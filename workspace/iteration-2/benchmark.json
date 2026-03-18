@@ -1,0 +1,195 @@
+{
+  "metadata": {
+    "skill_name": "gke-upgrades",
+    "skill_path": "/sessions/hopeful-optimistic-galileo/mnt/code/gke-upgrades",
+    "executor_model": "claude-opus-4-6",
+    "timestamp": "2026-03-18T12:00:00Z",
+    "evals_run": [1, 2, 3],
+    "runs_per_configuration": 1
+  },
+
+  "runs": [
+    {
+      "eval_id": 1,
+      "eval_name": "Standard Upgrade Plan",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 10,
+        "failed": 0,
+        "total": 10,
+        "time_seconds": 53.9,
+        "tokens": 34151,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "Recommends sequential upgrade path (1.28→1.29→1.30) rather than skipping", "passed": true, "evidence": "Clearly shows 1.28→1.29→1.30 path with rationale."},
+        {"text": "Specifies control plane upgrades before node pool upgrades", "passed": true, "evidence": "Phase 1/3 control plane, Phase 2/4 node pools."},
+        {"text": "Provides different node pool upgrade ordering with rationale", "passed": true, "evidence": "general-purpose → high-memory → GPU with rationale."},
+        {"text": "Includes specific surge settings for each pool", "passed": true, "evidence": "General (2,0), High-memory (1,0), GPU (1,0)."},
+        {"text": "Addresses Postgres-specific concerns", "passed": true, "evidence": "PDB, backup, operator compatibility, PV reclaim covered."},
+        {"text": "Addresses GPU-specific concerns", "passed": true, "evidence": "Driver compatibility, workload verification covered."},
+        {"text": "Includes actual gcloud commands", "passed": true, "evidence": "Full gcloud commands throughout."},
+        {"text": "Provides a pre-upgrade checklist", "passed": true, "evidence": "4-section pre-upgrade checklist."},
+        {"text": "Provides a post-upgrade checklist with validation", "passed": true, "evidence": "4-section post-upgrade checklist."},
+        {"text": "Includes rollback procedure", "passed": true, "evidence": "Full rollback section with gcloud commands."}
+      ]
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "Standard Upgrade Plan",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8,
+        "passed": 8,
+        "failed": 2,
+        "total": 10,
+        "time_seconds": 52.1,
+        "tokens": 27581,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "Recommends sequential upgrade path (1.28→1.29→1.30) rather than skipping", "passed": false, "evidence": "Upgrades directly 1.28→1.30."},
+        {"text": "Specifies control plane upgrades before node pool upgrades", "passed": true, "evidence": "Control plane first."},
+        {"text": "Provides different node pool upgrade ordering with rationale", "passed": true, "evidence": "Provides ordering."},
+        {"text": "Includes specific surge settings for each pool", "passed": false, "evidence": "Generic settings only."},
+        {"text": "Addresses Postgres-specific concerns", "passed": true, "evidence": "Covers StatefulSet, PDB, PVC."},
+        {"text": "Addresses GPU-specific concerns", "passed": true, "evidence": "GPU allocation, nvidia-smi checks."},
+        {"text": "Includes actual gcloud commands", "passed": true, "evidence": "Provides gcloud commands."},
+        {"text": "Provides a pre-upgrade checklist", "passed": true, "evidence": "Has readiness checklist."},
+        {"text": "Provides a post-upgrade checklist with validation", "passed": true, "evidence": "Has validation section."},
+        {"text": "Includes rollback procedure", "passed": true, "evidence": "Has rollback plan."}
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "Autopilot Checklists",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 9,
+        "failed": 0,
+        "total": 9,
+        "time_seconds": 34.4,
+        "tokens": 28268,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "Distinguishes dev (Rapid) and prod (Stable)", "passed": true, "evidence": "Separate sections throughout."},
+        {"text": "Recognizes Autopilot limitations", "passed": true, "evidence": "Dedicated differences section."},
+        {"text": "API deprecation checks", "passed": true, "evidence": "Deprecation insights check included."},
+        {"text": "Mandatory resource requests", "passed": true, "evidence": "Explicit Autopilot requirement noted."},
+        {"text": "Workload readiness items", "passed": true, "evidence": "PDBs, bare pods, grace periods covered."},
+        {"text": "Version verification commands", "passed": true, "evidence": "Per-cluster gcloud commands."},
+        {"text": "Workload health validation", "passed": true, "evidence": "Comprehensive workload and app validation."},
+        {"text": "Testing on dev before prod", "passed": true, "evidence": "Timeline notes and structure imply dev-first."},
+        {"text": "Monitoring/observability validation", "passed": true, "evidence": "Full observability checklist section."}
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "Autopilot Checklists",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.78,
+        "passed": 7,
+        "failed": 2,
+        "total": 9,
+        "time_seconds": 56.4,
+        "tokens": 30794,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "Distinguishes dev (Rapid) and prod (Stable)", "passed": true, "evidence": "Separate sections."},
+        {"text": "Recognizes Autopilot limitations", "passed": false, "evidence": "Does not mention Autopilot-specific limitations."},
+        {"text": "API deprecation checks", "passed": true, "evidence": "Mentions deprecation audits."},
+        {"text": "Mandatory resource requests", "passed": false, "evidence": "Does not mention mandatory resource requests."},
+        {"text": "Workload readiness items", "passed": true, "evidence": "Covers PDBs, termination."},
+        {"text": "Version verification commands", "passed": true, "evidence": "Includes version checks."},
+        {"text": "Workload health validation", "passed": true, "evidence": "Covers application workflows."},
+        {"text": "Testing on dev before prod", "passed": true, "evidence": "Recommends dev testing ground."},
+        {"text": "Monitoring/observability validation", "passed": true, "evidence": "Covers observability."}
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "Stuck Upgrade Troubleshoot",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8,
+        "time_seconds": 32.5,
+        "tokens": 28542,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "PDB as most likely cause", "passed": true, "evidence": "Listed first as Most Common Cause."},
+        {"text": "kubectl command for PDBs", "passed": true, "evidence": "kubectl get pdb -A -o wide."},
+        {"text": "Commands to identify blocking pods", "passed": true, "evidence": "Multiple diagnostic commands."},
+        {"text": "Resource constraint diagnosis", "passed": true, "evidence": "Section 2 covers capacity."},
+        {"text": "Fix for restrictive PDBs", "passed": true, "evidence": "Patch and backup-edit options."},
+        {"text": "Surge settings as fix", "passed": true, "evidence": "maxSurge increase command."},
+        {"text": "Webhook issues", "passed": true, "evidence": "Section 4 covers webhooks."},
+        {"text": "Validation steps", "passed": true, "evidence": "Dedicated validation section."}
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "Stuck Upgrade Troubleshoot",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.75,
+        "passed": 6,
+        "failed": 2,
+        "total": 8,
+        "time_seconds": 38.7,
+        "tokens": 27537,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "PDB as most likely cause", "passed": true, "evidence": "States PDBs as most common."},
+        {"text": "kubectl command for PDBs", "passed": true, "evidence": "Provides PDB commands."},
+        {"text": "Commands to identify blocking pods", "passed": true, "evidence": "Eviction failure events."},
+        {"text": "Resource constraint diagnosis", "passed": false, "evidence": "Does not explicitly diagnose resource constraints."},
+        {"text": "Fix for restrictive PDBs", "passed": true, "evidence": "Patch PDB option."},
+        {"text": "Surge settings as fix", "passed": true, "evidence": "maxSurge adjustment."},
+        {"text": "Webhook issues", "passed": false, "evidence": "Does not mention webhooks."},
+        {"text": "Validation steps", "passed": true, "evidence": "Watch commands included."}
+      ]
+    }
+  ],
+
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {"mean": 1.0, "stddev": 0.0, "min": 1.0, "max": 1.0},
+      "time_seconds": {"mean": 40.3, "stddev": 9.7, "min": 32.5, "max": 53.9},
+      "tokens": {"mean": 30320, "stddev": 2711, "min": 28268, "max": 34151}
+    },
+    "without_skill": {
+      "pass_rate": {"mean": 0.78, "stddev": 0.02, "min": 0.75, "max": 0.80},
+      "time_seconds": {"mean": 49.1, "stddev": 7.5, "min": 38.7, "max": 56.4},
+      "tokens": {"mean": 28637, "stddev": 1525, "min": 27537, "max": 30794}
+    },
+    "delta": {
+      "pass_rate": "+0.22",
+      "time_seconds": "-8.8",
+      "tokens": "+1683"
+    }
+  },
+
+  "notes": [
+    "With-skill achieves 100% pass rate across all 3 evals vs 78% baseline — key differentiators are sequential upgrade path, per-pool surge settings, Autopilot constraints, and webhook troubleshooting",
+    "Iteration 2 (Skills 2.0 improvements) is FASTER than baseline: 40.3s avg vs 49.1s baseline (and vs 51.2s in iteration 1 with_skill) — progressive disclosure reduced context overhead",
+    "Token usage is only slightly higher than baseline (+1683 tokens, +5.9%) despite producing more comprehensive outputs",
+    "The same 6 assertions fail in without_skill across both iterations: sequential upgrade path, per-pool surge settings, Autopilot limitations, mandatory resource requests, resource constraints, webhooks — these represent the skill's core value-add",
+    "Iteration 2 vs iteration 1 with_skill: same 100% pass rate but faster (40.3s vs 51.2s, -21%) and fewer tokens (30320 vs 30997, -2%)"
+  ]
+}

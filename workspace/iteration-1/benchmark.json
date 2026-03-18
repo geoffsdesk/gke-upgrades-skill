@@ -1,0 +1,198 @@
+{
+  "metadata": {
+    "skill_name": "gke-upgrades",
+    "skill_path": "/sessions/hopeful-optimistic-galileo/mnt/code/gke-upgrades",
+    "executor_model": "claude-opus-4-6",
+    "timestamp": "2026-03-18T12:00:00Z",
+    "evals_run": [1, 2, 3],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "eval_name": "Standard Upgrade Plan",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 10,
+        "failed": 0,
+        "total": 10,
+        "time_seconds": 70.4,
+        "tokens": 33636,
+        "tool_calls": 3,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "Recommends sequential upgrade path (1.28→1.29→1.30)", "passed": true, "evidence": "Explicitly recommends sequential upgrades with both phases"},
+        {"text": "Control plane before node pools", "passed": true, "evidence": "Phase 1 is control plane, Phases 2a-2c are node pools"},
+        {"text": "Node pool ordering with rationale", "passed": true, "evidence": "general→GPU→Postgres with risk-based rationale"},
+        {"text": "Specific surge settings per pool", "passed": true, "evidence": "Differentiated maxSurge/maxUnavailable per pool"},
+        {"text": "Postgres-specific concerns", "passed": true, "evidence": "PDB, backup, operator compat, PV reclaim all covered"},
+        {"text": "GPU-specific concerns", "passed": true, "evidence": "Driver compat, CUDA, workload coordination"},
+        {"text": "Actual gcloud commands", "passed": true, "evidence": "Full commands for each phase"},
+        {"text": "Pre-upgrade checklist", "passed": true, "evidence": "Comprehensive checkbox-style checklist"},
+        {"text": "Post-upgrade checklist with validation", "passed": true, "evidence": "Checklist with kubectl/gcloud commands"},
+        {"text": "Rollback procedure", "passed": true, "evidence": "Dedicated rollback section"}
+      ]
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "Standard Upgrade Plan",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8,
+        "passed": 8,
+        "failed": 2,
+        "total": 10,
+        "time_seconds": 52.1,
+        "tokens": 27581,
+        "tool_calls": 2,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "Recommends sequential upgrade path (1.28→1.29→1.30)", "passed": false, "evidence": "Jumps directly from 1.28 to 1.30"},
+        {"text": "Control plane before node pools", "passed": true, "evidence": "Phase 1 is control plane"},
+        {"text": "Node pool ordering with rationale", "passed": true, "evidence": "general→Postgres→GPU with rationale"},
+        {"text": "Specific surge settings per pool", "passed": false, "evidence": "Only generic maxSurge=1 for all pools"},
+        {"text": "Postgres-specific concerns", "passed": true, "evidence": "StatefulSet, PDB, PVC checks"},
+        {"text": "GPU-specific concerns", "passed": true, "evidence": "GPU allocation checks and nvidia-smi test"},
+        {"text": "Actual gcloud commands", "passed": true, "evidence": "Commands for upgrade steps"},
+        {"text": "Pre-upgrade checklist", "passed": true, "evidence": "Section 1.3 readiness checklist"},
+        {"text": "Post-upgrade checklist with validation", "passed": true, "evidence": "Section 5 validation steps"},
+        {"text": "Rollback procedure", "passed": true, "evidence": "Section 3.3 rollback plan"}
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "Autopilot Checklists",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 9,
+        "failed": 0,
+        "total": 9,
+        "time_seconds": 53.4,
+        "tokens": 30818,
+        "tool_calls": 3,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "Distinguishes dev (Rapid) and prod (Stable)", "passed": true, "evidence": "Separate sections for each environment"},
+        {"text": "Recognizes Autopilot limitations", "passed": true, "evidence": "States Google manages nodes, focus shifts to control plane"},
+        {"text": "API deprecation checks with commands", "passed": true, "evidence": "kubectl get --raw /metrics command"},
+        {"text": "Mandatory resource requests (Autopilot-specific)", "passed": true, "evidence": "Dedicated section with detection command"},
+        {"text": "Workload readiness items", "passed": true, "evidence": "PDBs, bare pods, graceful shutdown sections"},
+        {"text": "Version verification commands", "passed": true, "evidence": "gcloud commands for version checking"},
+        {"text": "Workload health validation", "passed": true, "evidence": "Deployments, StatefulSets, CrashLoopBackOff checks"},
+        {"text": "Dev-before-prod testing", "passed": true, "evidence": "Rollout sequence starting with dev clusters"},
+        {"text": "Monitoring/observability validation", "passed": true, "evidence": "Metrics, logging, error rates, latency sections"}
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "Autopilot Checklists",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.78,
+        "passed": 7,
+        "failed": 2,
+        "total": 9,
+        "time_seconds": 56.4,
+        "tokens": 30794,
+        "tool_calls": 5,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "Distinguishes dev (Rapid) and prod (Stable)", "passed": true, "evidence": "Separate sections for dev and prod"},
+        {"text": "Recognizes Autopilot limitations", "passed": false, "evidence": "Does not explicitly mention Autopilot-specific limitations"},
+        {"text": "API deprecation checks with commands", "passed": true, "evidence": "Mentions deprecation audits"},
+        {"text": "Mandatory resource requests (Autopilot-specific)", "passed": false, "evidence": "Does not mention mandatory resource requests"},
+        {"text": "Workload readiness items", "passed": true, "evidence": "PDBs, termination grace periods covered"},
+        {"text": "Version verification commands", "passed": true, "evidence": "Phase 1 post-upgrade verification"},
+        {"text": "Workload health validation", "passed": true, "evidence": "Application and storage validation"},
+        {"text": "Dev-before-prod testing", "passed": true, "evidence": "Dev cluster section as testing ground"},
+        {"text": "Monitoring/observability validation", "passed": true, "evidence": "Observability section in Phase 2"}
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "Stuck Upgrade Troubleshooting",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8,
+        "time_seconds": 29.8,
+        "tokens": 28536,
+        "tool_calls": 3,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "PDB as most likely cause", "passed": true, "evidence": "PDBs listed as #1 cause"},
+        {"text": "kubectl command to check PDBs", "passed": true, "evidence": "kubectl get pdb --all-namespaces"},
+        {"text": "Commands to find blocking pods", "passed": true, "evidence": "Step 2 with field-selector spec.nodeName"},
+        {"text": "Resource constraint diagnosis", "passed": true, "evidence": "Step 4 with kubectl top nodes and FailedScheduling events"},
+        {"text": "PDB fix (patch/adjustment)", "passed": true, "evidence": "Fix 1 with two patching options"},
+        {"text": "Surge settings as fix", "passed": true, "evidence": "Fix 3 with gcloud node-pool update"},
+        {"text": "Webhook issues mentioned", "passed": true, "evidence": "Step 6 covers webhook checking and Fix 5"},
+        {"text": "Validation steps post-fix", "passed": true, "evidence": "Validation section with watch commands"}
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "Stuck Upgrade Troubleshooting",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.75,
+        "passed": 6,
+        "failed": 2,
+        "total": 8,
+        "time_seconds": 38.7,
+        "tokens": 27537,
+        "tool_calls": 5,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "PDB as most likely cause", "passed": true, "evidence": "PDBs listed as most common culprit"},
+        {"text": "kubectl command to check PDBs", "passed": true, "evidence": "kubectl get pdb -A -o wide"},
+        {"text": "Commands to find blocking pods", "passed": true, "evidence": "Eviction failure events and drain status"},
+        {"text": "Resource constraint diagnosis", "passed": false, "evidence": "Does not explicitly diagnose capacity constraints"},
+        {"text": "PDB fix (patch/adjustment)", "passed": true, "evidence": "Option A patches PDB"},
+        {"text": "Surge settings as fix", "passed": true, "evidence": "Surge upgrade configuration section"},
+        {"text": "Webhook issues mentioned", "passed": false, "evidence": "Does not mention webhook issues"},
+        {"text": "Validation steps post-fix", "passed": true, "evidence": "Watch commands for monitoring"}
+      ]
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {"mean": 1.0, "stddev": 0.0, "min": 1.0, "max": 1.0},
+      "time_seconds": {"mean": 51.2, "stddev": 16.6, "min": 29.8, "max": 70.4},
+      "tokens": {"mean": 30997, "stddev": 2094, "min": 28536, "max": 33636}
+    },
+    "without_skill": {
+      "pass_rate": {"mean": 0.78, "stddev": 0.02, "min": 0.75, "max": 0.8},
+      "time_seconds": {"mean": 49.1, "stddev": 7.6, "min": 38.7, "max": 56.4},
+      "tokens": {"mean": 28637, "stddev": 1498, "min": 27537, "max": 30794}
+    },
+    "delta": {
+      "pass_rate": "+0.22",
+      "time_seconds": "+2.1",
+      "tokens": "+2360"
+    }
+  },
+  "notes": [
+    "With-skill runs achieved 100% pass rate across all 3 evals vs 78% without skill",
+    "Key differentiators: sequential upgrade path recommendation, per-pool surge settings, Autopilot-specific constraints, webhook troubleshooting",
+    "Baseline outputs were still solid (78% average) but missed nuanced, environment-specific guidance",
+    "Time overhead is minimal (+2.1s average) — most of the difference is in the upgrade plan eval",
+    "Token overhead is modest (+2360 average, ~8% increase) for a meaningful quality improvement"
+  ]
+}

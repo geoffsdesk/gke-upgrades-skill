@@ -1,0 +1,14 @@
+{
+  "expectations": [
+    {"text": "Distinguishes between dev (Rapid) and prod (Stable) clusters in the checklists", "passed": true, "evidence": "Separate version availability checks for Rapid and Stable channels, separate post-upgrade sections per cluster (Dev 1/2 Rapid, Prod 1/2 Stable), and timeline notes differentiating dev vs prod."},
+    {"text": "Recognizes Autopilot limitations (no node management, no SSH, mandatory resource requests)", "passed": true, "evidence": "Dedicated 'Key Differences for Autopilot Clusters' section: 'Google manages node pool upgrades and surge settings, OS patching automatic, Control plane upgrades scheduled during maintenance windows.'"},
+    {"text": "Includes API deprecation checks with kubectl commands", "passed": true, "evidence": "Pre-upgrade checklist includes 'No deprecated API usage across all clusters' with command to check GKE deprecation insights dashboard."},
+    {"text": "Mentions mandatory resource requests as an Autopilot-specific concern", "passed": true, "evidence": "Explicit item: 'All containers have resource requests AND limits defined' with note 'Autopilot requires requests on all containers; pods without requests will fail to schedule.'"},
+    {"text": "Pre-upgrade checklist includes workload readiness items (PDBs, bare pods, graceful shutdown)", "passed": true, "evidence": "Workload Readiness section covers PDBs, bare pods, terminationGracePeriodSeconds, StatefulSet backups, and PV reclaim policies."},
+    {"text": "Post-upgrade checklist includes version verification commands", "passed": true, "evidence": "Per-cluster post-upgrade checks include 'Control plane at 1.30' and 'All nodes at 1.30' with gcloud commands."},
+    {"text": "Post-upgrade checklist includes workload health validation", "passed": true, "evidence": "Workload Health section covers deployments, CrashLoopBackOff, Pending pods, StatefulSets, PDBs, and ingress. Application Validation section adds smoke tests."},
+    {"text": "Recommends testing on dev clusters before prod auto-upgrade", "passed": true, "evidence": "Timeline Notes section establishes dev (Rapid) gets 1.30 first, prod (Stable) follows after validation. Structure lists dev clusters first, implying test-on-dev-first workflow. Pre-freeze checklist timing also suggests this."},
+    {"text": "Includes monitoring/observability validation items", "passed": true, "evidence": "Observability section in post-upgrade covers metrics pipeline, log aggregation, error rates, latency baselines, and new error patterns."}
+  ],
+  "summary": {"passed": 9, "failed": 0, "total": 9, "pass_rate": 1.0}
+}

@@ -1,0 +1,14 @@
+{
+  "expectations": [
+    {"text": "Distinguishes between dev (Rapid) and prod (Stable) clusters in the checklists", "passed": true, "evidence": "Separate sections for 'Dev Clusters' and 'Prod Clusters' in both pre and post checklists, plus environment-specific items."},
+    {"text": "Recognizes Autopilot limitations (no node management, no SSH, mandatory resource requests)", "passed": true, "evidence": "States 'Google manages node upgrades automatically. Your focus shifts to control plane timing, workload compatibility, and validation.' Includes resource requests section."},
+    {"text": "Includes API deprecation checks with kubectl commands", "passed": true, "evidence": "Provides 'kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated' and mentions checking GKE release notes."},
+    {"text": "Mentions mandatory resource requests as an Autopilot-specific concern", "passed": true, "evidence": "Dedicated 'Resource Requests (Autopilot-Specific)' section with command to find pods missing requests."},
+    {"text": "Pre-upgrade checklist includes workload readiness items (PDBs, bare pods, graceful shutdown)", "passed": true, "evidence": "Sections for PDBs, bare pods, graceful shutdown with specific kubectl commands for each."},
+    {"text": "Post-upgrade checklist includes version verification commands", "passed": true, "evidence": "Includes gcloud command to verify control plane version and node pool versions."},
+    {"text": "Post-upgrade checklist includes workload health validation", "passed": true, "evidence": "Checks for deployments at desired replicas, StatefulSets ready, CrashLoopBackOff pods, and service endpoints."},
+    {"text": "Recommends testing on dev clusters before prod auto-upgrade", "passed": true, "evidence": "Section 'Quick Reference: Dev to Prod Rollout Sequence' with Week 1-4 timeline starting with dev clusters first."},
+    {"text": "Includes monitoring/observability validation items", "passed": true, "evidence": "Observability section covering metrics pipeline, error rates, latency baselines, and logging pipeline validation."}
+  ],
+  "summary": {"passed": 9, "failed": 0, "total": 9, "pass_rate": 1.0}
+}

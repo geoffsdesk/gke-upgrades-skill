@@ -1,0 +1,14 @@
+{
+  "expectations": [
+    {"text": "Distinguishes between dev (Rapid) and prod (Stable) clusters in the checklists", "passed": true, "evidence": "Separate sections for dev (Rapid) and prod (Stable) with environment-specific checklists."},
+    {"text": "Recognizes Autopilot limitations (no node management, no SSH, mandatory resource requests)", "passed": false, "evidence": "Does not explicitly mention Autopilot-specific limitations like no SSH, no node management. Treats clusters more generically."},
+    {"text": "Includes API deprecation checks with kubectl commands", "passed": true, "evidence": "Mentions deprecation audits and GKE Deprecation Insights feature."},
+    {"text": "Mentions mandatory resource requests as an Autopilot-specific concern", "passed": false, "evidence": "Does not mention mandatory resource requests as an Autopilot requirement."},
+    {"text": "Pre-upgrade checklist includes workload readiness items (PDBs, bare pods, graceful shutdown)", "passed": true, "evidence": "Covers PDBs, termination grace periods, node affinity constraints, and PVs."},
+    {"text": "Post-upgrade checklist includes version verification commands", "passed": true, "evidence": "Phase 1 post-upgrade includes verifying all nodes report 1.30.x."},
+    {"text": "Post-upgrade checklist includes workload health validation", "passed": true, "evidence": "Phase 2 covers application workflows, storage validation, and network/DNS."},
+    {"text": "Recommends testing on dev clusters before prod auto-upgrade", "passed": true, "evidence": "Dev cluster section recommends using them as testing ground before prod."},
+    {"text": "Includes monitoring/observability validation items", "passed": true, "evidence": "Phase 2 covers observability and monitoring verification."}
+  ],
+  "summary": {"passed": 7, "failed": 2, "total": 9, "pass_rate": 0.78}
+}

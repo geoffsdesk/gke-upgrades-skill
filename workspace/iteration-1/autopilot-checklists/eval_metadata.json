@@ -1,0 +1,6 @@
+{
+  "eval_id": 2,
+  "eval_name": "autopilot-checklists",
+  "prompt": "I manage 4 Autopilot clusters -- 2 in dev on Rapid channel and 2 in prod on Stable. We've been getting notifications that our prod clusters will auto-upgrade from 1.29 to 1.30 next month. Can you give me pre and post upgrade checklists tailored to our setup?",
+  "assertions": []
+}

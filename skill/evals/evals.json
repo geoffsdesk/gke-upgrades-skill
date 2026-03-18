@@ -1,0 +1,56 @@
+{
+  "skill_name": "gke-upgrades",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We have a Standard GKE cluster on the Regular release channel running 1.28 in us-central1-a. We need to upgrade to 1.30 before end of quarter. We have 3 node pools -- a general-purpose pool, a high-memory pool for our Postgres operator, and a GPU pool for ML inference. Can you put together an upgrade plan?",
+      "expected_output": "A structured upgrade plan covering version path, control plane then node pool ordering, specific handling for Postgres and GPU pools, surge settings, maintenance windows, PDB guidance, and gcloud commands.",
+      "files": [],
+      "expectations": [
+        "Recommends sequential upgrade path (1.28→1.29→1.30) rather than skipping",
+        "Specifies control plane upgrades before node pool upgrades",
+        "Provides different node pool upgrade ordering with rationale for the sequence",
+        "Includes specific surge upgrade settings (maxSurge/maxUnavailable) for each pool",
+        "Addresses Postgres-specific concerns (PDB, backup, operator compatibility, PV reclaim)",
+        "Addresses GPU-specific concerns (driver compatibility, workload coordination)",
+        "Includes actual gcloud commands for the upgrade steps",
+        "Provides a pre-upgrade checklist",
+        "Provides a post-upgrade checklist with validation commands",
+        "Includes rollback procedure or guidance"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I manage 4 Autopilot clusters -- 2 in dev on Rapid channel and 2 in prod on Stable. We've been getting notifications that our prod clusters will auto-upgrade from 1.29 to 1.30 next month. Can you give me pre and post upgrade checklists tailored to our setup?",
+      "expected_output": "Tailored pre and post upgrade checklists recognizing Autopilot limitations, covering both dev and prod environments, API deprecation checks, and Autopilot-specific items.",
+      "files": [],
+      "expectations": [
+        "Distinguishes between dev (Rapid) and prod (Stable) clusters in the checklists",
+        "Recognizes Autopilot limitations (no node management, no SSH, mandatory resource requests)",
+        "Includes API deprecation checks with kubectl commands",
+        "Mentions mandatory resource requests as an Autopilot-specific concern",
+        "Pre-upgrade checklist includes workload readiness items (PDBs, bare pods, graceful shutdown)",
+        "Post-upgrade checklist includes version verification commands",
+        "Post-upgrade checklist includes workload health validation",
+        "Recommends testing on dev clusters before prod auto-upgrade",
+        "Includes monitoring/observability validation items"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Our node pool upgrade has been stuck for 2 hours. It says 3 out of 12 nodes upgraded. We're on a Standard cluster in us-east1, running 1.29, upgrading nodes to 1.30. The pods on the remaining nodes aren't draining. What should we check and how do we fix this?",
+      "expected_output": "A troubleshooting walkthrough with specific kubectl and gcloud commands to diagnose PDB blocks, resource constraints, webhook issues, and stuck pods.",
+      "files": [],
+      "expectations": [
+        "Identifies PDB as the most likely/common cause of stuck upgrades",
+        "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
+        "Provides commands to identify which pods are blocking the drain",
+        "Includes resource constraint diagnosis (capacity issues, pending pods)",
+        "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+        "Includes guidance on surge upgrade settings as a potential fix",
+        "Mentions webhook issues as a possible cause",
+        "Includes validation steps to confirm the fix is working"
+      ]
+    }
+  ]
+}

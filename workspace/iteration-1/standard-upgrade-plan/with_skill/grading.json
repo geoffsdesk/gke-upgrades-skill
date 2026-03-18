@@ -1,0 +1,15 @@
+{
+  "expectations": [
+    {"text": "Recommends sequential upgrade path (1.28→1.29→1.30) rather than skipping", "passed": true, "evidence": "Explicitly recommends '1.28 → 1.29 → 1.30 (sequential upgrades recommended)' and includes both Phase 1 (1.28→1.29) and Phase 3 (1.29→1.30)"},
+    {"text": "Specifies control plane upgrades before node pool upgrades", "passed": true, "evidence": "Phase 1 is control plane, then Phases 2a/2b/2c are node pools. States 'control plane must lead'"},
+    {"text": "Provides different node pool upgrade ordering with rationale for the sequence", "passed": true, "evidence": "Orders: general-purpose (lowest risk, stateless) → GPU (moderate risk, batch) → Postgres (highest risk, stateful). Clear rationale for each."},
+    {"text": "Includes specific surge upgrade settings (maxSurge/maxUnavailable) for each pool", "passed": true, "evidence": "General: maxSurge=2, maxUnavailable=0. GPU: maxSurge=1, maxUnavailable=0. Postgres: maxSurge=1, maxUnavailable=0. Each with rationale."},
+    {"text": "Addresses Postgres-specific concerns (PDB, backup, operator compatibility, PV reclaim)", "passed": true, "evidence": "Dedicated section with PDB example YAML, operator compatibility checks, CRD verification, backup steps, and PV reclaim policy verification command."},
+    {"text": "Addresses GPU-specific concerns (driver compatibility, workload coordination)", "passed": true, "evidence": "Section on GPU workload compatibility with NVIDIA driver checks, CUDA version, long-running job coordination, and GPU resource request verification."},
+    {"text": "Includes actual gcloud commands for the upgrade steps", "passed": true, "evidence": "Full gcloud commands for each phase: cluster upgrade, node-pool update (surge settings), node-pool upgrade, and get-server-config."},
+    {"text": "Provides a pre-upgrade checklist", "passed": true, "evidence": "Comprehensive checkbox-style pre-upgrade checklist covering version checks, workload readiness, backup, infrastructure, and communication."},
+    {"text": "Provides a post-upgrade checklist with validation commands", "passed": true, "evidence": "Post-upgrade checklist with kubectl and gcloud commands for cluster health, workload health, observability, and cleanup."},
+    {"text": "Includes rollback procedure or guidance", "passed": true, "evidence": "Dedicated 'Rollback Procedure' section covering node pool rollback, control plane rollback, and Postgres recovery."}
+  ],
+  "summary": {"passed": 10, "failed": 0, "total": 10, "pass_rate": 1.0}
+}

@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "gke-upgrades", "runs": [{"id": "standard-upgrade-plan-with_skill", "prompt": "We have a Standard GKE cluster on the Regular release channel running 1.28 in us-central1-a. We need to upgrade to 1.30 before end of quarter. We have 3 node pools -- a general-purpose pool, a high-memory pool for our Postgres operator, and a GPU pool for ML inference. Can you put together an upgrade plan?", "eval_id": 1, "outputs": [{"name": "upgrade-plan.md", "type": "text", "content": "# GKE Cluster Upgrade Plan: 1.28 \u2192 1.30\n\n## Executive Summary\n\nThis document outlines the upgrade path for a Standard GKE cluster on the Regular release channel, upgrading from Kubernetes 1.28 to 1.30 in the `us-central1-a` zone. The cluster hosts three distinct workload types (general-purpose, Postgres operator, and GPU inference), requiring careful coordination to minimize disruption.\n\n**Target completion:** End of quarter (Q1 2026)\n**Estimated downtime:** < 5 minutes per node pool (with surge upgrades)\n**Cluster mode:** Standard (manual node management)\n**Release channel:** Regular\n\n---\n\n## Cluster Configuration\n\n| Property | Value |\n|----------|-------|\n| **Cluster Name** | (to be confirmed) |\n| **Zone** | us-central1-a |\n| **Release Channel** | Regular |\n| **Current Control Plane Version** | 1.28.x |\n| **Target Version** | 1.30.x |\n| **Node Pools** | 3 |\n| **Pool 1: General-Purpose** | Standard compute workloads, stateless services |\n| **Pool 2: High-Memory (Postgres)** | PostgreSQL operator & data workloads (stateful) |\n| **Pool 3: GPU** | ML inference workloads |\n\n---\n\n## Version Compatibility Checks\n\n### Target Version Availability\n- **1.30** is available on the Regular release channel as of Q1 2026\n- Confirm availability with: `gcloud container get-server-config --zone us-central1-a --format=\"yaml(channels)\"`\n- The Regular channel receives versions after validation in Rapid; 1.30 is stable for production workloads\n\n### Version Skew Requirements\n- **Node-to-control-plane skew:** Nodes cannot be more than 2 minor versions behind the control plane\n- **Path:** 1.28 \u2192 1.29 \u2192 1.30 (sequential upgrades recommended to avoid compatibility surprises)\n- Alternatively, 1.28 \u2192 1.30 direct is technically supported (2-minor-version jump), but sequential is safer for workload compatibility\n- **Recommendation:** Upgrade control plane to 1.29 first, let nodes stabilize, then proceed to 1.30\n\n### Deprecated APIs & Breaking Changes\n\n**Key checks for 1.28 \u2192 1.30 upgrade:**\n\n1. **API Server Deprecations**\n   - Verify no workloads use deprecated APIs with:\n     ```bash\n     kubectl get --raw /metrics | grep apiserver_request_total\n     ```\n   - Check the GKE deprecation insights dashboard for usage patterns\n   - Common deprecations to watch for: `extensions/v1beta1` Ingress, `batch/v1beta1` CronJob, `apps/v1beta2`\n\n2. **Third-party Controllers**\n   - Confirm Postgres operator version supports Kubernetes 1.30\n   - Verify GPU operator / NVIDIA driver support for 1.30 nodes\n   - Test any admission webhooks and custom operators in a staging environment\n\n3. **Review Release Notes**\n   - Kubernetes 1.29 and 1.30 release notes for breaking changes\n   - GKE-specific changes: https://cloud.google.com/kubernetes-engine/docs/release-notes\n\n---\n\n## Upgrade Path & Sequencing\n\n### Recommended Approach: Sequential Upgrade with Staged Node Pool Rollout\n\n**Phase 1: Control Plane Upgrade (1.28 \u2192 1.29)**\n- Upgrade the control plane first\n- This is the required order; control plane must lead\n- Nodes can temporarily run at 1.28 while control plane is at 1.29 (within skew limits)\n\n**Phase 2: Node Pool Upgrades (Staggered by workload)**\n1. **General-Purpose Pool** (lowest risk, stateless)\n2. **GPU Pool** (moderate risk, batch workloads typically restartable)\n3. **High-Memory/Postgres Pool** (highest risk, stateful \u2014 last)\n\n**Phase 3: Control Plane + Node Upgrade (1.29 \u2192 1.30)**\n- Once all pools are at 1.29, upgrade control plane to 1.30\n- Roll out node pools again in the same sequence\n\n**Total duration:** 2\u20134 weeks (with 3\u20135 business days soak time between phases for validation)\n\n---\n\n## Maintenance Windows & Exclusions\n\n### Maintenance Window Configuration\nSet a regular maintenance window for automatic operations (if enabled):\n```bash\ngcloud container clusters update CLUSTER_NAME \\\n  --zone us-central1-a \\\n  --maintenance-window-start 2026-04-01T22:00:00Z \\\n  --maintenance-window-end 2026-04-01T23:00:00Z \\\n  --maintenance-window-recurrence \"FREQ=WEEKLY;BYDAY=SA\"\n```\n\n**Suggested timing:** Weekend window (e.g., Saturday 10 PM\u201311 PM US Eastern), off-peak hours\n\n### Maintenance Exclusions\nIf there is a business-critical period (e.g., major product launch, year-end close), set a maintenance exclusion (up to 30 days):\n```bash\ngcloud container clusters update CLUSTER_NAME \\\n  --zone us-central1-a \\\n  --add-maintenance-exclusion-name \"Q1-end-of-quarter\" \\\n  --add-maintenance-exclusion-start-time 2026-03-20T00:00:00Z \\\n  --add-maintenance-exclusion-end-time 2026-03-31T23:59:59Z\n```\n\n**Note:** Manual upgrades (as outlined in this plan) bypass maintenance windows, so you have full control over timing.\n\n---\n\n## Node Pool Upgrade Strategy\n\n### Surge Upgrade Configuration (Recommended)\n\nAll three pools will use **surge upgrades** (rolling update with temporary overcapacity). This minimizes downtime and is suitable for all three workload types when properly configured.\n\n#### General-Purpose Pool\n- **Purpose:** Stateless services (web servers, APIs, microservices)\n- **Surge settings:** `maxSurge=2, maxUnavailable=0`\n- **Rationale:** Safe for stateless workloads; surge capacity ensures zero downtime\n- **Duration:** ~10\u201315 minutes (depends on node count and image pull time)\n\n#### GPU Pool\n- **Purpose:** ML inference (batch predictions, model serving)\n- **Surge settings:** `maxSurge=1, maxUnavailable=0` (GPUs are expensive; limit temporary overcapacity)\n- **Rationale:** Batch workloads are typically resilient to interruption; small surge avoids cost spike\n- **Duration:** ~15\u201320 minutes per node\n- **Pre-flight:** Confirm node image supports required NVIDIA driver version for 1.30\n\n#### High-Memory/Postgres Pool\n- **Purpose:** PostgreSQL operator, data workloads (stateful)\n- **Surge settings:** `maxSurge=1, maxUnavailable=0`\n- **Rationale:** Single-node surge to limit temporary cluster size; PDBs will protect the database\n- **Duration:** ~20\u201330 minutes per node (StatefulSets take longer to reschedule)\n- **Pre-flight:** Verify Postgres operator and backup system compatibility with 1.30\n\n### Why Not Blue-Green for This Cluster?\n\nBlue-green (create new pool, migrate, delete old) is an option but not recommended here because:\n- Temporary 2x node capacity is expensive, especially with high-memory and GPU nodes\n- Surge upgrades with PDBs are safe and sufficient for stateful workloads\n- Simpler operational procedure (fewer moving parts)\n\n---\n\n## Workload Readiness\n\n### Pod Disruption Budgets (PDBs)\n\n**Critical for Postgres Pool:**\nEnsure the Postgres operator has a PDB with `minAvailable=1`:\n```yaml\napiVersion: policy/v1\nkind: PodDisruptionBudget\nmetadata:\n  name: postgres-pdb\n  namespace: postgres-namespace\nspec:\n  minAvailable: 1\n  selector:\n    matchLabels:\n      app: postgres-operator\n```\n\nGKE respects PDBs for up to one hour during surge upgrades. If a pod is protected by a PDB and cannot be evicted, the upgrade pauses gracefully.\n\n**For other workloads:**\nReview and add PDBs for any critical or stateful services:\n```bash\nkubectl get pdb --all-namespaces\nkubectl get pods --all-namespaces -l critical=true  # identify critical workloads\n```\n\n### Workload Health Checks\n\n**Bare Pods**\nIdentify and eliminate bare pods (pods without a controller):\n```bash\nkubectl get pods --all-namespaces --field-selector=metadata.ownerReferences=null\n```\nBare pods will not be rescheduled during node drain. Wrap them in Deployments or StatefulSets.\n\n**Graceful Shutdown**\nFor long-running processes (especially batch jobs on GPU nodes), ensure adequate `terminationGracePeriodSeconds`:\n```yaml\nspec:\n  terminationGracePeriodSeconds: 120  # Allow 2 minutes for cleanup\n```\n\n**Resource Requests & Limits**\nVerify all pods have resource requests/limits (especially important for accurate scheduler decisions during surge upgrades):\n```bash\nkubectl get pods --all-namespaces -o jsonpath='{range .items[*]}{.metadata.namespace}{\"\\t\"}{.metadata.name}{\"\\t\"}{.spec.containers[*].resources}{\"\\n\"}{end}' | grep -v '{}' | wc -l\n```\n\n### Postgres Operator Compatibility\n\n**Pre-upgrade steps:**\n1. Verify Postgres operator version supports Kubernetes 1.30\n2. Check operator release notes for 1.29 and 1.30 compatibility\n3. Ensure all CRDs are at compatible versions:\n   ```bash\n   kubectl get crds | grep postgres\n   ```\n4. Backup all PostgreSQL databases before node pool upgrades\n5. Verify PersistentVolume reclaim policy (`Retain` is safest for data):\n   ```bash\n   kubectl get pv -o jsonpath='{range .items[*]}{.metadata.name}{\"\\t\"}{.spec.persistentVolumeReclaimPolicy}{\"\\n\"}{end}'\n   ```\n\n### GPU Workload Compatibility\n\n**Pre-upgrade steps:**\n1. Verify NVIDIA GPU operator / driver compatibility with 1.30 node images\n2. Check for GPU workload hard requirements (specific CUDA versions, driver versions)\n3. Identify long-running inference jobs that cannot be interrupted \u2014 coordinate shutdown before surge\n4. Confirm resource requests are accurate (GPU requests in `.spec.containers[].resources.limits.nvidia.com/gpu`)\n\n---\n\n## Pre-Upgrade Checklist\n\n- [ ] **Cluster identification**\n  - [ ] Cluster name confirmed: _______________\n  - [ ] Zone: us-central1-a\n  - [ ] Release channel: Regular\n\n- [ ] **Version checks**\n  - [ ] 1.30 is available on Regular channel (confirmed via `gcloud container get-server-config`)\n  - [ ] Release notes for 1.29 and 1.30 reviewed\n  - [ ] No deprecated API usage detected (checked deprecation insights)\n\n- [ ] **Workload readiness**\n  - [ ] Postgres PDB configured with `minAvailable=1`\n  - [ ] All pods have controllers (no bare pods)\n  - [ ] GPU workloads can tolerate graceful shutdown (terminationGracePeriod adequate)\n  - [ ] All pods have resource requests/limits defined\n  - [ ] Postgres operator version supports 1.29 and 1.30\n  - [ ] GPU operator / NVIDIA driver supports 1.30\n\n- [ ] **Backup & protection**\n  - [ ] All PostgreSQL databases backed up\n  - [ ] PersistentVolume reclaim policies verified (`Retain` for critical data)\n  - [ ] Current cluster snapshot / backup taken\n  - [ ] Rollback procedure documented and tested\n\n- [ ] **Infrastructure**\n  - [ ] Maintenance window set to off-peak (e.g., weekend, 10 PM)\n  - [ ] Maintenance exclusions set for freeze periods (if applicable)\n  - [ ] Surge capacity sufficient: at least 1\u20132 extra nodes per pool\n  - [ ] Quota check: `gcloud compute quotas list --filter=\"metric:~compute/instances\"` shows available quota\n\n- [ ] **Communication & ops readiness**\n  - [ ] Upgrade window communicated to stakeholders and on-call team\n  - [ ] On-call engineer assigned and available\n  - [ ] Monitoring and alerting confirmed active (Prometheus, Cloud Monitoring, Cloud Logging)\n  - [ ] Runbook prepared and shared with team\n\n---\n\n## Upgrade Execution Runbook\n\n### Phase 1: Control Plane Upgrade to 1.29\n\n#### Pre-flight Checks\n```bash\n# Verify current versions\ngcloud container clusters describe CLUSTER_NAME \\\n  --zone us-central1-a \\\n  --format=\"table(name, currentMasterVersion, nodePools[].version)\"\n\n# Check available versions for Regular channel\ngcloud container get-server-config --zone us-central1-a \\\n  --format=\"yaml(channels)\" | grep -A 20 \"Regular\"\n\n# Verify cluster is in good state\nkubectl get nodes\nkubectl get pods --all-namespaces | grep -v Running | grep -v Completed\n```\n\n#### Control Plane Upgrade\n```bash\ngcloud container clusters upgrade CLUSTER_NAME \\\n  --zone us-central1-a \\\n  --master \\\n  --cluster-version 1.29\n```\n\n**Expected duration:** 10\u201315 minutes. Control plane will be briefly unavailable (~1 min), then nodes reconnect.\n\n#### Validation\n```bash\n# Confirm control plane version\ngcloud container clusters describe CLUSTER_NAME \\\n  --zone us-central1-a \\\n  --format=\"value(currentMasterVersion)\"\n# Should return 1.29.x\n\n# Check system pods are healthy\nkubectl get pods -n kube-system -o wide\nkubectl get nodes\n```\n\n**Soak time:** Wait 24 hours before proceeding to node upgrades, monitoring for any API changes or workload issues.\n\n---\n\n### Phase 2a: General-Purpose Pool Upgrade to 1.29\n\n#### Configure Surge Settings\n```bash\ngcloud container node-pools update general-purpose \\\n  --cluster CLUSTER_NAME \\\n  --zone us-central1-a \\\n  --max-surge-upgrade 2 \\\n  --max-unavailable-upgrade 0\n```\n\n#### Upgrade Node Pool\n```bash\ngcloud container node-pools upgrade general-purpose \\\n  --cluster CLUSTER_NAME \\\n  --zone us-central1-a \\\n  --cluster-version 1.29\n```\n\n**Expected duration:** 10\u201315 minutes\n\n#### Validation\n```bash\n# Monitor upgrade progress\ngcloud container node-pools list --cluster CLUSTER_NAME --zone us-central1-a\n# Check that all nodes transition to 1.29\n\n# Verify pods are running\nkubectl get nodes -L cloud.google.com/gke-nodepool\nkubectl get pods --all-namespaces -o wide | grep -v Running | grep -v Completed\n```\n\n---\n\n### Phase 2b: GPU Pool Upgrade to 1.29\n\n#### Pre-flight for GPU Pool\n```bash\n# Check for active GPU workloads\nkubectl get pods --all-namespaces -o jsonpath='{range .items[*]}{.metadata.namespace}{\"\\t\"}{.metadata.name}{\"\\t\"}{.spec.containers[*].resources.limits.nvidia\\.com/gpu}{\"\\n\"}{end}' | grep -v '^[[:space:]]*$'\n\n# Gracefully drain long-running jobs (if needed)\n# Coordinate with team to pause inference jobs\n```\n\n#### Configure Surge Settings\n```bash\ngcloud container node-pools update gpu-pool \\\n  --cluster CLUSTER_NAME \\\n  --zone us-central1-a \\\n  --max-surge-upgrade 1 \\\n  --max-unavailable-upgrade 0\n```\n\n#### Upgrade Node Pool\n```bash\ngcloud container node-pools upgrade gpu-pool \\\n  --cluster CLUSTER_NAME \\\n  --zone us-central1-a \\\n  --cluster-version 1.29\n```\n\n**Expected duration:** 15\u201320 minutes per GPU node (depends on number of nodes)\n\n#### Validation\n```bash\n# Verify all GPU nodes are ready\nkubectl get nodes -L cloud.google.com/gke-nodepool | grep gpu\nkubectl get nodes -L nvidia.com/gpu\n\n# Confirm GPU workloads are rescheduling\nkubectl get pods --all-namespaces -o wide | grep gpu-pool\n```\n\n---\n\n### Phase 2c: High-Memory/Postgres Pool Upgrade to 1.29\n\n#### Pre-flight for Postgres Pool\n```bash\n# Verify Postgres operator is ready\nkubectl get pods -n postgres-namespace -o wide\nkubectl get statefulsets -n postgres-namespace\n\n# Check PDB is in place\nkubectl get pdb -n postgres-namespace\n\n# Verify database is healthy\n# (run operator-specific health check; example: `kubectl exec -it <pod> -- psql -c \"SELECT 1\"`)\n```\n\n#### Configure Surge Settings\n```bash\ngcloud container node-pools update postgres-pool \\\n  --cluster CLUSTER_NAME \\\n  --zone us-central1-a \\\n  --max-surge-upgrade 1 \\\n  --max-unavailable-upgrade 0\n```\n\n#### Upgrade Node Pool\n```bash\ngcloud container node-pools upgrade postgres-pool \\\n  --cluster CLUSTER_NAME \\\n  --zone us-central1-a \\\n  --cluster-version 1.29\n```\n\n**Expected duration:** 20\u201330 minutes (StatefulSets take longer to reschedule due to PDB protection)\n\n#### Validation\n```bash\n# Check all Postgres pods are running on new nodes\nkubectl get pods -n postgres-namespace -o wide\nkubectl describe statefulset -n postgres-namespace\n\n# Verify database connectivity\n# (run operator-specific health check)\n\n# Check node pool status\nkubectl get nodes -L cloud.google.com/gke-nodepool | grep postgres\n```\n\n---\n\n### Phase 3: Control Plane Upgrade to 1.30\n\n#### Pre-flight Checks\n```bash\n# All node pools should be at 1.29\ngcloud container clusters describe CLUSTER_NAME \\\n  --zone us-central1-a \\\n  --format=\"table(name, currentMasterVersion, nodePools[].version)\"\n\n# Wait for cluster to stabilize (~24 hours since last upgrade)\nkubectl get nodes\nkubectl get pods --all-namespaces | grep -v Running | grep -v Completed\n```\n\n#### Control Plane Upgrade\n```bash\ngcloud container clusters upgrade CLUSTER_NAME \\\n  --zone us-central1-a \\\n  --master \\\n  --cluster-version 1.30\n```\n\n**Expected duration:** 10\u201315 minutes\n\n#### Validation\n```bash\ngcloud container clusters describe CLUSTER_NAME \\\n  --zone us-central1-a \\\n  --format=\"value(currentMasterVersion)\"\n# Should return 1.30.x\n\nkubectl get pods -n kube-system\n```\n\n---\n\n### Phase 4: Node Pool Upgrades to 1.30\n\nRepeat Phase 2a, 2b, 2c procedures, but upgrade to 1.30:\n\n- **General-Purpose Pool** (lowest risk, stateless) \u2014 proceed first\n- **GPU Pool** (moderate risk) \u2014 second\n- **Postgres Pool** (highest risk, stateful) \u2014 last\n\nFor each pool:\n1. Configure surge settings (same as Phase 2)\n2. Run upgrade command with `--cluster-version 1.30`\n3. Validate node version and workload health\n4. Wait 24 hours before next pool\n\n---\n\n## Post-Upgrade Checklist\n\n- [ ] **Cluster health**\n  - [ ] Control plane version is 1.30: `gcloud container clusters describe CLUSTER_NAME --zone us-central1-a --format=\"value(currentMasterVersion)\"`\n  - [ ] All node pools at 1.30: `gcloud container node-pools list --cluster CLUSTER_NAME --zone us-central1-a`\n  - [ ] All nodes in Ready state: `kubectl get nodes`\n  - [ ] System pods healthy: `kubectl get pods -n kube-system -o wide`\n  - [ ] No PDBs blocking operations: `kubectl get pdb --all-namespaces`\n\n- [ ] **Workload health**\n  - [ ] All deployments at desired replica count: `kubectl get deployments --all-namespaces`\n  - [ ] No CrashLoopBackOff pods: `kubectl get pods --all-namespaces --field-selector=status.phase!=Running`\n  - [ ] Postgres operator healthy: `kubectl get pods -n postgres-namespace`\n  - [ ] GPU workloads resuming: `kubectl get pods --all-namespaces -o wide | grep gpu`\n  - [ ] Ingress/load balancers healthy: `kubectl get ingress --all-namespaces`\n  - [ ] Application health checks passing (smoke tests)\n\n- [ ] **Observability**\n  - [ ] Metrics pipeline active (Cloud Monitoring, Prometheus)\n  - [ ] Logs flowing (Cloud Logging, external logging)\n  - [ ] Error rates within baseline\n  - [ ] Latency within baseline\n  - [ ] No alerts firing related to upgrade\n\n- [ ] **Cleanup & documentation**\n  - [ ] Temporary surge nodes released (automatic at end of pool upgrades)\n  - [ ] Upgrade documented in changelog/runbook\n  - [ ] Lessons learned captured (what went well, what could improve)\n  - [ ] Team debriefing scheduled (optional but recommended)\n\n---\n\n## Rollback Procedure\n\nIf critical issues arise during the upgrade, follow this rollback sequence:\n\n### Rollback Node Pools (if in-progress)\n```bash\n# Stop ongoing node pool upgrade\ngcloud container node-pools update POOL_NAME \\\n  --cluster CLUSTER_NAME \\\n  --zone us-central1-a \\\n  --no-enable-autoupgrade\n```\n\n**Limitation:** Once a node pool has completed upgrading to 1.30, you cannot automatically rollback the nodes to 1.29. You must either:\n- Create a new node pool at 1.29 and migrate workloads\n- Or, accept the upgrade and troubleshoot the issue\n\n### Rollback Control Plane (if critical)\nIf the control plane upgrade introduces a critical bug:\n```bash\ngcloud container clusters upgrade CLUSTER_NAME \\\n  --zone us-central1-a \\\n  --master \\\n  --cluster-version 1.29\n```\n\n**Important:** Control plane downgrades are rare and not recommended unless there is a critical security or stability issue. Contact GKE support before attempting.\n\n### Recovery from Postgres Data Issues\nIf the Postgres upgrade causes data corruption or operator issues:\n1. Restore from backup: `kubectl apply -f <backup-manifest>`\n2. Verify data integrity before proceeding\n3. Document root cause and escalate to support if needed\n\n---\n\n## Common Issues & Troubleshooting\n\n### Upgrade Stuck on Node Pool\n\n**Symptom:** Node pool upgrade hangs, no nodes transitioning to new version\n\n**Root cause:** PDB is too restrictive; GKE cannot drain nodes\n\n**Resolution:**\n```bash\n# Check for blocking PDBs\nkubectl get pdb --all-namespaces\n\n# Identify which workloads are protected\nkubectl get pdb -n <namespace> -o yaml\n\n# If PDB is blocking safely-upgradeable workloads, temporarily adjust:\nkubectl patch pdb <pdb-name> -n <namespace> -p '{\"spec\":{\"minAvailable\":0}}'\n\n# Retry upgrade after adjustment (then restore PDB afterward)\n```\n\n### Pods Not Rescheduling After Node Drain\n\n**Symptom:** Pods remain in `Pending` state after nodes are cordoned\n\n**Root cause:** Cluster is at capacity; no room for pods to reschedule\n\n**Resolution:**\n```bash\n# Check resource availability\nkubectl describe nodes | grep -A 5 \"Allocated resources\"\n\n# Increase surge capacity temporarily\ngcloud container node-pools update POOL_NAME \\\n  --cluster CLUSTER_NAME \\\n  --zone us-central1-a \\\n  --max-surge-upgrade 3  # Increase surge\n\n# Restart the upgrade\ngcloud container node-pools upgrade POOL_NAME \\\n  --cluster CLUSTER_NAME \\\n  --zone us-central1-a \\\n  --cluster-version TARGET_VERSION\n```\n\n### GPU Nodes Not Joining Cluster\n\n**Symptom:** GPU nodes stay in NotReady state after upgrade\n\n**Root cause:** NVIDIA driver mismatch between node image and workload requirement\n\n**Resolution:**\n```bash\n# SSH to a GPU node and check driver version\ngcloud compute ssh <node-name> --zone us-central1-a -- nvidia-smi\n\n# Verify expected driver version matches workload requirement\n# If mismatch, contact GKE support to confirm node image includes correct driver for 1.30\n\n# Alternatively, create a new GPU node pool with correct image\ngcloud container node-pools create gpu-pool-v130 \\\n  --cluster CLUSTER_NAME \\\n  --zone us-central1-a \\\n  --num-nodes 0 \\\n  --machine-type n1-highmem-4 \\\n  --accelerator=type=nvidia-tesla-v100,count=1 \\\n  --cluster-version 1.30\n```\n\n### API Deprecation Errors After Upgrade\n\n**Symptom:** Workloads fail with `the server could not find the requested resource` or similar API errors\n\n**Root cause:** Client or admission webhook is calling a deprecated API that was removed in 1.30\n\n**Resolution:**\n```bash\n# Identify deprecated API usage\nkubectl get --raw /metrics | grep apiserver_request_total | grep deprecated\n\n# Check validating webhooks\nkubectl get validatingwebhookconfigurations\nkubectl get mutatingwebhookconfigurations\n\n# Update manifests to use non-deprecated API versions\n# Restart affected workloads after manifest update\nkubectl rollout restart deployment <deployment-name> -n <namespace>\n\n# If an admission webhook is blocking, check logs:\nkubectl logs -n <webhook-namespace> <webhook-pod> -f\n```\n\n### Postgres Operator Reconciliation Delays\n\n**Symptom:** Postgres StatefulSet pods stay in Pending for extended period (>5 minutes)\n\n**Root cause:** Operator is slow to react to node drain, or PDB is too restrictive\n\n**Resolution:**\n```bash\n# Check operator logs\nkubectl logs -n postgres-namespace -l app=postgres-operator -f\n\n# Verify PDB allows at least 1 pod to run\nkubectl get pdb -n postgres-namespace -o yaml\n\n# If operator is stuck, restart it\nkubectl rollout restart deployment postgres-operator -n postgres-namespace\n\n# Retry upgrade\n```\n\n---\n\n## Timeline & Milestones\n\n| Phase | Duration | Target Completion | Notes |\n|-------|----------|-------------------|-------|\n| **Phase 1:** Control plane 1.28 \u2192 1.29 | ~20 min | Week 1 (by Mar 24) | Includes 24h soak time |\n| **Phase 2a:** General-purpose pool 1.29 | ~15 min | Week 2 (by Mar 31) | Lowest risk, proceed quickly |\n| **Phase 2b:** GPU pool 1.29 | ~20 min | Week 2 (by Mar 31) | Coordinate ML workload downtime |\n| **Phase 2c:** Postgres pool 1.29 | ~30 min | Week 3 (by Apr 7) | Includes 24h soak time |\n| **Phase 3:** Control plane 1.29 \u2192 1.30 | ~20 min | Week 3 (by Apr 7) | Includes 24h soak time |\n| **Phase 4a\u20134c:** Node pools 1.29 \u2192 1.30 | ~1 hour total | Week 4 (by Apr 14) | Final push to 1.30 |\n| **Post-upgrade validation & signoff** | ~1 week | By Apr 21 | Smoke tests, monitoring, documentation |\n\n**End of quarter deadline (Mar 31):** Cluster should be at 1.30 by this date.\n\n---\n\n## Decision Checkpoints\n\nBefore each phase, confirm:\n\n1. **No production incidents in progress** \u2014 upgrade during stable operational period\n2. **Workloads are healthy** \u2014 no CrashLoopBackOff pods or alerts\n3. **Monitoring is active** \u2014 metrics, logs, and alerts in place\n4. **Stakeholder approval** \u2014 team lead/SRE confirms green light\n5. **On-call team ready** \u2014 engineer assigned and available for post-upgrade monitoring\n\n---\n\n## Contacts & Escalation\n\n| Role | Responsibility |\n|------|-----------------|\n| **Cluster owner** | Approves timeline, communicates to stakeholders |\n| **SRE/Platform engineer** | Executes upgrade, monitors progress, troubleshoots |\n| **Postgres team** | Verifies operator compatibility, backup status |\n| **ML/Data team** | Coordinates GPU workload pause/resume |\n| **On-call engineer** | Monitors post-upgrade for 24 hours |\n| **GKE support** | Escalation point for driver issues, critical bugs |\n\n---\n\n## Appendix: Useful Commands\n\n```bash\n# Get cluster version info\ngcloud container clusters describe CLUSTER_NAME --zone us-central1-a\n\n# List available versions for release channel\ngcloud container get-server-config --zone us-central1-a --format=\"yaml(channels)\"\n\n# Check node pool versions\ngcloud container node-pools list --cluster CLUSTER_NAME --zone us-central1-a\n\n# Monitor node pool upgrade progress (in real-time)\nwatch 'kubectl get nodes -L cloud.google.com/gke-nodepool'\n\n# Check PDB status\nkubectl get pdb --all-namespaces\n\n# Check for pods without controllers\nkubectl get pods --all-namespaces --field-selector=metadata.ownerReferences=null\n\n# Monitor system pods\nkubectl get pods -n kube-system -o wide --watch\n\n# Check API server metrics for deprecated API calls\nkubectl get --raw /metrics | grep apiserver_request_total\n\n# Restart a deployment to force pod rescheduling\nkubectl rollout restart deployment <name> -n <namespace>\n\n# Drain a node manually (if needed for emergency)\nkubectl drain <node-name> --ignore-daemonsets --delete-emptydir-data\n```\n\n---\n\n## Document History\n\n| Version | Date | Author | Changes |\n|---------|------|--------|---------|\n| 1.0 | 2026-03-18 | GKE Upgrade Planner | Initial plan (1.28 \u2192 1.30 sequential upgrade) |\n\n---\n\n**This plan should be reviewed and approved by the cluster owner and on-call team before execution. Update placeholder fields (CLUSTER_NAME, namespaces, contact names) with actual values.**\n"}], "grading": {"expectations": [{"text": "Recommends sequential upgrade path (1.28\u21921.29\u21921.30) rather than skipping", "passed": true, "evidence": "Explicitly recommends '1.28 \u2192 1.29 \u2192 1.30 (sequential upgrades recommended)' and includes both Phase 1 (1.28\u21921.29) and Phase 3 (1.29\u21921.30)"}, {"text": "Specifies control plane upgrades before node pool upgrades", "passed": true, "evidence": "Phase 1 is control plane, then Phases 2a/2b/2c are node pools. States 'control plane must lead'"}, {"text": "Provides different node pool upgrade ordering with rationale for the sequence", "passed": true, "evidence": "Orders: general-purpose (lowest risk, stateless) \u2192 GPU (moderate risk, batch) \u2192 Postgres (highest risk, stateful). Clear rationale for each."}, {"text": "Includes specific surge upgrade settings (maxSurge/maxUnavailable) for each pool", "passed": true, "evidence": "General: maxSurge=2, maxUnavailable=0. GPU: maxSurge=1, maxUnavailable=0. Postgres: maxSurge=1, maxUnavailable=0. Each with rationale."}, {"text": "Addresses Postgres-specific concerns (PDB, backup, operator compatibility, PV reclaim)", "passed": true, "evidence": "Dedicated section with PDB example YAML, operator compatibility checks, CRD verification, backup steps, and PV reclaim policy verification command."}, {"text": "Addresses GPU-specific concerns (driver compatibility, workload coordination)", "passed": true, "evidence": "Section on GPU workload compatibility with NVIDIA driver checks, CUDA version, long-running job coordination, and GPU resource request verification."}, {"text": "Includes actual gcloud commands for the upgrade steps", "passed": true, "evidence": "Full gcloud commands for each phase: cluster upgrade, node-pool update (surge settings), node-pool upgrade, and get-server-config."}, {"text": "Provides a pre-upgrade checklist", "passed": true, "evidence": "Comprehensive checkbox-style pre-upgrade checklist covering version checks, workload readiness, backup, infrastructure, and communication."}, {"text": "Provides a post-upgrade checklist with validation commands", "passed": true, "evidence": "Post-upgrade checklist with kubectl and gcloud commands for cluster health, workload health, observability, and cleanup."}, {"text": "Includes rollback procedure or guidance", "passed": true, "evidence": "Dedicated 'Rollback Procedure' section covering node pool rollback, control plane rollback, and Postgres recovery."}], "summary": {"passed": 10, "failed": 0, "total": 10, "pass_rate": 1.0}}}, {"id": "standard-upgrade-plan-without_skill", "prompt": "We have a Standard GKE cluster on the Regular release channel running 1.28 in us-central1-a. We need to upgrade to 1.30 before end of quarter. We have 3 node pools -- a general-purpose pool, a high-memory pool for our Postgres operator, and a GPU pool for ML inference. Can you put together an upgrade plan?", "eval_id": 1, "outputs": [{"name": "upgrade-plan.md", "type": "text", "content": "# GKE Cluster Upgrade Plan: 1.28 \u2192 1.30\n\n**Cluster Details:**\n- Cluster Type: Standard GKE\n- Release Channel: Regular\n- Region: us-central1-a\n- Current Version: 1.28\n- Target Version: 1.30\n- Deadline: End of Q1 2026 (March 31, 2026)\n- Node Pools: 3 (General-Purpose, High-Memory, GPU)\n\n---\n\n## Executive Summary\n\nThis plan outlines the safe migration of your GKE cluster from Kubernetes 1.28 to 1.30, accounting for two minor version upgrades with careful attention to workload compatibility and zero-downtime principles. The upgrade must be completed by March 31, 2026 (13 days from today).\n\n---\n\n## Pre-Upgrade Assessment\n\n### 1.1 Timeline Considerations\n\n**Critical:** Only 13 days remain until the deadline. Recommend immediate action to avoid delays.\n\n- Pre-upgrade testing should begin immediately\n- Schedule upgrade windows during off-peak hours\n- Allocate 2-3 days for the full upgrade process (control plane + 3 node pools)\n\n### 1.2 API Deprecations Review\n\n**Between 1.28 and 1.30, monitor for:**\n\n- **Kubernetes 1.29 changes:**\n  - ValidatingAdmissionPolicy graduates to stable (watch for webhook configurations)\n  - PodDisruptionBudget v1beta1 deprecated (use v1)\n  - Node feature discovery API updates\n  - Windows container runtime improvements\n\n- **Kubernetes 1.30 changes:**\n  - Further PDB API stabilization\n  - Pod resources API improvements\n  - Enhanced workload identity features\n  - Potential container runtime updates on nodes\n\n**Action Items:**\n- Audit your applications for PodDisruptionBudget v1beta1 usage \u2192 migrate to v1\n- Review any ValidatingAdmissionPolicy webhook configurations\n- Test webhook and CustomResourceDefinition compatibility\n- Check for deprecated APIs: `kubectl api-resources --verbs=list --namespaced=false | grep -i deprecated`\n\n### 1.3 Cluster Readiness Checklist\n\n- [ ] Backup critical cluster configurations and etcd (if using custom etcd)\n- [ ] Verify GKE Backup & Disaster Recovery is enabled\n- [ ] Document current workload resource utilization (CPU/memory)\n- [ ] Identify critical workloads requiring Pod Disruption Budgets\n- [ ] Verify PodDisruptionBudget coverage for Postgres operator and ML services\n- [ ] Test cluster autoscaling behavior under load\n- [ ] Confirm adequate node pool capacity for rolling updates\n- [ ] Review and test any custom DaemonSets compatibility with new Kubernetes versions\n- [ ] Document current network policies and ingress configurations\n- [ ] Verify all operator versions are compatible with target Kubernetes versions\n\n---\n\n## Upgrade Strategy\n\n### 2.1 Recommended Approach: Phased Control Plane + Rolling Node Pool Upgrades\n\nThis strategy minimizes risk and ensures workload continuity:\n\n1. **Phase 1 (Day 1-2):** Control plane upgrade (1.28 \u2192 1.30)\n2. **Phase 2 (Day 3-4):** General-purpose node pool upgrade\n3. **Phase 3 (Day 5-6):** High-memory node pool upgrade (Postgres)\n4. **Phase 4 (Day 7):** GPU node pool upgrade\n5. **Phase 5 (Day 8):** Validation and post-upgrade testing\n\n**Rationale:**\n- Control plane upgrade is rapid and has minimal impact during rolling updates\n- General-purpose pool typically handles diverse workloads (safe to upgrade first)\n- Postgres pool has lower tolerance for disruption (upgrade with careful PDB validation)\n- GPU pool typically has fewer/larger workloads (upgrade last, monitor carefully)\n\n### 2.2 GKE Automatic Upgrades Consideration\n\n**Important Decision Point:**\n\nIf you have automatic upgrades enabled:\n- Control plane auto-upgrades occur on a fixed schedule\n- You can choose to manually initiate immediately or wait for automatic window\n- **Recommendation:** Manually trigger upgrade now to control the timing given your tight deadline\n\nTo manually initiate: Navigate to GKE cluster details \u2192 \"Upgrade Now\" button on the cluster\n\n### 2.3 Node Pool Upgrade Windows\n\nRecommended upgrade sequence and estimated duration:\n\n```\nDay 1-2:   Control plane: 1.28 \u2192 1.30 (1-2 hours, nodes continue running)\nDay 3-4:   General-purpose pool (rolling 33% at a time, ~2-4 hours)\nDay 5-6:   High-memory pool (rolling 33% at a time, ~2-4 hours)\nDay 7:     GPU pool (rolling 25% at a time, ~2-3 hours)\nDay 8:     Post-upgrade validation and rollback plan deactivation\n```\n\n---\n\n## Phase-by-Phase Implementation\n\n### Phase 1: Control Plane Upgrade (1.28 \u2192 1.30)\n\n**Duration:** 1-2 hours (expect 30-60 minutes of brief API server unavailability during transition)\n\n**Steps:**\n\n1. **Pre-upgrade validation:**\n   ```bash\n   # Check current API server and components\n   kubectl get nodes -o wide\n   kubectl get componentstatuses\n\n   # Verify cluster can schedule pods\n   kubectl get pods -A --field-selector=status.phase!=Running,status.phase!=Succeeded\n   ```\n\n2. **Trigger control plane upgrade via gcloud CLI:**\n   ```bash\n   gcloud container clusters upgrade CLUSTER_NAME \\\n     --master \\\n     --cluster-version=1.30.0-gke.0 \\\n     --zone=us-central1-a\n   ```\n\n   OR use Google Cloud Console \u2192 Cluster Details \u2192 \"Upgrade\" button\n\n3. **Monitor upgrade progress:**\n   ```bash\n   # Watch control plane status (will briefly show unavailability)\n   watch kubectl get nodes\n\n   # Monitor system pod restarts\n   kubectl get pods -n kube-system -w\n   ```\n\n4. **Post-upgrade verification:**\n   ```bash\n   # Verify control plane version\n   kubectl version --short\n\n   # Check cluster health\n   kubectl cluster-info\n   kubectl top nodes\n\n   # Verify system pods are running\n   kubectl get pods -n kube-system\n   ```\n\n### Phase 2: General-Purpose Node Pool Upgrade\n\n**Duration:** 2-4 hours\n\n**Node pool name:** `general-purpose` (adjust if different)\n\n**Steps:**\n\n1. **Pre-upgrade health check:**\n   ```bash\n   # Verify pod distribution across nodes\n   kubectl get pods -A -o wide | grep general-purpose-pool\n\n   # Check for any pending pods\n   kubectl get pods -A --field-selector=status.phase=Pending\n   ```\n\n2. **Enable surge upgrade to speed up process (optional but recommended):**\n   ```bash\n   gcloud container node-pools update general-purpose \\\n     --cluster=CLUSTER_NAME \\\n     --zone=us-central1-a \\\n     --surge-upgrade \\\n     --max-surge-upgrade=1 \\\n     --max-unavailable-upgrade=0\n   ```\n\n3. **Trigger node pool upgrade:**\n   ```bash\n   gcloud container node-pools upgrade general-purpose \\\n     --cluster=CLUSTER_NAME \\\n     --zone=us-central1-a \\\n     --cluster-version=1.30.0-gke.0\n   ```\n\n4. **Monitor upgrade:**\n   ```bash\n   # Watch node status in real-time\n   watch kubectl get nodes -L cloud.google.com/gke-nodepool\n\n   # Monitor pod rescheduling\n   kubectl get events -A --sort-by='.lastTimestamp' -w\n   ```\n\n5. **Verify upgrade completion:**\n   ```bash\n   gcloud container node-pools describe general-purpose \\\n     --cluster=CLUSTER_NAME \\\n     --zone=us-central1-a | grep version\n   ```\n\n### Phase 3: High-Memory Node Pool Upgrade (Postgres Operator)\n\n**Duration:** 2-4 hours (upgrade more conservatively due to database workload)\n\n**Node pool name:** `high-memory` (adjust if different)\n\n**Pre-upgrade considerations:**\n\n- Postgres operator typically runs with StatefulSets and persistent volumes\n- Ensure PodDisruptionBudgets are configured for your Postgres instances\n- Coordinate with database team to prepare for potential pod restarts\n\n**Steps:**\n\n1. **Validate Postgres operator readiness:**\n   ```bash\n   # Identify Postgres instances on this pool\n   kubectl get statefulsets -A -o wide | grep postgres\n\n   # Check PodDisruptionBudget coverage\n   kubectl get pdb -A\n\n   # Verify persistent volume availability\n   kubectl get pvc -A\n   ```\n\n2. **Ensure Postgres has failover capability (if applicable):**\n   ```bash\n   # Check for replicas in high-memory pool\n   kubectl get pods -A -L cloud.google.com/gke-nodepool | grep high-memory\n   ```\n\n3. **Optional: Update surge settings for controlled rollout:**\n   ```bash\n   gcloud container node-pools update high-memory \\\n     --cluster=CLUSTER_NAME \\\n     --zone=us-central1-a \\\n     --max-surge-upgrade=1 \\\n     --max-unavailable-upgrade=0\n   ```\n\n4. **Trigger upgrade:**\n   ```bash\n   gcloud container node-pools upgrade high-memory \\\n     --cluster=CLUSTER_NAME \\\n     --zone=us-central1-a \\\n     --cluster-version=1.30.0-gke.0\n   ```\n\n5. **Monitor with focus on database health:**\n   ```bash\n   # Watch for Pod restarts\n   kubectl get pods -A -w -L cloud.google.com/gke-nodepool | grep high-memory\n\n   # Check database logs\n   kubectl logs -n POSTGRES_NAMESPACE -l app=postgres -f --tail=50\n\n   # Monitor persistent volumes\n   kubectl get pv\n   ```\n\n6. **Post-upgrade database validation:**\n   ```bash\n   # Connect to database and validate\n   kubectl exec -it POD_NAME -n POSTGRES_NAMESPACE -- psql -c \"SELECT version();\"\n   ```\n\n### Phase 4: GPU Node Pool Upgrade\n\n**Duration:** 2-3 hours\n\n**Node pool name:** `gpu` (adjust if different)\n\n**Pre-upgrade considerations:**\n\n- GPU workloads are often long-running ML inference jobs\n- Pod eviction during upgrade may interrupt in-flight predictions\n- Ensure adequate PodDisruptionBudgets for critical ML services\n\n**Steps:**\n\n1. **Assess current GPU workload:**\n   ```bash\n   # Check GPU utilization\n   kubectl top nodes -L cloud.google.com/gke-nodepool | grep gpu\n\n   # List GPU-bound pods\n   kubectl get pods -A -o json | jq '.items[] | select(.spec.containers[].resources.limits.\"nvidia.com/gpu\") | {namespace: .metadata.namespace, name: .metadata.name}'\n   ```\n\n2. **Configure upgrade parameters (conservative for stateful workloads):**\n   ```bash\n   gcloud container node-pools update gpu \\\n     --cluster=CLUSTER_NAME \\\n     --zone=us-central1-a \\\n     --max-surge-upgrade=1 \\\n     --max-unavailable-upgrade=0\n   ```\n\n3. **Trigger upgrade:**\n   ```bash\n   gcloud container node-pools upgrade gpu \\\n     --cluster=CLUSTER_NAME \\\n     --zone=us-central1-a \\\n     --cluster-version=1.30.0-gke.0\n   ```\n\n4. **Monitor upgrade:**\n   ```bash\n   # Watch GPU node status\n   watch kubectl get nodes -L cloud.google.com/gke-nodepool,nvidia.com/gpu\n\n   # Monitor GPU workload rescheduling\n   kubectl get pods -A -w -L cloud.google.com/gke-nodepool | grep gpu\n\n   # Check for GPU allocation errors\n   kubectl describe nodes | grep -A 10 \"nvidia.com/gpu\"\n   ```\n\n5. **Post-upgrade GPU validation:**\n   ```bash\n   # Verify GPU availability\n   kubectl describe nodes -l cloud.google.com/gke-nodepool=gpu | grep nvidia.com/gpu\n\n   # Run a test GPU workload\n   kubectl run gpu-test --image=nvidia/cuda:11.0.3-runtime-ubuntu20.04 --limits='nvidia.com/gpu=1' -- nvidia-smi\n   ```\n\n---\n\n## Risk Mitigation & Rollback\n\n### 3.1 Pre-Upgrade Backup Strategy\n\n1. **Create GKE cluster backup:**\n   ```bash\n   # If using GKE Backup & Disaster Recovery\n   gcloud container backup-restore backups create pre-upgrade-backup \\\n     --cluster=CLUSTER_NAME \\\n     --location=us-central1\n   ```\n\n2. **Backup critical resources:**\n   ```bash\n   # Export key resources\n   kubectl get all,cm,secrets,pvc -A -o yaml > cluster-backup-$(date +%Y%m%d).yaml\n   ```\n\n3. **Document current state:**\n   ```bash\n   # Save cluster configuration\n   gcloud container clusters describe CLUSTER_NAME --zone=us-central1-a > cluster-config.json\n\n   # Export node pool configurations\n   gcloud container node-pools list --cluster=CLUSTER_NAME --zone=us-central1-a\n   ```\n\n### 3.2 Handling Pod Disruptions\n\n**Best Practices:**\n\n1. **Ensure Pod Disruption Budgets (PDB) are defined:**\n   - Critical services: `minAvailable: 1`\n   - General services: `maxUnavailable: 1`\n   - Non-critical: Can omit or set `maxUnavailable: 100%`\n\n2. **Verify PDB coverage:**\n   ```bash\n   # List all PDBs\n   kubectl get pdb -A\n\n   # Identify workloads without PDB\n   kubectl get deployments,statefulsets -A -o json | \\\n     jq '.items[] | select(.metadata.labels.pdb == null) | {namespace: .metadata.namespace, name: .metadata.name}'\n   ```\n\n3. **Create PDBs for critical workloads before upgrade:**\n   ```yaml\n   apiVersion: policy/v1\n   kind: PodDisruptionBudget\n   metadata:\n     name: postgres-pdb\n     namespace: default\n   spec:\n     minAvailable: 1\n     selector:\n       matchLabels:\n         app: postgres\n   ```\n\n### 3.3 Rollback Plan\n\n**If critical issues arise:**\n\n1. **GKE does NOT support downgrading cluster versions directly**. Instead:\n\n   - Use GKE Backup & Disaster Recovery to restore to pre-upgrade backup\n   - Create a new cluster from snapshot if backup available\n   - Migrate workloads back if partial rollback needed\n\n2. **Abort upgrade process:**\n   - Stop node pool upgrades immediately (gcloud CLI)\n   - Wait for ongoing upgrades to complete/fail\n   - Revert to 1.28 control plane only if critical issues detected (contact GKE support)\n\n3. **Contact Google Cloud Support if:**\n   - Control plane upgrade fails or gets stuck\n   - Critical APIs become unavailable post-upgrade\n   - Multiple node pools fail upgrade simultaneously\n   - Production workloads show critical errors\n\n---\n\n## Compatibility & Testing\n\n### 4.1 Pre-Upgrade Testing\n\n**Recommended test sequence (run immediately, before production upgrade):**\n\n1. **Test cluster upgrade in non-prod environment:**\n   - Create a temporary test cluster with same configuration\n   - Upgrade test cluster from 1.28 \u2192 1.30\n   - Deploy sample workloads from production\n   - Verify workload behavior\n\n2. **Application compatibility testing:**\n   ```bash\n   # Test deployments\n   kubectl rollout restart deployment/DEPLOYMENT_NAME -n NAMESPACE\n\n   # Verify application health checks\n   kubectl get pods -A --field-selector=status.phase!=Running,status.phase!=Succeeded\n   ```\n\n3. **Custom resource compatibility:**\n   ```bash\n   # Check for CRD conflicts\n   kubectl api-resources | grep -v kubeadm\n\n   # Validate all CRDs\n   kubectl get crd -o json | jq '.items[].metadata.name'\n   ```\n\n### 4.2 Known Compatibility Issues (1.28 \u2192 1.30)\n\n**Container Runtime:**\n- Node image will be updated (likely GKE Ubuntu or COS)\n- Existing containers continue running\n- Monitor daemon processes during node upgrade\n\n**Networking:**\n- Network policies remain compatible\n- Service mesh (if used) may have minor version requirements\n- CNI plugins (Calico, Weave, etc.) should be compatible\n\n**Storage:**\n- PersistentVolume APIs remain stable\n- StatefulSet behavior unchanged\n- Verify backup/restore procedures work post-upgrade\n\n**Monitoring & Logging:**\n- Prometheus/Grafana: Monitor scrape targets post-upgrade\n- Fluent Bit/Logstash: Verify log delivery continues\n- GKE Metrics: System metrics dashboards should show no gaps\n\n---\n\n## Post-Upgrade Validation\n\n### 5.1 Cluster Health Verification\n\n**Immediately after entire upgrade:**\n\n```bash\n# 1. Verify cluster version\nkubectl version --short\n\n# 2. Check node health\nkubectl get nodes -o wide\nkubectl top nodes\n\n# 3. Verify system pods\nkubectl get pods -n kube-system -o wide\nkubectl get pods -n gke-system -o wide\n\n# 4. Check persistent volumes\nkubectl get pv,pvc -A\n\n# 5. Verify networking\nkubectl get services -A\nkubectl get ingress -A\n\n# 6. Check for API deprecation warnings\nkubectl api-resources\n\n# 7. Monitor cluster events for errors\nkubectl get events -A --sort-by='.lastTimestamp' | tail -20\n```\n\n### 5.2 Workload Health Verification\n\n**By workload type:**\n\n**General-purpose workloads:**\n```bash\n# Check deployment replicas are ready\nkubectl get deployments -A\n\n# Verify no pending pods\nkubectl get pods -A --field-selector=status.phase=Pending\n```\n\n**Postgres Operator:**\n```bash\n# Check statefulset status\nkubectl get statefulsets -n POSTGRES_NAMESPACE\n\n# Verify database connections working\nkubectl exec -it POSTGRES_POD -n POSTGRES_NAMESPACE -- psql -c \"SELECT 1;\"\n\n# Check for replication lag\nkubectl exec -it POSTGRES_POD -n POSTGRES_NAMESPACE -- psql -c \"SELECT pg_last_wal_receive_lsn();\"\n```\n\n**GPU workloads:**\n```bash\n# Verify GPU allocation\nkubectl describe nodes -l cloud.google.com/gke-nodepool=gpu | grep nvidia.com/gpu\n\n# Test GPU availability\nkubectl run gpu-test --image=nvidia/cuda:11.0.3-runtime-ubuntu20.04 \\\n  --limits='nvidia.com/gpu=1' -- nvidia-smi\n```\n\n### 5.3 Performance Baseline\n\n**Compare against pre-upgrade metrics:**\n\n```bash\n# Memory usage\nkubectl top nodes\n\n# CPU usage\nkubectl top pods -A | head -20\n\n# Network throughput\n# (use your monitoring solution - Prometheus, Cloud Monitoring, etc.)\n\n# Disk I/O for Postgres\n# (monitor PersistentVolume performance in Cloud Monitoring)\n```\n\n---\n\n## Timeline Summary\n\n| Date | Phase | Tasks | Duration | Owner |\n|------|-------|-------|----------|-------|\n| **Day 1** | Pre-Upgrade | Create backup, verify PDBs, test compatibility | 4-6 hours | DevOps/SRE |\n| **Day 2** | Control Plane | Upgrade control plane 1.28 \u2192 1.30, validate APIs | 1-2 hours | DevOps/SRE |\n| **Day 3-4** | General Pool | Upgrade general-purpose node pool | 2-4 hours | DevOps/SRE |\n| **Day 5-6** | High-Memory Pool | Upgrade Postgres node pool with database team | 2-4 hours | DevOps/SRE + DB Team |\n| **Day 7** | GPU Pool | Upgrade GPU node pool, validate ML services | 2-3 hours | DevOps/SRE + ML Team |\n| **Day 8** | Post-Upgrade | Full validation, performance testing, cleanup | 4-6 hours | DevOps/SRE + App Teams |\n| **Day 9-13** | Buffer | Monitoring, hotfix window if needed | Ongoing | On-call |\n\n**Total Active Time:** 13-25 hours over 8 days\n**Deadline:** March 31, 2026 (13 days remaining)\n\n---\n\n## Communication Plan\n\n### 6.1 Pre-Upgrade Announcements\n\n**48 hours before control plane upgrade:**\n- Notify all teams: upgrade window scheduled\n- Expected maintenance window: 1-2 hours for each phase\n- Possible pod restarts on non-critical workloads\n\n**24 hours before:**\n- Final confirmation of maintenance window\n- Request teams run health checks on their workloads\n\n### 6.2 During Upgrade\n\n- Real-time status updates on #incident or #sre-operations Slack channel\n- Post updates every 15-30 minutes during active upgrade windows\n- Alert teams immediately if issues detected\n\n### 6.3 Post-Upgrade\n\n- Announcement when each node pool is fully upgraded\n- Request feedback on workload health\n- Schedule retrospective if any issues occurred\n\n---\n\n## Troubleshooting Guide\n\n### Common Issues & Solutions\n\n| Issue | Symptoms | Solution |\n|-------|----------|----------|\n| **Pod eviction failures** | Pods stuck in `Terminating` state | Check PDB configurations; increase grace period if needed |\n| **Node upgrade timeout** | Nodes stuck in `NotReady` state after 30+ min | Check node system logs; restart kubelet if needed |\n| **GPU allocation errors** | GPU pods can't schedule post-upgrade | Restart GPU device plugin: `kubectl delete pod -n kube-system -l app=nvidia-device-plugin` |\n| **API deprecation errors** | Workloads fail with API version errors | Migrate resources to stable API versions (v1 instead of v1beta1) |\n| **Postgres connection loss** | Database pods become unreachable | Check PersistentVolume mounting; verify network policies |\n| **Control plane timeout** | API server unavailable during upgrade | Wait 5-10 minutes; control plane typically recovers automatically |\n\n---\n\n## Approval & Sign-Off\n\n**Plan Prepared By:** GKE DevOps Team\n**Date Prepared:** 2026-03-18\n**Review Required From:**\n- [ ] Platform Engineering Lead\n- [ ] Database Administrator (Postgres)\n- [ ] ML Engineering Lead (GPU workloads)\n- [ ] Security/Compliance (if applicable)\n\n**Final Approval:** _____________________ Date: _______\n\n**Execution Lead:** _____________________ Date: _______\n\n---\n\n## References & Documentation\n\n- [GKE Release Notes for 1.29 & 1.30](https://cloud.google.com/kubernetes-engine/docs/release-notes)\n- [GKE Cluster Upgrades Guide](https://cloud.google.com/kubernetes-engine/docs/how-to/upgrading-a-cluster)\n- [Kubernetes 1.29 Deprecations](https://kubernetes.io/docs/reference/using-api/deprecation-guide/#v1-29)\n- [Kubernetes 1.30 Release Notes](https://kubernetes.io/blog/2024/04/release-kubernetes-v1-30/)\n- [Pod Disruption Budgets](https://kubernetes.io/docs/tasks/run-application/configure-pdb/)\n- [GKE Node Pool Management](https://cloud.google.com/kubernetes-engine/docs/concepts/node-pools)\n"}], "grading": {"expectations": [{"text": "Recommends sequential upgrade path (1.28\u21921.29\u21921.30) rather than skipping", "passed": false, "evidence": "Upgrades control plane directly from 1.28 to 1.30 in one step: 'Control plane upgrade (1.28 \u2192 1.30)'. Does not recommend sequential minor version upgrades."}, {"text": "Specifies control plane upgrades before node pool upgrades", "passed": true, "evidence": "Phase 1 is control plane, Phases 2-4 are node pools."}, {"text": "Provides different node pool upgrade ordering with rationale for the sequence", "passed": true, "evidence": "Orders: general-purpose \u2192 high-memory (Postgres) \u2192 GPU. Provides rationale for each."}, {"text": "Includes specific surge upgrade settings (maxSurge/maxUnavailable) for each pool", "passed": false, "evidence": "Only provides maxSurge=1, maxUnavailable=0 as a generic setting. Does not differentiate settings per pool or explain tradeoffs."}, {"text": "Addresses Postgres-specific concerns (PDB, backup, operator compatibility, PV reclaim)", "passed": true, "evidence": "Covers StatefulSet checks, PDB, PVC verification, database connectivity testing. Though less detailed than with-skill version."}, {"text": "Addresses GPU-specific concerns (driver compatibility, workload coordination)", "passed": true, "evidence": "Includes GPU allocation checks, nvidia-smi test, and GPU availability validation."}, {"text": "Includes actual gcloud commands for the upgrade steps", "passed": true, "evidence": "Provides gcloud commands for cluster upgrade, node-pool update, and node-pool upgrade."}, {"text": "Provides a pre-upgrade checklist", "passed": true, "evidence": "Section 1.3 'Cluster Readiness Checklist' with checkbox items."}, {"text": "Provides a post-upgrade checklist with validation commands", "passed": true, "evidence": "Section 5 'Post-Upgrade Validation' with kubectl commands for cluster health, workload health, and performance baseline."}, {"text": "Includes rollback procedure or guidance", "passed": true, "evidence": "Section 3.3 'Rollback Plan' covers backup restore, aborting upgrade, and contacting GKE support. Notes that GKE doesn't support downgrading directly."}], "summary": {"passed": 8, "failed": 2, "total": 10, "pass_rate": 0.8}}}, {"id": "autopilot-checklists-with_skill", "prompt": "I manage 4 Autopilot clusters -- 2 in dev on Rapid channel and 2 in prod on Stable. We've been getting notifications that our prod clusters will auto-upgrade from 1.29 to 1.30 next month. Can you give me pre and post upgrade checklists tailored to our setup?", "eval_id": 2, "outputs": [{"name": "checklists.md", "type": "text", "content": "# GKE Autopilot 1.29 \u2192 1.30 Upgrade Checklists\n\n## Overview\n\nThis document provides pre-upgrade and post-upgrade checklists for your Autopilot cluster fleet:\n- **Dev (2 clusters):** Rapid release channel (auto-upgrade controlled by you)\n- **Prod (2 clusters):** Stable release channel (auto-upgrade scheduled for next month)\n\nSince you're running Autopilot, Google manages node upgrades automatically. Your focus shifts to control plane timing, workload compatibility, and validation. These checklists are organized by environment.\n\n---\n\n## Pre-Upgrade Checklist\n\n### Environment & Compatibility\n\n#### Dev Clusters\n- [ ] **Cluster names:** ___________________________\n- [ ] **Current master version:** Confirm 1.29 with:\n  ```bash\n  gcloud container clusters describe CLUSTER_NAME \\\n    --zone ZONE --format=\"value(currentMasterVersion)\"\n  ```\n- [ ] **Target version confirmed available in Rapid channel:** Check [GKE release schedule](https://cloud.google.com/kubernetes-engine/docs/release-schedule)\n- [ ] **Release channel verified:** Rapid\n  ```bash\n  gcloud container clusters describe CLUSTER_NAME \\\n    --zone ZONE --format=\"value(releaseChannel.channel)\"\n  ```\n\n#### Prod Clusters\n- [ ] **Cluster names:** ___________________________\n- [ ] **Current master version:** Confirm 1.29\n- [ ] **Target version confirmed available in Stable channel:** 1.30 should be available in Stable (typically 4\u20136 weeks after Rapid release)\n- [ ] **Release channel verified:** Stable\n- [ ] **Auto-upgrade scheduled date noted:** _______________\n- [ ] **Maintenance window aligns with auto-upgrade window:** Verify your cluster's configured maintenance window covers the auto-upgrade date\n\n### API Deprecation & Compatibility\n\nFor both dev and prod:\n- [ ] **Check for deprecated API usage** in your cluster:\n  ```bash\n  kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated\n  ```\n  If output is non-empty, investigate which controllers/apps are using deprecated APIs.\n\n- [ ] **Review GKE 1.30 release notes** for breaking changes:\n  - Check for removed APIs (if upgrading from 1.29, typically minimal)\n  - Note changes to default behavior or deprecated features becoming unavailable in 1.31\n  - Identify any changes to Autopilot-specific constraints (e.g., resource request validation)\n\n- [ ] **Verify third-party controllers/operators** are compatible with 1.30:\n  - List installed operators: `kubectl get operators --all-namespaces` (if using OLM)\n  - Check vendor documentation or GitHub repos for 1.30 compatibility\n  - Common examples: istio, linkerd, datadog-agent, prometheus-operator, external-dns\n\n- [ ] **Test admission webhooks against target version:**\n  ```bash\n  kubectl get validatingwebhookconfigurations\n  kubectl get mutatingwebhookconfigurations\n  ```\n  For each webhook, confirm the operator/controller is compatible with 1.30.\n\n### Workload Readiness (Both Environments)\n\n#### Pod Disruption Budgets\n- [ ] **PDBs configured for critical workloads:**\n  ```bash\n  kubectl get pdb --all-namespaces\n  ```\n  Verify that critical applications (databases, message brokers, service mesh control planes) have PDBs that allow at least one pod to be available during node maintenance.\n\n- [ ] **PDB configuration is not overly restrictive:**\n  - Avoid `minAvailable: 100%` (blocks all maintenance)\n  - Use `maxUnavailable: 1` or percentage-based settings instead\n\n#### Pod & Workload Health\n- [ ] **No bare pods (pods not managed by a controller):**\n  ```bash\n  kubectl get pods --all-namespaces --field-selector=metadata.ownerReferences=null\n  ```\n  All pods should be owned by a Deployment, StatefulSet, DaemonSet, or Job. Bare pods won't be rescheduled during node upgrades.\n\n- [ ] **Graceful shutdown configured for long-running workloads:**\n  - Check `terminationGracePeriodSeconds` in deployments (default is 30s):\n    ```bash\n    kubectl get deployments --all-namespaces \\\n      -o json | jq '.items[] | select(.spec.template.spec.terminationGracePeriodSeconds < 60)'\n    ```\n  - For workloads that need > 30 seconds to shut down cleanly, increase this value in manifests.\n\n- [ ] **StatefulSet workloads have backups:**\n  ```bash\n  kubectl get statefulsets --all-namespaces\n  ```\n  Verify recent backups exist for any data-bearing StatefulSets (databases, data stores). Confirm PersistentVolume reclaim policies are appropriate.\n\n#### Resource Requests (Autopilot-Specific)\n- [ ] **All containers have resource requests defined:**\n  ```bash\n  kubectl get pods --all-namespaces -o json | jq '.items[] | select(.spec.containers[].resources.requests == null)'\n  ```\n  Autopilot requires CPU and memory requests. If your output shows pods without requests, update their manifests before upgrade.\n\n- [ ] **Resource requests are reasonable:**\n  - No requests set to `1000m` or higher without justification\n  - Memory requests match actual usage patterns to avoid evictions\n\n### Infrastructure & Configuration (Both Environments)\n\n#### Maintenance Windows\n- [ ] **Maintenance window is configured and aligns with your off-peak hours:**\n  ```bash\n  gcloud container clusters describe CLUSTER_NAME \\\n    --zone ZONE --format=\"value(maintenancePolicy)\"\n  ```\n\n- [ ] **For prod clusters:** Confirm your scheduled maintenance window accommodates the auto-upgrade. If not, adjust it now:\n  ```bash\n  gcloud container clusters update CLUSTER_NAME \\\n    --zone ZONE \\\n    --maintenance-window-start YYYY-MM-DDTHH:MM:SS \\\n    --maintenance-window-end YYYY-MM-DDTHH:MM:SS \\\n    --maintenance-window-recurrence RECURRENCE_RULE\n  ```\n\n#### Monitoring & Alerting\n- [ ] **Metrics pipeline is active:**\n  - Cloud Monitoring or Prometheus is collecting cluster metrics\n  - Alert rules for key metrics (API server latency, etcd latency, node readiness) are enabled\n\n- [ ] **Logging is active:**\n  - Cloud Logging or external log aggregation is capturing cluster and application logs\n  - No recent log pipeline errors\n\n- [ ] **Baseline metrics captured:**\n  - Note current error rate, latency (p50, p95, p99), and throughput from your critical services\n  - This is your reference for post-upgrade validation\n\n### Communication & Planning\n\n#### Dev Clusters\n- [ ] **Upgrade window decided:** When will you test the upgrade on dev? (Recommend doing this before prod auto-upgrade)\n- [ ] **Team aware:** Notify dev team that control plane will be unavailable briefly during upgrade\n- [ ] **Rollback plan:** If 1.30 causes issues, rollback by downgrading the control plane (Google can assist). Note: workload rollbacks may be more complex if they've adapted to 1.30 APIs.\n\n#### Prod Clusters\n- [ ] **Auto-upgrade date communicated to stakeholders:** Ops team, app teams, leadership\n- [ ] **Expected downtime window noted:** Control plane will be unavailable for ~5\u201310 minutes. Nodes will be cordoned and drained sequentially (can take 20\u201360 minutes depending on workload count and PDB settings).\n- [ ] **Escalation path documented:** Who to contact if upgrade goes wrong during the scheduled window\n- [ ] **On-call team aware:** Ensure on-call is staffed and available during the maintenance window\n\n---\n\n## Post-Upgrade Checklist\n\n### Cluster Health (Run These Immediately After Upgrade)\n\n#### Version Verification\n- [ ] **Control plane upgraded to 1.30:**\n  ```bash\n  gcloud container clusters describe CLUSTER_NAME \\\n    --zone ZONE --format=\"value(currentMasterVersion)\"\n  ```\n  Expected output: `1.30.x-gke.y`\n\n- [ ] **All nodes at or above 1.28 (within 2 minor versions of control plane):**\n  ```bash\n  gcloud container node-pools list --cluster CLUSTER_NAME --zone ZONE \\\n    --format=\"table(name, version)\"\n  ```\n  In Autopilot, nodes auto-upgrade. Verify all are at least 1.28 (not 1.27 or older).\n\n#### Node & System Pod Health\n- [ ] **All nodes in Ready state:**\n  ```bash\n  kubectl get nodes\n  ```\n  All nodes should show `Ready` in the `STATUS` column. Investigate any `NotReady`, `SchedulingDisabled`, or `Unknown` nodes.\n\n- [ ] **System pods are running:**\n  ```bash\n  kubectl get pods -n kube-system\n  ```\n  Look for the kube-dns, kube-proxy, and gke-metrics-agent pods. All should be in `Running` state.\n\n- [ ] **No stuck Pod Disruption Budgets:**\n  ```bash\n  kubectl get pdb --all-namespaces\n  ```\n  Check the `DISRUPTIONSALLOWED` column. If any show `0` and haven't changed, investigate whether a workload is misconfigured.\n\n#### API Server & Control Plane\n- [ ] **API server is responsive:**\n  ```bash\n  kubectl get nodes\n  ```\n  If this command times out or fails, the API server may still be stabilizing. Wait 2\u20133 minutes and retry.\n\n- [ ] **No API deprecation warnings in recent logs:**\n  ```bash\n  kubectl get --raw /metrics | grep apiserver_request_errors_total\n  ```\n  Should be minimal or zero. If elevated, check what clients are sending invalid requests.\n\n### Workload Health\n\n#### Deployment & StatefulSet Status\n- [ ] **All Deployments at desired replica count:**\n  ```bash\n  kubectl get deployments --all-namespaces --no-headers | awk '{print $1, $2, $3, $4}' | awk '{if ($2 != $4) print \"MISMATCH: \" $0}'\n  ```\n  If any output appears, workloads are still scaling up. Wait 30\u201360 seconds and recheck.\n\n- [ ] **StatefulSets have all replicas ready:**\n  ```bash\n  kubectl get statefulsets --all-namespaces\n  ```\n  `READY` column should match `DESIRED`.\n\n- [ ] **No CrashLoopBackOff or pending pods:**\n  ```bash\n  kubectl get pods --all-namespaces --field-selector=status.phase!=Running,status.phase!=Succeeded\n  ```\n  Any output needs investigation. Common causes:\n  - Image pull errors (check credentials)\n  - Resource constraints (check `kubectl describe pod POD_NAME`)\n  - API compatibility (check pod logs for deprecation errors)\n\n#### Application Health\n- [ ] **Service endpoints are healthy:**\n  ```bash\n  kubectl get endpoints --all-namespaces | grep -v '<none>'\n  ```\n  Services should have endpoints. If a service shows `<none>`, its pods may not be passing readiness checks.\n\n- [ ] **Ingress/LoadBalancer endpoints are responding:**\n  ```bash\n  kubectl get ingress --all-namespaces\n  kubectl get svc --all-namespaces --field-selector=type=LoadBalancer\n  ```\n  For each, verify the external IP is assigned and the service is accessible from a client.\n\n- [ ] **Health checks and readiness probes passing:**\n  ```bash\n  kubectl logs -n NAMESPACE DEPLOYMENT_NAME --tail=50 | grep -i \"readiness\\|liveness\\|health\"\n  ```\n  No repeated failures should appear.\n\n### Observability & Metrics\n\n#### Metrics Pipeline\n- [ ] **Metrics are flowing:**\n  - Check Cloud Monitoring dashboards or Prometheus UI\n  - Verify no large gaps in metric collection around the upgrade window\n  - Confirm `kubelet` and `kube-state-metrics` metrics are present\n\n- [ ] **Error rates within baseline:**\n  ```bash\n  # From Cloud Monitoring or Prometheus, compare current error rates to pre-upgrade baseline\n  # Expected: no more than a small spike during upgrade, then return to normal\n  ```\n  If error rates are elevated 10+ minutes after upgrade, investigate:\n  - Check application logs for API errors\n  - Run deprecated API check again: `kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated`\n\n- [ ] **Latency within baseline:**\n  - API server latency (p50, p95, p99) should return to normal within 5 minutes\n  - Application response times should match pre-upgrade baselines\n\n#### Logging Pipeline\n- [ ] **Logs are flowing to central aggregation:**\n  - Cloud Logging UI shows recent cluster and application logs\n  - No backlog or pipeline errors\n\n- [ ] **Key error patterns from logs:**\n  - Check for `ContainerCannotRun`, `ImagePullBackOff`, or `CrashLoopBackOff` errors\n  - Check for webhook rejections or API validation failures\n  - Investigate any surge in `ERROR` or `CRITICAL` log lines\n\n### Data & State\n\n#### Persistent Data\n- [ ] **PersistentVolumes still mounted and accessible:**\n  ```bash\n  kubectl get pvc --all-namespaces\n  ```\n  All should show `Bound`. If any show `Pending`, investigate.\n\n- [ ] **Database/StatefulSet pods accessing volumes:**\n  ```bash\n  kubectl exec -it -n NAMESPACE POD_NAME -- ls -la /data  # or your mount point\n  ```\n  Verify files are present and readable.\n\n#### Backup Status\n- [ ] **Recent backups of databases/critical data still exist:**\n  - Verify backup job logs show successful runs post-upgrade\n  - Spot-check backup integrity if possible\n\n### Post-Upgrade Cleanup & Documentation\n\n#### Dev Clusters Only\n- [ ] **Testing completed:** Confirm all dev workloads function correctly on 1.30\n- [ ] **Known issues or compatibility notes recorded** for prod team\n- [ ] **Any required manifest updates completed and pushed to repo**\n\n#### Prod Clusters\n- [ ] **Incident severity:** If any issues occurred during auto-upgrade, was a ticket created?\n- [ ] **Upgrade duration recorded:** How long did the upgrade actually take? (Useful for planning future maintenance windows)\n- [ ] **Any PDB blocks or node drain delays noted:** Were there workloads that delayed the upgrade?\n\n#### All Clusters\n- [ ] **Changelog updated:** Document the upgrade date, version, and any issues encountered\n- [ ] **Runbook updated:** If you manually intervened or had to troubleshoot, update your runbook\n- [ ] **Team retrospective scheduled (if any issues):** Discuss what went well and what to improve\n\n---\n\n## Quick Reference: Dev to Prod Rollout Sequence\n\n### Recommended Timeline\n\n1. **Week 1: Dev Clusters**\n   - Manually upgrade control plane on first dev cluster\n   - Run full validation checklist\n   - Allow nodes to auto-upgrade (24 hours typically)\n   - Re-run post-upgrade checklist\n\n2. **Week 1\u20132: Dev Cluster 2**\n   - Repeat with second dev cluster\n   - Validate compatibility across your full workload mix\n   - Document any issues or required manifest changes\n\n3. **Week 2\u20133: Prod Preparation**\n   - Apply any manifest fixes discovered in dev\n   - Final compatibility review\n   - Communicate auto-upgrade timing to stakeholders\n   - Confirm maintenance window\n\n4. **Prod Auto-Upgrade Date (Next Month)**\n   - Control plane auto-upgrades per your release channel schedule\n   - Monitor health continuously\n   - Have on-call team available\n\n---\n\n## Rollback Procedure\n\nIf the upgrade causes critical issues:\n\n### For Control Plane\n- **GKE can downgrade your control plane** back to 1.29 if issues are discovered shortly after upgrade\n- Contact Google Cloud support to request a rollback (explain the issue)\n- Note: Rollbacks are typically only supported within a few hours of the upgrade\n\n### For Nodes (Autopilot)\n- Nodes auto-upgrade and cannot be directly downgraded by you\n- If node version causes issues, Google support can rebuild the node pool with the previous version (requires support ticket)\n\n### Application Rollback\n- If a workload is incompatible with 1.30, rollback your application manifest to a compatible version\n- Example: If an operator broke on 1.30, downgrade the operator Helm chart and re-apply\n\n---\n\n## Troubleshooting During Upgrade\n\n### Upgrade appears stuck\n- **Symptom:** Control plane upgrade initiated but hasn't completed after 30 minutes\n- **Check:** `gcloud container operations list --filter=\"name:upgrade\" --limit=1`\n- **Resolution:** Wait up to 1 hour. GKE typically completes control plane upgrades in 5\u201315 minutes. If still stuck, contact support.\n\n### Nodes not draining\n- **Symptom:** After control plane upgrade, nodes are cordoned but some aren't draining\n- **Cause:** Pod Disruption Budget too restrictive or pod not respecting termination grace period\n- **Check:** `kubectl describe node NODE_NAME` (look for events) and `kubectl get pdb --all-namespaces`\n- **Resolution:** Check if the PDB allows evictions; adjust if needed. Increase `terminationGracePeriodSeconds` if pods are timing out during drain.\n\n### New pod failures post-upgrade\n- **Symptom:** Pods are CrashLoopBackOff or failing readiness checks\n- **Cause:** Deprecated API usage, resource request missing, or admission webhook rejecting pods\n- **Check:**\n  ```bash\n  kubectl describe pod POD_NAME\n  kubectl logs POD_NAME --previous  # check last container log\n  kubectl get events --all-namespaces | grep -i error\n  ```\n- **Resolution:** Fix the manifests (deprecation, resource requests) and reapply\n\n### API calls failing with 410 Gone\n- **Symptom:** Applications seeing `410 Gone` errors after upgrade\n- **Cause:** Deprecated API removed in 1.30\n- **Resolution:** Identify the client (check logs), update the CRD/API version in your manifest, and redeploy\n\n---\n\n## Additional Resources\n\n- [GKE Release Schedule](https://cloud.google.com/kubernetes-engine/docs/release-schedule)\n- [GKE 1.30 Release Notes](https://cloud.google.com/kubernetes-engine/docs/release-notes)\n- [Autopilot Maintenance & Upgrades](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview#maintenance)\n- [Pod Disruption Budgets](https://kubernetes.io/docs/tasks/run-application/configure-pdb/)\n- [gcloud Container Clusters Documentation](https://cloud.google.com/sdk/gcloud/reference/container/clusters)\n"}], "grading": {"expectations": [{"text": "Distinguishes between dev (Rapid) and prod (Stable) clusters in the checklists", "passed": true, "evidence": "Separate sections for 'Dev Clusters' and 'Prod Clusters' in both pre and post checklists, plus environment-specific items."}, {"text": "Recognizes Autopilot limitations (no node management, no SSH, mandatory resource requests)", "passed": true, "evidence": "States 'Google manages node upgrades automatically. Your focus shifts to control plane timing, workload compatibility, and validation.' Includes resource requests section."}, {"text": "Includes API deprecation checks with kubectl commands", "passed": true, "evidence": "Provides 'kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated' and mentions checking GKE release notes."}, {"text": "Mentions mandatory resource requests as an Autopilot-specific concern", "passed": true, "evidence": "Dedicated 'Resource Requests (Autopilot-Specific)' section with command to find pods missing requests."}, {"text": "Pre-upgrade checklist includes workload readiness items (PDBs, bare pods, graceful shutdown)", "passed": true, "evidence": "Sections for PDBs, bare pods, graceful shutdown with specific kubectl commands for each."}, {"text": "Post-upgrade checklist includes version verification commands", "passed": true, "evidence": "Includes gcloud command to verify control plane version and node pool versions."}, {"text": "Post-upgrade checklist includes workload health validation", "passed": true, "evidence": "Checks for deployments at desired replicas, StatefulSets ready, CrashLoopBackOff pods, and service endpoints."}, {"text": "Recommends testing on dev clusters before prod auto-upgrade", "passed": true, "evidence": "Section 'Quick Reference: Dev to Prod Rollout Sequence' with Week 1-4 timeline starting with dev clusters first."}, {"text": "Includes monitoring/observability validation items", "passed": true, "evidence": "Observability section covering metrics pipeline, error rates, latency baselines, and logging pipeline validation."}], "summary": {"passed": 9, "failed": 0, "total": 9, "pass_rate": 1.0}}}, {"id": "autopilot-checklists-without_skill", "prompt": "I manage 4 Autopilot clusters -- 2 in dev on Rapid channel and 2 in prod on Stable. We've been getting notifications that our prod clusters will auto-upgrade from 1.29 to 1.30 next month. Can you give me pre and post upgrade checklists tailored to our setup?", "eval_id": 2, "outputs": [{"name": "checklists.md", "type": "text", "content": "# GKE Autopilot 1.29 to 1.30 Upgrade Checklists\n\n## Overview\n\nThis document provides pre and post-upgrade checklists tailored to your GKE Autopilot infrastructure:\n- **2 Dev Clusters** on Rapid release channel\n- **2 Prod Clusters** on Stable release channel\n\nThe upgrade from Kubernetes 1.29 to 1.30 will occur automatically during your configured maintenance windows. Key changes in 1.30 include removal of flowcontrol.apiserver.k8s.io/v1beta3 and legacy storage classes.\n\n---\n\n## Pre-Upgrade Checklist (4-6 weeks before)\n\n### Phase 1: Planning & Communication (Week -4 to -3)\n\n- [ ] **Notify stakeholders** of the scheduled upgrade window (prod clusters will auto-upgrade in ~1 month)\n- [ ] **Review Kubernetes 1.30 release notes** for breaking changes and new features\n- [ ] **Check GKE deprecations page** for any APIs or features removed in 1.30\n  - Focus on: flowcontrol.apiserver.k8s.io/v1beta3 removal, storage class changes\n- [ ] **Document current cluster versions** for all 4 clusters (2 dev, 2 prod)\n- [ ] **Assess upgrade impact** on workloads by reviewing:\n  - All deployed API object versions\n  - Storage class usage across clusters\n  - Custom admission controllers or flow control configurations\n\n### Phase 2: API & Deprecation Audit (Week -3 to -2)\n\n- [ ] **Run deprecation audits** on all 4 clusters using GKE's Deprecation Insights feature\n  - [ ] Dev Cluster 1 (Rapid)\n  - [ ] Dev Cluster 2 (Rapid)\n  - [ ] Prod Cluster 1 (Stable)\n  - [ ] Prod Cluster 2 (Stable)\n\n- [ ] **Identify deprecated APIs in use** - prioritize:\n  - flowcontrol.apiserver.k8s.io/v1beta3 \u2192 migrate to v1\n  - Legacy storage classes (4k, 8k, 16k, v1-dynamic-40) \u2192 migrate to v2 classes\n  - Any other deprecated APIs from 1.29 release\n\n- [ ] **Audit workload configurations** that may impact upgrade duration:\n  - [ ] Check all Pods with `terminationGracePeriodSeconds > 30s`\n  - [ ] Review PodDisruptionBudgets (overly conservative policies may slow upgrades)\n  - [ ] Identify node affinity constraints that could block node rotation\n  - [ ] List all PersistentVolumes attached to pods (may slow graceful shutdown)\n\n- [ ] **Export audit results** and share with development teams for remediation planning\n\n### Phase 3: Testing & Mitigation (Week -2 to -1)\n\n- [ ] **Update deprecated APIs** in all manifests:\n  - [ ] Dev Cluster 1 - migrate flow control configuration\n  - [ ] Dev Cluster 2 - migrate flow control configuration\n  - [ ] Test storage class migrations in dev clusters first\n  - [ ] Validate new API versions work with applications\n\n- [ ] **Optimize workload configurations:**\n  - [ ] Reduce `terminationGracePeriodSeconds` where safe\n  - [ ] Review and adjust PodDisruptionBudgets for upgrade-friendliness\n  - [ ] Test pod eviction and rescheduling behavior\n  - [ ] Document any required application changes\n\n- [ ] **Compute Engine quota verification:**\n  - [ ] Verify CE instance quota is below 90% on both prod clusters\n  - [ ] Reserve additional quota if needed (Autopilot surge upgrades use extra resources)\n  - [ ] Ensure no quota issues that could block parallel node upgrades\n\n- [ ] **Verify storage class migration readiness:**\n  - [ ] Test migrating PVCs from legacy to v2 storage classes (non-prod first)\n  - [ ] Validate storage performance expectations post-migration\n  - [ ] Plan any necessary PVC migration steps\n\n### Phase 4: Pre-Upgrade Validation (1 week before)\n\n- [ ] **Verify cluster health** on all 4 clusters:\n  - [ ] All nodes are Ready and SchedulingDisabled=False\n  - [ ] All kube-system and gke-system pods are Running\n  - [ ] No persistent pod failures or pending pods\n  - [ ] Check `kubectl get nodes` and `kubectl get pods -A`\n\n- [ ] **Backup critical configurations:**\n  - [ ] Export manifests for all critical workloads\n  - [ ] Backup any custom metrics, alerts, or observability configs\n  - [ ] Document static pod configurations (these won't be auto-recreated)\n\n- [ ] **Review maintenance windows:**\n  - [ ] Confirm maintenance windows are set for prod clusters\n  - [ ] Verify they align with low-traffic periods\n  - [ ] Check for any maintenance exclusions and their validity\n\n- [ ] **Enable enhanced monitoring:**\n  - [ ] Set up or verify alerting for node upgrade progress\n  - [ ] Ensure you can monitor pod scheduling during surge upgrades\n  - [ ] Prepare dashboards to track cluster health during upgrade\n\n- [ ] **Test rollback procedures** (if applicable):\n  - [ ] Understand that auto-upgrade cannot be rolled back\n  - [ ] Ensure you can manually downgrade if critical issues arise\n  - [ ] Document the manual downgrade process for the team\n\n- [ ] **Final API & configuration validation:**\n  - [ ] Re-run deprecation audits to confirm all issues are resolved\n  - [ ] Perform dry-run on any kubectl apply commands with updated manifests\n  - [ ] Test critical application workflows in dev clusters\n\n---\n\n## Pre-Upgrade Checklist - Dev Clusters (Rapid Channel)\n\nSince your dev clusters are on the Rapid channel, they may upgrade before the Stable channel. Use them as a testing ground:\n\n- [ ] **Deploy test workloads** that mirror prod architectures to dev clusters\n- [ ] **Perform full end-to-end testing** in dev after they upgrade\n  - [ ] Test all storage class migrations\n  - [ ] Verify flow control behavior\n  - [ ] Run integration tests\n  - [ ] Validate observability (metrics, logs, tracing)\n\n- [ ] **Document any compatibility issues** discovered during dev upgrades\n- [ ] **Brief prod teams** on any unexpected changes or gotchas found\n\n---\n\n## Pre-Upgrade Checklist - Prod Clusters (Stable Channel)\n\n- [ ] **Confirm no critical changes pending** in the 1-2 weeks before upgrade\n- [ ] **Reduce deployment/release velocity** during upgrade week to minimize conflicts\n- [ ] **Increase on-call staffing** for the upgrade window and 24 hours after\n- [ ] **Brief application teams** of expected behavior during surge upgrades\n  - Pod evictions will occur (be prepared for brief service impacts)\n  - Nodes will cycle (up to 20 nodes in parallel during surge upgrade)\n\n---\n\n## During Upgrade: Monitoring Checklist\n\n### For All Clusters\n\n- [ ] **Monitor control plane upgrade** (appears as API server restarts):\n  - [ ] Watch for brief API request latency spikes\n  - [ ] Monitor for service account token validation changes\n  - [ ] Verify no persistent API errors\n\n- [ ] **Monitor node surge upgrades:**\n  - [ ] Track pod eviction rate (should be gradual)\n  - [ ] Verify pods reschedule successfully on remaining nodes\n  - [ ] Monitor resource pressure (CPU, memory) during surge\n\n- [ ] **Watch for concerning patterns:**\n  - [ ] Pods stuck in Terminating state (beyond grace period)\n  - [ ] Persistent node failures during upgrade\n  - [ ] Unexpected pod evictions outside surge windows\n  - [ ] CrashLoopBackOff or other pod errors\n\n- [ ] **Verify network & DNS:**\n  - [ ] DNS resolution continues to work\n  - [ ] No unexpected network timeouts\n  - [ ] Inter-pod communication remains healthy\n\n---\n\n## Post-Upgrade Checklist (Immediate - first 24 hours)\n\n### Phase 1: Cluster Verification (0-2 hours post-upgrade)\n\n- [ ] **Verify upgrade completion:**\n  - [ ] All nodes report version 1.30.x with `kubectl get nodes`\n  - [ ] Control plane is at 1.30.x\n  - [ ] All nodes are in Ready state\n\n- [ ] **Cluster health verification:**\n  - [ ] Run `kubectl get nodes` - all should be Ready\n  - [ ] Run `kubectl get pods -A` - verify no stuck pods\n  - [ ] Check `kubectl get events -A --sort-by='.lastTimestamp'` for errors\n  - [ ] Verify all system pods (kube-dns, logging, monitoring) are running\n\n- [ ] **API server health:**\n  - [ ] Verify API server is responding to requests\n  - [ ] Check kubectl access from multiple sources\n  - [ ] Validate RBAC is functioning correctly\n  - [ ] Confirm webhook configurations are still valid\n\n- [ ] **Workload validation:**\n  - [ ] Verify all critical applications are Running\n  - [ ] Check pod restart counts haven't spiked unexpectedly\n  - [ ] Validate application logs for upgrade-related errors\n  - [ ] Confirm service endpoints are populated correctly\n\n### Phase 2: Application & Storage Validation (2-6 hours post-upgrade)\n\n- [ ] **Test critical application workflows:**\n  - [ ] Run smoke tests for all critical services\n  - [ ] Verify database connectivity and transactions\n  - [ ] Test API endpoints with real-world requests\n  - [ ] Check async job processing (queues, cron jobs, etc.)\n\n- [ ] **Storage validation:**\n  - [ ] Verify all PersistentVolumes are accessible\n  - [ ] Check storage class migrations completed successfully\n  - [ ] Confirm no data corruption or access issues\n  - [ ] Test read/write operations on volumes\n\n- [ ] **Network & DNS validation:**\n  - [ ] Verify DNS resolution for all services\n  - [ ] Test external traffic ingestion\n  - [ ] Confirm service-to-service communication\n  - [ ] Check load balancer health (if applicable)\n\n- [ ] **Observability & monitoring:**\n  - [ ] Verify metrics are being collected (Prometheus, Cloud Monitoring, etc.)\n  - [ ] Confirm logs are being shipped (Cloud Logging, Fluentd, etc.)\n  - [ ] Check alert rules are firing correctly\n  - [ ] Validate tracing/APM is functioning\n\n### Phase 3: Feature & Configuration Validation (6-24 hours post-upgrade)\n\n- [ ] **Validate new 1.30 features** (if adopting):\n  - [ ] Test any new API versions you're planning to use\n  - [ ] Verify feature gates are set as expected\n  - [ ] Validate new scheduler behavior if relevant\n\n- [ ] **Re-verify flow control (v1beta3 \u2192 v1 migration):**\n  - [ ] Confirm FlowSchema objects are v1 and functioning\n  - [ ] Check priority-and-fairness is working correctly\n  - [ ] Validate API server request handling under load\n\n- [ ] **Confirm static pod stability:**\n  - [ ] Verify any static pods are running correctly\n  - [ ] Check static pod logs for issues\n  - [ ] Confirm kubelet configuration stability\n\n- [ ] **Validate RBAC & security:**\n  - [ ] Verify ClusterRole/ClusterRoleBinding configurations still work\n  - [ ] Test service account tokens and authentication\n  - [ ] Confirm Pod Security Policies or Pod Security Standards are enforced\n\n### Phase 4: Performance Validation (6-24 hours post-upgrade)\n\n- [ ] **Cluster performance baseline:**\n  - [ ] Compare API latency with pre-upgrade baseline\n  - [ ] Check node CPU and memory utilization\n  - [ ] Monitor container startup times\n  - [ ] Verify pod scheduling latency\n\n- [ ] **Application performance:**\n  - [ ] Confirm application response times are normal\n  - [ ] Check database query performance\n  - [ ] Verify no unexpected resource consumption\n  - [ ] Validate throughput/RPS metrics\n\n- [ ] **Review upgrade-related metrics:**\n  - [ ] Check peak node allocation during surge upgrade\n  - [ ] Monitor for any lingering resource pressure\n  - [ ] Verify container image pull rates normalized\n\n---\n\n## Post-Upgrade Checklist - Dev Clusters (Rapid Channel)\n\n- [ ] **Document findings** from dev cluster upgrades\n- [ ] **Share lessons learned** with team before prod upgrades\n- [ ] **Identify any production-impacting issues** from dev experience\n- [ ] **Validate all test workloads** continue to function correctly\n\n---\n\n## Post-Upgrade Checklist - Prod Clusters (Stable Channel)\n\n- [ ] **Prioritize post-upgrade validation** - assign dedicated staff\n- [ ] **Monitor error rates** in production for 24 hours:\n  - [ ] 5xx error rates\n  - [ ] Timeout rates\n  - [ ] Dependency errors\n\n- [ ] **Customer/stakeholder communication:**\n  - [ ] Notify teams that upgrade completed successfully\n  - [ ] Document any observed issues or workarounds\n  - [ ] Share post-upgrade status report\n\n- [ ] **Extended monitoring:**\n  - [ ] Continue elevated monitoring for 48-72 hours post-upgrade\n  - [ ] Maintain increased on-call coverage\n  - [ ] Prepare rollback procedures in case critical issues emerge\n\n---\n\n## Rollback & Troubleshooting\n\n### Important: Auto-Upgrade Cannot Be Rolled Back\n\nSince Autopilot clusters auto-upgrade and you cannot disable automatic upgrades, understand that:\n- **Control plane downgrade** is not typically supported\n- **Node downgrade** requires manual node pool recreation\n- Plan mitigation strategies before upgrade, not rollback strategies\n\n### If Issues Arise Post-Upgrade\n\n- [ ] **Identify root cause** using cluster logs, events, and metrics\n- [ ] **Escalate to Google Cloud Support** if:\n  - Critical application failures\n  - Data loss or corruption suspected\n  - Cluster control plane instability\n  - Unable to schedule or run pods\n\n- [ ] **Implement workarounds** while investigating:\n  - Cordon affected nodes if safe\n  - Scale up unaffected node pools\n  - Redirect traffic away from affected clusters\n\n---\n\n## Deprecated APIs Reference (1.29 \u2192 1.30)\n\n### Critical Removals in 1.30\n\n| Deprecated API | Removal | Migration Path |\n|---|---|---|\n| `flowcontrol.apiserver.k8s.io/v1beta3` | Removed in 1.30 | Migrate to `flowcontrol.apiserver.k8s.io/v1` (available since 1.29) |\n| Storage classes: `4k`, `8k`, `16k`, `v1-dynamic-40` | Removed in 1.30 | Migrate to v2 storage classes (available since 1.26) |\n\n**Action:** Audit all clusters immediately for these resources and migrate before the upgrade window.\n\n---\n\n## Key Contacts & Escalation\n\n- **Google Cloud Support:** [File ticket for any blockers](https://cloud.google.com/support)\n- **Team Lead:** [Insert your escalation contact]\n- **On-Call Engineer:** [Insert on-call contact]\n- **Communications Lead:** [Insert for customer updates]\n\n---\n\n## Sign-Off & Timeline\n\n### Checklist Owner\n- **Name:** _______________\n- **Email:** _______________\n- **Date Completed:** _______________\n\n### Pre-Upgrade Sign-Off\n- [ ] All pre-upgrade items completed\n- [ ] No blocking issues identified\n- [ ] Stakeholders notified and ready\n- **Signed off by:** _______________ **Date:** _______________\n\n### Post-Upgrade Sign-Off\n- [ ] All post-upgrade validation complete\n- [ ] No critical issues remain\n- [ ] Normal operations resumed\n- **Signed off by:** _______________ **Date:** _______________\n\n---\n\n## Additional Resources\n\n- [GKE Autopilot Cluster Upgrades](https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-upgrades-autopilot)\n- [GKE Best Practices for Upgrading Clusters](https://cloud.google.com/kubernetes-engine/docs/best-practices/upgrading-clusters)\n- [GKE Feature and API Deprecations](https://cloud.google.com/kubernetes-engine/docs/deprecations)\n- [Kubernetes Deprecation Guide](https://kubernetes.io/docs/reference/using-api/deprecation-guide/)\n- [GKE Release Notes](https://cloud.google.com/kubernetes-engine/docs/release-notes)\n- [GKE Release Schedule](https://cloud.google.com/kubernetes-engine/docs/release-schedule)\n\n---\n\n**Last Updated:** March 18, 2026\n**Version:** 1.0\n"}], "grading": {"expectations": [{"text": "Distinguishes between dev (Rapid) and prod (Stable) clusters in the checklists", "passed": true, "evidence": "Separate sections for dev (Rapid) and prod (Stable) with environment-specific checklists."}, {"text": "Recognizes Autopilot limitations (no node management, no SSH, mandatory resource requests)", "passed": false, "evidence": "Does not explicitly mention Autopilot-specific limitations like no SSH, no node management. Treats clusters more generically."}, {"text": "Includes API deprecation checks with kubectl commands", "passed": true, "evidence": "Mentions deprecation audits and GKE Deprecation Insights feature."}, {"text": "Mentions mandatory resource requests as an Autopilot-specific concern", "passed": false, "evidence": "Does not mention mandatory resource requests as an Autopilot requirement."}, {"text": "Pre-upgrade checklist includes workload readiness items (PDBs, bare pods, graceful shutdown)", "passed": true, "evidence": "Covers PDBs, termination grace periods, node affinity constraints, and PVs."}, {"text": "Post-upgrade checklist includes version verification commands", "passed": true, "evidence": "Phase 1 post-upgrade includes verifying all nodes report 1.30.x."}, {"text": "Post-upgrade checklist includes workload health validation", "passed": true, "evidence": "Phase 2 covers application workflows, storage validation, and network/DNS."}, {"text": "Recommends testing on dev clusters before prod auto-upgrade", "passed": true, "evidence": "Dev cluster section recommends using them as testing ground before prod."}, {"text": "Includes monitoring/observability validation items", "passed": true, "evidence": "Phase 2 covers observability and monitoring verification."}], "summary": {"passed": 7, "failed": 2, "total": 9, "pass_rate": 0.78}}}, {"id": "stuck-upgrade-troubleshoot-with_skill", "prompt": "Our node pool upgrade has been stuck for 2 hours. It says 3 out of 12 nodes upgraded. We're on a Standard cluster in us-east1, running 1.29, upgrading nodes to 1.30. The pods on the remaining nodes aren't draining. What should we check and how do we fix this?", "eval_id": 3, "outputs": [{"name": "troubleshoot.md", "type": "text", "content": "# GKE Node Pool Upgrade Troubleshooting: Stuck at 3/12 Nodes\n\n## Situation Summary\n\n- **Cluster Mode**: Standard\n- **Region**: us-east1\n- **Current Version**: 1.29\n- **Target Version**: 1.30\n- **Status**: Upgrade stuck for 2 hours; 3 out of 12 nodes upgraded\n- **Issue**: Pods on remaining nodes are not draining\n\n## Root Cause Analysis\n\nWhen a node pool upgrade stalls during the drain phase, the most common causes are:\n\n1. **Pod Disruption Budgets (PDBs) blocking drain** \u2014 GKE respects PDBs during surge upgrades for up to 1 hour. If a PDB is too restrictive, GKE cannot evict pods and the upgrade pauses.\n2. **Pods without controllers** \u2014 Bare pods (not managed by Deployment, StatefulSet, DaemonSet, etc.) cannot be rescheduled and will block the drain indefinitely.\n3. **Resource constraints** \u2014 If the cluster is at capacity and `maxSurge` is set to 0, new pods have nowhere to be scheduled, preventing the old node from draining.\n4. **Admission webhooks** \u2014 Webhooks rejecting pod creation can prevent rescheduling.\n5. **PVC issues** \u2014 Pods with PersistentVolumeClaims that can't be attached to new nodes will fail to reschedule.\n\n## Diagnostic Steps\n\n### Step 1: Check Pod Disruption Budgets\n\nPDBs are the #1 reason upgrades get stuck. Run:\n\n```bash\nkubectl get pdb --all-namespaces\nkubectl describe pdb <PDB_NAME> -n <NAMESPACE>\n```\n\nLook for PDBs with very restrictive `minAvailable` or `maxUnavailable` settings. A PDB requiring `minAvailable: 3` on a 2-replica deployment means no pods can be evicted.\n\n**What to look for:**\n- `disruptions_allowed: 0` \u2014 Pods cannot be evicted right now\n- Mismatch between `desired` and `disruptions_allowed` \u2014 All pods are protected\n\n### Step 2: Identify Pods Blocking the Drain\n\nFind pods on the nodes that are refusing to drain:\n\n```bash\n# Get the names of non-upgraded nodes\nkubectl get nodes --sort-by=.metadata.creationTimestamp | grep NotReady\n\n# Or check nodes by version\nkubectl get nodes -o wide | grep 1.29\n\n# For each node, see what pods are on it\nkubectl get pods --all-namespaces -o wide --field-selector spec.nodeName=<NODE_NAME>\n```\n\nCheck if any pods:\n- Have no owner reference (bare pods)\n- Are in `Terminating` state for > 30 seconds (PVC, webhook, or finalizer issue)\n- Have `terminationGracePeriodSeconds` set to a very high value\n\n### Step 3: Check for Pods Without Controllers\n\nBare pods will never be rescheduled and will block node drains:\n\n```bash\nkubectl get pods --all-namespaces -o json | \\\n  jq -r '.items[] | select(.metadata.ownerReferences | length == 0) | \"\\(.metadata.namespace) \\(.metadata.name)\"'\n```\n\nAny pods found here must be manually deleted or restarted with a controller (e.g., wrapped in a Deployment).\n\n### Step 4: Check Resource Constraints\n\nIf the cluster is out of capacity, pods won't reschedule:\n\n```bash\n# Check node capacity\nkubectl top nodes\nkubectl describe nodes | grep -A 5 \"Allocated resources\"\n\n# Check if any pods are pending\nkubectl get pods --all-namespaces | grep Pending\n\n# Check for insufficient resources events\nkubectl get events --all-namespaces --field-selector reason=FailedScheduling\n```\n\nIf pods are pending with `Insufficient cpu` or `Insufficient memory`, either:\n- Add temporary surge nodes (increase `maxSurge`)\n- Remove or scale down non-critical workloads\n\n### Step 5: Check Surge Upgrade Settings\n\nVerify the node pool's current surge configuration:\n\n```bash\ngcloud container node-pools describe <NODE_POOL_NAME> \\\n  --cluster <CLUSTER_NAME> \\\n  --zone us-east1-b \\\n  --format=\"value(managementConfig.upgradeOptions.maxSurge, managementConfig.upgradeOptions.maxUnavailable)\"\n```\n\nIf both `maxSurge` and `maxUnavailable` are 0, nodes can't drain because there's nowhere for pods to go.\n\n### Step 6: Check for Webhook Issues\n\nAdmission webhooks can silently fail during pod rescheduling:\n\n```bash\nkubectl get validatingwebhookconfigurations\nkubectl get mutatingwebhookconfigurations\n\n# Check webhook status and rules\nkubectl describe validatingwebhookconfigurations <NAME>\n\n# Check webhook logs in kube-system\nkubectl logs -n kube-system -l app=<WEBHOOK_APP> --tail=50\n```\n\nLook for rules that match `*` or apply to core API groups.\n\n### Step 7: Check the Upgrade Operation Status\n\nMonitor the actual upgrade progress:\n\n```bash\n# Watch node pool upgrade status\ngcloud container node-pools describe <NODE_POOL_NAME> \\\n  --cluster <CLUSTER_NAME> \\\n  --zone us-east1-b \\\n  --format=\"value(managementConfig.upgradeOptions)\"\n\n# Check Google Cloud Operations (stackdriver) for drain errors\n# or retrieve logs via gcloud\ngcloud container operations list --cluster <CLUSTER_NAME> --zone us-east1-b\n```\n\n## Fix Procedures\n\n### Fix 1: Address Problematic Pod Disruption Budgets\n\nIf a PDB is blocking the upgrade:\n\n**Option A: Temporarily relax the PDB**\n\n```bash\nkubectl patch pdb <PDB_NAME> -n <NAMESPACE> -p '{\"spec\":{\"minAvailable\":null,\"maxUnavailable\":100%}}'\n```\n\nThis allows all pods under the PDB to be evicted. Once the upgrade completes, restore the original PDB.\n\n**Option B: Get the original PDB definition, modify it, and reapply:**\n\n```bash\nkubectl get pdb <PDB_NAME> -n <NAMESPACE> -o yaml > pdb-backup.yaml\n# Edit pdb-backup.yaml to increase maxUnavailable\nkubectl apply -f pdb-backup.yaml\n```\n\n### Fix 2: Remove Bare Pods\n\nBare pods can only be deleted (they won't reschedule):\n\n```bash\n# Delete the bare pod (it's gone for good)\nkubectl delete pod <POD_NAME> -n <NAMESPACE>\n\n# Consider wrapping critical workloads in a Deployment or StatefulSet\n```\n\n### Fix 3: Add Temporary Surge Capacity\n\nIf the cluster is out of capacity, add surge nodes:\n\n```bash\ngcloud container node-pools update <NODE_POOL_NAME> \\\n  --cluster <CLUSTER_NAME> \\\n  --zone us-east1-b \\\n  --max-surge-upgrade 2 \\\n  --max-unavailable-upgrade 1\n```\n\nThis adds 2 temporary nodes during upgrade, allowing pods to reschedule. After the upgrade completes, surge nodes are automatically removed.\n\n### Fix 4: Scale Down Non-Critical Workloads\n\nIf adding surge nodes isn't feasible, free up space by scaling down:\n\n```bash\n# Identify and scale down low-priority deployments\nkubectl scale deployment <DEPLOYMENT_NAME> -n <NAMESPACE> --replicas=0\n\n# Restore after upgrade\nkubectl scale deployment <DEPLOYMENT_NAME> -n <NAMESPACE> --replicas=<ORIGINAL_COUNT>\n```\n\n### Fix 5: Fix Webhook Issues\n\nIf a webhook is rejecting pod creation:\n\n**Option A: Temporarily disable the webhook**\n\n```bash\nkubectl patch validatingwebhookconfigurations <NAME> -p '{\"webhooks\":[{\"name\":\"<WEBHOOK_NAME>\",\"clientConfig\":{\"service\":null}}]}'\n```\n\nThen re-enable after the upgrade.\n\n**Option B: Update the webhook to exclude system namespaces**\n\nEdit the webhook to add a namespace selector that excludes `kube-system` and other critical namespaces.\n\n### Fix 6: Manually Restart the Upgrade\n\nOnce issues are resolved, restart the upgrade:\n\n```bash\ngcloud container node-pools upgrade <NODE_POOL_NAME> \\\n  --cluster <CLUSTER_NAME> \\\n  --zone us-east1-b \\\n  --cluster-version 1.30\n```\n\nGKE will resume draining and upgrading from where it left off.\n\n## Validation Steps After Fix\n\nOnce you've applied a fix:\n\n```bash\n# Monitor pod drain and node upgrade progress\nwatch 'kubectl get nodes -o wide | grep -E \"NAME|1.29|1.30\"'\n\n# Check for any pods still stuck in Terminating\nkubectl get pods --all-namespaces | grep Terminating\n\n# Verify no new stuck nodes\nkubectl get pods --all-namespaces --field-selector=status.phase=Pending\n```\n\nThe upgrade should resume and complete within a reasonable time (typically minutes per node, depending on workload size).\n\n## Prevention Checklist for Future Upgrades\n\n- [ ] Review all PDBs before upgrading: `kubectl get pdb --all-namespaces`\n- [ ] Ensure no bare pods: verify all pods have ownerReferences\n- [ ] Set reasonable `terminationGracePeriodSeconds` (typically 30-60 seconds, not > 300)\n- [ ] Configure surge: `maxSurge >= 1`, `maxUnavailable <= 1` for safety\n- [ ] Reserve cluster headroom: keep ~20% of nodes unscheduled before upgrades\n- [ ] Audit admission webhooks: ensure they don't reject normal pod operations\n- [ ] Test PDBs in staging before applying to production\n- [ ] Monitor the upgrade: watch nodes and pods during the operation, don't assume it will complete unattended\n"}], "grading": {"expectations": [{"text": "Identifies PDB as the most likely/common cause of stuck upgrades", "passed": true, "evidence": "States 'Pod Disruption Budgets (PDBs) blocking drain' as #1 cause and 'PDBs are the #1 reason upgrades get stuck.'"}, {"text": "Provides kubectl command to check PDBs", "passed": true, "evidence": "Provides 'kubectl get pdb --all-namespaces' and 'kubectl describe pdb' commands."}, {"text": "Provides commands to identify which pods are blocking the drain", "passed": true, "evidence": "Step 2 shows how to find pods on non-upgraded nodes using field-selector spec.nodeName, plus checking for Terminating state."}, {"text": "Includes resource constraint diagnosis (capacity issues, pending pods)", "passed": true, "evidence": "Step 4 covers kubectl top nodes, describe nodes for allocated resources, and checking for pending pods with FailedScheduling events."}, {"text": "Provides a fix for restrictive PDBs (patch or temporary adjustment)", "passed": true, "evidence": "Fix 1 shows two options: patch with maxUnavailable or get/edit/reapply YAML."}, {"text": "Includes guidance on surge upgrade settings as a potential fix", "passed": true, "evidence": "Fix 3 shows gcloud command to update maxSurge to 2 and maxUnavailable to 1."}, {"text": "Mentions webhook issues as a possible cause", "passed": true, "evidence": "Step 6 covers checking validatingwebhookconfigurations and mutatingwebhookconfigurations with Fix 5 for resolution."}, {"text": "Includes validation steps to confirm the fix is working", "passed": true, "evidence": "Validation section with watch commands for nodes, checking for Terminating pods, and pending pods."}], "summary": {"passed": 8, "failed": 0, "total": 8, "pass_rate": 1.0}}}, {"id": "stuck-upgrade-troubleshoot-without_skill", "prompt": "Our node pool upgrade has been stuck for 2 hours. It says 3 out of 12 nodes upgraded. We're on a Standard cluster in us-east1, running 1.29, upgrading nodes to 1.30. The pods on the remaining nodes aren't draining. What should we check and how do we fix this?", "eval_id": 3, "outputs": [{"name": "troubleshoot.md", "type": "text", "content": "# GKE Node Pool Upgrade Troubleshooting Guide\n## Stuck Upgrade - Pods Not Draining\n\n**Scenario:** Standard cluster in `us-east1`, upgrading nodes from Kubernetes 1.29 to 1.30, 3 of 12 nodes completed, stuck for 2+ hours with remaining pods not draining.\n\n---\n\n## Immediate Diagnosis Steps\n\n### 1. Check Pod Disruption Budgets (PDBs)\nPDBs are the most common cause of stuck drains. They prevent pods from being evicted if it would violate the budget.\n\n```bash\n# List all PDBs and their allowed disruptions\nkubectl get pdb -A -o wide\n\n# Look for any PDBs with ALLOWED DISRUPTIONS = 0\nkubectl get pdb -A -o wide | grep ' 0 '\n\n# Get detailed info on problematic PDBs\nkubectl describe pdb <pdb-name> -n <namespace>\n```\n\n**What to look for:**\n- ALLOWED DISRUPTIONS column = 0 \u2192 pods cannot be evicted\n- MAX DISRUPTIONS set too conservatively (e.g., 0 pods allowed)\n- Check which pods are protected by that PDB\n\n### 2. Check for Eviction Failures\n```bash\n# Find eviction failures in cluster events\nkubectl get events -A --field-selector reason=EvictionFailed\n\n# Check node drain status\nkubectl describe node <node-name> | grep -A 5 \"Taints\"\n\n# Check which pods are preventing drain\nkubectl get pods -A --field-selector=status.phase=Running -o wide | grep <node-name>\n```\n\n### 3. Check Termination Grace Period\nHigh termination grace periods force Kubernetes to wait longer for graceful shutdown, blocking the drain.\n\n```bash\n# Find pods with long termination periods\nkubectl get pods -A -o json | jq '.items[] | select(.spec.terminationGracePeriodSeconds > 60) | {name:.metadata.name, namespace:.metadata.namespace, grace:.spec.terminationGracePeriodSeconds}'\n\n# Check specific pod details\nkubectl get pod <pod-name> -n <namespace> -o yaml | grep terminationGracePeriodSeconds\n```\n\n**Context:** GKE waits up to 1 hour for pod eviction. A 5-10 minute grace period \u00d7 multiple pods can cause significant delays.\n\n### 4. Check for Extended Duration Pods\nIn Autopilot (not Standard), GKE skips evicting long-running pods for up to 7 days. Verify this isn't affecting you.\n\n```bash\n# Check pod creation times - look for pods running for days\nkubectl get pods -A -o wide --sort-by=.metadata.creationTimestamp\n```\n\n### 5. Check Persistent Volume Attachments\nPods with PVs attached take longer to drain due to volume lifecycle management.\n\n```bash\n# Find pods with PVs\nkubectl get pods -A -o json | jq '.items[] | select(.spec.volumes[]?.persistentVolumeClaim != null) | {name:.metadata.name, namespace:.metadata.namespace}'\n\n# Check PV status\nkubectl get pv -o wide\nkubectl get pvc -A -o wide\n```\n\n### 6. Monitor the Upgrade Process\n```bash\n# Watch node status in real-time\nwatch kubectl get nodes -o wide\n\n# Check GKE upgrade progress (via gcloud)\ngcloud container node-pools update <pool-name> \\\n  --cluster=<cluster-name> \\\n  --zone=us-east1-b \\  # or your zone\n  --no-enable-autoupgrade\n\n# View node pool details\ngcloud container node-pools describe <pool-name> \\\n  --cluster=<cluster-name> \\\n  --zone=us-east1-b\n```\n\n---\n\n## Common Root Causes & Fixes\n\n### Issue 1: Restrictive Pod Disruption Budgets\n**Symptom:** `kubectl get pdb` shows ALLOWED DISRUPTIONS = 0\n\n**Fix Options:**\n\n**Option A: Temporarily Relax PDB (Recommended for stuck upgrades)**\n```bash\n# Edit the PDB to allow disruptions\nkubectl patch pdb <pdb-name> -n <namespace> --type merge \\\n  -p '{\"spec\":{\"minAvailable\":null,\"maxUnavailable\":\"100%\"}}'\n\n# Or edit directly\nkubectl edit pdb <pdb-name> -n <namespace>\n# Change: minAvailable: 1 \u2192 maxUnavailable: 100%\n```\n\n**Option B: Adjust unhealthy pod eviction policy**\n```bash\n# Add this to your PDB to allow eviction of unhealthy pods\nkubectl patch pdb <pdb-name> -n <namespace> --type merge \\\n  -p '{\"spec\":{\"unhealthyPodEvictionPolicy\":\"AlwaysAllow\"}}'\n```\n\n### Issue 2: Long Termination Grace Periods\n**Symptom:** Pods have `terminationGracePeriodSeconds: 300+`\n\n**Fix:**\n```bash\n# Patch the deployment/statefulset to reduce grace period\nkubectl patch deployment <deployment-name> -n <namespace> --type merge \\\n  -p '{\"spec\":{\"template\":{\"spec\":{\"terminationGracePeriodSeconds\":30}}}}'\n\n# For statefulsets\nkubectl patch statefulset <statefulset-name> -n <namespace> --type merge \\\n  -p '{\"spec\":{\"template\":{\"spec\":{\"terminationGracePeriodSeconds\":30}}}}'\n```\n\n### Issue 3: Persistent Volumes Blocking Drain\n**Symptom:** Pods with PVs take very long to detach\n\n**Investigation:**\n```bash\n# Check if PV detach is stuck\nkubectl get pvc -A -o wide\ngcloud compute disks list  # Check if disks are in use\n\n# Check PV status\nkubectl describe pv <pv-name>\n```\n\n**Fix (if safe for your workload):**\n- Migrate stateful workloads to nodes that are already upgraded\n- Or delete/migrate PVCs if they're no longer needed\n- Check if node has proper permissions to detach volumes\n\n---\n\n## Force Drain as Last Resort\n\n**Only use if troubleshooting confirms pods are stuck due to non-critical workloads.**\n\n```bash\n# Cordon the node (prevent new pods from scheduling)\nkubectl cordon <node-name>\n\n# Drain with ignoring daemonsets and local storage\nkubectl drain <node-name> \\\n  --ignore-daemonsets \\\n  --delete-emptydir-data \\\n  --force \\\n  --timeout=5m\n\n# Or use --disable-eviction to bypass PDB checks (nuclear option)\nkubectl drain <node-name> \\\n  --ignore-daemonsets \\\n  --delete-emptydir-data \\\n  --disable-eviction \\\n  --force \\\n  --timeout=5m\n```\n\n**After drain completes:**\n```bash\n# Resume the upgrade via GKE\ngcloud container node-pools update <pool-name> \\\n  --cluster=<cluster-name> \\\n  --zone=us-east1-b\n```\n\n---\n\n## Recommended Upgrade Strategies for Future\n\n### 1. Pre-Upgrade Validation\n```bash\n# List all PDBs before upgrading\nkubectl get pdb -A -o wide\n\n# Identify risky PDB configurations\nkubectl get pdb -A -o yaml | grep -E \"(minAvailable|maxUnavailable)\"\n```\n\n### 2. Configure Surge Upgrade\nGKE's surge upgrade runs multiple nodes in parallel, reducing total upgrade time and pressure on remaining nodes.\n\n```bash\n# Update node pool with surge strategy (gcloud)\ngcloud container node-pools update <pool-name> \\\n  --cluster=<cluster-name> \\\n  --zone=us-east1-b \\\n  --max-surge-upgrade 3 \\\n  --max-unavailable-upgrade 1\n```\n\n### 3. Set Reasonable Defaults for PDBs\n```yaml\n# Example PDB that allows controlled disruptions\napiVersion: policy/v1\nkind: PodDisruptionBudget\nmetadata:\n  name: safe-pdb\n  namespace: default\nspec:\n  maxUnavailable: 1  # Allow 1 pod disruption at a time\n  selector:\n    matchLabels:\n      app: my-app\n  unhealthyPodEvictionPolicy: AlwaysAllow  # Allow eviction of stuck pods\n```\n\n### 4. Graceful Termination Settings\n```yaml\n# Set reasonable grace period in deployments\nspec:\n  template:\n    spec:\n      terminationGracePeriodSeconds: 30  # Adjust based on app needs\n```\n\n---\n\n## Escalation Checklist\n\nIf the above steps don't resolve the issue:\n\n- [ ] Verify node pool is in a valid state (check GKE console)\n- [ ] Check GKE cluster system health (control plane status)\n- [ ] Review GKE cluster events for system-level issues\n- [ ] Check if nodes are experiencing disk/memory pressure\n- [ ] Verify IAM permissions allow node termination\n- [ ] Contact Google Cloud Support with:\n  - Cluster name, zone, node pool name\n  - Upgrade start time and current status\n  - Output of `kubectl get nodes -o wide`\n  - Output of `kubectl get pdb -A -o wide`\n  - Output of `kubectl get events -A --sort-by='.lastTimestamp'`\n\n---\n\n## Summary\n\n**Quick Fix Priority:**\n1. **Check PDBs first** - Most common culprit: `kubectl get pdb -A -o wide | grep ' 0 '`\n2. **Relax restrictive PDB** - Patch with `maxUnavailable: 100%` temporarily\n3. **Check termination grace periods** - Reduce if > 60 seconds\n4. **Monitor PV detachment** - If applicable to your workloads\n5. **Force drain as last resort** - Only after validating safety\n\nAfter fix is applied, the remaining 9 nodes should resume draining and upgrading normally.\n\n---\n\n## References\n\n- [GKE Troubleshoot Cluster Upgrades](https://cloud.google.com/kubernetes-engine/docs/troubleshooting/upgrades)\n- [GKE Node Upgrade Strategies](https://docs.cloud.google.com/kubernetes-engine/docs/concepts/node-pool-upgrade-strategies)\n- [Kubernetes Pod Disruptions](https://kubernetes.io/docs/concepts/workloads/pods/disruptions/)\n- [Pod Disruption Budget Configuration Guide](https://oneuptime.com/blog/post/2026-02-17-how-to-configure-pod-disruption-budgets-in-gke-to-maintain-availability-during-upgrades/view)\n- [Kubernetes Node Drain Best Practices](https://kubernetes.io/docs/tasks/administer-cluster/safely-drain-node/)\n"}], "grading": {"expectations": [{"text": "Identifies PDB as the most likely/common cause of stuck upgrades", "passed": true, "evidence": "States PDBs as most common cause and provides priority order starting with PDBs."}, {"text": "Provides kubectl command to check PDBs", "passed": true, "evidence": "Provides 'kubectl get pdb -A -o wide' and 'kubectl get pdb -A -o wide | grep 0'."}, {"text": "Provides commands to identify which pods are blocking the drain", "passed": true, "evidence": "Shows eviction failure events and node drain status checking commands."}, {"text": "Includes resource constraint diagnosis (capacity issues, pending pods)", "passed": false, "evidence": "Does not explicitly diagnose resource capacity constraints or include commands to check for insufficient resources causing scheduling failures."}, {"text": "Provides a fix for restrictive PDBs (patch or temporary adjustment)", "passed": true, "evidence": "Option A patches PDB with maxUnavailable:100%. Option B adjusts unhealthyPodEvictionPolicy."}, {"text": "Includes guidance on surge upgrade settings as a potential fix", "passed": true, "evidence": "Section on configuring surge upgrade with maxSurge=3, maxUnavailable=1."}, {"text": "Mentions webhook issues as a possible cause", "passed": false, "evidence": "Does not mention webhook issues as a potential cause of stuck upgrades."}, {"text": "Includes validation steps to confirm the fix is working", "passed": true, "evidence": "Includes 'watch kubectl get nodes -o wide' and monitoring commands."}], "summary": {"passed": 6, "failed": 2, "total": 8, "pass_rate": 0.75}}}], "previous_feedback": {}, "previous_outputs": {}, "benchmark": {"metadata": {"skill_name": "gke-upgrades", "skill_path": "/sessions/hopeful-optimistic-galileo/mnt/code/gke-upgrades", "executor_model": "claude-opus-4-6", "timestamp": "2026-03-18T12:00:00Z", "evals_run": [1, 2, 3], "runs_per_configuration": 1}, "runs": [{"eval_id": 1, "eval_name": "Standard Upgrade Plan", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 10, "failed": 0, "total": 10, "time_seconds": 70.4, "tokens": 33636, "tool_calls": 3, "errors": 0}, "expectations": [{"text": "Recommends sequential upgrade path (1.28\u21921.29\u21921.30)", "passed": true, "evidence": "Explicitly recommends sequential upgrades with both phases"}, {"text": "Control plane before node pools", "passed": true, "evidence": "Phase 1 is control plane, Phases 2a-2c are node pools"}, {"text": "Node pool ordering with rationale", "passed": true, "evidence": "general\u2192GPU\u2192Postgres with risk-based rationale"}, {"text": "Specific surge settings per pool", "passed": true, "evidence": "Differentiated maxSurge/maxUnavailable per pool"}, {"text": "Postgres-specific concerns", "passed": true, "evidence": "PDB, backup, operator compat, PV reclaim all covered"}, {"text": "GPU-specific concerns", "passed": true, "evidence": "Driver compat, CUDA, workload coordination"}, {"text": "Actual gcloud commands", "passed": true, "evidence": "Full commands for each phase"}, {"text": "Pre-upgrade checklist", "passed": true, "evidence": "Comprehensive checkbox-style checklist"}, {"text": "Post-upgrade checklist with validation", "passed": true, "evidence": "Checklist with kubectl/gcloud commands"}, {"text": "Rollback procedure", "passed": true, "evidence": "Dedicated rollback section"}]}, {"eval_id": 1, "eval_name": "Standard Upgrade Plan", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.8, "passed": 8, "failed": 2, "total": 10, "time_seconds": 52.1, "tokens": 27581, "tool_calls": 2, "errors": 0}, "expectations": [{"text": "Recommends sequential upgrade path (1.28\u21921.29\u21921.30)", "passed": false, "evidence": "Jumps directly from 1.28 to 1.30"}, {"text": "Control plane before node pools", "passed": true, "evidence": "Phase 1 is control plane"}, {"text": "Node pool ordering with rationale", "passed": true, "evidence": "general\u2192Postgres\u2192GPU with rationale"}, {"text": "Specific surge settings per pool", "passed": false, "evidence": "Only generic maxSurge=1 for all pools"}, {"text": "Postgres-specific concerns", "passed": true, "evidence": "StatefulSet, PDB, PVC checks"}, {"text": "GPU-specific concerns", "passed": true, "evidence": "GPU allocation checks and nvidia-smi test"}, {"text": "Actual gcloud commands", "passed": true, "evidence": "Commands for upgrade steps"}, {"text": "Pre-upgrade checklist", "passed": true, "evidence": "Section 1.3 readiness checklist"}, {"text": "Post-upgrade checklist with validation", "passed": true, "evidence": "Section 5 validation steps"}, {"text": "Rollback procedure", "passed": true, "evidence": "Section 3.3 rollback plan"}]}, {"eval_id": 2, "eval_name": "Autopilot Checklists", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 9, "failed": 0, "total": 9, "time_seconds": 53.4, "tokens": 30818, "tool_calls": 3, "errors": 0}, "expectations": [{"text": "Distinguishes dev (Rapid) and prod (Stable)", "passed": true, "evidence": "Separate sections for each environment"}, {"text": "Recognizes Autopilot limitations", "passed": true, "evidence": "States Google manages nodes, focus shifts to control plane"}, {"text": "API deprecation checks with commands", "passed": true, "evidence": "kubectl get --raw /metrics command"}, {"text": "Mandatory resource requests (Autopilot-specific)", "passed": true, "evidence": "Dedicated section with detection command"}, {"text": "Workload readiness items", "passed": true, "evidence": "PDBs, bare pods, graceful shutdown sections"}, {"text": "Version verification commands", "passed": true, "evidence": "gcloud commands for version checking"}, {"text": "Workload health validation", "passed": true, "evidence": "Deployments, StatefulSets, CrashLoopBackOff checks"}, {"text": "Dev-before-prod testing", "passed": true, "evidence": "Rollout sequence starting with dev clusters"}, {"text": "Monitoring/observability validation", "passed": true, "evidence": "Metrics, logging, error rates, latency sections"}]}, {"eval_id": 2, "eval_name": "Autopilot Checklists", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.78, "passed": 7, "failed": 2, "total": 9, "time_seconds": 56.4, "tokens": 30794, "tool_calls": 5, "errors": 0}, "expectations": [{"text": "Distinguishes dev (Rapid) and prod (Stable)", "passed": true, "evidence": "Separate sections for dev and prod"}, {"text": "Recognizes Autopilot limitations", "passed": false, "evidence": "Does not explicitly mention Autopilot-specific limitations"}, {"text": "API deprecation checks with commands", "passed": true, "evidence": "Mentions deprecation audits"}, {"text": "Mandatory resource requests (Autopilot-specific)", "passed": false, "evidence": "Does not mention mandatory resource requests"}, {"text": "Workload readiness items", "passed": true, "evidence": "PDBs, termination grace periods covered"}, {"text": "Version verification commands", "passed": true, "evidence": "Phase 1 post-upgrade verification"}, {"text": "Workload health validation", "passed": true, "evidence": "Application and storage validation"}, {"text": "Dev-before-prod testing", "passed": true, "evidence": "Dev cluster section as testing ground"}, {"text": "Monitoring/observability validation", "passed": true, "evidence": "Observability section in Phase 2"}]}, {"eval_id": 3, "eval_name": "Stuck Upgrade Troubleshooting", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 8, "failed": 0, "total": 8, "time_seconds": 29.8, "tokens": 28536, "tool_calls": 3, "errors": 0}, "expectations": [{"text": "PDB as most likely cause", "passed": true, "evidence": "PDBs listed as #1 cause"}, {"text": "kubectl command to check PDBs", "passed": true, "evidence": "kubectl get pdb --all-namespaces"}, {"text": "Commands to find blocking pods", "passed": true, "evidence": "Step 2 with field-selector spec.nodeName"}, {"text": "Resource constraint diagnosis", "passed": true, "evidence": "Step 4 with kubectl top nodes and FailedScheduling events"}, {"text": "PDB fix (patch/adjustment)", "passed": true, "evidence": "Fix 1 with two patching options"}, {"text": "Surge settings as fix", "passed": true, "evidence": "Fix 3 with gcloud node-pool update"}, {"text": "Webhook issues mentioned", "passed": true, "evidence": "Step 6 covers webhook checking and Fix 5"}, {"text": "Validation steps post-fix", "passed": true, "evidence": "Validation section with watch commands"}]}, {"eval_id": 3, "eval_name": "Stuck Upgrade Troubleshooting", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.75, "passed": 6, "failed": 2, "total": 8, "time_seconds": 38.7, "tokens": 27537, "tool_calls": 5, "errors": 0}, "expectations": [{"text": "PDB as most likely cause", "passed": true, "evidence": "PDBs listed as most common culprit"}, {"text": "kubectl command to check PDBs", "passed": true, "evidence": "kubectl get pdb -A -o wide"}, {"text": "Commands to find blocking pods", "passed": true, "evidence": "Eviction failure events and drain status"}, {"text": "Resource constraint diagnosis", "passed": false, "evidence": "Does not explicitly diagnose capacity constraints"}, {"text": "PDB fix (patch/adjustment)", "passed": true, "evidence": "Option A patches PDB"}, {"text": "Surge settings as fix", "passed": true, "evidence": "Surge upgrade configuration section"}, {"text": "Webhook issues mentioned", "passed": false, "evidence": "Does not mention webhook issues"}, {"text": "Validation steps post-fix", "passed": true, "evidence": "Watch commands for monitoring"}]}], "run_summary": {"with_skill": {"pass_rate": {"mean": 1.0, "stddev": 0.0, "min": 1.0, "max": 1.0}, "time_seconds": {"mean": 51.2, "stddev": 16.6, "min": 29.8, "max": 70.4}, "tokens": {"mean": 30997, "stddev": 2094, "min": 28536, "max": 33636}}, "without_skill": {"pass_rate": {"mean": 0.78, "stddev": 0.02, "min": 0.75, "max": 0.8}, "time_seconds": {"mean": 49.1, "stddev": 7.6, "min": 38.7, "max": 56.4}, "tokens": {"mean": 28637, "stddev": 1498, "min": 27537, "max": 30794}}, "delta": {"pass_rate": "+0.22", "time_seconds": "+2.1", "tokens": "+2360"}}, "notes": ["With-skill runs achieved 100% pass rate across all 3 evals vs 78% without skill", "Key differentiators: sequential upgrade path recommendation, per-pool surge settings, Autopilot-specific constraints, webhook troubleshooting", "Baseline outputs were still solid (78% average) but missed nuanced, environment-specific guidance", "Time overhead is minimal (+2.1s average) \u2014 most of the difference is in the upgrade plan eval", "Token overhead is modest (+2360 average, ~8% increase) for a meaningful quality improvement"]}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>

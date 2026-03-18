@@ -1,0 +1,13 @@
+{
+  "expectations": [
+    {"text": "Identifies PDB as the most likely/common cause of stuck upgrades", "passed": true, "evidence": "States PDBs as most common cause and provides priority order starting with PDBs."},
+    {"text": "Provides kubectl command to check PDBs", "passed": true, "evidence": "Provides 'kubectl get pdb -A -o wide' and 'kubectl get pdb -A -o wide | grep 0'."},
+    {"text": "Provides commands to identify which pods are blocking the drain", "passed": true, "evidence": "Shows eviction failure events and node drain status checking commands."},
+    {"text": "Includes resource constraint diagnosis (capacity issues, pending pods)", "passed": false, "evidence": "Does not explicitly diagnose resource capacity constraints or include commands to check for insufficient resources causing scheduling failures."},
+    {"text": "Provides a fix for restrictive PDBs (patch or temporary adjustment)", "passed": true, "evidence": "Option A patches PDB with maxUnavailable:100%. Option B adjusts unhealthyPodEvictionPolicy."},
+    {"text": "Includes guidance on surge upgrade settings as a potential fix", "passed": true, "evidence": "Section on configuring surge upgrade with maxSurge=3, maxUnavailable=1."},
+    {"text": "Mentions webhook issues as a possible cause", "passed": false, "evidence": "Does not mention webhook issues as a potential cause of stuck upgrades."},
+    {"text": "Includes validation steps to confirm the fix is working", "passed": true, "evidence": "Includes 'watch kubectl get nodes -o wide' and monitoring commands."}
+  ],
+  "summary": {"passed": 6, "failed": 2, "total": 8, "pass_rate": 0.75}
+}

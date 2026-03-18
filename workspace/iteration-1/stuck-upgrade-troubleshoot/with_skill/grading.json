@@ -1,0 +1,13 @@
+{
+  "expectations": [
+    {"text": "Identifies PDB as the most likely/common cause of stuck upgrades", "passed": true, "evidence": "States 'Pod Disruption Budgets (PDBs) blocking drain' as #1 cause and 'PDBs are the #1 reason upgrades get stuck.'"},
+    {"text": "Provides kubectl command to check PDBs", "passed": true, "evidence": "Provides 'kubectl get pdb --all-namespaces' and 'kubectl describe pdb' commands."},
+    {"text": "Provides commands to identify which pods are blocking the drain", "passed": true, "evidence": "Step 2 shows how to find pods on non-upgraded nodes using field-selector spec.nodeName, plus checking for Terminating state."},
+    {"text": "Includes resource constraint diagnosis (capacity issues, pending pods)", "passed": true, "evidence": "Step 4 covers kubectl top nodes, describe nodes for allocated resources, and checking for pending pods with FailedScheduling events."},
+    {"text": "Provides a fix for restrictive PDBs (patch or temporary adjustment)", "passed": true, "evidence": "Fix 1 shows two options: patch with maxUnavailable or get/edit/reapply YAML."},
+    {"text": "Includes guidance on surge upgrade settings as a potential fix", "passed": true, "evidence": "Fix 3 shows gcloud command to update maxSurge to 2 and maxUnavailable to 1."},
+    {"text": "Mentions webhook issues as a possible cause", "passed": true, "evidence": "Step 6 covers checking validatingwebhookconfigurations and mutatingwebhookconfigurations with Fix 5 for resolution."},
+    {"text": "Includes validation steps to confirm the fix is working", "passed": true, "evidence": "Validation section with watch commands for nodes, checking for Terminating pods, and pending pods."}
+  ],
+  "summary": {"passed": 8, "failed": 0, "total": 8, "pass_rate": 1.0}
+}
