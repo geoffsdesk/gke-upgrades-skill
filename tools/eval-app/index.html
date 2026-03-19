@@ -22,11 +22,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .badge-partial{background:#92400e;color:#fcd34d}
 .badge-iter{background:#1e3a5f;color:#7dd3fc}
 .badge-core{background:#4c1d95;color:#c4b5fd}
+.badge-live{background:#7c3aed;color:#e9d5ff}
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.topbar{padding:16px 24px;border-bottom:1px solid #334155;background:#1e293b;display:flex;justify-content:space-between;align-items:center}
+.topbar{padding:16px 24px;border-bottom:1px solid #334155;background:#1e293b;display:flex;justify-content:space-between;align-items:center;gap:12px}
 .topbar h2{font-size:15px;font-weight:600;color:#f8fafc}
+.topbar-btns{display:flex;gap:8px}
 .btn{padding:6px 16px;border-radius:6px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all .15s}
 .btn-success{background:#059669;color:#fff}.btn-success:hover{background:#047857}
+.btn-primary{background:#3b82f6;color:#fff}.btn-primary:hover{background:#2563eb}
+.btn-secondary{background:#334155;color:#e2e8f0}.btn-secondary:hover{background:#475569}
+.btn-purple{background:#7c3aed;color:#fff}.btn-purple:hover{background:#6d28d9}
+.btn:disabled{opacity:.5;cursor:not-allowed}
 .content{flex:1;overflow-y:auto;padding:24px}
 .tab-bar{display:flex;gap:2px;background:#1e293b;border-radius:8px;padding:3px;margin-bottom:24px;width:fit-content}
 .tab{padding:8px 20px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;color:#94a3b8;transition:all .15s}
@@ -72,6 +78,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .welcome p{max-width:400px;line-height:1.6;font-size:13px}
 .notes-list{list-style:none;padding:0}
 .notes-list li{padding:8px 12px;border-left:3px solid #3b82f6;margin-bottom:8px;background:#0f172a;border-radius:0 6px 6px 0;font-size:12px;color:#94a3b8;line-height:1.5}
+/* Settings modal */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:100;display:flex;align-items:center;justify-content:center}
+.modal{background:#1e293b;border:1px solid #334155;border-radius:12px;width:520px;max-height:80vh;overflow-y:auto;padding:24px}
+.modal h3{font-size:16px;font-weight:700;color:#f8fafc;margin-bottom:20px}
+.form-group{margin-bottom:16px}
+.form-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin-bottom:6px;display:block}
+.form-input{width:100%;padding:10px 12px;background:#0f172a;border:1px solid #334155;border-radius:6px;color:#e2e8f0;font-size:13px;font-family:inherit}
+.form-input:focus{outline:none;border-color:#3b82f6}
+.form-select{width:100%;padding:10px 12px;background:#0f172a;border:1px solid #334155;border-radius:6px;color:#e2e8f0;font-size:13px;-webkit-appearance:none}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-hint{font-size:11px;color:#64748b;margin-top:4px}
+.modal-btns{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+/* Live run */
+.live-bar{display:flex;gap:8px;align-items:center;margin-top:12px;padding:12px;background:#0f172a;border:1px solid #334155;border-radius:8px}
+.live-bar .btn{flex-shrink:0}
+.live-status{font-size:11px;color:#64748b;flex:1}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid #334155;border-top-color:#3b82f6;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.live-result{margin-top:12px;border:2px solid #7c3aed;border-radius:8px;overflow:hidden}
+.live-result .output-header{background:#2e1065;border-bottom-color:#7c3aed}
+.live-meta{display:flex;gap:16px;padding:8px 12px;background:#1a1033;font-size:11px;color:#a78bfa;border-bottom:1px solid #7c3aed}
 ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#0f172a}::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
 </style>
 </head>
@@ -88,17 +115,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 <div class="main">
     <div class="topbar">
         <h2 id="topbar-title">Select an iteration</h2>
-        <div><button class="btn btn-success" onclick="submitFeedback()" id="submit-btn" style="display:none">Submit Feedback</button></div>
+        <div class="topbar-btns">
+            <button class="btn btn-secondary" onclick="showSettings()">Settings</button>
+            <button class="btn btn-success" onclick="submitFeedback()" id="submit-btn" style="display:none">Submit Feedback</button>
+        </div>
     </div>
     <div class="content" id="content">
         <div class="welcome" id="welcome">
             <h3>Skill Eval Reviewer</h3>
-            <p>Select an iteration from the sidebar to review outputs, compare with/without skill runs, view benchmarks, and submit feedback. Feedback saves as JSON to the workspace for easy git commits.</p>
+            <p>Select an iteration from the sidebar to review outputs, compare with/without skill runs, view benchmarks, and submit feedback.</p>
+            <p style="margin-top:12px;font-size:12px">Click <strong style="color:#f8fafc">Settings</strong> to add API keys for live Claude and Gemini runs.</p>
         </div>
     </div>
 </div>
+<div id="modal-root"></div>
 <script>
 let APP = null, curIter = null, curSkill = null, curTab = 'outputs', fb = {};
+let liveResults = {}; // key: "eval-name:mode" => result object
+
+// Settings stored in memory only (never persisted to disk for security)
+let settings = {
+    claude_key: '', claude_model: 'claude-sonnet-4-20250514',
+    gemini_key: '', gemini_model: 'gemini-2.0-flash',
+};
 
 async function init() {
     APP = await (await fetch('/api/data')).json();
@@ -124,11 +163,13 @@ function renderNav() {
         if (b) {
             const pr = b.pass_rate.mean;
             badge = pr >= 1 ? '<span class="badge badge-pass">100%</span>'
-                : pr >= .8 ? '<span class="badge badge-partial">'+Math.round(pr*100)+'%</span>'
                 : '<span class="badge badge-partial">'+Math.round(pr*100)+'%</span>';
         }
         h += `<div class="nav-item${curIter===it.name?' active':''}" onclick="selectIter('${it.name}')">${it.name}${badge}</div>`;
     });
+    h += '</div>';
+    h += '<div class="nav-section"><div class="nav-section-title">Live Run</div>';
+    h += `<div class="nav-item${curTab==='live'&&!curIter&&!curSkill?' active':''}" onclick="selectLive()"><span>Run Evals Live</span><span class="badge badge-live">API</span></div>`;
     h += '</div>';
     nav.innerHTML = h;
 }
@@ -145,32 +186,31 @@ function selectIter(name) {
     document.getElementById('submit-btn').style.display = '';
 }
 
+function selectLive() {
+    curIter = null; curSkill = null; curTab = 'live';
+    renderNav(); renderLive();
+    document.getElementById('submit-btn').style.display = 'none';
+}
+
 function renderSkill() {
     const s = APP.skills.find(sk => sk.name === curSkill);
     if (!s) return;
     document.getElementById('topbar-title').textContent = s.name;
-    const wel = document.getElementById('welcome');
-    if (wel) wel.style.display = 'none';
+    const wel = document.getElementById('welcome'); if (wel) wel.style.display = 'none';
     const c = document.getElementById('content');
     let h = `<div class="eval-card"><div class="eval-header"><div class="eval-title">${esc(s.name)}</div></div><div class="eval-body">`;
     h += `<div style="font-size:12px;color:#94a3b8;margin-bottom:12px"><strong style="color:#f8fafc">Type:</strong> ${s.type === 'core' ? 'Core Skill' : 'Specialized Sub-Skill'}</div>`;
     h += `<div style="font-size:12px;color:#94a3b8;margin-bottom:16px"><strong style="color:#f8fafc">Path:</strong> <code style="background:#0f172a;padding:2px 6px;border-radius:4px;font-size:11px">${esc(s.path)}</code></div>`;
-    // Show which iterations have eval data for this skill
     h += `<div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Eval Coverage Across Iterations</div>`;
     h += '<div class="bench-grid">';
     APP.iterations.forEach(it => {
         const ws = it.benchmark?.run_summary?.with_skill;
         const wos = it.benchmark?.run_summary?.without_skill;
-        const wsPr = ws ? Math.round(ws.pass_rate.mean * 100) + '%' : '—';
-        const wosPr = wos ? Math.round(wos.pass_rate.mean * 100) + '%' : '—';
-        h += `<div class="bench-card" style="cursor:pointer" onclick="selectIter('${it.name}')">`;
-        h += `<div class="bench-label">${it.name}</div>`;
-        h += `<div class="bench-value">${wsPr}</div>`;
-        h += `<div class="bench-sub">with skill · baseline ${wosPr}</div>`;
-        h += `</div>`;
+        const wsPr = ws ? Math.round(ws.pass_rate.mean * 100) + '%' : '--';
+        const wosPr = wos ? Math.round(wos.pass_rate.mean * 100) + '%' : '--';
+        h += `<div class="bench-card" style="cursor:pointer" onclick="selectIter('${it.name}')"><div class="bench-label">${it.name}</div><div class="bench-value">${wsPr}</div><div class="bench-sub">with skill / baseline ${wosPr}</div></div>`;
     });
-    h += '</div>';
-    h += '</div></div>';
+    h += '</div></div></div>';
     c.innerHTML = h;
 }
 
@@ -178,10 +218,8 @@ function render() {
     const it = APP.iterations.find(i => i.name === curIter);
     if (!it) return;
     document.getElementById('topbar-title').textContent = curIter;
-    const wel = document.getElementById('welcome');
-    if (wel) wel.style.display = 'none';
+    const wel = document.getElementById('welcome'); if (wel) wel.style.display = 'none';
     if (it.feedback?.reviews) it.feedback.reviews.forEach(r => { fb[r.eval_name] = r.feedback; });
-
     const c = document.getElementById('content');
     const idx = APP.iterations.findIndex(i => i.name === curIter);
     let h = '<div class="tab-bar">';
@@ -189,12 +227,10 @@ function render() {
     h += `<div class="tab ${curTab==='benchmark'?'active':''}" onclick="tab('benchmark')">Benchmark</div>`;
     if (idx > 0) h += `<div class="tab ${curTab==='compare'?'active':''}" onclick="tab('compare')">Compare Iterations</div>`;
     h += '</div>';
-
     if (curTab === 'outputs') h += outputsTab(it);
     else if (curTab === 'benchmark') h += benchTab(it);
     else if (curTab === 'compare') h += compareTab(it, idx);
     c.innerHTML = h;
-
     document.querySelectorAll('.feedback-area').forEach(ta => { if (fb[ta.dataset.key]) ta.value = fb[ta.dataset.key]; });
 }
 
@@ -204,7 +240,7 @@ function saveFb() { document.querySelectorAll('.feedback-area').forEach(ta => { 
 function outputsTab(it) {
     let h = '';
     it.evals.forEach((ev, i) => {
-        h += `<div class="eval-card"><div class="eval-header"><div class="eval-title">Eval #${ev.eval_id??i+1} — ${ev.name}</div><div class="eval-prompt">${esc(ev.prompt)}</div></div><div class="eval-body">`;
+        h += `<div class="eval-card"><div class="eval-header"><div class="eval-title">Eval #${ev.eval_id??i+1} -- ${ev.name}</div><div class="eval-prompt">${esc(ev.prompt)}</div></div><div class="eval-body">`;
         const cfgs = Object.keys(ev.configs);
         h += '<div class="config-tabs">';
         cfgs.forEach((cfg, ci) => {
@@ -216,8 +252,8 @@ function outputsTab(it) {
             const run = ev.configs[cfg];
             h += `<div class="config-panel" data-eval="${ev.name}" data-config="${cfg}" style="${ci>0?'display:none':''}">`;
             if (run.timing) {
-                const s = run.timing.total_duration_seconds || (run.timing.duration_ms/1000);
-                h += `<div style="font-size:11px;color:#64748b;margin-bottom:12px">${s.toFixed(1)}s · ${(run.timing.total_tokens||0).toLocaleString()} tokens</div>`;
+                const s = run.timing.total_duration_seconds || (run.timing.duration_ms ? run.timing.duration_ms/1000 : 0);
+                if (s) h += `<div style="font-size:11px;color:#64748b;margin-bottom:12px">${s.toFixed(1)}s${run.timing.total_tokens ? ' / '+run.timing.total_tokens.toLocaleString()+' tokens' : ''}</div>`;
             }
             run.outputs.forEach(f => {
                 h += `<div class="output-block"><div class="output-header"><span>${esc(f.name)}</span><span>${f.ext||''}</span></div>`;
@@ -228,7 +264,7 @@ function outputsTab(it) {
             });
             if (run.grading?.expectations) {
                 h += '<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Grading';
-                if (run.grading.summary) { const s = run.grading.summary; h += ` — ${s.passed}/${s.total} (${Math.round(s.pass_rate*100)}%)`; }
+                if (run.grading.summary) { const s = run.grading.summary; h += ` -- ${s.passed}/${s.total} (${Math.round(s.pass_rate*100)}%)`; }
                 h += '</div>';
                 run.grading.expectations.forEach(ex => {
                     const cls = ex.passed ? 'grade-pass' : 'grade-fail';
@@ -254,24 +290,24 @@ function benchTab(it) {
     let h = '';
     const ws = b.run_summary?.with_skill, wos = b.run_summary?.without_skill, d = b.run_summary?.delta;
     h += '<div class="bench-grid">';
-    if (ws) h += bc('With Skill', Math.round(ws.pass_rate.mean*100)+'%', `σ ${(ws.pass_rate.stddev*100).toFixed(1)}%`);
-    if (wos) h += bc('Baseline', Math.round(wos.pass_rate.mean*100)+'%', `σ ${(wos.pass_rate.stddev*100).toFixed(1)}%`);
+    if (ws) h += bc('With Skill', Math.round(ws.pass_rate.mean*100)+'%', `stddev ${(ws.pass_rate.stddev*100).toFixed(1)}%`);
+    if (wos) h += bc('Baseline', Math.round(wos.pass_rate.mean*100)+'%', `stddev ${(wos.pass_rate.stddev*100).toFixed(1)}%`);
     if (d) { const dr=parseFloat(d.pass_rate); h += bc('Delta', (dr>0?'+':'')+Math.round(dr*100)+'%', '', dr>0?'delta-pos':dr<0?'delta-neg':'delta-neutral'); }
-    if (ws) h += bc('Time (Skill)', ws.time_seconds.mean.toFixed(1)+'s', `σ ${ws.time_seconds.stddev.toFixed(1)}s`);
-    if (wos) h += bc('Time (Baseline)', wos.time_seconds.mean.toFixed(1)+'s', `σ ${wos.time_seconds.stddev.toFixed(1)}s`);
-    if (ws) h += bc('Tokens (Skill)', ws.tokens.mean.toLocaleString(), `σ ${ws.tokens.stddev.toLocaleString()}`);
+    if (ws) h += bc('Time (Skill)', ws.time_seconds.mean.toFixed(1)+'s', `stddev ${ws.time_seconds.stddev.toFixed(1)}s`);
+    if (wos) h += bc('Time (Baseline)', wos.time_seconds.mean.toFixed(1)+'s', `stddev ${wos.time_seconds.stddev.toFixed(1)}s`);
+    if (ws) h += bc('Tokens (Skill)', ws.tokens.mean.toLocaleString(), `stddev ${ws.tokens.stddev.toLocaleString()}`);
     h += '</div>';
     if (b.runs) {
         h += '<div style="margin-top:24px"><div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Per-Eval Breakdown</div>';
         const byE = {};
         b.runs.forEach(r => { const k = r.eval_name||r.eval_id; if (!byE[k]) byE[k]={}; byE[k][r.configuration]=r; });
         Object.entries(byE).forEach(([name, cfgs]) => {
-            h += `<div class="eval-card" style="margin-bottom:12px"><div style="padding:16px 20px"><div style="font-size:13px;font-weight:700;color:#f8fafc;margin-bottom:12px">${esc(name)}</div><div class="compare-grid">`;
+            h += `<div class="eval-card" style="margin-bottom:12px"><div style="padding:16px 20px"><div style="font-size:13px;font-weight:700;color:#f8fafc;margin-bottom:12px">${esc(String(name))}</div><div class="compare-grid">`;
             ['with_skill','without_skill'].forEach(cfg => {
                 const r = cfgs[cfg]; if (!r) return;
                 const lbl = cfg==='with_skill'?'With Skill':'Without Skill';
                 h += `<div class="compare-col ${cfg}"><h4>${lbl}</h4><div style="font-size:24px;font-weight:800;color:#f8fafc">${Math.round(r.result.pass_rate*100)}%</div>`;
-                h += `<div style="font-size:11px;color:#64748b;margin-top:4px">${r.result.passed}/${r.result.total} · ${r.result.time_seconds?.toFixed(1)||'?'}s</div></div>`;
+                h += `<div style="font-size:11px;color:#64748b;margin-top:4px">${r.result.passed}/${r.result.total}${r.result.time_seconds ? ' / '+r.result.time_seconds.toFixed(1)+'s' : ''}</div></div>`;
             });
             h += '</div></div></div>';
         });
@@ -288,7 +324,7 @@ function benchTab(it) {
 function compareTab(it, idx) {
     const prev = APP.iterations[idx-1];
     if (!prev) return '<div style="color:#64748b;text-align:center;padding:40px">No previous iteration.</div>';
-    let h = `<div style="font-size:13px;color:#94a3b8;margin-bottom:20px">Comparing <strong style="color:#f8fafc">${prev.name}</strong> → <strong style="color:#f8fafc">${it.name}</strong></div>`;
+    let h = `<div style="font-size:13px;color:#94a3b8;margin-bottom:20px">Comparing <strong style="color:#f8fafc">${prev.name}</strong> to <strong style="color:#f8fafc">${it.name}</strong></div>`;
     if (it.benchmark && prev.benchmark) {
         const w1 = prev.benchmark.run_summary?.with_skill, w2 = it.benchmark.run_summary?.with_skill;
         if (w1 && w2) {
@@ -296,7 +332,7 @@ function compareTab(it, idx) {
             h += bc(prev.name, Math.round(w1.pass_rate.mean*100)+'%', w1.time_seconds.mean.toFixed(1)+'s');
             h += bc(it.name, Math.round(w2.pass_rate.mean*100)+'%', w2.time_seconds.mean.toFixed(1)+'s');
             const td = w2.time_seconds.mean - w1.time_seconds.mean;
-            h += bc('Time Δ', (td>0?'+':'')+td.toFixed(1)+'s', td<0?'Faster':'Slower', td<0?'delta-pos':'delta-neg');
+            h += bc('Time delta', (td>0?'+':'')+td.toFixed(1)+'s', td<0?'Faster':'Slower', td<0?'delta-pos':'delta-neg');
             h += '</div>';
         }
     }
@@ -319,6 +355,198 @@ function compareTab(it, idx) {
     });
     return h;
 }
+
+// ========== LIVE RUN TAB ==========
+
+function renderLive() {
+    document.getElementById('topbar-title').textContent = 'Live Eval Runner';
+    const wel = document.getElementById('welcome'); if (wel) wel.style.display = 'none';
+    const c = document.getElementById('content');
+    const hasKey = settings.claude_key || settings.gemini_key;
+
+    let h = '';
+    if (!hasKey) {
+        h += '<div class="eval-card"><div class="eval-body" style="text-align:center;padding:40px">';
+        h += '<div style="font-size:14px;color:#f8fafc;margin-bottom:8px">No API keys configured</div>';
+        h += '<div style="font-size:12px;color:#64748b;margin-bottom:16px">Add your Claude or Gemini API key in Settings to run live evals.</div>';
+        h += '<button class="btn btn-primary" onclick="showSettings()">Open Settings</button>';
+        h += '</div></div>';
+        c.innerHTML = h;
+        return;
+    }
+
+    // Load evals from evals.json
+    const coreSkill = APP.skills.find(s => s.type === 'core');
+    const lastIter = APP.iterations[APP.iterations.length - 1];
+    const evals = lastIter?.evals || [];
+
+    h += '<div style="font-size:12px;color:#94a3b8;margin-bottom:20px">Run eval prompts live against Claude or Gemini APIs. <strong style="color:#f8fafc">With Skill</strong> sends SKILL.md + references as system context. <strong style="color:#f8fafc">Without Skill</strong> sends the raw prompt only.</div>';
+
+    // Provider selector
+    h += '<div style="display:flex;gap:12px;margin-bottom:24px;align-items:center">';
+    h += '<span style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px">Provider:</span>';
+    if (settings.claude_key) h += `<button class="btn btn-primary" onclick="runAllLive('claude')" id="btn-run-claude">Run All (Claude ${settings.claude_model.split('-').slice(0,2).join(' ')})</button>`;
+    if (settings.gemini_key) h += `<button class="btn btn-purple" onclick="runAllLive('gemini')" id="btn-run-gemini">Run All (Gemini ${settings.gemini_model})</button>`;
+    h += '</div>';
+
+    evals.forEach((ev, i) => {
+        const eid = ev.eval_id ?? i + 1;
+        h += `<div class="eval-card" id="live-eval-${eid}"><div class="eval-header"><div class="eval-title">Eval #${eid} -- ${ev.name}</div><div class="eval-prompt">${esc(ev.prompt)}</div></div><div class="eval-body">`;
+
+        // Run buttons per eval
+        h += '<div style="display:flex;gap:8px;margin-bottom:16px">';
+        if (settings.claude_key) {
+            h += `<button class="btn btn-primary" onclick="runSingleLive(${eid},'claude','with_skill')" id="btn-${eid}-claude-ws">Claude + Skill</button>`;
+            h += `<button class="btn btn-secondary" onclick="runSingleLive(${eid},'claude','without_skill')" id="btn-${eid}-claude-wos">Claude Baseline</button>`;
+        }
+        if (settings.gemini_key) {
+            h += `<button class="btn btn-purple" onclick="runSingleLive(${eid},'gemini','with_skill')" id="btn-${eid}-gemini-ws">Gemini + Skill</button>`;
+            h += `<button class="btn btn-secondary" onclick="runSingleLive(${eid},'gemini','without_skill')" id="btn-${eid}-gemini-wos">Gemini Baseline</button>`;
+        }
+        h += '</div>';
+
+        // Results area
+        h += `<div id="live-results-${eid}">`;
+        // Show any existing live results
+        for (const [key, res] of Object.entries(liveResults)) {
+            if (key.startsWith(eid + ':')) h += renderLiveResult(res);
+        }
+        h += '</div>';
+
+        h += '</div></div>';
+    });
+
+    c.innerHTML = h;
+}
+
+function renderLiveResult(res) {
+    const modeLabel = res.mode === 'with_skill' ? 'With Skill' : 'Without Skill';
+    const provLabel = res.provider === 'claude' ? 'Claude' : 'Gemini';
+    const borderColor = res.provider === 'claude' ? '#3b82f6' : '#7c3aed';
+    const headerBg = res.provider === 'claude' ? '#1e3a5f' : '#2e1065';
+    const metaBg = res.provider === 'claude' ? '#0f2847' : '#1a1033';
+    const metaColor = res.provider === 'claude' ? '#7dd3fc' : '#a78bfa';
+
+    let h = `<div class="live-result" style="border-color:${borderColor};margin-bottom:12px">`;
+    h += `<div class="output-header" style="background:${headerBg};border-bottom-color:${borderColor}"><span>${provLabel} - ${modeLabel}</span><span>${res.model || ''}</span></div>`;
+    h += `<div class="live-meta" style="background:${metaBg};color:${metaColor};border-bottom-color:${borderColor}">`
+    h += `<span>${res.time_seconds}s</span>`;
+    h += `<span>${(res.tokens||0).toLocaleString()} tokens</span>`;
+    if (res.input_tokens) h += `<span>(${res.input_tokens.toLocaleString()} in / ${(res.output_tokens||0).toLocaleString()} out)</span>`;
+    h += '</div>';
+    if (res.error) {
+        h += `<div class="output-content" style="color:#fca5a5">Error: ${esc(res.error)}</div>`;
+    } else {
+        h += `<div class="output-content">${esc(res.content)}</div>`;
+    }
+    h += '</div>';
+    return h;
+}
+
+async function runSingleLive(evalId, provider, mode) {
+    const lastIter = APP.iterations[APP.iterations.length - 1];
+    const ev = lastIter?.evals?.find(e => (e.eval_id ?? 0) === evalId);
+    if (!ev) return;
+
+    const btnId = `btn-${evalId}-${provider}-${mode === 'with_skill' ? 'ws' : 'wos'}`;
+    const btn = document.getElementById(btnId);
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Running...'; }
+
+    const key = `${evalId}:${provider}:${mode}`;
+    const api_key = provider === 'claude' ? settings.claude_key : settings.gemini_key;
+    const model = provider === 'claude' ? settings.claude_model : settings.gemini_model;
+
+    try {
+        const resp = await fetch('/api/run', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ provider, api_key, model, prompt: ev.prompt, mode })
+        });
+        const data = await resp.json();
+        if (data.ok) {
+            liveResults[key] = data.result;
+            const container = document.getElementById(`live-results-${evalId}`);
+            if (container) container.innerHTML += renderLiveResult(data.result);
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+        }
+    } catch (e) {
+        alert('Request failed: ' + e.message);
+    }
+
+    if (btn) { btn.disabled = false; btn.textContent = btn.textContent.replace('Running...', 'Done').replace('Running...','Rerun'); }
+}
+
+async function runAllLive(provider) {
+    const lastIter = APP.iterations[APP.iterations.length - 1];
+    if (!lastIter?.evals?.length) return;
+
+    const btnId = `btn-run-${provider}`;
+    const btn = document.getElementById(btnId);
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Running all...'; }
+
+    for (const ev of lastIter.evals) {
+        const eid = ev.eval_id ?? 0;
+        await runSingleLive(eid, provider, 'with_skill');
+        await runSingleLive(eid, provider, 'without_skill');
+    }
+
+    if (btn) { btn.disabled = false; btn.textContent = 'Done - Run Again'; }
+}
+
+// ========== SETTINGS MODAL ==========
+
+function showSettings() {
+    const m = document.getElementById('modal-root');
+    m.innerHTML = `<div class="modal-overlay" onclick="if(event.target===this)closeSettings()"><div class="modal">
+        <h3>API Settings</h3>
+        <div class="form-group">
+            <label class="form-label">Claude API Key</label>
+            <input type="password" class="form-input" id="s-claude-key" value="${esc(settings.claude_key)}" placeholder="sk-ant-...">
+            <div class="form-hint">From console.anthropic.com. Stored in memory only -- never saved to disk.</div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Claude Model</label>
+            <select class="form-select" id="s-claude-model">
+                <option value="claude-sonnet-4-20250514"${settings.claude_model==='claude-sonnet-4-20250514'?' selected':''}>Claude Sonnet 4</option>
+                <option value="claude-opus-4-20250514"${settings.claude_model==='claude-opus-4-20250514'?' selected':''}>Claude Opus 4</option>
+                <option value="claude-haiku-4-5-20251001"${settings.claude_model==='claude-haiku-4-5-20251001'?' selected':''}>Claude Haiku 4.5</option>
+            </select>
+        </div>
+        <hr style="border-color:#334155;margin:20px 0">
+        <div class="form-group">
+            <label class="form-label">Gemini API Key</label>
+            <input type="password" class="form-input" id="s-gemini-key" value="${esc(settings.gemini_key)}" placeholder="AIza...">
+            <div class="form-hint">From aistudio.google.com. Stored in memory only -- never saved to disk.</div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Gemini Model</label>
+            <select class="form-select" id="s-gemini-model">
+                <option value="gemini-2.0-flash"${settings.gemini_model==='gemini-2.0-flash'?' selected':''}>Gemini 2.0 Flash</option>
+                <option value="gemini-2.5-pro-preview-05-06"${settings.gemini_model==='gemini-2.5-pro-preview-05-06'?' selected':''}>Gemini 2.5 Pro</option>
+                <option value="gemini-2.5-flash-preview-05-20"${settings.gemini_model==='gemini-2.5-flash-preview-05-20'?' selected':''}>Gemini 2.5 Flash</option>
+            </select>
+        </div>
+        <div class="modal-btns">
+            <button class="btn btn-secondary" onclick="closeSettings()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+        </div>
+    </div></div>`;
+}
+
+function saveSettings() {
+    settings.claude_key = document.getElementById('s-claude-key').value.trim();
+    settings.claude_model = document.getElementById('s-claude-model').value;
+    settings.gemini_key = document.getElementById('s-gemini-key').value.trim();
+    settings.gemini_model = document.getElementById('s-gemini-model').value;
+    closeSettings();
+    // Re-render current view to show/hide live buttons
+    if (curTab === 'live') renderLive();
+}
+
+function closeSettings() { document.getElementById('modal-root').innerHTML = ''; }
+
+// ========== UTILITIES ==========
 
 function bc(label, value, sub, cls) {
     return `<div class="bench-card"><div class="bench-label">${label}</div><div class="bench-value${cls?' '+cls:''}">${value}</div>${sub?'<div class="bench-sub">'+sub+'</div>':''}</div>`;

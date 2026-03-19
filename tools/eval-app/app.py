@@ -19,10 +19,14 @@ import mimetypes
 import os
 import sys
 import base64
+import time
+import threading
 from datetime import datetime, timezone
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 from urllib.parse import urlparse
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
 
 METADATA_FILES = {"transcript.md", "user_notes.md", "metrics.json"}
 
@@ -350,6 +354,106 @@ def build_api_data(repo_root: Path, workspace: Path) -> dict:
     return {"skills": discover_skills(repo_root), "iterations": iter_data, "repo_root": str(repo_root)}
 
 
+def build_skill_context(repo_root: Path) -> str:
+    """Build system prompt from SKILL.md + references for with_skill runs."""
+    skill_dir = repo_root / "skill"
+    parts = []
+    skill_md = skill_dir / "SKILL.md"
+    if skill_md.exists():
+        parts.append(f"# SKILL.md\n\n{skill_md.read_text()}")
+    refs_dir = skill_dir / "references"
+    if refs_dir.is_dir():
+        for f in sorted(refs_dir.iterdir()):
+            if f.is_file() and f.suffix in TEXT_EXTENSIONS:
+                parts.append(f"# Reference: {f.name}\n\n{f.read_text()}")
+    return "\n\n---\n\n".join(parts)
+
+
+def call_claude(api_key: str, model: str, system: str, prompt: str) -> dict:
+    """Call Claude Messages API. Returns {content, tokens, time_seconds, error}."""
+    t0 = time.time()
+    body = json.dumps({
+        "model": model,
+        "max_tokens": 8192,
+        "system": system if system else "You are a helpful assistant.",
+        "messages": [{"role": "user", "content": prompt}],
+    }).encode()
+    req = Request(
+        "https://api.anthropic.com/v1/messages",
+        data=body,
+        headers={
+            "Content-Type": "application/json",
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01",
+        },
+        method="POST",
+    )
+    try:
+        with urlopen(req, timeout=120) as resp:
+            data = json.loads(resp.read())
+        elapsed = time.time() - t0
+        content = ""
+        for block in data.get("content", []):
+            if block.get("type") == "text":
+                content += block["text"]
+        usage = data.get("usage", {})
+        return {
+            "content": content,
+            "tokens": usage.get("input_tokens", 0) + usage.get("output_tokens", 0),
+            "input_tokens": usage.get("input_tokens", 0),
+            "output_tokens": usage.get("output_tokens", 0),
+            "time_seconds": round(elapsed, 1),
+            "model": data.get("model", model),
+            "error": None,
+        }
+    except HTTPError as e:
+        elapsed = time.time() - t0
+        err_body = e.read().decode() if e.readable() else str(e)
+        return {"content": "", "tokens": 0, "time_seconds": round(elapsed, 1), "error": f"HTTP {e.code}: {err_body}"}
+    except Exception as e:
+        elapsed = time.time() - t0
+        return {"content": "", "tokens": 0, "time_seconds": round(elapsed, 1), "error": str(e)}
+
+
+def call_gemini(api_key: str, model: str, system: str, prompt: str) -> dict:
+    """Call Gemini generateContent API. Returns {content, tokens, time_seconds, error}."""
+    t0 = time.time()
+    body_data = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"maxOutputTokens": 8192},
+    }
+    if system:
+        body_data["systemInstruction"] = {"parts": [{"text": system}]}
+    body = json.dumps(body_data).encode()
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+    req = Request(url, data=body, headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        with urlopen(req, timeout=120) as resp:
+            data = json.loads(resp.read())
+        elapsed = time.time() - t0
+        content = ""
+        for cand in data.get("candidates", []):
+            for part in cand.get("content", {}).get("parts", []):
+                content += part.get("text", "")
+        usage = data.get("usageMetadata", {})
+        return {
+            "content": content,
+            "tokens": usage.get("totalTokenCount", 0),
+            "input_tokens": usage.get("promptTokenCount", 0),
+            "output_tokens": usage.get("candidatesTokenCount", 0),
+            "time_seconds": round(elapsed, 1),
+            "model": model,
+            "error": None,
+        }
+    except HTTPError as e:
+        elapsed = time.time() - t0
+        err_body = e.read().decode() if e.readable() else str(e)
+        return {"content": "", "tokens": 0, "time_seconds": round(elapsed, 1), "error": f"HTTP {e.code}: {err_body}"}
+    except Exception as e:
+        elapsed = time.time() - t0
+        return {"content": "", "tokens": 0, "time_seconds": round(elapsed, 1), "error": str(e)}
+
+
 class EvalHandler(BaseHTTPRequestHandler):
     repo_root: Path = None
     workspace: Path = None
@@ -369,13 +473,18 @@ class EvalHandler(BaseHTTPRequestHandler):
             data = build_api_data(self.repo_root, self.workspace)
             self.send_json(data)
             return
+        if path == "/api/skill-context":
+            ctx = build_skill_context(self.repo_root)
+            self.send_json({"context": ctx, "length": len(ctx)})
+            return
         self.send_error(404)
 
     def do_POST(self):
         path = urlparse(self.path).path
+        content_len = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(content_len) if content_len else b""
+
         if path == "/api/feedback":
-            content_len = int(self.headers.get("Content-Length", 0))
-            body = self.rfile.read(content_len)
             try:
                 payload = json.loads(body)
                 iteration = payload.get("iteration", "")
@@ -387,6 +496,51 @@ class EvalHandler(BaseHTTPRequestHandler):
             except Exception as e:
                 self.send_json({"ok": False, "error": str(e)}, status=400)
             return
+
+        if path == "/api/run":
+            try:
+                payload = json.loads(body)
+                provider = payload.get("provider", "claude")
+                api_key = payload.get("api_key", "")
+                model = payload.get("model", "")
+                prompt = payload.get("prompt", "")
+                mode = payload.get("mode", "without_skill")
+
+                if not api_key:
+                    self.send_json({"ok": False, "error": "No API key provided"}, status=400)
+                    return
+                if not prompt:
+                    self.send_json({"ok": False, "error": "No prompt provided"}, status=400)
+                    return
+
+                system = ""
+                if mode == "with_skill":
+                    system = build_skill_context(self.repo_root)
+
+                print(f"  Running {provider}/{model} [{mode}] ...")
+                if provider == "claude":
+                    if not model:
+                        model = "claude-sonnet-4-20250514"
+                    result = call_claude(api_key, model, system, prompt)
+                elif provider == "gemini":
+                    if not model:
+                        model = "gemini-2.0-flash"
+                    result = call_gemini(api_key, model, system, prompt)
+                else:
+                    self.send_json({"ok": False, "error": f"Unknown provider: {provider}"}, status=400)
+                    return
+
+                result["provider"] = provider
+                result["mode"] = mode
+                if result["error"]:
+                    print(f"  Error: {result['error'][:100]}")
+                else:
+                    print(f"  Done: {result['time_seconds']}s, {result['tokens']} tokens")
+                self.send_json({"ok": True, "result": result})
+            except Exception as e:
+                self.send_json({"ok": False, "error": str(e)}, status=400)
+            return
+
         self.send_error(404)
 
     def send_json(self, data, status=200):
