@@ -12,6 +12,9 @@ Usage:
     # Run with Gemini
     python3 tools/run-evals.py --provider gemini --api-key AIza... --iteration 4 --model gemini-2.0-flash
 
+    # Run BOTH providers in same iteration (head-to-head comparison)
+    python3 tools/run-evals.py --provider both --api-key sk-ant-... --gemini-key AIza... --iteration 4
+
     # Run only specific evals
     python3 tools/run-evals.py --provider claude --api-key sk-ant-... --iteration 4 --evals 4,5,6
 
@@ -218,11 +221,21 @@ def grade_output(provider: str, api_key: str, model: str,
 # ---------------------------------------------------------------------------
 # File I/O
 # ---------------------------------------------------------------------------
-def ensure_iteration_dir(iteration: int) -> Path:
-    """Create workspace/iteration-N/{with_skill,without_skill}/ dirs."""
+def ensure_iteration_dir(iteration: int, provider: str = None) -> Path:
+    """Create workspace/iteration-N/ dirs with appropriate subdirectories.
+
+    If provider is given (for 'both' mode), creates provider-prefixed dirs:
+        claude_with_skill/, claude_without_skill/, gemini_with_skill/, gemini_without_skill/
+    Otherwise creates standard dirs:
+        with_skill/, without_skill/
+    """
     base = WORKSPACE / f"iteration-{iteration}"
-    (base / "with_skill").mkdir(parents=True, exist_ok=True)
-    (base / "without_skill").mkdir(parents=True, exist_ok=True)
+    if provider:
+        (base / f"{provider}_with_skill").mkdir(parents=True, exist_ok=True)
+        (base / f"{provider}_without_skill").mkdir(parents=True, exist_ok=True)
+    else:
+        (base / "with_skill").mkdir(parents=True, exist_ok=True)
+        (base / "without_skill").mkdir(parents=True, exist_ok=True)
     return base
 
 
@@ -260,56 +273,94 @@ def save_grading(iteration_dir: Path, eval_id: int, mode: str, grading: dict):
     path.write_text(json.dumps(grading, indent=2))
 
 
+def _compute_mode_stats(mode_dir: Path) -> dict:
+    """Compute stats for a single mode directory."""
+    evals = []
+    total_passed = 0
+    total_assertions = 0
+
+    grading_files = sorted(mode_dir.glob("eval-*-grading.json"))
+    for gf in grading_files:
+        eval_id = int(gf.name.split("-")[1])
+        try:
+            data = json.loads(gf.read_text())
+        except (json.JSONDecodeError, OSError):
+            continue
+
+        assertions = data.get("assertions", [])
+        passed = sum(1 for a in assertions if a.get("passed"))
+        total = len(assertions)
+        total_passed += passed
+        total_assertions += total
+
+        evals.append({
+            "eval_id": eval_id,
+            "pass_rate": round(passed / total, 3) if total else 0,
+            "pass_count": passed,
+            "total": total,
+        })
+
+    overall = round(total_passed / total_assertions, 3) if total_assertions else 0
+    return {
+        "evals": evals,
+        "overall_pass_rate": overall,
+        "total_passed": total_passed,
+        "total_assertions": total_assertions,
+    }
+
+
 def compute_benchmark(iteration_dir: Path, iteration: int) -> dict:
-    """Compute aggregate benchmark from grading files."""
+    """Compute aggregate benchmark from grading files.
+
+    Auto-detects directory layout:
+    - Standard: with_skill/, without_skill/
+    - Both mode: claude_with_skill/, claude_without_skill/, gemini_with_skill/, gemini_without_skill/
+    """
     benchmark = {
         "iteration": iteration,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
-    for mode in ["with_skill", "without_skill"]:
-        mode_dir = iteration_dir / mode
-        evals = []
-        total_passed = 0
-        total_assertions = 0
+    # Detect all mode directories
+    mode_dirs = sorted([
+        d.name for d in iteration_dir.iterdir()
+        if d.is_dir() and ("with_skill" in d.name or "without_skill" in d.name)
+    ])
 
-        grading_files = sorted(mode_dir.glob("eval-*-grading.json"))
-        for gf in grading_files:
-            eval_id = int(gf.name.split("-")[1])
-            try:
-                data = json.loads(gf.read_text())
-            except (json.JSONDecodeError, OSError):
-                continue
+    for mode_name in mode_dirs:
+        mode_dir = iteration_dir / mode_name
+        benchmark[mode_name] = _compute_mode_stats(mode_dir)
 
-            assertions = data.get("assertions", [])
-            passed = sum(1 for a in assertions if a.get("passed"))
-            total = len(assertions)
-            total_passed += passed
-            total_assertions += total
+    # Compute deltas for each provider
+    providers = set()
+    for m in mode_dirs:
+        parts = m.rsplit("_", 2)
+        if len(parts) == 3:  # provider_with_skill or provider_without_skill
+            providers.add(parts[0])
+        elif m in ("with_skill", "without_skill"):
+            providers.add("default")
 
-            evals.append({
-                "eval_id": eval_id,
-                "pass_rate": round(passed / total, 3) if total else 0,
-                "pass_count": passed,
-                "total": total,
-            })
+    deltas = {}
+    for provider in sorted(providers):
+        if provider == "default":
+            ws_key, wos_key = "with_skill", "without_skill"
+        else:
+            ws_key = f"{provider}_with_skill"
+            wos_key = f"{provider}_without_skill"
 
-        overall = round(total_passed / total_assertions, 3) if total_assertions else 0
-        benchmark[mode] = {
-            "evals": evals,
-            "overall_pass_rate": overall,
-            "total_passed": total_passed,
-            "total_assertions": total_assertions,
+        ws = benchmark.get(ws_key, {})
+        wos = benchmark.get(wos_key, {})
+        ws_rate = ws.get("overall_pass_rate", 0)
+        wos_rate = wos.get("overall_pass_rate", 0)
+        delta = round(ws_rate - wos_rate, 3)
+
+        deltas[provider] = {
+            "pass_rate_improvement": delta,
+            "with_skill_rate": ws_rate,
+            "without_skill_rate": wos_rate,
         }
 
-    ws = benchmark.get("with_skill", {})
-    wos = benchmark.get("without_skill", {})
-    delta = round(ws.get("overall_pass_rate", 0) - wos.get("overall_pass_rate", 0), 3)
-    benchmark["delta"] = {
-        "pass_rate_improvement": delta,
-        "with_skill_rate": ws.get("overall_pass_rate", 0),
-        "without_skill_rate": wos.get("overall_pass_rate", 0),
-    }
+    benchmark["delta"] = deltas if len(deltas) > 1 else deltas.get("default", deltas.get(list(deltas.keys())[0], {}))
 
     return benchmark
 
@@ -317,53 +368,21 @@ def compute_benchmark(iteration_dir: Path, iteration: int) -> dict:
 # ---------------------------------------------------------------------------
 # Main runner
 # ---------------------------------------------------------------------------
-def run_evals(args):
-    # Load evals
-    evals_data = json.loads(EVALS_PATH.read_text())
-    all_evals = evals_data["evals"]
-
-    # Filter evals if specified
-    if args.evals:
-        eval_ids = {int(x) for x in args.evals.split(",")}
-        all_evals = [e for e in all_evals if e["id"] in eval_ids]
-        print(f"Running {len(all_evals)} selected evals: {sorted(eval_ids)}")
-    else:
-        print(f"Running all {len(all_evals)} evals")
-
-    # Resolve model name
-    model = args.model
-    if args.provider == "claude" and model in CLAUDE_MODELS:
-        model = CLAUDE_MODELS[model]
-    elif args.provider == "gemini" and model in GEMINI_MODELS:
-        model = GEMINI_MODELS[model]
-    print(f"Provider: {args.provider} | Model: {model} | Iteration: {args.iteration}")
-
-    # Build skill context
-    skill_context = build_skill_context()
-    print(f"Skill context: {len(skill_context)} chars")
-
-    # Create output directory
-    iteration_dir = ensure_iteration_dir(args.iteration)
-    print(f"Output: {iteration_dir}\n")
-
-    if args.dry_run:
-        print("=== DRY RUN ===")
-        for ev in all_evals:
-            print(f"  Eval {ev['id']}: {ev['prompt'][:80]}...")
-            print(f"    Expectations: {len(ev['expectations'])}")
-        print(f"\nWould run {len(all_evals)} evals x 2 modes = {len(all_evals)*2} API calls")
-        print(f"Plus {len(all_evals)*2} grading calls = {len(all_evals)*4} total API calls")
-        return
-
-    # Run evals
+def _run_provider(provider: str, api_key: str, model: str, all_evals: list,
+                   skill_context: str, iteration_dir: Path, args, mode_prefix: str = ""):
+    """Run all evals for a single provider."""
     modes = ["with_skill", "without_skill"]
     total_calls = len(all_evals) * len(modes)
     call_num = 0
 
-    for mode in modes:
-        system = skill_context if mode == "with_skill" else ""
+    for base_mode in modes:
+        mode = f"{mode_prefix}{base_mode}" if mode_prefix else base_mode
+        # Ensure dir exists
+        (iteration_dir / mode).mkdir(parents=True, exist_ok=True)
+
+        system = skill_context if "with_skill" in mode else ""
         print(f"\n{'='*60}")
-        print(f"  MODE: {mode}")
+        print(f"  {provider.upper()} | MODE: {mode}")
         print(f"{'='*60}")
 
         for ev in all_evals:
@@ -372,7 +391,6 @@ def run_evals(args):
             prompt = ev["prompt"]
             expectations = ev["expectations"]
 
-            # Check if output already exists (skip if not --force)
             output_path = iteration_dir / mode / f"eval-{eval_id}-output.md"
             if output_path.exists() and not args.force:
                 print(f"  [{call_num}/{total_calls}] Eval {eval_id} ({mode}) — SKIPPED (exists)")
@@ -380,22 +398,19 @@ def run_evals(args):
 
             print(f"  [{call_num}/{total_calls}] Eval {eval_id} ({mode}) — running...", end="", flush=True)
 
-            # Call model
-            result = call_model(args.provider, args.api_key, model, system, prompt)
+            result = call_model(provider, api_key, model, system, prompt)
             if result["error"]:
                 print(f" ERROR: {result['error'][:100]}")
                 continue
 
             print(f" {result['time_seconds']}s, {result['output_tokens']} tokens")
 
-            # Save output and config
             save_output(iteration_dir, eval_id, mode, result["content"])
-            save_config(iteration_dir, eval_id, mode, prompt, model, args.provider, result)
+            save_config(iteration_dir, eval_id, mode, prompt, model, provider, result)
 
-            # Grade
             if not args.skip_grading:
                 print(f"         grading...", end="", flush=True)
-                grading = grade_output(args.provider, args.api_key, model,
+                grading = grade_output(provider, api_key, model,
                                        prompt, result["content"], expectations)
                 if "error" in grading:
                     print(f" GRADE ERROR: {grading['error'][:100]}")
@@ -405,8 +420,71 @@ def run_evals(args):
                     print(f" {passed}/{len(assertions)} passed")
                     save_grading(iteration_dir, eval_id, mode, grading)
 
-            # Rate limiting pause
             time.sleep(1)
+
+
+def run_evals(args):
+    # Load evals
+    evals_data = json.loads(EVALS_PATH.read_text())
+    all_evals = evals_data["evals"]
+
+    if args.evals:
+        eval_ids = {int(x) for x in args.evals.split(",")}
+        all_evals = [e for e in all_evals if e["id"] in eval_ids]
+        print(f"Running {len(all_evals)} selected evals: {sorted(eval_ids)}")
+    else:
+        print(f"Running all {len(all_evals)} evals")
+
+    # Build skill context
+    skill_context = build_skill_context()
+    print(f"Skill context: {len(skill_context)} chars")
+
+    # Determine providers to run
+    if args.provider == "both":
+        providers = [
+            ("claude", args.api_key, args.claude_model),
+            ("gemini", args.gemini_key, args.gemini_model),
+        ]
+        iteration_dir = ensure_iteration_dir(args.iteration, "claude")
+        ensure_iteration_dir(args.iteration, "gemini")
+        n_providers = 2
+    else:
+        model = args.model
+        if args.provider == "claude" and model in CLAUDE_MODELS:
+            model = CLAUDE_MODELS[model]
+        elif args.provider == "gemini" and model in GEMINI_MODELS:
+            model = GEMINI_MODELS[model]
+        providers = [(args.provider, args.api_key, model)]
+        iteration_dir = ensure_iteration_dir(args.iteration)
+        n_providers = 1
+
+    print(f"Iteration: {args.iteration}")
+    print(f"Output: {iteration_dir}\n")
+
+    if args.dry_run:
+        print("=== DRY RUN ===")
+        for ev in all_evals:
+            print(f"  Eval {ev['id']}: {ev['prompt'][:80]}...")
+            print(f"    Expectations: {len(ev['expectations'])}")
+        calls = len(all_evals) * 2 * n_providers
+        print(f"\nWould run {len(all_evals)} evals x 2 modes x {n_providers} provider(s) = {calls} API calls")
+        print(f"Plus {calls} grading calls = {calls*2} total API calls")
+        return
+
+    # Run each provider
+    for provider, api_key, model in providers:
+        # Resolve model aliases
+        if provider == "claude" and model in CLAUDE_MODELS:
+            model = CLAUDE_MODELS[model]
+        elif provider == "gemini" and model in GEMINI_MODELS:
+            model = GEMINI_MODELS[model]
+
+        mode_prefix = f"{provider}_" if args.provider == "both" else ""
+        print(f"\n{'#'*60}")
+        print(f"  PROVIDER: {provider.upper()} | MODEL: {model}")
+        print(f"{'#'*60}")
+        _run_provider(provider, api_key, model, all_evals,
+                      skill_context, iteration_dir, args, mode_prefix)
 
     # Compute benchmark
     print(f"\n{'='*60}")
@@ -416,15 +494,28 @@ def run_evals(args):
     benchmark_path = iteration_dir / "benchmark.json"
     benchmark_path.write_text(json.dumps(benchmark, indent=2))
 
-    ws = benchmark.get("with_skill", {})
-    wos = benchmark.get("without_skill", {})
+    # Print summary
     delta = benchmark.get("delta", {})
+    if args.provider == "both":
+        for prov in ["claude", "gemini"]:
+            ws = benchmark.get(f"{prov}_with_skill", {})
+            wos = benchmark.get(f"{prov}_without_skill", {})
+            prov_delta = delta.get(prov, {})
+            print(f"\n  {prov.upper()}:")
+            print(f"    With Skill:    {ws.get('total_passed', 0)}/{ws.get('total_assertions', 0)} "
+                  f"({ws.get('overall_pass_rate', 0)*100:.1f}%)")
+            print(f"    Without Skill: {wos.get('total_passed', 0)}/{wos.get('total_assertions', 0)} "
+                  f"({wos.get('overall_pass_rate', 0)*100:.1f}%)")
+            print(f"    Delta:         +{prov_delta.get('pass_rate_improvement', 0)*100:.1f}%")
+    else:
+        ws = benchmark.get("with_skill", {})
+        wos = benchmark.get("without_skill", {})
+        print(f"\n  With Skill:    {ws.get('total_passed', 0)}/{ws.get('total_assertions', 0)} "
+              f"({ws.get('overall_pass_rate', 0)*100:.1f}%)")
+        print(f"  Without Skill: {wos.get('total_passed', 0)}/{wos.get('total_assertions', 0)} "
+              f"({wos.get('overall_pass_rate', 0)*100:.1f}%)")
+        print(f"  Delta:         +{delta.get('pass_rate_improvement', 0)*100:.1f}%")
 
-    print(f"\n  With Skill:    {ws.get('total_passed', 0)}/{ws.get('total_assertions', 0)} "
-          f"({ws.get('overall_pass_rate', 0)*100:.1f}%)")
-    print(f"  Without Skill: {wos.get('total_passed', 0)}/{wos.get('total_assertions', 0)} "
-          f"({wos.get('overall_pass_rate', 0)*100:.1f}%)")
-    print(f"  Delta:         +{delta.get('pass_rate_improvement', 0)*100:.1f}%")
     print(f"\n  Benchmark saved: {benchmark_path}")
     print("  Done!")
 
@@ -499,11 +590,16 @@ def main():
               python3 tools/run-evals.py --dry-run --iteration 4
         """)
     )
-    parser.add_argument("--provider", choices=["claude", "gemini"], default="claude",
-                        help="API provider (default: claude)")
-    parser.add_argument("--api-key", help="API key (or set ANTHROPIC_API_KEY / GEMINI_API_KEY env var)")
+    parser.add_argument("--provider", choices=["claude", "gemini", "both"], default="claude",
+                        help="API provider: claude, gemini, or both (default: claude)")
+    parser.add_argument("--api-key", help="Claude API key (or set ANTHROPIC_API_KEY env var). Used for both --provider claude and --provider both.")
+    parser.add_argument("--gemini-key", help="Gemini API key (or set GEMINI_API_KEY env var). Required for --provider gemini or --provider both.")
     parser.add_argument("--model", default="sonnet",
-                        help="Model name or alias. Claude: sonnet/opus/haiku. Gemini: flash/pro/flash-lite. Or full model ID.")
+                        help="Model name or alias (single provider). Claude: sonnet/opus/haiku. Gemini: flash/pro/flash-lite.")
+    parser.add_argument("--claude-model", default="sonnet",
+                        help="Claude model for --provider both (default: sonnet)")
+    parser.add_argument("--gemini-model", default="flash",
+                        help="Gemini model for --provider both (default: flash)")
     parser.add_argument("--iteration", type=int, required=True,
                         help="Iteration number (creates workspace/iteration-N/)")
     parser.add_argument("--evals", help="Comma-separated eval IDs to run (default: all)")
@@ -518,13 +614,28 @@ def main():
 
     args = parser.parse_args()
 
-    # Resolve API key from env if not provided
-    if not args.api_key and not args.dry_run:
-        env_key = "ANTHROPIC_API_KEY" if args.provider == "claude" else "GEMINI_API_KEY"
-        args.api_key = os.environ.get(env_key)
-        if not args.api_key:
-            print(f"Error: --api-key required (or set {env_key} env var)")
-            sys.exit(1)
+    # Resolve API keys from env if not provided
+    if not args.dry_run:
+        if args.provider in ("claude", "both"):
+            if not args.api_key:
+                args.api_key = os.environ.get("ANTHROPIC_API_KEY")
+            if not args.api_key:
+                print("Error: --api-key required for Claude (or set ANTHROPIC_API_KEY env var)")
+                sys.exit(1)
+
+        if args.provider in ("gemini", "both"):
+            if not args.gemini_key:
+                args.gemini_key = os.environ.get("GEMINI_API_KEY")
+            if args.provider == "gemini" and not args.gemini_key:
+                # For single-provider gemini, allow --api-key as fallback
+                args.gemini_key = args.api_key
+            if not args.gemini_key:
+                print("Error: --gemini-key required for Gemini (or set GEMINI_API_KEY env var)")
+                sys.exit(1)
+
+        # For single-provider gemini, map api_key to gemini_key
+        if args.provider == "gemini" and not args.gemini_key:
+            args.gemini_key = args.api_key
 
     if args.grade_only:
         grade_only(args)
