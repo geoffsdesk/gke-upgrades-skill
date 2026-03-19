@@ -143,7 +143,8 @@ function render() {
     const it = APP.iterations.find(i => i.name === curIter);
     if (!it) return;
     document.getElementById('topbar-title').textContent = curIter;
-    document.getElementById('welcome').style.display = 'none';
+    const wel = document.getElementById('welcome');
+    if (wel) wel.style.display = 'none';
     if (it.feedback?.reviews) it.feedback.reviews.forEach(r => { fb[r.eval_name] = r.feedback; });
 
     const c = document.getElementById('content');
