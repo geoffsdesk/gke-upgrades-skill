@@ -75,18 +75,62 @@ The skill activates automatically when you ask about GKE upgrades, version bumps
 
 ### Gemini CLI
 
+**Prerequisites:**
+
+- [Gemini CLI](https://github.com/google-gemini/gemini-cli) installed (`npm install -g @anthropic-ai/gemini-cli` or via the standalone installer)
+- A Gemini API key (set `GEMINI_API_KEY` in your environment, or pass via `--api-key`)
+- Optional: `gcloud` SDK authenticated to your GKE project (enables live cluster queries via the MCP server)
+
+**Install the extension:**
+
 ```bash
+# Create the extension directory
 mkdir -p ~/.gemini/extensions/gke-mgmt-lifecycle
+
+# Copy the extension files
 cp -r gemini/* ~/.gemini/extensions/gke-mgmt-lifecycle/
+
+# Verify it was picked up
+gemini extensions list
+# Should show: gke-mgmt-lifecycle (GKE Maintenance & Upgrade)
 ```
 
-**Gemini slash commands:**
+**What gets installed:**
+
+| Component | Path | Purpose |
+|-----------|------|---------|
+| `GEMINI.md` | System prompt | Core upgrade planning knowledge and principles |
+| `gemini-extension.json` | Extension manifest | Registers skills, commands, MCP server, and references |
+| `skills/control-plane-upgrade/` | Skill | Regional/zonal control plane upgrade guidance |
+| `skills/node-pool-strategy/` | Skill | Surge vs blue-green, per-pool settings |
+| `skills/troubleshooting/` | Skill | Diagnostic flowchart and fixes |
+| `commands/*.toml` | Slash commands | Three purpose-built commands (see below) |
+| `references/version-matrix.md` | Reference | Release channel versions and skew policy |
+| `references/api-deprecations.md` | Reference | API deprecation detection and remediation |
+
+**Slash commands:**
 
 | Command | What It Does |
 |---------|-------------|
 | `/gke:check` | Pre-upgrade health check with GREEN/YELLOW/RED risk assessment |
 | `/gke:plan` | Generate a complete upgrade plan with gcloud commands and checklists |
 | `/gke:diagnose` | Systematic troubleshooting for stuck or failing upgrades |
+
+**Usage examples:**
+
+```
+# Open Gemini CLI and ask directly
+gemini> Plan an upgrade for our Standard cluster from 1.28 to 1.30
+
+# Or use the slash commands
+gemini> /gke:check --cluster my-cluster --zone us-central1-a
+gemini> /gke:plan --from 1.28 --to 1.30 --mode standard
+gemini> /gke:diagnose "node pool stuck at 3/12 nodes drained"
+```
+
+**Optional — enable live cluster access:**
+
+The extension manifest includes an MCP server entry for `gcloud-sdk`. If you have `gcloud` authenticated, Gemini can run live commands (`gcloud container clusters describe`, `kubectl get pdb -A`, etc.) to base its advice on your actual cluster state rather than assumptions. Set `GOOGLE_APPLICATION_CREDENTIALS` in your environment to enable this.
 
 ## Eval Results
 
@@ -107,7 +151,7 @@ Running with `--provider both` for head-to-head comparison. See `workspace/itera
 | 1 | 3 | 100% | 78% | +22% |
 | 2 | 3 | 100% | 78% | +22% |
 | 3 | 3 | 100% | 44% | +56% |
-| 4 | 23 | *pending* | *pending* | *pending* |
+| 4 | 23 | 80.4% (Claude) | 71.1% (Claude) | +9.3% |
 
 ## Running Evals
 
