@@ -31,7 +31,18 @@ Infrastructure (Standard only)
 - [ ] Surge settings configured per pool: maxSurge=___ maxUnavailable=___
 - [ ] Sufficient compute quota for surge nodes
 - [ ] Maintenance window configured (off-peak hours)
-- [ ] Maintenance exclusions set for freeze periods (if applicable)
+- [ ] Maintenance exclusion type selected if needed:
+      - "No upgrades" (30-day max, blocks everything including patches)
+      - "No minor or node upgrades" (up to EoS, allows CP patches — recommended for max control)
+      - "No minor upgrades" (up to EoS, allows patches + node upgrades)
+- [ ] Rollout sequencing configured (if multi-cluster fleet)
+
+Version & Channel Readiness
+- [ ] Cluster channel verified (Rapid/Regular/Stable/Extended/No channel)
+- [ ] If legacy "No channel": evaluate migration to a release channel before upgrading
+- [ ] Auto-upgrade target reviewed (`gcloud container clusters describe CLUSTER --zone ZONE --format="value(autopilot,releaseChannel)"`)
+- [ ] EoS timeline checked — confirm current version is not approaching End of Support
+- [ ] Understand version terminology: "available" ≠ "default" ≠ "auto-upgrade target"
 
 Ops Readiness
 - [ ] Monitoring and alerting active (Cloud Monitoring / Prometheus)
@@ -39,6 +50,7 @@ Ops Readiness
 - [ ] Upgrade window communicated to stakeholders
 - [ ] Rollback plan documented
 - [ ] On-call team aware and available
+- [ ] Scheduled upgrade notifications configured (72h advance opt-in via Cloud Logging)
 ```
 
 ## Post-Upgrade Checklist

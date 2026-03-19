@@ -30,12 +30,28 @@ Establish these five things early. If the user provides them upfront, skip strai
 
 | Channel | When versions arrive | Best for | Support period |
 |---------|---------------------|----------|----------------|
-| **Rapid** | First | Dev/test, early feature access | Standard (14 months) |
+| **Rapid** | First (new K8s minors available within ~2 weeks) | Dev/test, early feature access | Standard (14 months) |
 | **Regular** (default) | After Rapid validation | Most production workloads | Standard (14 months) |
 | **Stable** | After Regular validation | Mission-critical, stability-first | Standard (14 months) |
-| **Extended** | Same as Regular, but stays longer | Compliance, slow upgrade cycles | Up to 24 months (extra cost) |
+| **Extended** | Same as Regular, but stays longer | Compliance, slow upgrade cycles | Up to 24 months (extra cost, versions 1.27+) |
 
 Common multi-environment strategy: Dev→Rapid, Staging→Regular, Prod→Stable or Regular. Direct users to the [GKE release schedule](https://cloud.google.com/kubernetes-engine/docs/release-schedule) for current version availability.
+
+### Legacy "No channel" (static version)
+
+The "No channel" option is a legacy configuration that lacks critical features available in release channels, including granular maintenance exclusion types (e.g., "no minor or node upgrades"), Extended support, and rollout sequencing. Clusters on "No channel" are upgraded at the pace of the Stable channel for minor releases and the Regular channel for patches.
+
+**Migration path:** Move to Regular or Stable channel (closest match to legacy behavior). Use Extended channel if the customer does manual upgrades exclusively or needs flexibility around EoS enforcement. See the [comparison table](https://cloud.google.com/kubernetes-engine/docs/concepts/release-channels#comparison-table-no-channel). Always recommend migrating off "No channel."
+
+### Version terminology
+
+Distinguish these three concepts — they are NOT the same:
+
+- **Available**: The version is officially available in the release channel. Customers can manually upgrade to it.
+- **Default**: The version used for new cluster creation. Not necessarily the auto-upgrade target.
+- **Auto-upgrade target**: The version GKE will automatically upgrade existing clusters to. This is what matters for planning. Can differ from the default, especially during new minor version rollouts.
+
+The auto-upgrade target depends on the cluster's constraints (maintenance windows, maintenance exclusions). For example, a cluster with a "no minor" exclusion will have its auto-upgrade target set to the latest patch of its current minor, not the next minor.
 
 ## Upgrade planning
 
@@ -52,9 +68,25 @@ When asked to plan an upgrade, produce a structured document covering:
 - Control plane first, then node pools — this is the required order
 - For multi-cluster: define rollout sequence with soak time between groups
 
-### Maintenance windows
-- Set maintenance windows aligned with off-peak hours (auto-upgrades respect them, manual upgrades bypass them)
-- Suggest maintenance exclusions (up to 30 days) for business-critical periods
+### Maintenance windows and exclusions
+
+**Maintenance windows:** Set recurring windows aligned with off-peak hours. Auto-upgrades respect them; manual upgrades bypass them.
+
+**Maintenance exclusion types** — there are three distinct scopes:
+
+| Exclusion type | What it blocks | Max duration | Use case |
+|---------------|---------------|-------------|----------|
+| **"No upgrades"** | All upgrades (patches, minor, nodes) | 30 days (one-time) | Code freezes, BFCM, critical periods. Honored even after EoS. |
+| **"No minor or node upgrades"** | Minor version upgrades + node pool upgrades. Allows CP patches. | Up to version's End of Support | Conservative customers who want CP security patches but no disruptive changes. |
+| **"No minor upgrades"** | Minor version upgrades only. Allows patches and node upgrades. | Up to version's End of Support | Teams comfortable with node churn but not minor version changes. |
+
+The "No minor or node upgrades" exclusion is the recommended approach for maximum control — it prevents disruptive upgrades while still allowing security patches on the control plane. Customers can chain exclusions to stay on a minor version until its EoS.
+
+**Disruption budget/interval:** GKE enforces a disruption interval between patch and minor upgrades on a given cluster, preventing back-to-back upgrades. Control plane patch and minor disruption intervals can be configured (max 90 days) to control manual rollout cadence.
+
+### Rollout sequencing (multi-cluster)
+
+GKE rollout sequencing allows customers to define the order in which clusters are upgraded, with configurable soak time between stages. This ensures upgrades progress through environments (dev → staging → prod) with validation gaps. Recommend configuring rollout sequencing for any fleet with 3+ clusters.
 
 ### Node pool upgrade strategy (Standard only — skip for Autopilot)
 
@@ -73,6 +105,29 @@ Recommend blue-green only when the user needs instant rollback or has particular
 - Stateful: verify PV reclaim policies and backup status
 - GPU: confirm driver compatibility with target node image
 - Autopilot: all containers must have resource requests
+
+## End of Support (EoS) enforcement
+
+When a GKE version reaches End of Support, clusters are force-upgraded to the next minor version. Key details:
+
+- **Release channel clusters:** Node pool enforcement follows cluster-level policies. The cluster (CP + nodes) is upgraded to the next supported minor.
+- **Legacy "No channel" clusters:** Node-level EoS enforcement is systematic — nodes on EoS versions are force-upgraded. Enforcement for ≤1.29 completed in 2025; systematic enforcement for every EoS version applies from 1.32 onward.
+- **Avoiding forced upgrade:** Enroll in the Extended release channel (versions 1.27+) for up to 24 months of support. Or apply a "no upgrades" maintenance exclusion (30 days) to defer temporarily even past EoS.
+- **Planning tools:** GKE provides EoS notifications via Cloud Logging, deprecation insights in the console, and the cluster's auto-upgrade status shows the target version and EoL timeline.
+
+A "snowflake" is any cluster with a manually frozen version that deviates from the standard automated lifecycle. Snowflakes pose security risks (missed patches), reliability issues, and increased support complexity. Always recommend customers use maintenance exclusions and release channels instead.
+
+## Upgrade velocity and predictability
+
+Help customers understand when upgrades will happen:
+
+- **Release cadence:** GKE targets one new release per week (including patches). New K8s minor versions appear in Rapid within ~2 weeks of upstream release.
+- **Progressive rollout:** New releases roll out across all regions over 4-5 business days. The [GKE release schedule](https://cloud.google.com/kubernetes-engine/docs/release-schedule) shows "best case" dates — upgrades won't happen before those dates but may happen later.
+- **Factors affecting timing:** Progressive rollout across regions, maintenance windows/exclusions, disruption intervals between upgrades, internal freezes (e.g., BFCM), rollout sequencing soak times, and technical pauses.
+- **Predicting upgrades:** Check the cluster's auto-upgrade status for the current target version. Configure maintenance windows for predictable timing. Use rollout sequencing to control multi-cluster ordering.
+- **Scheduled upgrade notifications:** GKE offers opt-in notifications 72 hours before an auto-upgrade, delivered via Cloud Logging.
+
+Refer customers to [upgrade assist common scenarios](https://cloud.google.com/kubernetes-engine/docs/how-to/upgrade-assist#common-upgrades-scenarios) for additional guidance.
 
 ## Checklists
 

@@ -72,12 +72,48 @@ gcloud container clusters update CLUSTER_NAME \
   --maintenance-window-end YYYY-MM-DDTHH:MM:SSZ \
   --maintenance-window-recurrence "FREQ=WEEKLY;BYDAY=SA"
 
-# Add maintenance exclusion (up to 30 days)
+# Add "no upgrades" exclusion (blocks ALL upgrades for up to 30 days — use for code freezes)
 gcloud container clusters update CLUSTER_NAME \
   --zone ZONE \
   --add-maintenance-exclusion-name "EXCLUSION_NAME" \
   --add-maintenance-exclusion-start-time START_TIME \
-  --add-maintenance-exclusion-end-time END_TIME
+  --add-maintenance-exclusion-end-time END_TIME \
+  --add-maintenance-exclusion-scope no_upgrades
+
+# Add "no minor or node upgrades" exclusion (allows CP patches, blocks minor + node — up to EoS)
+gcloud container clusters update CLUSTER_NAME \
+  --zone ZONE \
+  --add-maintenance-exclusion-name "EXCLUSION_NAME" \
+  --add-maintenance-exclusion-start-time START_TIME \
+  --add-maintenance-exclusion-end-time END_TIME \
+  --add-maintenance-exclusion-scope no_minor_or_node_upgrades
+
+# Add "no minor upgrades" exclusion (allows patches + node upgrades, blocks minor — up to EoS)
+gcloud container clusters update CLUSTER_NAME \
+  --zone ZONE \
+  --add-maintenance-exclusion-name "EXCLUSION_NAME" \
+  --add-maintenance-exclusion-start-time START_TIME \
+  --add-maintenance-exclusion-end-time END_TIME \
+  --add-maintenance-exclusion-scope no_minor_upgrades
+```
+
+## Channel migration (legacy "No channel" → release channel)
+
+```bash
+# Check current channel
+gcloud container clusters describe CLUSTER_NAME \
+  --zone ZONE \
+  --format="value(releaseChannel.channel)"
+
+# Migrate to Regular channel (closest to legacy behavior)
+gcloud container clusters update CLUSTER_NAME \
+  --zone ZONE \
+  --release-channel regular
+
+# Or migrate to Extended channel (for customers wanting max flexibility around EoS)
+gcloud container clusters update CLUSTER_NAME \
+  --zone ZONE \
+  --release-channel extended
 ```
 
 ## Rollback guidance

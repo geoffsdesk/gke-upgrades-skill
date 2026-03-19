@@ -378,6 +378,119 @@
         "Provides kubectl patch commands to fix the problematic PDBs",
         "Recommends testing PDB changes in a non-production environment first"
       ]
+    },
+    {
+      "id": 24,
+      "prompt": "Our company has 8 GKE Standard clusters on the legacy 'No channel' (static version) configuration. We keep hitting issues with forced upgrades and lack of control. Our platform team wants to understand: what are we missing by staying on 'No channel', and what's the migration path to release channels? We're currently at 1.29.",
+      "expected_output": "Comprehensive explanation of No channel limitations, comparison with release channels, migration path recommendation, and gcloud commands.",
+      "files": [],
+      "expectations": [
+        "Explains that 'No channel' is a legacy configuration that lacks granular maintenance exclusion types",
+        "Mentions that 'No channel' does not support 'no minor or node upgrades' exclusion scope — only the 30-day 'no upgrades' type",
+        "Notes that Extended support (24 months) is only available on release channels, not 'No channel'",
+        "Notes that rollout sequencing is not available on 'No channel'",
+        "Recommends Regular or Stable channel as the closest migration target (legacy behavior matches Stable for minors, Regular for patches)",
+        "Mentions Extended channel as an option for customers who want maximum flexibility around EoS",
+        "Provides the gcloud command to change the release channel",
+        "References the comparison table at cloud.google.com/kubernetes-engine/docs/concepts/release-channels"
+      ]
+    },
+    {
+      "id": 25,
+      "prompt": "We're trying to understand GKE's version lifecycle. Our cluster shows version 1.29.6-gke.1000000 as 'available', version 1.29.8-gke.1200000 as 'default', and our auto-upgrade status says the target is 1.29.7-gke.1100000. We're confused — why are these three different? What do they each mean?",
+      "expected_output": "Clear explanation of the three version concepts (available, default, auto-upgrade target) and why they can differ.",
+      "files": [],
+      "expectations": [
+        "Defines 'available' as versions officially available in the channel that customers can manually upgrade to",
+        "Defines 'default' as the version used for new cluster creation — NOT necessarily the auto-upgrade target",
+        "Defines 'auto-upgrade target' as the version GKE will actually upgrade existing clusters to automatically",
+        "Explains that default and auto-upgrade target are often the same but CAN differ, especially during new minor version rollouts",
+        "Notes that the auto-upgrade target depends on cluster constraints (maintenance windows, maintenance exclusions)",
+        "Explains that a cluster with a 'no minor' exclusion will have a patch-only auto-upgrade target for its current minor",
+        "Recommends checking the cluster's auto-upgrade status to see the actual target version",
+        "Points to the GKE release schedule or release notes for tracking version availability"
+      ]
+    },
+    {
+      "id": 26,
+      "prompt": "Our GKE 1.28 clusters are approaching End of Support. We have a mix of clusters: 3 on Regular channel, 2 on Extended channel, and 1 on legacy 'No channel'. What exactly will happen to each when 1.28 hits EoS? What are our options to prepare?",
+      "expected_output": "Detailed breakdown of EoS enforcement behavior per channel type with preparation options.",
+      "files": [],
+      "expectations": [
+        "Explains that clusters on Regular channel will be force-upgraded to the next minor version (1.29) when 1.28 hits EoS",
+        "Explains that clusters on Extended channel get up to 24 months of support, so 1.28 EoS is significantly later — they have more time",
+        "Explains that legacy 'No channel' clusters face systematic node-level EoS enforcement — nodes on EoS versions are force-upgraded",
+        "Mentions that a 'no upgrades' maintenance exclusion (30 days) can temporarily defer even EoS force-upgrades",
+        "Recommends proactive upgrade planning rather than waiting for EoS enforcement",
+        "Mentions GKE EoS notifications via Cloud Logging as a planning tool",
+        "Mentions the deprecation insights dashboard for checking API compatibility before the forced upgrade",
+        "Warns that 'snowflaking' (manually freezing versions) should be avoided — it creates security and reliability risks"
+      ]
+    },
+    {
+      "id": 27,
+      "prompt": "We want maximum control over our GKE upgrade timing without falling behind on security. We're a financial services company with strict change windows. What's the recommended configuration to control when upgrades happen while keeping our clusters secure?",
+      "expected_output": "Comprehensive upgrade control strategy combining maintenance windows, exclusion types, disruption intervals, and release channel selection.",
+      "files": [],
+      "expectations": [
+        "Recommends combining release channels with maintenance exclusions as the approach for maximum control",
+        "Recommends 'no minor or node upgrades' exclusion to prevent disruptive changes while allowing control plane security patches",
+        "Recommends maintenance windows to control WHEN patches are applied (e.g., weekend windows only)",
+        "Mentions the disruption interval between patch and minor upgrades to prevent back-to-back upgrades",
+        "Suggests Stable or Extended channel for production clusters in regulated environments",
+        "Notes that disabling control plane patches entirely is not recommended due to security risks — monthly patches at minimum",
+        "Mentions rollout sequencing for controlling the order of upgrades across multiple clusters",
+        "Provides gcloud commands for configuring the recommended exclusion type and maintenance window"
+      ]
+    },
+    {
+      "id": 28,
+      "prompt": "Our VP wants to know exactly when our GKE clusters will be upgraded next. She needs predictable timelines for stakeholder communication. How can we predict or control upgrade timing, and what tools does GKE provide for upgrade visibility?",
+      "expected_output": "Guide to GKE upgrade predictability tools, timing factors, and visibility features.",
+      "files": [],
+      "expectations": [
+        "Explains that exact upgrade dates are difficult to predict but several tools help narrow the window",
+        "Mentions the GKE release schedule as a 'best case' timeline — upgrades won't happen before listed dates",
+        "Recommends checking the cluster's auto-upgrade status for the current target version and any pauses",
+        "Mentions that new releases roll out progressively across regions over 4-5 business days",
+        "Recommends configuring maintenance windows so upgrades only happen during known time slots",
+        "Mentions scheduled upgrade notifications (72h advance, opt-in via Cloud Logging)",
+        "Notes that GKE upgrade visibility shows the cluster's target version and EoL timeline",
+        "Mentions rollout sequencing with configurable soak times for multi-cluster predictability"
+      ]
+    },
+    {
+      "id": 29,
+      "prompt": "We need to set up maintenance exclusions for our GKE clusters to handle our company's schedule: a quarterly code freeze in June, our busiest period during Black Friday/Cyber Monday in November, and we never want minor version upgrades to happen without our explicit approval. Give us the exact configuration.",
+      "expected_output": "Specific maintenance exclusion configuration using all three exclusion types with gcloud commands.",
+      "files": [],
+      "expectations": [
+        "Uses 'no upgrades' exclusion (30-day max) for the BFCM period — blocks everything including patches",
+        "Uses 'no upgrades' exclusion for the June code freeze period",
+        "Uses 'no minor or node upgrades' exclusion for ongoing minor upgrade control — allows CP patches but blocks disruptive changes",
+        "Notes the 30-day maximum for 'no upgrades' exclusions vs up-to-EoS for 'no minor or node upgrades'",
+        "Provides specific gcloud commands with --add-maintenance-exclusion-scope flags for each exclusion type",
+        "Notes that you can have a maximum of three 'no upgrades' exclusions, and they must allow 48h of maintenance in any 32-day window",
+        "Mentions that manual upgrades bypass maintenance windows — only auto-upgrades respect them",
+        "Warns about the risk of falling too far behind on versions during extended exclusion periods"
+      ]
+    },
+    {
+      "id": 30,
+      "prompt": "We just joined the company and inherited a bunch of GKE clusters in bad shape. Some are on 'No channel', some on release channels, versions are all over the place. How do we get our fleet into a healthy, well-managed state? What self-service tools does GKE provide to help us assess and plan?",
+      "expected_output": "Fleet assessment and remediation plan using GKE's self-service visibility and planning tools.",
+      "files": [],
+      "expectations": [
+        "Recommends migrating all 'No channel' clusters to release channels as a first priority",
+        "Mentions GKE upgrade visibility for checking each cluster's auto-upgrade status and target version",
+        "Mentions the deprecation insights dashboard for identifying clusters using deprecated APIs",
+        "Recommends checking EoS timelines for each cluster and prioritizing those closest to EoS",
+        "Mentions GKE EoS notifications via Cloud Logging as an ongoing monitoring tool",
+        "Recommends enrolling in scheduled upgrade notifications (72h advance) for all clusters",
+        "Suggests standardizing on a channel strategy: dev→Rapid, staging→Regular, prod→Stable/Extended",
+        "Recommends configuring rollout sequencing to control upgrade ordering across the fleet",
+        "Mentions GKE Insights and Recommendations in the console for identifying issues like version skew"
+      ]
     }
   ]
 }
