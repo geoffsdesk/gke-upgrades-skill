@@ -1,0 +1,29 @@
+{
+  "id": "gke-mgmt-lifecycle",
+  "name": "GKE Maintenance & Upgrade",
+  "version": "1.0.0",
+  "description": "Lifecycle management for GKE Control Planes and Node Pools. Provides upgrade planning, troubleshooting, and pre-flight validation for Standard and Autopilot clusters across all release channels.",
+  "skills": [
+    "skills/control-plane-upgrade",
+    "skills/node-pool-strategy",
+    "skills/troubleshooting"
+  ],
+  "commands": [
+    "commands/check_upgrade.toml",
+    "commands/upgrade_plan.toml",
+    "commands/diagnose_stuck.toml"
+  ],
+  "mcpServers": {
+    "gcloud-sdk": {
+      "command": "npx",
+      "args": ["-y", "@anthropic-ai/mcp-server-gcloud"],
+      "env": {
+        "GOOGLE_APPLICATION_CREDENTIALS": "${GOOGLE_APPLICATION_CREDENTIALS}"
+      }
+    }
+  },
+  "references": [
+    "references/version-matrix.md",
+    "references/api-deprecations.md"
+  ]
+}

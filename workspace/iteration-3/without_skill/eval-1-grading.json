@@ -1,0 +1,60 @@
+{
+  "eval_id": 1,
+  "mode": "without_skill",
+  "iteration": 3,
+  "assertions": [
+    {
+      "expectation": "Recommends sequential upgrade path (1.28→1.29→1.30) rather than skipping",
+      "passed": true,
+      "reason": "Upgrade Path and Timeline section shows 'Phase 1: Control Plane Upgrade to 1.29', 'Phase 2: Node Pool Upgrades to 1.29', 'Phase 3: Control Plane Upgrade to 1.30', 'Phase 4: Node Pool Upgrades to 1.30'"
+    },
+    {
+      "expectation": "Specifies control plane upgrades before node pool upgrades",
+      "passed": true,
+      "reason": "Timeline clearly separates 'Phase 1: Control Plane Upgrade to 1.29' before 'Phase 2: Node Pool Upgrades to 1.29'"
+    },
+    {
+      "expectation": "Provides different node pool upgrade ordering with rationale for the sequence",
+      "passed": false,
+      "reason": "Specifies order (general-purpose → high-memory → GPU) but provides minimal rationale. Document states 'Recommended order: General-purpose pool → High-memory pool (Postgres) → GPU pool' without explaining why this sequence is chosen or what benefits each ordering provides"
+    },
+    {
+      "expectation": "Includes specific surge upgrade settings (maxSurge/maxUnavailable) for each pool",
+      "passed": false,
+      "reason": "High-memory pool section shows '--max-surge 1 --max-unavailable 1' but general-purpose pool has no surge settings and GPU pool only shows '--max-unavailable 1' without maxSurge. Inconsistent and incomplete coverage"
+    },
+    {
+      "expectation": "Addresses Postgres-specific concerns (PDB, backup, operator compatibility, PV reclaim)",
+      "passed": false,
+      "reason": "High-Memory Node Pool section mentions 'Pre-Upgrade Checks for Postgres' with operator compatibility and backup snapshots, but does not include PDB configuration checks or PV reclaim policy verification commands"
+    },
+    {
+      "expectation": "Addresses GPU-specific concerns (driver compatibility, workload coordination)",
+      "passed": false,
+      "reason": "GPU Node Pool section mentions 'verify NVIDIA GPU Operator' and 'checkpointing' but lacks explicit driver compatibility verification commands and detailed workload coordination strategy"
+    },
+    {
+      "expectation": "Includes actual gcloud commands for the upgrade steps",
+      "passed": true,
+      "reason": "Document includes gcloud commands for cluster upgrade, node pool updates (general-purpose, high-memory, GPU), though some are incomplete without surge parameter specification"
+    },
+    {
+      "expectation": "Provides a pre-upgrade checklist",
+      "passed": true,
+      "reason": "'Pre-Upgrade Readiness Checklist' section includes ~20 checkbox items covering cluster health, backup, dependencies, and load testing"
+    },
+    {
+      "expectation": "Provides a post-upgrade checklist with validation commands",
+      "passed": true,
+      "reason": "'Post-Upgrade Validation' section includes version verification, workload status checks, and health validation commands"
+    },
+    {
+      "expectation": "Includes rollback procedure or guidance",
+      "passed": false,
+      "reason": "Rollback Procedure mentions 'restore from pre-upgrade backup snapshot' and 'cannot support cluster downgrade' but lacks specific backup restoration commands or detailed procedures for recovery"
+    }
+  ],
+  "pass_count": 5,
+  "total_count": 10,
+  "pass_rate": 0.5
+}

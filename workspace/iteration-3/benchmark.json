@@ -1,0 +1,58 @@
+{
+  "iteration": 3,
+  "timestamp": "2026-03-18T00:00:00Z",
+  "with_skill": {
+    "evals": [
+      {
+        "eval_id": 1,
+        "pass_rate": 1.0,
+        "pass_count": 10,
+        "total": 10
+      },
+      {
+        "eval_id": 2,
+        "pass_rate": 1.0,
+        "pass_count": 9,
+        "total": 9
+      },
+      {
+        "eval_id": 3,
+        "pass_rate": 1.0,
+        "pass_count": 8,
+        "total": 8
+      }
+    ],
+    "overall_pass_rate": 1.0,
+    "total_passed": 27,
+    "total_assertions": 27
+  },
+  "without_skill": {
+    "evals": [
+      {
+        "eval_id": 1,
+        "pass_rate": 0.5,
+        "pass_count": 5,
+        "total": 10
+      },
+      {
+        "eval_id": 2,
+        "pass_rate": 0.44,
+        "pass_count": 4,
+        "total": 9
+      },
+      {
+        "eval_id": 3,
+        "pass_rate": 0.375,
+        "pass_count": 3,
+        "total": 8
+      }
+    ],
+    "overall_pass_rate": 0.444,
+    "total_passed": 12,
+    "total_assertions": 27
+  },
+  "delta": {
+    "pass_rate_improvement": 0.556,
+    "description": "With_skill outputs demonstrate perfect 100% pass rate across all evaluations (27/27 assertions passed), while without_skill outputs show 44.4% pass rate (12/27 assertions passed). The skill provides comprehensive technical depth with specific commands, explicit prioritization of troubleshooting steps, detailed configuration parameters (surge settings, PDB adjustments), and Autopilot-specific constraints. Without_skill outputs offer basic guidance but lack specificity, miss critical diagnostic commands, omit certain cause categories (webhooks), and provide incomplete surge/PDB configuration examples."
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "eval_id": 2,
+  "mode": "with_skill",
+  "iteration": 3,
+  "assertions": [
+    {
+      "expectation": "Distinguishes between dev (Rapid) and prod (Stable) clusters in the checklists",
+      "passed": true,
+      "reason": "Document header explicitly states '2 Dev (Rapid) + 2 Prod (Stable)'; Phases 4 and 5 of pre-upgrade section and Phases 5 of post-upgrade section provide distinct procedures for dev vs prod"
+    },
+    {
+      "expectation": "Recognizes Autopilot limitations (no node management, no SSH, mandatory resource requests)",
+      "passed": true,
+      "reason": "Document explicitly addresses Autopilot limitations: Phase 3 note states 'Autopilot does NOT support node SSH access', Phase 1 includes mandatory resource request audit, and Autopilot-Specific Validation confirms these constraints"
+    },
+    {
+      "expectation": "Includes API deprecation checks with kubectl commands",
+      "passed": true,
+      "reason": "Phase 2 includes 'Kubernetes 1.30 API Deprecations' section with specific kubectl commands for checking beta APIs, v1beta1 resources, removed APIs, and HPAs"
+    },
+    {
+      "expectation": "Mentions mandatory resource requests as an Autopilot-specific concern",
+      "passed": true,
+      "reason": "Phase 1 'Resource Request Validation (Autopilot-Mandatory)' section explicitly addresses mandatory CPU/memory requests with audit commands and Autopilot constraints"
+    },
+    {
+      "expectation": "Pre-upgrade checklist includes workload readiness items (PDBs, bare pods, graceful shutdown)",
+      "passed": true,
+      "reason": "Phase 1 includes specific checks for PDBs, bare pods identification with kubectl commands, and graceful shutdown configuration verification"
+    },
+    {
+      "expectation": "Post-upgrade checklist includes version verification commands",
+      "passed": true,
+      "reason": "Phase 1 post-upgrade includes 'kubectl version --short', control plane version verification, and node version verification commands"
+    },
+    {
+      "expectation": "Post-upgrade checklist includes workload health validation",
+      "passed": true,
+      "reason": "Phase 2 'Application Readiness' and 'Workload Health' sections include pod status verification, restart count checks, resource monitoring, and functional testing"
+    },
+    {
+      "expectation": "Recommends testing on dev clusters before prod auto-upgrade",
+      "passed": true,
+      "reason": "Phase 4 explicitly recommends upgrading dev clusters first to validate before prod, stating 'Dev clusters on Rapid channel will upgrade first, ideal for validation'"
+    },
+    {
+      "expectation": "Includes monitoring/observability validation items",
+      "passed": true,
+      "reason": "Phase 3 'API & Feature Validation' and Phase 4 'Observability & Monitoring Validation' include detailed metrics, logging, and monitoring checks"
+    }
+  ],
+  "pass_count": 9,
+  "total_count": 9,
+  "pass_rate": 1.0
+}

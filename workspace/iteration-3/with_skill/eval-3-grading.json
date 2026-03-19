@@ -1,0 +1,50 @@
+{
+  "eval_id": 3,
+  "mode": "with_skill",
+  "iteration": 3,
+  "assertions": [
+    {
+      "expectation": "Identifies PDB as the most likely/common cause of stuck upgrades",
+      "passed": true,
+      "reason": "Document overview states 'Pod Disruption Budgets (PDBs)' are #1 reason (1st in likelihood order), and Step 1 title reinforces: 'Check Pod Disruption Budgets (Most Common Cause)'"
+    },
+    {
+      "expectation": "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
+      "passed": true,
+      "reason": "Step 1 includes 'kubectl get pdb --all-namespaces -o wide' command with example output showing problematic ALLOWED DISRUPTIONS = 0 scenario"
+    },
+    {
+      "expectation": "Provides commands to identify which pods are blocking the drain",
+      "passed": true,
+      "reason": "Step 1 includes commands to identify pods matching PDB labels and pods on nodes being upgraded using 'kubectl get pods' with label selectors"
+    },
+    {
+      "expectation": "Includes resource constraint diagnosis (capacity issues, pending pods)",
+      "passed": true,
+      "reason": "Step 2 'Diagnose Resource Constraints' provides 'kubectl get pods -A --field-selector=status.phase=Pending' and FailedScheduling event checking"
+    },
+    {
+      "expectation": "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+      "passed": true,
+      "reason": "'Fix 1: Adjust Restrictive PDBs' includes kubectl patch commands for both maxUnavailable and minAvailable adjustment options"
+    },
+    {
+      "expectation": "Includes guidance on surge upgrade settings as a potential fix",
+      "passed": true,
+      "reason": "'Fix 2: Increase Node Surge' provides gcloud command to adjust max-surge-upgrade and max-unavailable-upgrade settings"
+    },
+    {
+      "expectation": "Mentions webhook issues as a possible cause",
+      "passed": true,
+      "reason": "Step 4 'Check Admission Webhooks' is included as potential cause (listed as #4 in likelihood order), with kubectl commands to list and examine webhooks"
+    },
+    {
+      "expectation": "Includes validation steps to confirm the fix is working",
+      "passed": true,
+      "reason": "'Validation Steps to Confirm Fix is Working' section includes watch commands for node upgrade, pod eviction monitoring, terminating pod checks, and event log verification"
+    }
+  ],
+  "pass_count": 8,
+  "total_count": 8,
+  "pass_rate": 1.0
+}

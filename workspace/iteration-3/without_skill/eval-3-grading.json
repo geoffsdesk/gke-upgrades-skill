@@ -1,0 +1,50 @@
+{
+  "eval_id": 3,
+  "mode": "without_skill",
+  "iteration": 3,
+  "assertions": [
+    {
+      "expectation": "Identifies PDB as the most likely/common cause of stuck upgrades",
+      "passed": false,
+      "reason": "Document mentions PDBs in Step 2 checking but does not identify PDB as THE most common/likely cause upfront. With_skill version explicitly states 'Pod Disruption Budgets (PDBs)' as #1 in likelihood order; without_skill treats it as one of many possibilities without prioritization"
+    },
+    {
+      "expectation": "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
+      "passed": true,
+      "reason": "Step 2 includes 'kubectl get pdb -A' and detailed jq parsing for PDB status, though explanation is less explicit than with_skill version"
+    },
+    {
+      "expectation": "Provides commands to identify which pods are blocking the drain",
+      "passed": true,
+      "reason": "Step 2 includes multiple commands: identifying bare pods, checking local storage pods, and using jq to filter pods by node, though scattered across different subsections"
+    },
+    {
+      "expectation": "Includes resource constraint diagnosis (capacity issues, pending pods)",
+      "passed": true,
+      "reason": "Step 2 includes explicit checks for pending pods and node capacity via 'kubectl top nodes' and resource quota verification"
+    },
+    {
+      "expectation": "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+      "passed": false,
+      "reason": "Option 2 mentions 'Relax PodDisruptionBudgets Temporarily' with patch command, but the guidance is less comprehensive and detailed than with_skill version which explicitly shows both maxUnavailable and minAvailable adjustment options with clear syntax"
+    },
+    {
+      "expectation": "Includes guidance on surge upgrade settings as a potential fix",
+      "passed": false,
+      "reason": "Fix 2 does mention 'Increase Termination Grace Period' but does not provide gcloud command to adjust max-surge/max-unavailable settings as a way to improve drain capacity (unlike with_skill's 'Fix 2: Increase Node Surge')"
+    },
+    {
+      "expectation": "Mentions webhook issues as a possible cause",
+      "passed": false,
+      "reason": "Document does not mention webhooks as a potential cause of stuck upgrades at all. With_skill version includes comprehensive 'Step 5: Check Admission Webhooks' section"
+    },
+    {
+      "expectation": "Includes validation steps to confirm the fix is working",
+      "passed": false,
+      "reason": "Document includes general monitoring commands and prevention for future upgrades, but lacks a dedicated systematic validation section confirming the fix is working (e.g., watch commands for upgrade resumption, pod eviction progress verification)"
+    }
+  ],
+  "pass_count": 3,
+  "total_count": 8,
+  "pass_rate": 0.375
+}

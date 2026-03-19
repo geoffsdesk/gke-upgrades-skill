@@ -1,0 +1,55 @@
+{
+  "eval_id": 2,
+  "mode": "without_skill",
+  "iteration": 3,
+  "assertions": [
+    {
+      "expectation": "Distinguishes between dev (Rapid) and prod (Stable) clusters in the checklists",
+      "passed": true,
+      "reason": "Document header states '4 Autopilot Clusters (2 Dev/Rapid, 2 Prod/Stable)' and 'Environment-Specific Notes' section explicitly covers Dev Clusters (Rapid Channel) vs Prod Clusters (Stable Channel)"
+    },
+    {
+      "expectation": "Recognizes Autopilot limitations (no node management, no SSH, mandatory resource requests)",
+      "passed": false,
+      "reason": "Document mentions Autopilot doesn't allow downgrades and discusses auto-scaling/auto-repairs, but does NOT explicitly address SSH limitations, does NOT include mandatory resource request audit section comparable to with_skill version, and fails to integrate these constraints into pre-upgrade checklists"
+    },
+    {
+      "expectation": "Includes API deprecation checks with kubectl commands",
+      "passed": false,
+      "reason": "Compatibility Review mentions 'Check Kubernetes 1.30 release notes' and 'audit workloads for removed/deprecated features' but does NOT include specific kubectl commands to check API usage or deprecated APIs (unlike with_skill which provides detailed kubectl api-resources and grep commands)"
+    },
+    {
+      "expectation": "Mentions mandatory resource requests as an Autopilot-specific concern",
+      "passed": false,
+      "reason": "Document does not explicitly address mandatory resource requests as an Autopilot requirement. Dependency Updates section mentions 'Pod Security Standards' but not resource requests"
+    },
+    {
+      "expectation": "Pre-upgrade checklist includes workload readiness items (PDBs, bare pods, graceful shutdown)",
+      "passed": false,
+      "reason": "Phase 1 mentions PDBs and graceful shutdown in passing within Compatibility Review and Dependency Updates, but lacks dedicated systematic checks with specific kubectl commands for each item (bare pods checking is particularly absent)"
+    },
+    {
+      "expectation": "Post-upgrade checklist includes version verification commands",
+      "passed": true,
+      "reason": "Phase 1 post-upgrade includes version verification commands: 'kubectl version' and gcloud describe commands to check node versions"
+    },
+    {
+      "expectation": "Post-upgrade checklist includes workload health validation",
+      "passed": true,
+      "reason": "Phase 2 'Application Validation' includes workload health checks, pod restart counts, resource usage monitoring, and functionality testing"
+    },
+    {
+      "expectation": "Recommends testing on dev clusters before prod auto-upgrade",
+      "passed": true,
+      "reason": "Phase 1 Testing in Dev section explicitly recommends 'Schedule test window on dev clusters' and Phase 2 Communication recommends validating dev upgrade before prod"
+    },
+    {
+      "expectation": "Includes monitoring/observability validation items",
+      "passed": true,
+      "reason": "Phase 3 'Observability & Monitoring Validation' includes metrics, logging, and monitoring validation checks"
+    }
+  ],
+  "pass_count": 4,
+  "total_count": 9,
+  "pass_rate": 0.44
+}

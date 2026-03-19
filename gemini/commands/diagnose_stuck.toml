@@ -1,0 +1,44 @@
+name = "gke:diagnose"
+description = "Diagnose a stuck or failing GKE node pool upgrade with systematic troubleshooting."
+
+[prompt]
+text = """
+A GKE node pool upgrade appears to be stuck for cluster '{{cluster_name}}' in '{{location}}'.
+
+Symptoms: {{symptoms}}
+
+Run through the diagnostic flowchart in priority order:
+
+1. Check PDBs blocking drain (most common cause)
+   - kubectl get pdb -A -o wide
+   - Look for ALLOWED DISRUPTIONS = 0
+
+2. Check resource constraints
+   - kubectl get pods -A | grep Pending
+   - kubectl get events -A --field-selector reason=FailedScheduling
+
+3. Check for bare pods
+   - Find pods with no ownerReferences
+
+4. Check admission webhooks
+   - kubectl get validatingwebhookconfigurations
+   - Look for webhooks intercepting system namespaces
+
+5. Check PVC attachment issues
+   - kubectl get pvc -A | grep -v Bound
+
+6. Check GKE operation status
+   - gcloud container operations list
+
+For each issue found, provide:
+- The specific problem identified
+- The exact fix command
+- Validation that the fix worked
+
+End with a summary of all issues found and their resolution status.
+"""
+
+[prompt.args]
+cluster_name = { description = "GKE cluster name", required = true }
+location = { description = "Zone or region", required = true }
+symptoms = { description = "What you're seeing (e.g., '3/12 nodes upgraded, pods not draining')", required = true }

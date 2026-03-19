@@ -1,0 +1,60 @@
+{
+  "eval_id": 1,
+  "mode": "with_skill",
+  "iteration": 3,
+  "assertions": [
+    {
+      "expectation": "Recommends sequential upgrade path (1.28→1.29→1.30) rather than skipping",
+      "passed": true,
+      "reason": "Document explicitly states 'Sequential upgrade path: 1.28 → 1.29 → 1.30' and explains version skew limits"
+    },
+    {
+      "expectation": "Specifies control plane upgrades before node pool upgrades",
+      "passed": true,
+      "reason": "Node Pool Upgrade Sequence clearly shows 'Upgrade control plane (master) to next version' as step 1, followed by node pools"
+    },
+    {
+      "expectation": "Provides different node pool upgrade ordering with rationale for the sequence",
+      "passed": true,
+      "reason": "Document specifies order (general-purpose → high-memory → GPU) with clear rationale: 'General-purpose has no state to protect; upgrade first to unblock developers' etc."
+    },
+    {
+      "expectation": "Includes specific surge upgrade settings (maxSurge/maxUnavailable) for each pool",
+      "passed": true,
+      "reason": "Each pool has explicit settings: general-purpose (maxSurge=2, maxUnavailable=0), high-memory (maxSurge=1, maxUnavailable=0), GPU (maxSurge=1, maxUnavailable=0)"
+    },
+    {
+      "expectation": "Addresses Postgres-specific concerns (PDB, backup, operator compatibility, PV reclaim)",
+      "passed": true,
+      "reason": "Section 'Pool 2: High-Memory Pool' covers PDB configuration, PV reclaim policies, operator compatibility, and backup procedures with kubectl commands"
+    },
+    {
+      "expectation": "Addresses GPU-specific concerns (driver compatibility, workload coordination)",
+      "passed": true,
+      "reason": "Section 'Pool 3: GPU Pool' addresses NVIDIA driver compatibility verification, GPU resource requests validation, and workload staggering guidance"
+    },
+    {
+      "expectation": "Includes actual gcloud commands for the upgrade steps",
+      "passed": true,
+      "reason": "Document includes complete gcloud commands for cluster upgrade, node pool updates, and monitoring (e.g., 'gcloud container clusters upgrade', 'gcloud container node-pools upgrade')"
+    },
+    {
+      "expectation": "Provides a pre-upgrade checklist",
+      "passed": true,
+      "reason": "Comprehensive 'Pre-Upgrade Checklist' section with ~30 checkbox items covering compatibility, workload readiness, infrastructure, and ops readiness"
+    },
+    {
+      "expectation": "Provides a post-upgrade checklist with validation commands",
+      "passed": true,
+      "reason": "'Post-Upgrade Checklist' includes cluster health, workload health, observability, and cleanup sections with specific kubectl/gcloud validation commands"
+    },
+    {
+      "expectation": "Includes rollback procedure or guidance",
+      "passed": true,
+      "reason": "'Rollback Procedure' section covers control plane rollback (contact support) and node pool rollback with blue-green alternative and manual drain options"
+    }
+  ],
+  "pass_count": 10,
+  "total_count": 10,
+  "pass_rate": 1.0
+}

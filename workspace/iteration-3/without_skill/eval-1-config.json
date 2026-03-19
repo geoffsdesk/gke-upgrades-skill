@@ -1,0 +1,8 @@
+{
+  "eval_id": 1,
+  "mode": "without_skill",
+  "iteration": 3,
+  "prompt": "We have a Standard GKE cluster on the Regular release channel running 1.28 in us-central1-a. We need to upgrade to 1.30 before end of quarter. We have 3 node pools -- a general-purpose pool, a high-memory pool for our Postgres operator, and a GPU pool for ML inference. Can you put together an upgrade plan?",
+  "start_time": "2026-03-18T20:56:19-04:00",
+  "skill_files": []
+}

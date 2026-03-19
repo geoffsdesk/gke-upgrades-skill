@@ -1,0 +1,28 @@
+name = "gke:plan"
+description = "Generate a complete GKE upgrade plan with commands, checklists, and rollback procedures."
+
+[prompt]
+text = """
+Generate a complete upgrade plan for GKE cluster '{{cluster_name}}' in '{{location}}'.
+
+Target version: {{target_version}}
+Cluster mode: {{cluster_mode}}
+
+The plan must include:
+1. Version path (sequential minor upgrades if needed)
+2. Pre-upgrade checklist with checkboxes
+3. Control plane upgrade commands with validation steps
+4. Node pool upgrade commands ordered by workload sensitivity (stateless first, stateful/GPU last)
+5. Per-pool surge settings (maxSurge/maxUnavailable) tailored to workload type
+6. Post-upgrade validation checklist with kubectl/gcloud commands
+7. Rollback procedure for each stage
+8. Estimated timeline
+
+Format as a self-contained markdown document that a team can follow without additional context.
+"""
+
+[prompt.args]
+cluster_name = { description = "GKE cluster name", required = true }
+location = { description = "Zone or region", required = true }
+target_version = { description = "Target GKE version (e.g., 1.30)", required = true }
+cluster_mode = { description = "Standard or Autopilot", required = false, default = "Standard" }
