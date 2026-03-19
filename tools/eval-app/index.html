@@ -98,7 +98,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
     </div>
 </div>
 <script>
-let APP = null, curIter = null, curTab = 'outputs', fb = {};
+let APP = null, curIter = null, curSkill = null, curTab = 'outputs', fb = {};
 
 async function init() {
     APP = await (await fetch('/api/data')).json();
@@ -113,7 +113,7 @@ function renderNav() {
         h += '<div class="nav-section"><div class="nav-section-title">Skills</div>';
         APP.skills.forEach(s => {
             const b = s.type==='core' ? '<span class="badge badge-core">core</span>' : '<span class="badge badge-iter">sub</span>';
-            h += `<div class="nav-item">${s.name}${b}</div>`;
+            h += `<div class="nav-item${curSkill===s.name?' active':''}" onclick="selectSkill('${s.name}')">${s.name}${b}</div>`;
         });
         h += '</div>';
     }
@@ -133,10 +133,45 @@ function renderNav() {
     nav.innerHTML = h;
 }
 
+function selectSkill(name) {
+    curSkill = name; curIter = null;
+    renderNav(); renderSkill();
+    document.getElementById('submit-btn').style.display = 'none';
+}
+
 function selectIter(name) {
-    curIter = name; curTab = 'outputs';
+    curIter = name; curSkill = null; curTab = 'outputs';
     renderNav(); render();
     document.getElementById('submit-btn').style.display = '';
+}
+
+function renderSkill() {
+    const s = APP.skills.find(sk => sk.name === curSkill);
+    if (!s) return;
+    document.getElementById('topbar-title').textContent = s.name;
+    const wel = document.getElementById('welcome');
+    if (wel) wel.style.display = 'none';
+    const c = document.getElementById('content');
+    let h = `<div class="eval-card"><div class="eval-header"><div class="eval-title">${esc(s.name)}</div></div><div class="eval-body">`;
+    h += `<div style="font-size:12px;color:#94a3b8;margin-bottom:12px"><strong style="color:#f8fafc">Type:</strong> ${s.type === 'core' ? 'Core Skill' : 'Specialized Sub-Skill'}</div>`;
+    h += `<div style="font-size:12px;color:#94a3b8;margin-bottom:16px"><strong style="color:#f8fafc">Path:</strong> <code style="background:#0f172a;padding:2px 6px;border-radius:4px;font-size:11px">${esc(s.path)}</code></div>`;
+    // Show which iterations have eval data for this skill
+    h += `<div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Eval Coverage Across Iterations</div>`;
+    h += '<div class="bench-grid">';
+    APP.iterations.forEach(it => {
+        const ws = it.benchmark?.run_summary?.with_skill;
+        const wos = it.benchmark?.run_summary?.without_skill;
+        const wsPr = ws ? Math.round(ws.pass_rate.mean * 100) + '%' : '—';
+        const wosPr = wos ? Math.round(wos.pass_rate.mean * 100) + '%' : '—';
+        h += `<div class="bench-card" style="cursor:pointer" onclick="selectIter('${it.name}')">`;
+        h += `<div class="bench-label">${it.name}</div>`;
+        h += `<div class="bench-value">${wsPr}</div>`;
+        h += `<div class="bench-sub">with skill · baseline ${wosPr}</div>`;
+        h += `</div>`;
+    });
+    h += '</div>';
+    h += '</div></div>';
+    c.innerHTML = h;
 }
 
 function render() {
