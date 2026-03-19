@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GKE Upgrade Skill Ecosystem - Overview</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400&display=swap');
+
+  :root {
+    --blue: #1A73E8;
+    --dark: #202124;
+    --gray: #5F6368;
+    --light-bg: #F8F9FA;
+    --light-blue: #E8F0FE;
+    --green: #34A853;
+    --green-bg: #E6F4EA;
+    --purple: #7B1FA2;
+    --orange: #EA8600;
+    --orange-bg: #FFF3E0;
+    --border: #DADCE0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Roboto', 'Arial', sans-serif;
+    color: var(--dark);
+    line-height: 1.6;
+    max-width: 816px; /* Google Docs width */
+    margin: 0 auto;
+    padding: 48px 72px;
+    background: #fff;
+  }
+
+  h1 {
+    font-family: 'Google Sans', 'Arial', sans-serif;
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--blue);
+    margin: 32px 0 12px 0;
+    padding-bottom: 4px;
+    border-bottom: 2px solid var(--light-blue);
+  }
+
+  h2 {
+    font-family: 'Google Sans', 'Arial', sans-serif;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--dark);
+    margin: 24px 0 8px 0;
+  }
+
+  .title-block {
+    text-align: center;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 3px solid var(--blue);
+  }
+
+  .title-block h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--dark);
+    border: none;
+    margin: 0 0 8px 0;
+  }
+
+  .subtitle {
+    font-size: 16px;
+    color: var(--gray);
+    font-style: italic;
+  }
+
+  .date-line {
+    font-size: 13px;
+    color: var(--gray);
+    margin-top: 8px;
+  }
+
+  p { margin-bottom: 12px; font-size: 14px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 20px 0;
+    font-size: 13px;
+  }
+
+  th, td {
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    background: var(--light-blue);
+    font-weight: 500;
+    color: var(--dark);
+  }
+
+  code {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12.5px;
+    background: var(--light-bg);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0 20px 0;
+  }
+
+  .result-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .result-card .label {
+    font-size: 13px;
+    color: var(--gray);
+    margin-bottom: 4px;
+  }
+
+  .result-card .value {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .card-green { background: var(--green-bg); }
+  .card-green .value { color: var(--green); }
+  .card-orange { background: var(--orange-bg); }
+  .card-orange .value { color: var(--orange); }
+  .card-blue { background: var(--light-blue); }
+  .card-blue .value { color: var(--blue); }
+
+  ul, ol { margin: 8px 0 16px 24px; font-size: 14px; }
+  li { margin-bottom: 6px; }
+
+  .highlight { background: var(--light-bg); border-left: 3px solid var(--blue); padding: 12px 16px; margin: 12px 0; border-radius: 0 4px 4px 0; }
+
+  .footer-link {
+    text-align: center;
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--gray);
+  }
+
+  .footer-link a { color: var(--blue); text-decoration: none; }
+  .footer-link a:hover { text-decoration: underline; }
+
+  .platform-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-right: 4px;
+  }
+  .badge-claude { background: #E8F0FE; color: #1A73E8; }
+  .badge-gemini { background: #F3E8FD; color: #7B1FA2; }
+
+  @media print {
+    body { padding: 36px 54px; }
+    .results-grid { break-inside: avoid; }
+  }
+
+  .page-break { page-break-before: always; margin-top: 0; }
+</style>
+</head>
+<body>
+
+<div class="title-block">
+  <h1>GKE Upgrade & Maintenance Skill Ecosystem</h1>
+  <div class="subtitle">Multi-platform AI skills for Google Kubernetes Engine lifecycle management</div>
+  <div class="date-line">March 2026 &middot; geoffsdesk/gke-upgrades-skill</div>
+</div>
+
+<h1>What This Project Is</h1>
+<p>This repository contains a purpose-built skill ecosystem that teaches AI coding assistants (Claude and Gemini) how to plan, execute, and troubleshoot GKE cluster upgrades. Instead of relying on generic LLM knowledge, the skills inject domain-specific context &mdash; version skew rules, node pool strategies, PDB diagnostics, and runbook templates &mdash; directly into the model&rsquo;s system prompt at inference time.</p>
+<p>The project also includes a rigorous evaluation framework that measures whether the skill actually improves output quality, plus a standalone web app for side-by-side comparison and live API testing.</p>
+
+<h1>Architecture Overview</h1>
+
+<table>
+  <tr>
+    <th>Component</th>
+    <th><span class="platform-badge badge-claude">Claude</span> Agent Skills 2.0</th>
+    <th><span class="platform-badge badge-gemini">Gemini</span> CLI Extension</th>
+  </tr>
+  <tr><td><strong>System Prompt</strong></td><td><code>skill/SKILL.md</code></td><td><code>gemini/GEMINI.md</code></td></tr>
+  <tr><td><strong>Reference Docs</strong></td><td><code>skill/references/*.md</code></td><td><code>gemini/references/*.md</code></td></tr>
+  <tr><td><strong>Specialized Skills</strong></td><td><code>skills/gke-*/SKILL.md</code></td><td><code>gemini/skills/*/SKILL.md</code></td></tr>
+  <tr><td><strong>Slash Commands</strong></td><td>N/A (implicit activation)</td><td><code>/gke:check</code>, <code>/gke:plan</code>, <code>/gke:diagnose</code></td></tr>
+  <tr><td><strong>Eval Definitions</strong></td><td><code>skill/evals/evals.json</code></td><td>Shared eval prompts</td></tr>
+</table>
+
+<h1>Evaluation & Grading System</h1>
+<p>Each evaluation consists of a realistic GKE scenario prompt and a set of graded assertions. The same prompt is run twice: once <strong>with the skill context</strong> injected as a system prompt, and once <strong>without</strong> (baseline). A grading pass then checks each response against domain-specific expectations.</p>
+
+<h2>Current Eval Scenarios (3 evals, 27 total assertions)</h2>
+<ol>
+  <li><strong>Multi-pool Standard upgrade plan</strong> &mdash; General-purpose + Postgres + GPU pools, version 1.28 &rarr; 1.30 (10 assertions)</li>
+  <li><strong>Autopilot fleet maintenance strategy</strong> &mdash; 4 clusters across Rapid/Stable channels, EOL notification handling (9 assertions)</li>
+  <li><strong>Stuck node pool upgrade diagnosis</strong> &mdash; 3/12 nodes upgraded, 2-hour stall, root cause analysis (8 assertions)</li>
+</ol>
+
+<h1>Iteration 3 Results</h1>
+
+<div class="results-grid">
+  <div class="result-card card-green">
+    <div class="label">With Skill</div>
+    <div class="value">27/27</div>
+    <div class="label">100% pass rate</div>
+  </div>
+  <div class="result-card card-orange">
+    <div class="label">Without Skill</div>
+    <div class="value">12/27</div>
+    <div class="label">44% pass rate</div>
+  </div>
+  <div class="result-card card-blue">
+    <div class="label">Skill Delta</div>
+    <div class="value">+56%</div>
+    <div class="label">improvement</div>
+  </div>
+</div>
+
+<div class="highlight">
+  <strong>Key finding:</strong> Without the skill, baseline models miss critical specifics &mdash; exact kubectl diagnostic commands, correct surge configuration values, PDB relaxation techniques, and Autopilot-specific constraints. The skill closes these gaps completely.
+</div>
+
+<h1>Knowledge Base</h1>
+<p>The curated knowledge base (<code>data/gke_maint_knowledge.json</code>, v2.0) contains 28 entries sourced from public GKE documentation, with quality scoring to guide skill refinement:</p>
+<ul>
+  <li><strong>Score 2 (14 entries):</strong> Verified and recommended &mdash; directly referenced in skill materials</li>
+  <li><strong>Score 1 (14 entries):</strong> Accepted as accurate &mdash; available for future skill expansion</li>
+  <li>All internal/proprietary references have been scrubbed; only public documentation URLs remain</li>
+</ul>
+
+<h1>Eval Web App</h1>
+<p>A standalone, zero-dependency web app (<code>tools/eval-app/</code>) provides:</p>
+<ul>
+  <li><strong>Side-by-side comparison:</strong> View with_skill vs without_skill outputs for each eval, with grading overlays</li>
+  <li><strong>Benchmark dashboard:</strong> Pass rates, delta analysis, and per-assertion drill-down</li>
+  <li><strong>Live API runs:</strong> Enter your Claude or Gemini API key and run any eval prompt live, with or without skill context</li>
+  <li>Runs via <code>python3 tools/eval-app/app.py</code> &mdash; Python stdlib only, no pip installs</li>
+</ul>
+
+<h1 class="page-break">How to Expand the Eval Set</h1>
+<p>The eval system is designed for easy extension. To add new evaluations:</p>
+<ol>
+  <li><strong>Add eval definitions</strong> to <code>skill/evals/evals.json</code>. Each eval needs an id, a realistic prompt, and a list of expectations (assertions the grader will check).</li>
+  <li><strong>Run evals</strong> with and without the skill context. Use the eval app&rsquo;s live run feature or run manually via API. Save outputs as <code>eval-N-output.md</code> in the appropriate <code>workspace/iteration-X/{with,without}_skill/</code> directory.</li>
+  <li><strong>Grade outputs</strong> by having a model check each output against the expectations. Save as <code>eval-N-grading.json</code> with an array of assertions (expectation + passed + reason).</li>
+  <li><strong>Update the benchmark</strong> by computing aggregate pass rates and saving to <code>benchmark.json</code>. The eval app reads this for dashboard display.</li>
+</ol>
+
+<h2>Suggested New Eval Areas</h2>
+<ul>
+  <li>Multi-region cluster upgrades with traffic shifting</li>
+  <li>Istio/Anthos Service Mesh version compatibility during upgrades</li>
+  <li>GKE Sandbox (gVisor) node pool upgrades</li>
+  <li>Windows Server node pool upgrades</li>
+  <li>Release channel migration (e.g., Regular &rarr; Stable)</li>
+  <li>Webhook/admission controller conflicts during upgrades</li>
+</ul>
+
+<h1>How to Expand the Knowledge Base</h1>
+<p>The knowledge base drives the quality of the skill&rsquo;s reference materials. To grow it:</p>
+<ul>
+  <li><strong>Add entries</strong> to <code>data/gke_maint_knowledge.json</code> following the existing schema (title, content, source_url, tags, quality_score)</li>
+  <li><strong>Score new entries:</strong> 2 = directly usable in skill references, 1 = accurate supplementary info, 0 = needs review</li>
+  <li><strong>Run coverage gap analysis</strong> by comparing eval assertion failures against knowledge base topics to identify what&rsquo;s missing</li>
+  <li><strong>Use quality scores</strong> to prioritize which entries get incorporated into the skill&rsquo;s reference .md files</li>
+</ul>
+
+<h1>Quick Start</h1>
+<p><span class="platform-badge badge-claude">Claude</span> Copy the <code>skill/</code> directory into your Claude Code project&rsquo;s <code>.claude/skills/</code> folder. The skill activates automatically when GKE upgrade topics arise.</p>
+<p><span class="platform-badge badge-gemini">Gemini</span> Copy the <code>gemini/</code> directory into <code>~/.gemini/extensions/gke-mgmt-lifecycle/</code>. Use slash commands: <code>/gke:check</code>, <code>/gke:plan</code>, <code>/gke:diagnose</code>.</p>
+<p><strong>Eval App:</strong> <code>python3 tools/eval-app/app.py</code> then open <code>http://localhost:8000</code> in your browser.</p>
+
+<div class="footer-link">
+  Repository: <a href="https://github.com/geoffsdesk/gke-upgrades-skill">github.com/geoffsdesk/gke-upgrades-skill</a>
+</div>
+
+</body>
+</html>
