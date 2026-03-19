@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies Service A (minAvailable=100%) as a guaranteed upgrade blocker \u2014 no disruptions allowed at all",
+      "passed": true,
+      "reason": "Response correctly identifies Service A with minAvailable=100% as HIGH RISK and states it will completely block rolling updates, node drains, and any maintenance"
+    },
+    {
+      "expectation": "Identifies Service B (maxUnavailable=0) as also blocking upgrades \u2014 same effect as 100% minAvailable",
+      "passed": true,
+      "reason": "Response correctly identifies Service B with maxUnavailable=0 as HIGH RISK and explicitly states it's equivalent to minAvailable=100% with identical issues"
+    },
+    {
+      "expectation": "States Service C (minAvailable=2 with 3 replicas) is safe \u2014 allows 1 pod disruption at a time",
+      "passed": false,
+      "reason": "Response categorizes Service C as MEDIUM RISK and potentially problematic, not safe. It states the configuration is risky with tight constraints, contradicting the expectation that it should be deemed safe"
+    },
+    {
+      "expectation": "States Service D (maxUnavailable=1 with 5 replicas) is safe \u2014 allows 1 pod down at a time",
+      "passed": true,
+      "reason": "Response correctly identifies Service D as LOW RISK - Safe Configuration and states it's well-configured and shouldn't block upgrades"
+    },
+    {
+      "expectation": "Recommends fixing Service A: change to minAvailable=N-1 or maxUnavailable=1",
+      "passed": true,
+      "reason": "Response provides specific fix recommendations for Service A including maxUnavailable=1 and minAvailable=80% alternatives"
+    },
+    {
+      "expectation": "Recommends fixing Service B: change to maxUnavailable=1",
+      "passed": true,
+      "reason": "Response provides specific fix recommendation for Service B to change to maxUnavailable=1 or 25% if many replicas"
+    },
+    {
+      "expectation": "Explains that GKE respects PDBs for up to 1 hour during surge upgrades, then may force-drain",
+      "passed": false,
+      "reason": "Response does not mention GKE-specific behavior, time limits, or force-drain scenarios. This specific technical detail about GKE's 1-hour respect period is not addressed"
+    },
+    {
+      "expectation": "Provides kubectl patch commands to fix the problematic PDBs",
+      "passed": false,
+      "reason": "Response provides complete YAML manifests for fixes but does not provide kubectl patch commands specifically. The fixes are shown as full resource definitions rather than patch operations"
+    },
+    {
+      "expectation": "Recommends testing PDB changes in a non-production environment first",
+      "passed": false,
+      "reason": "Response provides testing commands like 'kubectl drain --dry-run' but does not specifically recommend testing in non-production environments first before applying changes"
+    }
+  ]
+}

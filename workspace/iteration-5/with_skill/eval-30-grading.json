@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends migrating all 'No channel' clusters to release channels as a first priority",
+      "passed": true,
+      "reason": "Explicitly mentions migrating 'No channel' clusters as Phase 1 immediate action with code example"
+    },
+    {
+      "expectation": "Mentions GKE upgrade visibility for checking each cluster's auto-upgrade status and target version",
+      "passed": false,
+      "reason": "Does not specifically mention GKE upgrade visibility feature or checking auto-upgrade status"
+    },
+    {
+      "expectation": "Mentions the deprecation insights dashboard for identifying clusters using deprecated APIs",
+      "passed": true,
+      "reason": "Explicitly mentions GKE Deprecation Insights Dashboard as a self-service tool and references it multiple times"
+    },
+    {
+      "expectation": "Recommends checking EoS timelines for each cluster and prioritizing those closest to EoS",
+      "passed": true,
+      "reason": "Mentions checking End of Support dates and categorizes clusters at/past EoS as 'Critical (Fix Immediately)'"
+    },
+    {
+      "expectation": "Mentions GKE EoS notifications via Cloud Logging as an ongoing monitoring tool",
+      "passed": false,
+      "reason": "Does not specifically mention GKE EoS notifications via Cloud Logging"
+    },
+    {
+      "expectation": "Recommends enrolling in scheduled upgrade notifications (72h advance) for all clusters",
+      "passed": false,
+      "reason": "Does not mention scheduled upgrade notifications or 72-hour advance notifications"
+    },
+    {
+      "expectation": "Suggests standardizing on a channel strategy: dev\u2192Rapid, staging\u2192Regular, prod\u2192Stable/Extended",
+      "passed": true,
+      "reason": "Explicitly defines channel strategy with dev\u2192Rapid, staging\u2192Regular, prod\u2192Stable/Extended in the fleet standards section"
+    },
+    {
+      "expectation": "Recommends configuring rollout sequencing to control upgrade ordering across the fleet",
+      "passed": true,
+      "reason": "Mentions rollout sequencing with specific code example showing cascaded rollout configuration"
+    },
+    {
+      "expectation": "Mentions GKE Insights and Recommendations in the console for identifying issues like version skew",
+      "passed": false,
+      "reason": "Does not specifically mention GKE Insights and Recommendations feature in the console"
+    }
+  ]
+}

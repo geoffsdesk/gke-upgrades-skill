@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends Stable or Extended release channel to minimize upgrade frequency",
+      "passed": true,
+      "reason": "Explicitly recommends Extended channel for 24 months of support vs 14 months for other channels, with multi-environment approach using Regular for dev and Extended for production"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
+      "passed": true,
+      "reason": "Provides specific gcloud command with --add-maintenance-exclusion-scope no_minor_or_node_upgrades and explains it blocks minor version upgrades and node pool upgrades while still allowing control plane security patches"
+    },
+    {
+      "expectation": "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
+      "passed": true,
+      "reason": "Shows specific gcloud command configuring Sunday 2-6 AM maintenance window with FREQ=WEEKLY;BYDAY=SU for predictable timing"
+    },
+    {
+      "expectation": "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
+      "passed": true,
+      "reason": "Provides separate node pool configurations for 'h100-training' and 'system-pool' with explicit explanation that system pool keeps cluster services isolated and upgradeable"
+    },
+    {
+      "expectation": "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
+      "passed": true,
+      "reason": "Shows --enable-autoupgrade=false for H100 pool and includes detailed operational workflow for planned upgrades during training gaps"
+    },
+    {
+      "expectation": "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
+      "passed": true,
+      "reason": "Provides specific YAML configuration with terminationGracePeriodSeconds: 3600 and explains SIGTERM handler for checkpoint saving, plus mentions checkpoint strategy in operational workflow"
+    },
+    {
+      "expectation": "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
+      "passed": true,
+      "reason": "Includes specific commands for verifying CUDA version and testing target GKE version in staging, with explicit warning that minor GKE upgrades can change CUDA versions and break training frameworks"
+    },
+    {
+      "expectation": "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading",
+      "passed": false,
+      "reason": "While it mentions GPUDirect-TCPX support and compact placement for GPUDirect performance, it does not specifically mention strict GKE version requirements or compatibility verification before upgrading"
+    }
+  ]
+}

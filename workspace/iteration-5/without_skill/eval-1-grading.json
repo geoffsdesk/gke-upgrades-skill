@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends sequential upgrade path (1.28\u21921.29\u21921.30) rather than skipping",
+      "passed": true,
+      "reason": "Explicitly states 'Must upgrade incrementally (1.28 \u2192 1.29 \u2192 1.30)' and structures the entire plan around this sequential approach"
+    },
+    {
+      "expectation": "Specifies control plane upgrades before node pool upgrades",
+      "passed": true,
+      "reason": "Plan clearly shows Phase 1: Control Plane Upgrade (1.28 \u2192 1.29) followed by Phase 2: Node Pool Upgrades, and repeats this pattern for 1.30"
+    },
+    {
+      "expectation": "Provides different node pool upgrade ordering with rationale for the sequence",
+      "passed": true,
+      "reason": "Specifies upgrade order as '1. General-purpose pool (least risky) 2. High-memory pool (coordinate with DB team) 3. GPU pool (requires driver compatibility check)' with clear rationales"
+    },
+    {
+      "expectation": "Includes specific surge upgrade settings (maxSurge/maxUnavailable) for each pool",
+      "passed": false,
+      "reason": "No mention of maxSurge/maxUnavailable settings in any of the gcloud commands or recommendations for managing upgrade disruption"
+    },
+    {
+      "expectation": "Addresses Postgres-specific concerns (PDB, backup, operator compatibility, PV reclaim)",
+      "passed": true,
+      "reason": "Mentions Postgres operator compatibility checks, coordination with DB team for maintenance windows, and includes draining nodes with grace periods, though PV reclaim policy is not explicitly addressed"
+    },
+    {
+      "expectation": "Addresses GPU-specific concerns (driver compatibility, workload coordination)",
+      "passed": true,
+      "reason": "Includes GPU driver compatibility checks, verification commands for nvidia drivers, and ML workload validation steps"
+    },
+    {
+      "expectation": "Includes actual gcloud commands for the upgrade steps",
+      "passed": true,
+      "reason": "Provides specific gcloud container clusters upgrade commands for both control plane and node pool upgrades throughout the plan"
+    },
+    {
+      "expectation": "Provides a pre-upgrade checklist",
+      "passed": true,
+      "reason": "Includes 'Pre-Flight Checks' section with kubectl commands and 'Risk Mitigation' section with checkbox items for pre-upgrade tasks"
+    },
+    {
+      "expectation": "Provides a post-upgrade checklist with validation commands",
+      "passed": true,
+      "reason": "Includes 'Validation Steps' section with specific kubectl and nvidia-smi commands for post-upgrade verification"
+    },
+    {
+      "expectation": "Includes rollback procedure or guidance",
+      "passed": false,
+      "reason": "Only mentions 'Plan rollback strategy' and 'Have rollback plan for workloads' in risk mitigation but provides no actual rollback procedures or specific guidance"
+    }
+  ]
+}

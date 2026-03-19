@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that clusters on Regular channel will be force-upgraded to the next minor version (1.29) when 1.28 hits EoS",
+      "passed": true,
+      "reason": "Response clearly states Regular channel clusters will be 'Force-upgraded to 1.29 automatically' with control plane upgraded first, then node pools"
+    },
+    {
+      "expectation": "Explains that clusters on Extended channel get up to 24 months of support, so 1.28 EoS is significantly later \u2014 they have more time",
+      "passed": true,
+      "reason": "Response explicitly states 'Extended channel provides up to 24 months of support for 1.28' and mentions they can 'stay on 1.28 longer than Regular channel clusters'"
+    },
+    {
+      "expectation": "Explains that legacy 'No channel' clusters face systematic node-level EoS enforcement \u2014 nodes on EoS versions are force-upgraded",
+      "passed": true,
+      "reason": "Response specifically states 'Nodes on 1.28 will be force-upgraded when EoS hits' and describes it as 'Systematic node-level EoS enforcement' with individual nodes upgraded without coordination"
+    },
+    {
+      "expectation": "Mentions that a 'no upgrades' maintenance exclusion (30 days) can temporarily defer even EoS force-upgrades",
+      "passed": true,
+      "reason": "Response provides specific command for applying maintenance exclusion with 'no_upgrades' scope and explicitly states '30-day max' and 'Buy 30 days max to prepare'"
+    },
+    {
+      "expectation": "Recommends proactive upgrade planning rather than waiting for EoS enforcement",
+      "passed": true,
+      "reason": "Response consistently recommends 'Proactive upgrade (Recommended)' and includes detailed action plans with immediate, short-term, and medium-term planning phases"
+    },
+    {
+      "expectation": "Mentions GKE EoS notifications via Cloud Logging as a planning tool",
+      "passed": true,
+      "reason": "Response mentions 'set up notifications via Cloud Logging for advance warning' in the monitoring section"
+    },
+    {
+      "expectation": "Mentions the deprecation insights dashboard for checking API compatibility before the forced upgrade",
+      "passed": false,
+      "reason": "The response does not mention the deprecation insights dashboard or API compatibility checking tools"
+    },
+    {
+      "expectation": "Warns that 'snowflaking' (manually freezing versions) should be avoided \u2014 it creates security and reliability risks",
+      "passed": false,
+      "reason": "The response does not mention 'snowflaking' or warn against manually freezing versions, nor does it discuss the security and reliability risks of this practice"
+    }
+  ]
+}

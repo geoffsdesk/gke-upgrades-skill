@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that GKE respects terminationGracePeriodSeconds during pod eviction, but surge upgrades have a max eviction timeout",
+      "passed": true,
+      "reason": "Response explains that GKE's default surge upgrade timeout (1 hour) will forcibly terminate jobs and mentions setting terminationGracePeriodSeconds \u2265 600 seconds in the job configuration example"
+    },
+    {
+      "expectation": "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour \u2014 far less than 8-16 hour jobs",
+      "passed": true,
+      "reason": "Response explicitly states 'GKE's default surge upgrade timeout (1 hour) << job duration' and 'default 1-hour pod eviction timeout will forcibly terminate them'"
+    },
+    {
+      "expectation": "Recommends pausing new batch job submissions before starting the upgrade",
+      "passed": true,
+      "reason": "Response includes steps to 'Prevent new jobs from scheduling on old nodes' using kubectl cordon and mentions 'Verify no new jobs scheduled during maintenance' in the pre-upgrade coordination section"
+    },
+    {
+      "expectation": "Advises waiting for in-flight jobs to complete naturally before upgrading their node pool",
+      "passed": true,
+      "reason": "Response explicitly recommends 'Wait for current jobs to complete naturally' and 'When all jobs complete, upgrade the empty pool' in the cordon-and-wait strategy"
+    },
+    {
+      "expectation": "Suggests using node affinity or taints to isolate batch workloads on a dedicated node pool",
+      "passed": true,
+      "reason": "Response provides detailed commands for creating a dedicated batch node pool with node-labels and node-taints, plus corresponding nodeSelector and tolerations configuration for jobs"
+    },
+    {
+      "expectation": "Recommends upgrading non-batch node pools first while batch jobs complete on the old pool",
+      "passed": true,
+      "reason": "Response includes a phased approach: Phase 1 (Control plane), Phase 2 (Non-batch node pools), and Phase 3 (Batch pool upgrade after jobs complete)"
+    },
+    {
+      "expectation": "Mentions scheduling the upgrade during a natural gap in batch processing if one exists",
+      "passed": true,
+      "reason": "Response mentions coordinating 'Only when no active jobs (coordinate with job scheduler)' and includes timeline management with 'Batch pool: Only when no active jobs'"
+    },
+    {
+      "expectation": "Provides commands for cordoning batch nodes to prevent new scheduling while jobs finish",
+      "passed": true,
+      "reason": "Response provides specific kubectl cordon commands: 'kubectl cordon -l workload=batch' and later 'kubectl uncordon -l workload=batch' when upgrade completes"
+    }
+  ]
+}

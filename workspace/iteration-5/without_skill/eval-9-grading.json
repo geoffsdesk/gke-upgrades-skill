@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends increasing maxSurge significantly (e.g., 10-20 or higher) to parallelize node replacements",
+      "passed": true,
+      "reason": "The response recommends maxSurge: 10 in the YAML example and --max-surge-upgrade=10 in the gcloud command, which is within the expected range"
+    },
+    {
+      "expectation": "Explains that higher maxSurge means more nodes upgrading simultaneously but requires more compute quota",
+      "passed": false,
+      "reason": "While the response shows how to configure higher maxSurge, it does not explain the compute quota implications or that more nodes upgrading simultaneously requires additional quota"
+    },
+    {
+      "expectation": "Advises checking and requesting increased compute quota before the upgrade",
+      "passed": false,
+      "reason": "The response does not mention checking or requesting increased compute quota as a prerequisite for the upgrade optimizations"
+    },
+    {
+      "expectation": "Suggests staggering node pool upgrades or running non-conflicting pools in parallel",
+      "passed": true,
+      "reason": "The response includes both phased rolling upgrades (staggering across weeks) and parallel node pool upgrades with async commands"
+    },
+    {
+      "expectation": "Mentions that maxUnavailable can be set >0 for non-critical pools to speed things up further",
+      "passed": true,
+      "reason": "The response shows maxUnavailable: 5 in examples and explains it as 'Max nodes that can be unavailable simultaneously'"
+    },
+    {
+      "expectation": "Recommends expanding the maintenance window or splitting across multiple weekends",
+      "passed": true,
+      "reason": "The response explicitly shows a phased approach with 'Week 1: Upgrade 2 node pools' and 'Week 2: Upgrade remaining 2 node pools'"
+    },
+    {
+      "expectation": "Provides the gcloud command for updating surge settings on each pool",
+      "passed": true,
+      "reason": "The response includes the specific gcloud container node-pools update command with --max-surge-upgrade and --max-unavailable-upgrade flags"
+    },
+    {
+      "expectation": "Includes monitoring commands to track upgrade progress in real-time",
+      "passed": true,
+      "reason": "The response provides monitoring commands including 'watch kubectl get nodes -o wide' and 'gcloud container operations list --filter' for tracking progress"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies Service A (minAvailable=100%) as a guaranteed upgrade blocker \u2014 no disruptions allowed at all",
+      "passed": true,
+      "reason": "Correctly identifies Service A as HIGH RISK and states it will block all node drains, preventing any pod disruption"
+    },
+    {
+      "expectation": "Identifies Service B (maxUnavailable=0) as also blocking upgrades \u2014 same effect as 100% minAvailable",
+      "passed": true,
+      "reason": "Correctly identifies Service B as HIGH RISK and states it will block all node drains, preventing ANY pod eviction"
+    },
+    {
+      "expectation": "States Service C (minAvailable=2 with 3 replicas) is safe \u2014 allows 1 pod disruption at a time",
+      "passed": false,
+      "reason": "Incorrectly labels Service C as MEDIUM RISK rather than safe, citing concerns about competition with rolling deployments and unhealthy replicas"
+    },
+    {
+      "expectation": "States Service D (maxUnavailable=1 with 5 replicas) is safe \u2014 allows 1 pod down at a time",
+      "passed": true,
+      "reason": "Correctly identifies Service D as LOW RISK/SAFE and states it's a good configuration that allows controlled disruption"
+    },
+    {
+      "expectation": "Recommends fixing Service A: change to minAvailable=N-1 or maxUnavailable=1",
+      "passed": true,
+      "reason": "Provides kubectl patch command to change Service A to minAvailable=80% and suggests maxUnavailable=20% alternative"
+    },
+    {
+      "expectation": "Recommends fixing Service B: change to maxUnavailable=1",
+      "passed": true,
+      "reason": "Provides kubectl patch command to change Service B to maxUnavailable=20% and removes minAvailable constraint"
+    },
+    {
+      "expectation": "Explains that GKE respects PDBs for up to 1 hour during surge upgrades, then may force-drain",
+      "passed": true,
+      "reason": "Explicitly states 'GKE respects PDBs for up to 1 hour during node drains' and 'After 1 hour, GKE may force-drain nodes regardless of PDBs'"
+    },
+    {
+      "expectation": "Provides kubectl patch commands to fix the problematic PDBs",
+      "passed": true,
+      "reason": "Provides specific kubectl patch commands for both Service A and Service B with exact syntax and parameters"
+    },
+    {
+      "expectation": "Recommends testing PDB changes in a non-production environment first",
+      "passed": false,
+      "reason": "Does not mention testing in non-production environments before making PDB changes"
+    }
+  ]
+}

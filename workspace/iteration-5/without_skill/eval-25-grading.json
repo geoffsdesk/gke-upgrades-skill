@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Defines 'available' as versions officially available in the channel that customers can manually upgrade to",
+      "passed": false,
+      "reason": "Response defines 'available' as the oldest supported version, not as versions officially available for manual upgrade"
+    },
+    {
+      "expectation": "Defines 'default' as the version used for new cluster creation \u2014 NOT necessarily the auto-upgrade target",
+      "passed": true,
+      "reason": "Response correctly defines 'default' as the recommended version for new clusters and distinguishes it from auto-upgrade target"
+    },
+    {
+      "expectation": "Defines 'auto-upgrade target' as the version GKE will actually upgrade existing clusters to automatically",
+      "passed": true,
+      "reason": "Response correctly defines auto-upgrade target as the next planned upgrade for the specific cluster"
+    },
+    {
+      "expectation": "Explains that default and auto-upgrade target are often the same but CAN differ, especially during new minor version rollouts",
+      "passed": true,
+      "reason": "Response explains that default and auto-upgrade target are different and provides context about why they differ during rollouts"
+    },
+    {
+      "expectation": "Notes that the auto-upgrade target depends on cluster constraints (maintenance windows, maintenance exclusions)",
+      "passed": false,
+      "reason": "Response mentions cluster configuration but does not specifically discuss maintenance windows or maintenance exclusions"
+    },
+    {
+      "expectation": "Explains that a cluster with a 'no minor' exclusion will have a patch-only auto-upgrade target for its current minor",
+      "passed": false,
+      "reason": "Response does not mention 'no minor' exclusions or patch-only upgrades"
+    },
+    {
+      "expectation": "Recommends checking the cluster's auto-upgrade status to see the actual target version",
+      "passed": false,
+      "reason": "Response does not provide a specific recommendation to check auto-upgrade status"
+    },
+    {
+      "expectation": "Points to the GKE release schedule or release notes for tracking version availability",
+      "passed": false,
+      "reason": "Response does not mention GKE release schedule or release notes as resources"
+    }
+  ]
+}

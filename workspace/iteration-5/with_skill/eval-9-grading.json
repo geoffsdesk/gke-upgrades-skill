@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends increasing maxSurge significantly (e.g., 10-20 or higher) to parallelize node replacements",
+      "passed": true,
+      "reason": "Response explicitly recommends maxSurge=20 for non-critical pools and provides the specific gcloud command to set it"
+    },
+    {
+      "expectation": "Explains that higher maxSurge means more nodes upgrading simultaneously but requires more compute quota",
+      "passed": true,
+      "reason": "Response clearly explains that maxSurge=20 requires +20 nodes worth of compute quota and discusses quota monitoring with specific commands"
+    },
+    {
+      "expectation": "Advises checking and requesting increased compute quota before the upgrade",
+      "passed": true,
+      "reason": "Response provides specific command to monitor quota usage: 'gcloud compute project-info describe --project PROJECT_ID' and discusses quota requirements"
+    },
+    {
+      "expectation": "Suggests staggering node pool upgrades or running non-conflicting pools in parallel",
+      "passed": true,
+      "reason": "Response includes detailed staggered strategy with specific commands for upgrading different pools across multiple weekends"
+    },
+    {
+      "expectation": "Mentions that maxUnavailable can be set >0 for non-critical pools to speed things up further",
+      "passed": false,
+      "reason": "Response consistently sets maxUnavailable=0 for all pools and does not suggest setting it >0 for non-critical pools to speed up upgrades"
+    },
+    {
+      "expectation": "Recommends expanding the maintenance window or splitting across multiple weekends",
+      "passed": true,
+      "reason": "Response provides both extended maintenance window configuration with gcloud command and detailed multi-weekend staggered approach"
+    },
+    {
+      "expectation": "Provides the gcloud command for updating surge settings on each pool",
+      "passed": true,
+      "reason": "Response provides complete gcloud container node-pools update commands with specific flags for maxSurge and maxUnavailable settings"
+    },
+    {
+      "expectation": "Includes monitoring commands to track upgrade progress in real-time",
+      "passed": true,
+      "reason": "Response includes multiple monitoring commands: watch command for node status, gcloud operations list, and pod eviction monitoring"
+    }
+  ]
+}

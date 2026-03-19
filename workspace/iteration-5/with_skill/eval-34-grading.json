@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": true,
+      "reason": "Response explicitly states 'Each 256-chip slice is recreated entirely in a single step (not node-by-node like CPU clusters)' and contrasts this with rolling updates"
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": true,
+      "reason": "Response clearly states 'Maintenance on ANY slice triggers restart of ALL slices in the multislice environment' and describes it as a 'cascading effect'"
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "Response explicitly states 'Every pod across all 4 slices will terminate and restart simultaneously' and 'Your LLM training will be completely interrupted'"
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": true,
+      "reason": "Response mentions 'can be longer if TPU capacity is constrained' and includes a capacity risk mitigation section discussing 'TPU multislice capacity can be unavailable during recreation, causing extended downtime'"
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "Response includes 'Force checkpoint save NOW' as step 1 with specific commands and emphasizes immediate checkpointing"
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "Response provides YAML configuration examples with '--resume-from-checkpoint' and discusses checkpoint strategy with 'checkpoint_on_signal: true'"
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": true,
+      "reason": "Response includes detailed gcloud command for applying maintenance exclusion with specific parameters to block upgrades for up to 30 days"
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": true,
+      "reason": "Response recommends 'Schedule training campaigns between GKE maintenance cycles (typically monthly)' and suggests 'Dedicated training windows' in longer-term recommendations"
+    }
+  ]
+}

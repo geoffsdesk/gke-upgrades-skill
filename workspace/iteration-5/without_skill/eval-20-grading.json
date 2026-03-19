@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Starts with pre-flight checks: current versions, cluster health, node status",
+      "passed": true,
+      "reason": "Step 1.2 includes gcloud commands to get current cluster and node pool versions, and Step 2.1 includes kubectl commands to check node status, system pods, and failed pods"
+    },
+    {
+      "expectation": "Includes the gcloud command to check available versions in the release channel",
+      "passed": true,
+      "reason": "Step 1.3 includes the exact command 'gcloud container get-server-config --zone=$ZONE --project=$PROJECT_ID --format=\"value(validMasterVersions[0:5])\"'"
+    },
+    {
+      "expectation": "Includes the API deprecation check command before upgrading",
+      "passed": false,
+      "reason": "No API deprecation check command is provided. The runbook does not include any kubectl or gcloud commands to check for deprecated APIs before upgrading"
+    },
+    {
+      "expectation": "Provides the exact gcloud command for control plane upgrade to 1.29 first (--master flag)",
+      "passed": true,
+      "reason": "Step 3.1 provides the exact command 'gcloud container clusters upgrade $CLUSTER_NAME --zone=$ZONE --project=$PROJECT_ID --master --cluster-version=1.29 --quiet'"
+    },
+    {
+      "expectation": "Includes a verification step after control plane upgrade with expected output",
+      "passed": true,
+      "reason": "Step 3.2 includes verification commands to check master version and cluster health, though it doesn't show expected output format"
+    },
+    {
+      "expectation": "Provides the exact gcloud command for each node pool upgrade to 1.29",
+      "passed": true,
+      "reason": "Steps 4.1 and 4.4 provide exact commands for upgrading both default-pool and workload-pool to 1.29 using --node-pool flag"
+    },
+    {
+      "expectation": "Includes monitoring commands to watch node pool upgrade progress",
+      "passed": true,
+      "reason": "Step 4.2 includes 'watch kubectl get nodes' and 'watch kubectl get pods --all-namespaces | grep -v Running | grep -v Completed' commands"
+    },
+    {
+      "expectation": "Repeats the full sequence for 1.29\u21921.30 (sequential, not skipping)",
+      "passed": true,
+      "reason": "The runbook includes separate steps for upgrading control plane to 1.30 (Step 3.3) and both node pools to 1.30 (Steps 4.3 and 4.5), following the sequential pattern"
+    },
+    {
+      "expectation": "Includes post-upgrade validation: node versions, pod health, kube-system pods",
+      "passed": true,
+      "reason": "Step 5 includes comprehensive validation commands checking cluster versions, node status, system pods, and workload pods"
+    },
+    {
+      "expectation": "Provides a rollback section explaining what to do if something goes wrong",
+      "passed": true,
+      "reason": "Emergency Rollback section explains that control plane cannot be rolled back but provides command to create new node pool with previous version if needed"
+    }
+  ]
+}

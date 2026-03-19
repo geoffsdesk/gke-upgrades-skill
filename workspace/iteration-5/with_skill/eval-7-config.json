@@ -1,0 +1,19 @@
+{
+  "eval_id": 7,
+  "mode": "with_skill",
+  "iteration": 5,
+  "prompt": "We need to upgrade 12 GKE clusters across 3 environments (dev, staging, prod) with 4 clusters each. Dev is on Rapid, staging on Regular, prod on Stable. All are Standard clusters running 1.28 and we need to get to 1.30. Can you create a rollout strategy?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-19T18:32:01.889480+00:00",
+  "input_tokens": 7899,
+  "output_tokens": 2017,
+  "time_seconds": 35.68,
+  "skill_files": [
+    "skill/SKILL.md",
+    "skill/evals/evals.json",
+    "skill/references/checklists.md",
+    "skill/references/runbook-template.md",
+    "skill/references/troubleshooting.md"
+  ]
+}

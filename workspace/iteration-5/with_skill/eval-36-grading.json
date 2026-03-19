@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that surge upgrades create NEW nodes before draining old ones \u2014 this requires extra GPU capacity that may not exist for scarce hardware like H100",
+      "passed": true,
+      "reason": "Response clearly explains the surge capacity problem and mentions 'draining existing nodes before creating replacements' vs surge approach, though could be more explicit about surge creating new nodes first"
+    },
+    {
+      "expectation": "Recommends switching to maxSurge=0, maxUnavailable=1 \u2014 this drains a node first then creates the replacement, requiring zero extra GPU capacity",
+      "passed": true,
+      "reason": "Explicitly provides the exact gcloud command with --max-surge-upgrade 0 and --max-unavailable-upgrade 1, with clear explanation that it requires zero extra GPUs"
+    },
+    {
+      "expectation": "Warns that maxUnavailable=1 means reduced cluster capacity during upgrade \u2014 63/64 nodes available at any time",
+      "passed": true,
+      "reason": "Clearly states 'Temporary capacity reduction (63 nodes during upgrade instead of 64+surge)' in the tradeoffs section"
+    },
+    {
+      "expectation": "Mentions blue-green as an alternative if a full replacement pool can be provisioned (requires 2x quota but gives instant rollback)",
+      "passed": false,
+      "reason": "Mentions controlled blue-green with staging pool but doesn't discuss full replacement pool requiring 2x quota or instant rollback benefits"
+    },
+    {
+      "expectation": "Suggests upgrading during off-peak when some GPU nodes are idle \u2014 scale down non-critical workloads to free capacity",
+      "passed": true,
+      "reason": "Recommends planning upgrades around training gaps, coordinating with ML teams on natural break points, and scaling down workloads to migrate in batches"
+    },
+    {
+      "expectation": "Notes that with maxUnavailable=1 on 64 nodes at ~20-node parallelism, the upgrade will take significantly longer",
+      "passed": true,
+      "reason": "States 'Slower upgrade (sequential rather than parallel)' and mentions '~64 upgrade cycles' though doesn't specifically mention 20-node parallelism"
+    },
+    {
+      "expectation": "Recommends checking if GPU reservations have headroom that could be used for surge nodes",
+      "passed": false,
+      "reason": "Does not mention checking GPU reservations or headroom for surge nodes"
+    },
+    {
+      "expectation": "Advises scheduling the upgrade during a gap between training runs when nodes can be drained without impacting workloads",
+      "passed": true,
+      "reason": "Explicitly recommends planning upgrades around training gaps, coordinating with ML teams, and enabling checkpointing for training resumption"
+    }
+  ]
+}

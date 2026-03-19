@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies PDB as the most likely/common cause of stuck upgrades",
+      "passed": true,
+      "reason": "Response explicitly states 'The most common cause is pods that can't be evicted' and later mentions 'Start with checking the PodDisruptionBudgets and stuck pods - that's the cause in ~80% of cases'"
+    },
+    {
+      "expectation": "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
+      "passed": true,
+      "reason": "Provides exact command 'kubectl get pdb --all-namespaces' in the diagnostic section"
+    },
+    {
+      "expectation": "Provides commands to identify which pods are blocking the drain",
+      "passed": true,
+      "reason": "Includes multiple commands: 'kubectl get pods --all-namespaces --field-selector=status.phase!=Running,status.phase!=Succeeded' and commands to find pods without proper replica sets and stuck in terminating state"
+    },
+    {
+      "expectation": "Includes resource constraint diagnosis (capacity issues, pending pods)",
+      "passed": false,
+      "reason": "Does not specifically address resource constraints, capacity issues, or pending pods as potential causes of the upgrade being stuck"
+    },
+    {
+      "expectation": "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+      "passed": true,
+      "reason": "Provides specific kubectl patch commands to adjust PDBs: 'kubectl patch pdb PDB_NAME -n NAMESPACE --type merge -p '{\"spec\":{\"minAvailable\":0}}'' and similar for maxUnavailable"
+    },
+    {
+      "expectation": "Includes guidance on surge upgrade settings as a potential fix",
+      "passed": true,
+      "reason": "Provides specific gcloud command to configure surge settings: 'gcloud container node-pools update YOUR_POOL_NAME --max-surge=3 --max-unavailable=1'"
+    },
+    {
+      "expectation": "Mentions webhook issues as a possible cause",
+      "passed": false,
+      "reason": "Does not mention admission webhooks or webhook-related issues as a potential cause of stuck node upgrades"
+    },
+    {
+      "expectation": "Includes validation steps to confirm the fix is working",
+      "passed": true,
+      "reason": "Provides commands to check upgrade status and monitor progress: 'gcloud container operations list --filter=\"targetLink:YOUR_CLUSTER_NAME\"' and 'kubectl get nodes -o wide'"
+    }
+  ]
+}

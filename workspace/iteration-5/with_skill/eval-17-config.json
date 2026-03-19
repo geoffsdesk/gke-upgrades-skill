@@ -1,0 +1,19 @@
+{
+  "eval_id": 17,
+  "mode": "with_skill",
+  "iteration": 5,
+  "prompt": "Our node pool upgrade is stuck and we've determined it's a resource constraint issue \u2014 surge nodes can't be created because we've hit our compute quota in the region. We can't get a quota increase approved for another week. Is there any way to proceed with the upgrade?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-19T17:49:51.746175+00:00",
+  "input_tokens": 7881,
+  "output_tokens": 646,
+  "time_seconds": 14.12,
+  "skill_files": [
+    "skill/SKILL.md",
+    "skill/evals/evals.json",
+    "skill/references/checklists.md",
+    "skill/references/runbook-template.md",
+    "skill/references/troubleshooting.md"
+  ]
+}

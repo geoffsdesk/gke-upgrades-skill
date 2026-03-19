@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends combining release channels with maintenance exclusions as the approach for maximum control",
+      "passed": true,
+      "reason": "Response explicitly recommends Extended channel + 'No minor or node upgrades' exclusions as the primary strategy"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' exclusion to prevent disruptive changes while allowing control plane security patches",
+      "passed": true,
+      "reason": "Response specifically recommends 'no_minor_or_node_upgrades' exclusion scope and explains it allows CP patches while blocking disruptive changes"
+    },
+    {
+      "expectation": "Recommends maintenance windows to control WHEN patches are applied (e.g., weekend windows only)",
+      "passed": true,
+      "reason": "Response provides specific gcloud commands for setting maintenance windows with Sunday schedule and explains patches arrive during these windows"
+    },
+    {
+      "expectation": "Mentions the disruption interval between patch and minor upgrades to prevent back-to-back upgrades",
+      "passed": false,
+      "reason": "Response does not mention disruption intervals or preventing back-to-back upgrades as a timing consideration"
+    },
+    {
+      "expectation": "Suggests Stable or Extended channel for production clusters in regulated environments",
+      "passed": true,
+      "reason": "Response recommends Extended channel for production and includes it in the multi-environment strategy table for regulated financial services"
+    },
+    {
+      "expectation": "Notes that disabling control plane patches entirely is not recommended due to security risks \u2014 monthly patches at minimum",
+      "passed": true,
+      "reason": "Response warns about 'no upgrades' exclusion blocking security patches and recommends using it sparingly (max 30 days), emphasizing security patch importance"
+    },
+    {
+      "expectation": "Mentions rollout sequencing for controlling the order of upgrades across multiple clusters",
+      "passed": true,
+      "reason": "Response provides a multi-environment strategy table showing Dev \u2192 Staging \u2192 Prod progression with different configurations for each"
+    },
+    {
+      "expectation": "Provides gcloud commands for configuring the recommended exclusion type and maintenance window",
+      "passed": true,
+      "reason": "Response includes detailed gcloud commands for setting maintenance windows, adding exclusions with 'no_minor_or_node_upgrades' scope, and managing the configuration"
+    }
+  ]
+}

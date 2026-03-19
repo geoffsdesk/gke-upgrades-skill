@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that 'No channel' is a legacy configuration that lacks granular maintenance exclusion types",
+      "passed": true,
+      "reason": "The response clearly explains that legacy clusters have 'Limited maintenance exclusion types' and shows a comparison table indicating 'No channel' only has basic exclusions while missing two other exclusion types"
+    },
+    {
+      "expectation": "Mentions that 'No channel' does not support 'no minor or node upgrades' exclusion scope \u2014 only the 30-day 'no upgrades' type",
+      "passed": true,
+      "reason": "The comparison table explicitly shows 'No minor or node upgrades' and 'No minor upgrades' as '\u274c Missing' for the current option, while 'No upgrades' shows '\u2705 Available'"
+    },
+    {
+      "expectation": "Notes that Extended support (24 months) is only available on release channels, not 'No channel'",
+      "passed": true,
+      "reason": "The response explicitly states 'Release channels 1.27+ can enroll in Extended support (up to 24 months vs. 14 months standard)' and 'Legacy clusters can't access Extended support'"
+    },
+    {
+      "expectation": "Notes that rollout sequencing is not available on 'No channel'",
+      "passed": true,
+      "reason": "The response has a dedicated section 'No rollout sequencing' explaining that release channels support rollout sequencing while 'Legacy clusters upgrade at unpredictable times based on regional rollout'"
+    },
+    {
+      "expectation": "Recommends Regular or Stable channel as the closest migration target (legacy behavior matches Stable for minors, Regular for patches)",
+      "passed": true,
+      "reason": "The response recommends Regular channel as 'the closest match to your current upgrade behavior' and explains legacy clusters follow 'Stable channel pace' for minor versions and 'Regular channel pace' for patches"
+    },
+    {
+      "expectation": "Mentions Extended channel as an option for customers who want maximum flexibility around EoS",
+      "passed": true,
+      "reason": "The response mentions Extended channel as an 'Alternative' option that 'gives you up to 24 months per version' and 'is designed for customers who do manual upgrades exclusively'"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "The response provides specific gcloud commands: 'gcloud container clusters update CLUSTER_NAME --zone ZONE --release-channel regular' and similar commands for Extended channel"
+    },
+    {
+      "expectation": "References the comparison table at cloud.google.com/kubernetes-engine/docs/concepts/release-channels",
+      "passed": false,
+      "reason": "The response does not reference or mention the official GKE documentation URL for release channels comparison table"
+    }
+  ]
+}

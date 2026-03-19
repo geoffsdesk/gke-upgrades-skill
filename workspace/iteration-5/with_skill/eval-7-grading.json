@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Proposes a phased rollout: dev first, then staging, then prod",
+      "passed": true,
+      "reason": "Clearly defines Phase 1 (Dev), Phase 2 (Staging), Phase 3 (Production) with explicit sequencing"
+    },
+    {
+      "expectation": "Includes soak time between environment phases (e.g., 24-48 hours for dev, 1 week for staging before prod)",
+      "passed": true,
+      "reason": "Specifies 24h soak time for dev, 48h for staging, and 1 week for production clusters"
+    },
+    {
+      "expectation": "Defines go/no-go criteria between phases (error rates, latency, pod health)",
+      "passed": true,
+      "reason": "Includes validation gates with specific criteria: application health checks, integration tests for dev; regression suite and performance benchmarks for staging; business acceptance and traffic validation for prod"
+    },
+    {
+      "expectation": "Addresses version availability differences across channels (1.30 may be on Rapid but not yet on Stable)",
+      "passed": true,
+      "reason": "Includes detailed version availability timeline table showing when 1.30 will be available on each channel, and explicitly mentions waiting for availability before upgrading"
+    },
+    {
+      "expectation": "Recommends upgrading sequentially within each environment (1.28\u21921.29\u21921.30)",
+      "passed": true,
+      "reason": "Explicitly states 'Sequential minors (1.28 \u2192 1.29 \u2192 1.30)' and shows this path in all environment phases"
+    },
+    {
+      "expectation": "Suggests not upgrading all prod clusters simultaneously \u2014 do one or two first as canary",
+      "passed": true,
+      "reason": "Shows sequential upgrade pattern 'Prod-1 \u2192 Prod-2 \u2192 Prod-3 \u2192 Prod-4' with 1 week soak between clusters"
+    },
+    {
+      "expectation": "Includes rollback triggers and criteria for halting the rollout",
+      "passed": true,
+      "reason": "Provides 'Break Glass Scenarios' section with specific triggers and 'Risk Mitigation' section detailing when to pause rollout"
+    },
+    {
+      "expectation": "Provides a timeline or schedule estimate for the full rollout",
+      "passed": true,
+      "reason": "Includes detailed timeline with Week 1 for dev, Week 2-3 for staging, Week 4-6 for prod, totaling ~6 weeks"
+    },
+    {
+      "expectation": "Mentions maintenance window coordination across clusters",
+      "passed": true,
+      "reason": "Includes 'Maintenance Windows & Exclusions' section with specific gcloud commands and configuration examples for setting maintenance windows"
+    }
+  ]
+}

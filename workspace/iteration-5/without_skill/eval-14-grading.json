@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Checks for deprecated API usage that may have changed behavior in 1.30",
+      "passed": false,
+      "reason": "Response mentions ValidatingAdmissionPolicy changes and feature gate changes but doesn't specifically address checking for deprecated API usage or API version changes that could affect application behavior"
+    },
+    {
+      "expectation": "Recommends checking admission webhooks \u2014 they may be rejecting or slowing down requests on the new version",
+      "passed": true,
+      "reason": "Response specifically mentions checking validating and mutating webhook configurations, looking for admission controller errors, and suggests temporarily disabling problematic webhooks"
+    },
+    {
+      "expectation": "Advises checking if resource requests/limits need adjusting for any system components that changed",
+      "passed": true,
+      "reason": "Response includes checking resource usage with 'kubectl top nodes/pods', checking for resource pressure, and mentions API server resource configuration options"
+    },
+    {
+      "expectation": "Suggests examining kube-system pods for any that are crashlooping or restarting",
+      "passed": true,
+      "reason": "Response explicitly checks kube-system pods with commands like 'kubectl get pods -n kube-system | grep apiserver' and includes checking for non-Running pods across namespaces"
+    },
+    {
+      "expectation": "Includes commands to check API server metrics and latency (kubectl get --raw /metrics)",
+      "passed": true,
+      "reason": "Response includes the exact command 'kubectl get --raw /metrics | grep apiserver_request_duration' to monitor API server response times"
+    },
+    {
+      "expectation": "Recommends checking if NetworkPolicy or service mesh components need updating for the new version",
+      "passed": true,
+      "reason": "Response includes checking CNI plugin status and network-related errors, which covers network components that may need updating"
+    },
+    {
+      "expectation": "Advises reviewing pod events for scheduling delays or readiness probe failures",
+      "passed": true,
+      "reason": "Response includes checking pod readiness issues, describes pod status checks, and mentions looking for readiness probe failures with 'kubectl describe pod'"
+    },
+    {
+      "expectation": "Mentions checking if HPA or VPA are behaving differently on the new version",
+      "passed": false,
+      "reason": "Response does not mention checking HPA (Horizontal Pod Autoscaler) or VPA (Vertical Pod Autoscaler) behavior after the upgrade"
+    }
+  ]
+}

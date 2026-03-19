@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends upgrading the L4 inference pool and A100 pool separately with different strategies",
+      "passed": true,
+      "reason": "The response clearly separates Phase 2 for L4 pool upgrade and Phase 3 for A100 pool upgrade with distinct strategies - blue-green approach for L4 and job-aware scheduling for A100"
+    },
+    {
+      "expectation": "For L4 inference pool: recommends surge upgrade with maxSurge=1 or 2 to maintain capacity during rolling replacement",
+      "passed": false,
+      "reason": "The response uses a blue-green node pool approach with batch migration rather than recommending surge upgrade parameters like maxSurge=1 or 2"
+    },
+    {
+      "expectation": "Addresses GPU driver version compatibility \u2014 auto-installed drivers must be compatible with inference framework (TensorRT, vLLM, etc.)",
+      "passed": false,
+      "reason": "While the response mentions checking GPU driver compatibility with kubectl describe commands, it doesn't specifically address compatibility with inference frameworks like TensorRT or vLLM"
+    },
+    {
+      "expectation": "For A100 fine-tuning pool: recommends scheduling the upgrade during a gap between fine-tuning jobs",
+      "passed": true,
+      "reason": "The response includes a CronJob scheduler and job-aware migration script that specifically checks for running fine-tuning jobs and waits for gaps between jobs"
+    },
+    {
+      "expectation": "Notes that GPU VMs do not support live migration \u2014 inference pods will restart during node upgrade, causing brief latency spikes",
+      "passed": false,
+      "reason": "The response doesn't explicitly mention that GPU VMs don't support live migration or that inference pods will restart, though it does include latency monitoring"
+    },
+    {
+      "expectation": "Recommends PDBs on inference deployments to ensure enough replicas stay available during the rolling upgrade",
+      "passed": false,
+      "reason": "While PDBs are mentioned in the backup command, the response doesn't specifically recommend configuring PDBs for inference deployments to maintain availability"
+    },
+    {
+      "expectation": "Addresses auto-scaler interaction \u2014 new nodes created by auto-scaler during upgrade will be at the old version until their pool upgrade completes",
+      "passed": false,
+      "reason": "The response doesn't address the specific issue that auto-scaler will create nodes at the old version during the upgrade process"
+    },
+    {
+      "expectation": "Recommends testing driver + CUDA compatibility in staging before production upgrade",
+      "passed": false,
+      "reason": "The response doesn't mention testing in a staging environment or specifically testing CUDA compatibility before production upgrade"
+    }
+  ]
+}

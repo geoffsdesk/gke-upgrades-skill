@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Distinguishes between dev (Rapid) and prod (Stable) clusters in the checklists",
+      "passed": true,
+      "reason": "The response explicitly mentions dev clusters on Rapid channel and prod clusters on Stable channel, with specific advice to validate dev clusters first and use them for testing before prod upgrades"
+    },
+    {
+      "expectation": "Recognizes Autopilot limitations (no node management, no SSH, mandatory resource requests)",
+      "passed": true,
+      "reason": "The response includes an 'Autopilot-Specific Considerations' section that mentions resource requests/limits auto-adjustment and includes mandatory resource requests as a concern"
+    },
+    {
+      "expectation": "Includes API deprecation checks with kubectl commands",
+      "passed": true,
+      "reason": "The pre-upgrade checklist includes checking for deprecated APIs, custom resources using deprecated APIs, and references the Kubernetes deprecation guide"
+    },
+    {
+      "expectation": "Mentions mandatory resource requests as an Autopilot-specific concern",
+      "passed": true,
+      "reason": "The Autopilot-Specific Considerations section explicitly mentions reviewing 'current resource requests/limits (Autopilot auto-adjusts)' in pre-upgrade"
+    },
+    {
+      "expectation": "Pre-upgrade checklist includes workload readiness items (PDBs, bare pods, graceful shutdown)",
+      "passed": false,
+      "reason": "While the checklist includes application assessment and workload inventory, it does not specifically mention PodDisruptionBudgets, bare pods, or graceful shutdown configurations"
+    },
+    {
+      "expectation": "Post-upgrade checklist includes version verification commands",
+      "passed": true,
+      "reason": "Post-upgrade section includes specific commands like 'gcloud container clusters describe' and 'kubectl get nodes -o wide' to verify cluster status and version"
+    },
+    {
+      "expectation": "Post-upgrade checklist includes workload health validation",
+      "passed": true,
+      "reason": "The Application Validation section includes comprehensive workload status checks with kubectl commands to verify deployments, pods, and jobs"
+    },
+    {
+      "expectation": "Recommends testing on dev clusters before prod auto-upgrade",
+      "passed": true,
+      "reason": "The Dev Environment Validation section explicitly states to verify dev clusters are on 1.30+ and run full application test suites before prod upgrade"
+    },
+    {
+      "expectation": "Includes monitoring/observability validation items",
+      "passed": true,
+      "reason": "The response includes monitoring validation in multiple sections: pre-upgrade monitoring system health checks, immediate post-upgrade verification, and extended 24-hour monitoring of performance metrics and logging"
+    }
+  ]
+}

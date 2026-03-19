@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies PDB as the most likely/common cause of stuck upgrades",
+      "passed": true,
+      "reason": "Response clearly states PDB blocking drain is the 'most common cause' and 'almost certainly' the issue, dedicating a full section to it as the primary diagnosis"
+    },
+    {
+      "expectation": "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
+      "passed": true,
+      "reason": "Provides 'kubectl get pdb -A -o wide' command which is equivalent to --all-namespaces"
+    },
+    {
+      "expectation": "Provides commands to identify which pods are blocking the drain",
+      "passed": true,
+      "reason": "Includes multiple commands: kubectl describe pdb to see protected pods, kubectl get pods | grep Pending for pending pods, and kubectl get events for FailedScheduling events"
+    },
+    {
+      "expectation": "Includes resource constraint diagnosis (capacity issues, pending pods)",
+      "passed": true,
+      "reason": "Has dedicated section 'Check for resource constraints' with commands to check pending pods, FailedScheduling events, and node capacity using kubectl top nodes"
+    },
+    {
+      "expectation": "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+      "passed": true,
+      "reason": "Provides kubectl patch command to temporarily adjust PDB with maxUnavailable 50% and includes backup/restore instructions"
+    },
+    {
+      "expectation": "Includes guidance on surge upgrade settings as a potential fix",
+      "passed": true,
+      "reason": "Provides gcloud command to adjust max-surge-upgrade and max-unavailable-upgrade settings as a fix for resource constraints"
+    },
+    {
+      "expectation": "Mentions webhook issues as a possible cause",
+      "passed": false,
+      "reason": "Webhook issues are not mentioned anywhere in the response as a potential cause of stuck upgrades"
+    },
+    {
+      "expectation": "Includes validation steps to confirm the fix is working",
+      "passed": true,
+      "reason": "Has dedicated 'Monitor Progress' section with watch commands for node status, pod movement, and upgrade operation status to validate fixes are working"
+    }
+  ]
+}

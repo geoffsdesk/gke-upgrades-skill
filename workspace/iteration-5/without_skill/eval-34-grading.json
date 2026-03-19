@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": true,
+      "reason": "Response explicitly states 'Coordinated shutdown: All slices in your multislice job will terminate simultaneously' and 'No graceful migration: Unlike CPU/GPU workloads, TPU slices cannot be live-migrated'"
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": true,
+      "reason": "Response clearly states 'All slices in your multislice job will terminate simultaneously' and addresses the coordinated nature of the shutdown across all 4 slices"
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "Response explicitly mentions 'Pod eviction: Your TPU pods will receive termination signals' and 'Full job termination: Your training job will be completely stopped across all 4 slices'"
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": false,
+      "reason": "Response mentions monitoring slice availability and cold start times but does not specifically warn about blocking behavior when insufficient TPU resources are available during recreation"
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "Response recommends 'Increase checkpoint frequency before maintenance' with specific code example reducing checkpoint interval to every 100 steps"
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "Response includes comprehensive checkpointing guidance with code examples and mentions 'Plan Your Restart Strategy' with specific steps for resuming training"
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": false,
+      "reason": "Response does not mention maintenance exclusions or the ability to defer maintenance events - it treats maintenance as unavoidable"
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": false,
+      "reason": "While response mentions 'Maintenance window: Typically 2-6 hours', it does not discuss the ability to schedule or control when maintenance occurs during planned training breaks"
+    }
+  ]
+}

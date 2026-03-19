@@ -1,0 +1,19 @@
+{
+  "eval_id": 21,
+  "mode": "with_skill",
+  "iteration": 5,
+  "prompt": "We want to use the Extended release channel for our production GKE clusters to get 24-month support. Currently we're on Regular channel at 1.29. What are the tradeoffs and how do we switch?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-19T17:53:00.153076+00:00",
+  "input_tokens": 7872,
+  "output_tokens": 1000,
+  "time_seconds": 23.42,
+  "skill_files": [
+    "skill/SKILL.md",
+    "skill/evals/evals.json",
+    "skill/references/checklists.md",
+    "skill/references/runbook-template.md",
+    "skill/references/troubleshooting.md"
+  ]
+}

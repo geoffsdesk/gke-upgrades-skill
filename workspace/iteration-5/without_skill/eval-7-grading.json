@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Proposes a phased rollout: dev first, then staging, then prod",
+      "passed": true,
+      "reason": "Strategy clearly defines Phase 1 (Dev), Phase 2 (Staging), Phase 3 (Prod) with explicit ordering"
+    },
+    {
+      "expectation": "Includes soak time between environment phases (e.g., 24-48 hours for dev, 1 week for staging before prod)",
+      "passed": true,
+      "reason": "Includes 1 hour between dev cluster upgrades, 2 hours between staging clusters, 24 hours monitoring in prod, and 48 hours between prod clusters"
+    },
+    {
+      "expectation": "Defines go/no-go criteria between phases (error rates, latency, pod health)",
+      "passed": true,
+      "reason": "Includes validation steps checking pod status, running staging tests with job completion criteria, and comprehensive health checks"
+    },
+    {
+      "expectation": "Addresses version availability differences across channels (1.30 may be on Rapid but not yet on Stable)",
+      "passed": false,
+      "reason": "While it mentions the different channels (Rapid, Regular, Stable), it doesn't address potential version availability differences or timing constraints"
+    },
+    {
+      "expectation": "Recommends upgrading sequentially within each environment (1.28\u21921.29\u21921.30)",
+      "passed": true,
+      "reason": "Explicitly shows two-step upgrade process: first upgrading to 1.29, then to 1.30 with wait times between major upgrades"
+    },
+    {
+      "expectation": "Suggests not upgrading all prod clusters simultaneously \u2014 do one or two first as canary",
+      "passed": true,
+      "reason": "Production strategy upgrades clusters sequentially with 48-hour gaps between each cluster, effectively using each as a canary"
+    },
+    {
+      "expectation": "Includes rollback triggers and criteria for halting the rollout",
+      "passed": true,
+      "reason": "Includes rollback procedures, validation failure stops (exit 1), and comprehensive backup/restore mechanisms"
+    },
+    {
+      "expectation": "Provides a timeline or schedule estimate for the full rollout",
+      "passed": true,
+      "reason": "Includes detailed timeline table showing Week 1 (Dev), Week 2 (Staging), Week 3-4 (Prod) with specific cluster counts"
+    },
+    {
+      "expectation": "Mentions maintenance window coordination across clusters",
+      "passed": true,
+      "reason": "Mentions maintenance windows in production section and includes maintenance window notifications in the production upgrade script"
+    }
+  ]
+}

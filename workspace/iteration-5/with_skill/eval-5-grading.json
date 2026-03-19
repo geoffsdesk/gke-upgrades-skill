@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Response clearly states 'exceeds GKE's supported skew limit of 2 minor versions' and explains the policy"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (3 minor versions)",
+      "passed": true,
+      "reason": "Response explicitly states 'Your node pool at 1.28 is 3 minor versions behind your 1.31 control plane'"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Response mentions 'API compatibility issues, pod scheduling failures, unpredictable behavior' covering the expected issues"
+    },
+    {
+      "expectation": "Recommends sequential node pool upgrades (1.28\u21921.29\u21921.30\u21921.31) not a direct jump",
+      "passed": true,
+      "reason": "Response provides specific sequential upgrade commands and explicitly states 'You must upgrade sequentially (1.28\u21921.29\u21921.30\u21921.31). Don't attempt to jump directly to 1.31'"
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Response includes specific gcloud container node-pools upgrade commands for each upgrade stage"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": false,
+      "reason": "Response recommends aggressive surge settings (maxSurge=3, maxUnavailable=0) instead of conservative settings"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": true,
+      "reason": "Response includes monitoring commands and states 'Monitor progress between stages' with specific commands for watching nodes and checking pods"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": true,
+      "reason": "Response covers prevention including reviewing maintenance exclusions, migrating to release channels, and setting up monitoring"
+    }
+  ]
+}

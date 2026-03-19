@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends upgrading the L4 inference pool and A100 pool separately with different strategies",
+      "passed": true,
+      "reason": "Response clearly recommends separate strategies: L4 pool with maxSurge=2 for inference SLA protection, and A100 pool with maxSurge=1 for quota conservation, executed in different phases"
+    },
+    {
+      "expectation": "For L4 inference pool: recommends surge upgrade with maxSurge=1 or 2 to maintain capacity during rolling replacement",
+      "passed": true,
+      "reason": "Response explicitly recommends maxSurge=2 for the L4 pool with the command 'gcloud container node-pools update l4-inference-pool --max-surge-upgrade 2 --max-unavailable-upgrade 0'"
+    },
+    {
+      "expectation": "Addresses GPU driver version compatibility \u2014 auto-installed drivers must be compatible with inference framework (TensorRT, vLLM, etc.)",
+      "passed": true,
+      "reason": "Response includes GPU driver compatibility testing section, mentions 'GKE 1.30 may ship different CUDA drivers than 1.29', and recommends testing in staging cluster with 'Verify CUDA version, driver compatibility, framework compatibility'"
+    },
+    {
+      "expectation": "For A100 fine-tuning pool: recommends scheduling the upgrade during a gap between fine-tuning jobs",
+      "passed": true,
+      "reason": "Response recommends 'Wait for fine-tuning job completion or checkpoint' in Phase 3 and includes maintenance exclusion commands to 'Block node pool upgrades during critical fine-tuning campaigns'"
+    },
+    {
+      "expectation": "Notes that GPU VMs do not support live migration \u2014 inference pods will restart during node upgrade, causing brief latency spikes",
+      "passed": true,
+      "reason": "Response explicitly states 'No live migration: GPU VMs require pod restart for every node upgrade' and mentions 'expect brief inference latency spikes during L4 upgrade' in stakeholder coordination"
+    },
+    {
+      "expectation": "Recommends PDBs on inference deployments to ensure enough replicas stay available during the rolling upgrade",
+      "passed": true,
+      "reason": "Response includes a PDB configuration for fine-tuning jobs with minAvailable: 100% and mentions 'Fine-tuning jobs protected by PDBs', though it focuses more on training workloads than inference deployments specifically"
+    },
+    {
+      "expectation": "Addresses auto-scaler interaction \u2014 new nodes created by auto-scaler during upgrade will be at the old version until their pool upgrade completes",
+      "passed": false,
+      "reason": "While the response mentions auto-scaling and states 'Auto-scaler should maintain serving capacity via surge nodes', it does not explicitly address that new nodes created by auto-scaler during upgrade will be at the old version"
+    },
+    {
+      "expectation": "Recommends testing driver + CUDA compatibility in staging before production upgrade",
+      "passed": true,
+      "reason": "Response includes detailed staging cluster testing with commands to create a staging cluster with GKE 1.30 and explicit instruction to 'Test inference workloads + fine-tuning jobs on GKE 1.30' and 'Verify CUDA version, driver compatibility, framework compatibility'"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the key difference: surge upgrades nodes in-place with rolling replacement, blue-green creates an entirely new pool",
+      "passed": false,
+      "reason": "The response incorrectly describes surge upgrade as preserving node identity and storage, when surge actually does rolling replacement. It correctly describes blue-green as creating new nodes but mischaracterizes surge upgrade mechanics."
+    },
+    {
+      "expectation": "Recommends blue-green for this scenario due to local SSDs (data can't migrate between nodes)",
+      "passed": false,
+      "reason": "The response recommends surge upgrade instead of blue-green, which is the opposite of what the expectation requires."
+    },
+    {
+      "expectation": "Explains that local SSD data is lost when a node is drained during surge upgrade",
+      "passed": false,
+      "reason": "The response incorrectly states that surge upgrade preserves storage and node identity, failing to explain that local SSD data is lost during surge upgrades."
+    },
+    {
+      "expectation": "Describes the blue-green process: create new pool, cordon old pool, migrate workloads, delete old pool",
+      "passed": false,
+      "reason": "The response does not describe the blue-green process steps. Instead, it focuses entirely on surge upgrade configuration and dismisses blue-green."
+    },
+    {
+      "expectation": "Addresses Cassandra-specific concerns: need to decommission from the ring before draining, rebuild on new nodes",
+      "passed": true,
+      "reason": "The response mentions Cassandra-specific considerations like nodetool drain in the preStop hook and discusses cluster health, though not specifically decommissioning before draining."
+    },
+    {
+      "expectation": "Provides gcloud commands for creating the new node pool with matching configuration",
+      "passed": false,
+      "reason": "The response provides YAML configuration for surge upgrade but does not provide gcloud commands for creating a new node pool, as it recommends surge instead of blue-green."
+    },
+    {
+      "expectation": "Includes kubectl commands for cordoning and draining",
+      "passed": false,
+      "reason": "The response does not include kubectl commands for cordoning and draining nodes, as it focuses on surge upgrade automation rather than manual blue-green migration steps."
+    },
+    {
+      "expectation": "Mentions PDB configuration to protect the Cassandra quorum during migration",
+      "passed": true,
+      "reason": "The response includes a PodDisruptionBudget configuration with minAvailable: 6 to ensure majority remains available during the process."
+    }
+  ]
+}

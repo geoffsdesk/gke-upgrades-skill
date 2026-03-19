@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that GKE respects terminationGracePeriodSeconds during pod eviction, but surge upgrades have a max eviction timeout",
+      "passed": false,
+      "reason": "The response does not mention terminationGracePeriodSeconds or explain GKE's pod eviction behavior during upgrades"
+    },
+    {
+      "expectation": "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour \u2014 far less than 8-16 hour jobs",
+      "passed": false,
+      "reason": "The response does not mention the 1-hour default eviction timeout or explain this limitation relative to long-running jobs"
+    },
+    {
+      "expectation": "Recommends pausing new batch job submissions before starting the upgrade",
+      "passed": true,
+      "reason": "The response shows cordoning old nodes to prevent new scheduling and includes migration script that cordons nodes before waiting for jobs to complete"
+    },
+    {
+      "expectation": "Advises waiting for in-flight jobs to complete naturally before upgrading their node pool",
+      "passed": true,
+      "reason": "The migration script includes a wait_for_jobs() function that waits for running jobs to complete before proceeding, and the timeline suggests waiting for current jobs to complete"
+    },
+    {
+      "expectation": "Suggests using node affinity or taints to isolate batch workloads on a dedicated node pool",
+      "passed": true,
+      "reason": "The response extensively covers node pools with taints (workload-type=batch:NoSchedule), node labels, and corresponding tolerations in job specs"
+    },
+    {
+      "expectation": "Recommends upgrading non-batch node pools first while batch jobs complete on the old pool",
+      "passed": true,
+      "reason": "The strategy shows upgrading control plane first, then creating new node pools while keeping old ones running until jobs complete"
+    },
+    {
+      "expectation": "Mentions scheduling the upgrade during a natural gap in batch processing if one exists",
+      "passed": false,
+      "reason": "The response does not mention timing upgrades around natural gaps in batch processing schedules"
+    },
+    {
+      "expectation": "Provides commands for cordoning batch nodes to prevent new scheduling while jobs finish",
+      "passed": true,
+      "reason": "The migration script includes a cordon_old_nodes() function with kubectl cordon commands to prevent new scheduling on old nodes"
+    }
+  ]
+}

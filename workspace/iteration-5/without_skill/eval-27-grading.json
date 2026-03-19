@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends combining release channels with maintenance exclusions as the approach for maximum control",
+      "passed": true,
+      "reason": "Response clearly demonstrates combining REGULAR release channel with maintenance exclusions (blackout periods) in both YAML and Terraform configurations"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' exclusion to prevent disruptive changes while allowing control plane security patches",
+      "passed": false,
+      "reason": "Response shows NO_UPGRADES and NO_MINOR_UPGRADES exclusions but doesn't explain that NO_MINOR_UPGRADES allows control plane security patches while preventing disruptive changes"
+    },
+    {
+      "expectation": "Recommends maintenance windows to control WHEN patches are applied (e.g., weekend windows only)",
+      "passed": true,
+      "reason": "Response provides detailed maintenance window configuration with weekly Sunday windows (2-6 AM UTC) in multiple formats and includes validation script"
+    },
+    {
+      "expectation": "Mentions the disruption interval between patch and minor upgrades to prevent back-to-back upgrades",
+      "passed": false,
+      "reason": "Response does not mention disruption intervals or preventing back-to-back upgrades between different upgrade types"
+    },
+    {
+      "expectation": "Suggests Stable or Extended channel for production clusters in regulated environments",
+      "passed": false,
+      "reason": "Response recommends REGULAR channel instead of STABLE or EXTENDED channels for regulated financial services environment"
+    },
+    {
+      "expectation": "Notes that disabling control plane patches entirely is not recommended due to security risks \u2014 monthly patches at minimum",
+      "passed": false,
+      "reason": "Response does not mention the security risks of disabling control plane patches entirely or recommend monthly patches as minimum"
+    },
+    {
+      "expectation": "Mentions rollout sequencing for controlling the order of upgrades across multiple clusters",
+      "passed": false,
+      "reason": "Response does not discuss rollout sequencing or controlling upgrade order across multiple clusters"
+    },
+    {
+      "expectation": "Provides gcloud commands for configuring the recommended exclusion type and maintenance window",
+      "passed": true,
+      "reason": "Response provides gcloud commands in the upgrade script and mentions gcloud commands for enabling security features, though not specifically for configuring exclusions"
+    }
+  ]
+}

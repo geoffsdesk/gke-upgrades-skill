@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes notifications into End-of-Life warnings, Auto-upgrade scheduled (72h notice), Security patches available, New version available, and Release channel updates in the priority matrix"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": false,
+      "reason": "Security patches are assigned Medium priority, not highest. End-of-Life warnings are marked as High priority, making them higher than security patches"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response clearly states EoS warnings are High priority with 'Yes - Plan upgrade' action required within <30 days timeline, and includes detailed playbook for scheduling upgrades before EoS date"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response provides detailed readiness validation checklist including health checks, deprecated API checks, and PDB validation commands for auto-upgrade scheduled notifications"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response mentions applying security patches within security SLA (typically 30 days) and provides triage by environment with faster cycles for dev/staging, suggesting expedited handling"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response clearly marks 'New version available' as Low priority with 'No - Informational' action required and states 'Log in upgrade planning backlog. No immediate action required.'"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "Response includes Cloud Monitoring alert configuration examples and Cloud Logging sink setup for structured logging of GKE upgrade events"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": false,
+      "reason": "Response does not mention GKE release notes or reference them as a source for understanding version changes"
+    }
+  ]
+}

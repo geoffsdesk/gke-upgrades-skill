@@ -1,0 +1,12 @@
+{
+  "eval_id": 3,
+  "mode": "without_skill",
+  "iteration": 5,
+  "prompt": "Our node pool upgrade has been stuck for 2 hours. It says 3 out of 12 nodes upgraded. We're on a Standard cluster in us-east1, running 1.29, upgrading nodes to 1.30. The pods on the remaining nodes aren't draining. What should we check and how do we fix this?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-19T18:39:46.762044+00:00",
+  "input_tokens": 82,
+  "output_tokens": 1102,
+  "time_seconds": 20.15
+}

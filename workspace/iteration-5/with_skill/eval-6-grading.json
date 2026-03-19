@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the difference between Rapid and Stable channels (Stable gets versions later, more validated)",
+      "passed": true,
+      "reason": "Response clearly explains Rapid gets versions ~2 weeks after upstream while Stable gets them 4-8 weeks later after validation in other channels"
+    },
+    {
+      "expectation": "Notes that channel changes don't trigger an immediate upgrade or downgrade",
+      "passed": true,
+      "reason": "Response explicitly states 'The channel change is immediate and non-disruptive' and 'No immediate disruption: Channel change doesn't trigger upgrades'"
+    },
+    {
+      "expectation": "Warns that if 1.30 isn't yet available on Stable, the cluster may not receive patches until Stable catches up",
+      "passed": true,
+      "reason": "Response warns 'If Stable's current version is older than your 1.30, GKE won't downgrade you \u2014 you'll stay at 1.30 until Stable catches up' and mentions staying put for weeks"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "Response provides the exact command: 'gcloud container clusters update PROD_CLUSTER_NAME --zone ZONE --release-channel stable'"
+    },
+    {
+      "expectation": "Recommends checking version availability on Stable before switching (gcloud container get-server-config)",
+      "passed": true,
+      "reason": "Response includes the command 'gcloud container get-server-config --zone ZONE --format=\"yaml(channels.STABLE.defaultVersion)\"' to check Stable version availability"
+    },
+    {
+      "expectation": "Discusses the impact on auto-upgrade timing going forward",
+      "passed": true,
+      "reason": "Response thoroughly discusses auto-upgrade changes, maintenance windows, and timeline expectations for future versions"
+    },
+    {
+      "expectation": "Mentions that the Extended channel is an option if they need even slower cadence (with cost implications)",
+      "passed": false,
+      "reason": "Response does not mention the Extended channel or its cost implications as an alternative option"
+    },
+    {
+      "expectation": "Advises coordinating the change during a maintenance window",
+      "passed": false,
+      "reason": "Response mentions maintenance windows remain active but doesn't specifically advise coordinating the channel change during a maintenance window"
+    }
+  ]
+}

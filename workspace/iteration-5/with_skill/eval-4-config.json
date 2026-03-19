@@ -1,0 +1,19 @@
+{
+  "eval_id": 4,
+  "mode": "with_skill",
+  "iteration": 5,
+  "prompt": "We're running a regional Standard GKE cluster in us-central1 on Regular channel at 1.29. We need to upgrade the control plane to 1.30. Our team is worried about API server downtime during the upgrade. Can you explain what will happen and give us the commands to do it safely?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-19T18:30:06.416351+00:00",
+  "input_tokens": 7892,
+  "output_tokens": 1116,
+  "time_seconds": 22.75,
+  "skill_files": [
+    "skill/SKILL.md",
+    "skill/evals/evals.json",
+    "skill/references/checklists.md",
+    "skill/references/runbook-template.md",
+    "skill/references/troubleshooting.md"
+  ]
+}

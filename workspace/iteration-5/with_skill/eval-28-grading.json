@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that exact upgrade dates are difficult to predict but several tools help narrow the window",
+      "passed": true,
+      "reason": "Response clearly states that GKE upgrade timing has both predictable elements and variable factors, and provides multiple tools to maximize predictability and visibility"
+    },
+    {
+      "expectation": "Mentions the GKE release schedule as a 'best case' timeline \u2014 upgrades won't happen before listed dates",
+      "passed": true,
+      "reason": "Explicitly states 'The GKE release schedule shows \"best case\" dates \u2014 upgrades won't happen before these dates but may happen later'"
+    },
+    {
+      "expectation": "Recommends checking the cluster's auto-upgrade status for the current target version and any pauses",
+      "passed": true,
+      "reason": "Provides specific gcloud command to check cluster's auto-upgrade target: 'gcloud container clusters describe CLUSTER_NAME --zone ZONE --format=\"value(nodePools[].management.autoUpgrade,releaseChannel.channel)\"'"
+    },
+    {
+      "expectation": "Mentions that new releases roll out progressively across regions over 4-5 business days",
+      "passed": true,
+      "reason": "Specifically states 'New GKE versions roll out across all regions over 4-5 business days'"
+    },
+    {
+      "expectation": "Recommends configuring maintenance windows so upgrades only happen during known time slots",
+      "passed": true,
+      "reason": "Provides detailed maintenance window configuration with gcloud command and explains 'Auto-upgrades will ONLY happen during these windows'"
+    },
+    {
+      "expectation": "Mentions scheduled upgrade notifications (72h advance, opt-in via Cloud Logging)",
+      "passed": true,
+      "reason": "Explicitly mentions '72-hour advance notifications via Cloud Logging' and provides the specific gcloud command to enable them"
+    },
+    {
+      "expectation": "Notes that GKE upgrade visibility shows the cluster's target version and EoL timeline",
+      "passed": true,
+      "reason": "Discusses version availability API and mentions checking what's available, plus references End of Support dates throughout the response"
+    },
+    {
+      "expectation": "Mentions rollout sequencing with configurable soak times for multi-cluster predictability",
+      "passed": true,
+      "reason": "Has a dedicated 'Multi-cluster orchestration' section with specific gcloud command showing rollout sequencing and soak duration configuration"
+    }
+  ]
+}

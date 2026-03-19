@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Response clearly states 'Node versions must be within 2 minor versions of the control plane' in the version skew policy section"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (3 minor versions)",
+      "passed": true,
+      "reason": "Explicitly states 'Your setup: Control plane (1.31) vs Nodes (1.28) = 3 minor version gap \u274c' and confirms it exceeds the policy"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Mentions 'API compatibility issues, networking problems, and unpredictable behavior' and later references 'cluster instability' though doesn't specifically mention kubelet incompatibility"
+    },
+    {
+      "expectation": "Recommends sequential node pool upgrades (1.28\u21921.29\u21921.30\u21921.31) not a direct jump",
+      "passed": true,
+      "reason": "Provides step-by-step upgrade commands showing gradual progression: 1.29.x, then 1.30.x, then 1.31.x, and explicitly states 'Upgrade one minor version at a time'"
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Multiple gcloud container node-pools upgrade commands are provided with proper syntax for sequential upgrades"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": false,
+      "reason": "No mention of surge settings, maxSurge, or maxUnavailable parameters in any of the upgrade commands or recommendations"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": true,
+      "reason": "Explicitly states 'Monitor between each upgrade' and provides monitoring commands like 'kubectl get nodes -w' and checking upgrade progress"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": true,
+      "reason": "Provides commands for setting up maintenance windows and enabling auto-upgrade, though doesn't specifically mention 'release channel enrollment'"
+    }
+  ]
+}

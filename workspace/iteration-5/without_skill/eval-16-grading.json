@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies this as an admission webhook compatibility issue \u2014 the webhook is rejecting pod creation requests",
+      "passed": true,
+      "reason": "Response clearly identifies this as a webhook compatibility issue and states 'This is a common issue when upgrading Kubernetes versions due to API changes or webhook compatibility issues'"
+    },
+    {
+      "expectation": "Provides commands to identify the problematic webhook (kubectl get validatingwebhookconfigurations / mutatingwebhookconfigurations)",
+      "passed": true,
+      "reason": "Provides both commands: 'kubectl get validatingwebhookconfigurations' and 'kubectl get mutatingwebhookconfigurations'"
+    },
+    {
+      "expectation": "Offers an immediate fix: temporarily disable or remove the problematic webhook",
+      "passed": true,
+      "reason": "Provides two immediate fix options: Option 1 to bypass/disable webhooks temporarily and Option 2 to delete webhook configurations"
+    },
+    {
+      "expectation": "Provides the kubectl delete command for the webhook configuration as emergency mitigation",
+      "passed": true,
+      "reason": "Includes kubectl delete commands for both validating and mutating webhook configurations under 'Option 2: Delete Webhook Configurations'"
+    },
+    {
+      "expectation": "Warns that deleting the webhook removes validation \u2014 it's a temporary fix",
+      "passed": true,
+      "reason": "Clearly warns with 'CAUTION: This completely removes webhook validation' and labels it as 'Nuclear Option'"
+    },
+    {
+      "expectation": "Recommends checking cert-manager version compatibility with Kubernetes 1.30",
+      "passed": true,
+      "reason": "Includes command to check current cert-manager version and discusses upgrading to '1.30-compatible version'"
+    },
+    {
+      "expectation": "Advises upgrading cert-manager to a version that supports 1.30 as the permanent fix",
+      "passed": true,
+      "reason": "Under 'Permanent Fix' section, provides helm upgrade command to upgrade cert-manager to v1.15.0 as '1.30-compatible version'"
+    },
+    {
+      "expectation": "Mentions setting failurePolicy to Ignore as a less drastic alternative to deletion",
+      "passed": true,
+      "reason": "Option 1 shows kubectl patch commands that set 'failurePolicy':'Ignore' as an alternative to deletion"
+    },
+    {
+      "expectation": "Includes commands to verify pods can be created after the fix",
+      "passed": true,
+      "reason": "Provides verification commands under 'Verify Webhook Health' including checking pods, webhook endpoint, and testing connectivity"
+    }
+  ]
+}
