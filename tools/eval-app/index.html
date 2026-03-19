@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skill Eval Reviewer</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0f172a;color:#e2e8f0;display:flex;height:100vh;overflow:hidden}
+.sidebar{width:280px;background:#1e293b;border-right:1px solid #334155;display:flex;flex-direction:column;flex-shrink:0}
+.sidebar-header{padding:20px;border-bottom:1px solid #334155}
+.sidebar-header h1{font-size:16px;font-weight:700;color:#f8fafc;display:flex;align-items:center;gap:8px}
+.sidebar-header h1 svg{width:20px;height:20px;color:#3b82f6}
+.sidebar-nav{flex:1;overflow-y:auto;padding:12px}
+.nav-section{margin-bottom:16px}
+.nav-section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;padding:8px 12px}
+.nav-item{padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px;color:#94a3b8;transition:all .15s;display:flex;justify-content:space-between;align-items:center}
+.nav-item:hover{background:#334155;color:#f1f5f9}
+.nav-item.active{background:#3b82f6;color:#fff}
+.badge{font-size:9px;padding:2px 6px;border-radius:10px;font-weight:700;text-transform:uppercase}
+.badge-pass{background:#065f46;color:#6ee7b7}
+.badge-partial{background:#92400e;color:#fcd34d}
+.badge-iter{background:#1e3a5f;color:#7dd3fc}
+.badge-core{background:#4c1d95;color:#c4b5fd}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{padding:16px 24px;border-bottom:1px solid #334155;background:#1e293b;display:flex;justify-content:space-between;align-items:center}
+.topbar h2{font-size:15px;font-weight:600;color:#f8fafc}
+.btn{padding:6px 16px;border-radius:6px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all .15s}
+.btn-success{background:#059669;color:#fff}.btn-success:hover{background:#047857}
+.content{flex:1;overflow-y:auto;padding:24px}
+.tab-bar{display:flex;gap:2px;background:#1e293b;border-radius:8px;padding:3px;margin-bottom:24px;width:fit-content}
+.tab{padding:8px 20px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;color:#94a3b8;transition:all .15s}
+.tab:hover{color:#e2e8f0}.tab.active{background:#334155;color:#f8fafc}
+.eval-card{background:#1e293b;border:1px solid #334155;border-radius:10px;margin-bottom:16px;overflow:hidden}
+.eval-header{padding:16px 20px;border-bottom:1px solid #334155}
+.eval-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#3b82f6}
+.eval-prompt{font-size:14px;color:#e2e8f0;margin-top:6px;line-height:1.5}
+.eval-body{padding:20px}
+.config-tabs{display:flex;gap:2px;margin-bottom:16px}
+.config-tab{padding:6px 14px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;color:#64748b;background:#0f172a;transition:all .15s}
+.config-tab:hover{color:#94a3b8}
+.config-tab.active{background:#334155;color:#f8fafc}
+.config-tab.with_skill.active{background:#1d4ed8;color:#fff}
+.config-tab.without_skill.active{background:#b45309;color:#fff}
+.output-block{background:#0f172a;border:1px solid #334155;border-radius:8px;overflow:hidden;margin-bottom:12px}
+.output-header{padding:8px 12px;background:#1a2332;font-size:11px;font-weight:600;color:#64748b;border-bottom:1px solid #334155;display:flex;justify-content:space-between}
+.output-content{padding:16px;font-family:"SF Mono",Monaco,Consolas,monospace;font-size:12px;line-height:1.6;color:#cbd5e1;white-space:pre-wrap;max-height:500px;overflow-y:auto}
+.grade-row{display:flex;align-items:flex-start;padding:6px 0;gap:8px;font-size:12px}
+.grade-icon{flex-shrink:0;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;margin-top:1px}
+.grade-pass{background:#065f46;color:#6ee7b7}
+.grade-fail{background:#991b1b;color:#fca5a5}
+.grade-text{color:#94a3b8}.grade-evidence{color:#64748b;font-size:11px;margin-top:2px}
+.bench-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.bench-card{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:20px;text-align:center}
+.bench-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin-bottom:8px}
+.bench-value{font-size:28px;font-weight:800;color:#f8fafc}
+.bench-sub{font-size:11px;color:#64748b;margin-top:4px}
+.delta-pos{color:#6ee7b7}.delta-neg{color:#fca5a5}.delta-neutral{color:#94a3b8}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.compare-col{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:16px}
+.compare-col h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+.compare-col.with_skill h4{color:#3b82f6}
+.compare-col.without_skill h4{color:#f59e0b}
+.feedback-area{width:100%;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px;color:#e2e8f0;font-size:13px;font-family:inherit;resize:vertical;min-height:80px;margin-top:12px}
+.feedback-area:focus{outline:none;border-color:#3b82f6}
+.iter-compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.iter-col{background:#0f172a;border:1px solid #334155;border-radius:8px;overflow:hidden}
+.iter-col-header{padding:8px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #334155;background:#1a2332}
+.iter-col-body{padding:12px;max-height:400px;overflow-y:auto}
+.welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;color:#64748b}
+.welcome h3{font-size:18px;color:#f8fafc;margin-bottom:8px}
+.welcome p{max-width:400px;line-height:1.6;font-size:13px}
+.notes-list{list-style:none;padding:0}
+.notes-list li{padding:8px 12px;border-left:3px solid #3b82f6;margin-bottom:8px;background:#0f172a;border-radius:0 6px 6px 0;font-size:12px;color:#94a3b8;line-height:1.5}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#0f172a}::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
+</style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h1>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Skill Eval Reviewer
+        </h1>
+    </div>
+    <div class="sidebar-nav" id="sidebar-nav"></div>
+</div>
+<div class="main">
+    <div class="topbar">
+        <h2 id="topbar-title">Select an iteration</h2>
+        <div><button class="btn btn-success" onclick="submitFeedback()" id="submit-btn" style="display:none">Submit Feedback</button></div>
+    </div>
+    <div class="content" id="content">
+        <div class="welcome" id="welcome">
+            <h3>Skill Eval Reviewer</h3>
+            <p>Select an iteration from the sidebar to review outputs, compare with/without skill runs, view benchmarks, and submit feedback. Feedback saves as JSON to the workspace for easy git commits.</p>
+        </div>
+    </div>
+</div>
+<script>
+let APP = null, curIter = null, curTab = 'outputs', fb = {};
+
+async function init() {
+    APP = await (await fetch('/api/data')).json();
+    renderNav();
+    if (APP.iterations.length) selectIter(APP.iterations[APP.iterations.length-1].name);
+}
+
+function renderNav() {
+    const nav = document.getElementById('sidebar-nav');
+    let h = '';
+    if (APP.skills.length) {
+        h += '<div class="nav-section"><div class="nav-section-title">Skills</div>';
+        APP.skills.forEach(s => {
+            const b = s.type==='core' ? '<span class="badge badge-core">core</span>' : '<span class="badge badge-iter">sub</span>';
+            h += `<div class="nav-item">${s.name}${b}</div>`;
+        });
+        h += '</div>';
+    }
+    h += '<div class="nav-section"><div class="nav-section-title">Iterations</div>';
+    APP.iterations.forEach(it => {
+        const b = it.benchmark?.run_summary?.with_skill;
+        let badge = '';
+        if (b) {
+            const pr = b.pass_rate.mean;
+            badge = pr >= 1 ? '<span class="badge badge-pass">100%</span>'
+                : pr >= .8 ? '<span class="badge badge-partial">'+Math.round(pr*100)+'%</span>'
+                : '<span class="badge badge-partial">'+Math.round(pr*100)+'%</span>';
+        }
+        h += `<div class="nav-item${curIter===it.name?' active':''}" onclick="selectIter('${it.name}')">${it.name}${badge}</div>`;
+    });
+    h += '</div>';
+    nav.innerHTML = h;
+}
+
+function selectIter(name) {
+    curIter = name; curTab = 'outputs';
+    renderNav(); render();
+    document.getElementById('submit-btn').style.display = '';
+}
+
+function render() {
+    const it = APP.iterations.find(i => i.name === curIter);
+    if (!it) return;
+    document.getElementById('topbar-title').textContent = curIter;
+    document.getElementById('welcome').style.display = 'none';
+    if (it.feedback?.reviews) it.feedback.reviews.forEach(r => { fb[r.eval_name] = r.feedback; });
+
+    const c = document.getElementById('content');
+    const idx = APP.iterations.findIndex(i => i.name === curIter);
+    let h = '<div class="tab-bar">';
+    h += `<div class="tab ${curTab==='outputs'?'active':''}" onclick="tab('outputs')">Outputs</div>`;
+    h += `<div class="tab ${curTab==='benchmark'?'active':''}" onclick="tab('benchmark')">Benchmark</div>`;
+    if (idx > 0) h += `<div class="tab ${curTab==='compare'?'active':''}" onclick="tab('compare')">Compare Iterations</div>`;
+    h += '</div>';
+
+    if (curTab === 'outputs') h += outputsTab(it);
+    else if (curTab === 'benchmark') h += benchTab(it);
+    else if (curTab === 'compare') h += compareTab(it, idx);
+    c.innerHTML = h;
+
+    document.querySelectorAll('.feedback-area').forEach(ta => { if (fb[ta.dataset.key]) ta.value = fb[ta.dataset.key]; });
+}
+
+function tab(t) { saveFb(); curTab = t; render(); }
+function saveFb() { document.querySelectorAll('.feedback-area').forEach(ta => { fb[ta.dataset.key] = ta.value; }); }
+
+function outputsTab(it) {
+    let h = '';
+    it.evals.forEach((ev, i) => {
+        h += `<div class="eval-card"><div class="eval-header"><div class="eval-title">Eval #${ev.eval_id??i+1} — ${ev.name}</div><div class="eval-prompt">${esc(ev.prompt)}</div></div><div class="eval-body">`;
+        const cfgs = Object.keys(ev.configs);
+        h += '<div class="config-tabs">';
+        cfgs.forEach((cfg, ci) => {
+            const label = cfg === 'with_skill' ? 'With Skill' : 'Without Skill';
+            h += `<div class="config-tab ${cfg}${ci===0?' active':''}" onclick="swCfg(this,'${ev.name}','${cfg}')">${label}</div>`;
+        });
+        h += '</div>';
+        cfgs.forEach((cfg, ci) => {
+            const run = ev.configs[cfg];
+            h += `<div class="config-panel" data-eval="${ev.name}" data-config="${cfg}" style="${ci>0?'display:none':''}">`;
+            if (run.timing) {
+                const s = run.timing.total_duration_seconds || (run.timing.duration_ms/1000);
+                h += `<div style="font-size:11px;color:#64748b;margin-bottom:12px">${s.toFixed(1)}s · ${(run.timing.total_tokens||0).toLocaleString()} tokens</div>`;
+            }
+            run.outputs.forEach(f => {
+                h += `<div class="output-block"><div class="output-header"><span>${esc(f.name)}</span><span>${f.ext||''}</span></div>`;
+                if (f.type==='text') h += `<div class="output-content">${esc(f.content)}</div>`;
+                else if (f.type==='image') h += `<div class="output-content"><img src="${f.content}" style="max-width:100%"></div>`;
+                else h += `<div class="output-content">${esc(f.content)}</div>`;
+                h += '</div>';
+            });
+            if (run.grading?.expectations) {
+                h += '<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Grading';
+                if (run.grading.summary) { const s = run.grading.summary; h += ` — ${s.passed}/${s.total} (${Math.round(s.pass_rate*100)}%)`; }
+                h += '</div>';
+                run.grading.expectations.forEach(ex => {
+                    const cls = ex.passed ? 'grade-pass' : 'grade-fail';
+                    const ico = ex.passed ? '&#10003;' : '&#10007;';
+                    h += `<div class="grade-row"><div class="grade-icon ${cls}">${ico}</div><div><div class="grade-text">${esc(ex.text)}</div>`;
+                    if (ex.evidence) h += `<div class="grade-evidence">${esc(ex.evidence)}</div>`;
+                    h += '</div></div>';
+                });
+                h += '</div>';
+            }
+            h += '</div>';
+        });
+        h += `<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Feedback</div>`;
+        h += `<textarea class="feedback-area" data-key="${ev.name}" placeholder="Leave feedback (empty = looks good)...">${esc(fb[ev.name]||'')}</textarea></div>`;
+        h += '</div></div>';
+    });
+    return h;
+}
+
+function benchTab(it) {
+    const b = it.benchmark;
+    if (!b) return '<div style="color:#64748b;text-align:center;padding:40px">No benchmark data.</div>';
+    let h = '';
+    const ws = b.run_summary?.with_skill, wos = b.run_summary?.without_skill, d = b.run_summary?.delta;
+    h += '<div class="bench-grid">';
+    if (ws) h += bc('With Skill', Math.round(ws.pass_rate.mean*100)+'%', `σ ${(ws.pass_rate.stddev*100).toFixed(1)}%`);
+    if (wos) h += bc('Baseline', Math.round(wos.pass_rate.mean*100)+'%', `σ ${(wos.pass_rate.stddev*100).toFixed(1)}%`);
+    if (d) { const dr=parseFloat(d.pass_rate); h += bc('Delta', (dr>0?'+':'')+Math.round(dr*100)+'%', '', dr>0?'delta-pos':dr<0?'delta-neg':'delta-neutral'); }
+    if (ws) h += bc('Time (Skill)', ws.time_seconds.mean.toFixed(1)+'s', `σ ${ws.time_seconds.stddev.toFixed(1)}s`);
+    if (wos) h += bc('Time (Baseline)', wos.time_seconds.mean.toFixed(1)+'s', `σ ${wos.time_seconds.stddev.toFixed(1)}s`);
+    if (ws) h += bc('Tokens (Skill)', ws.tokens.mean.toLocaleString(), `σ ${ws.tokens.stddev.toLocaleString()}`);
+    h += '</div>';
+    if (b.runs) {
+        h += '<div style="margin-top:24px"><div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Per-Eval Breakdown</div>';
+        const byE = {};
+        b.runs.forEach(r => { const k = r.eval_name||r.eval_id; if (!byE[k]) byE[k]={}; byE[k][r.configuration]=r; });
+        Object.entries(byE).forEach(([name, cfgs]) => {
+            h += `<div class="eval-card" style="margin-bottom:12px"><div style="padding:16px 20px"><div style="font-size:13px;font-weight:700;color:#f8fafc;margin-bottom:12px">${esc(name)}</div><div class="compare-grid">`;
+            ['with_skill','without_skill'].forEach(cfg => {
+                const r = cfgs[cfg]; if (!r) return;
+                const lbl = cfg==='with_skill'?'With Skill':'Without Skill';
+                h += `<div class="compare-col ${cfg}"><h4>${lbl}</h4><div style="font-size:24px;font-weight:800;color:#f8fafc">${Math.round(r.result.pass_rate*100)}%</div>`;
+                h += `<div style="font-size:11px;color:#64748b;margin-top:4px">${r.result.passed}/${r.result.total} · ${r.result.time_seconds?.toFixed(1)||'?'}s</div></div>`;
+            });
+            h += '</div></div></div>';
+        });
+        h += '</div>';
+    }
+    if (b.notes?.length) {
+        h += '<div style="margin-top:24px"><div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Notes</div><ul class="notes-list">';
+        b.notes.forEach(n => h += `<li>${esc(n)}</li>`);
+        h += '</ul></div>';
+    }
+    return h;
+}
+
+function compareTab(it, idx) {
+    const prev = APP.iterations[idx-1];
+    if (!prev) return '<div style="color:#64748b;text-align:center;padding:40px">No previous iteration.</div>';
+    let h = `<div style="font-size:13px;color:#94a3b8;margin-bottom:20px">Comparing <strong style="color:#f8fafc">${prev.name}</strong> → <strong style="color:#f8fafc">${it.name}</strong></div>`;
+    if (it.benchmark && prev.benchmark) {
+        const w1 = prev.benchmark.run_summary?.with_skill, w2 = it.benchmark.run_summary?.with_skill;
+        if (w1 && w2) {
+            h += '<div class="bench-grid">';
+            h += bc(prev.name, Math.round(w1.pass_rate.mean*100)+'%', w1.time_seconds.mean.toFixed(1)+'s');
+            h += bc(it.name, Math.round(w2.pass_rate.mean*100)+'%', w2.time_seconds.mean.toFixed(1)+'s');
+            const td = w2.time_seconds.mean - w1.time_seconds.mean;
+            h += bc('Time Δ', (td>0?'+':'')+td.toFixed(1)+'s', td<0?'Faster':'Slower', td<0?'delta-pos':'delta-neg');
+            h += '</div>';
+        }
+    }
+    it.evals.forEach(ev => {
+        const pe = prev.evals.find(e => e.name === ev.name);
+        if (!pe) return;
+        h += `<div class="eval-card"><div class="eval-header"><div class="eval-title">${ev.name}</div></div><div class="eval-body"><div class="iter-compare">`;
+        [pe, ev].forEach((e, i) => {
+            const label = i===0 ? prev.name : it.name;
+            const color = i===0 ? '#f59e0b' : '#3b82f6';
+            h += `<div class="iter-col"><div class="iter-col-header" style="color:${color}">${label}</div><div class="iter-col-body">`;
+            const run = e.configs?.with_skill;
+            if (run) {
+                run.outputs.forEach(f => { if (f.type==='text') h += `<div style="font-family:monospace;font-size:11px;white-space:pre-wrap;color:#94a3b8">${esc(f.content.substring(0,3000))}</div>`; });
+                if (run.grading?.summary) { const s = run.grading.summary; h += `<div style="margin-top:8px;font-size:11px;color:#64748b">${s.passed}/${s.total} passed</div>`; }
+            }
+            h += '</div></div>';
+        });
+        h += '</div></div></div>';
+    });
+    return h;
+}
+
+function bc(label, value, sub, cls) {
+    return `<div class="bench-card"><div class="bench-label">${label}</div><div class="bench-value${cls?' '+cls:''}">${value}</div>${sub?'<div class="bench-sub">'+sub+'</div>':''}</div>`;
+}
+
+function swCfg(el, evalName, config) {
+    el.parentElement.querySelectorAll('.config-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    el.closest('.eval-card').querySelectorAll('.config-panel').forEach(p => { p.style.display = p.dataset.config===config?'':'none'; });
+}
+
+async function submitFeedback() {
+    saveFb();
+    const reviews = Object.entries(fb).map(([k,v]) => ({eval_name:k, feedback:v||'', timestamp:new Date().toISOString()}));
+    try {
+        const r = await fetch('/api/feedback', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({iteration:curIter, reviews})});
+        const d = await r.json();
+        if (d.ok) alert('Feedback saved to:\n'+d.path+'\n\nCommit and push to share.');
+        else alert('Error: '+d.error);
+    } catch(e) { alert('Failed: '+e.message); }
+}
+
+function esc(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
+
+init();
+</script>
+</body>
+</html>

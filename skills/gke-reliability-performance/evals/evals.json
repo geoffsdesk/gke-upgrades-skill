@@ -1,0 +1,1 @@
+{"skill_name": "gke-reliability-performance", "evals": [{"id": 1, "prompt": "Tell me about Minimizing Disruption due to Upgrades", "expected_output": "Should match FAQ", "expectations": ["Matches CSV content"]}]}

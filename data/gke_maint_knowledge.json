@@ -1,0 +1,381 @@
+{
+  "version": "2.0",
+  "description": "Curated GKE maintenance knowledge base with public documentation enrichment",
+  "entries": [
+    {
+      "id": "7746802687542296576",
+      "title": "CEP Probers failing due to Context Cancelled",
+      "question": "Hello -- We've been facing some probers that fairly consistently hit an error `CANCELED: context canceled`. Now from what I've read: * There was an OMG two weeks ago regarding pods being evicted and additional latency. We did hit this (we believe).\n* [CANCELED implies CEP](http://[internal link removed]#error-histograms) didn't finish a workflow successfully, for potentially various reasons. However, previous to this it didn't seem like we've had consistently spurious failures with `CANCELED` in the past couple of weeks and they seem to be mostly concentrated around one type of our probe, so we're trying to understand if there's something we can change about our probe to mitigate or even prevent these CANCELED probes. Some background is that our probes are very long running since our Cloud Service takes a while to cold-create and we wait on LROs for import/export/create during this which perhaps makes it more likely to be CANCELED since it's so long running. Example Runs with Canceled: * Failed on create-import\n* failed on export\n* Failed on Import again These are all from the same cemk-workflow, however, we also have canceled here: * During Create-List-Delete workflow And I leave you with Monday's diagram: [internal screenshot removed] We're just curious if theres something we can do about this whether it be redesign our prober or if this is a lot of updates hitting worklets or something like that.",
+      "best_answer": "This error log means that the pod was evicted by the CEP platform, so the overall deadline is cut to the 9 minutes grace period. When GKE upgrades or restarts nodes, we only have 10 minutes to do a graceful termination. The log occurred on Oct 20, while we were upgrading nodes. [internal bug removed] We are planning to raise this to 1 hour before enabling automatic cluster upgrades. http://[internal link removed]",
+      "quality_score": 2,
+      "total_answers": 1,
+      "topic_tags": [
+        "tooling"
+      ]
+    },
+    {
+      "id": "4353812058806943744",
+      "title": "Can static release GKE upgrades be paused for a customer code freeze?",
+      "question": "I have a customer who has GKE clusters running on a static release that are on v1.24 which is going EOL on 10/31/2023. On 11/1/2023 the customer wants to pause upgrades for a code freeze - they are running Static (no channel). Docs state that control planes will still auto upgrade at EoL is it possible to freeze those upgrades during the time of their code freeze?",
+      "best_answer": "In case of EOL, the release channel and static are treated the same way. If a cluster is using [any deprecated API](https://cloud.google.com/kubernetes-engine/docs/deprecations/apis-1-25); the cluster will NOT be auto-upgraded (or force upgraded) until Jan 8th-2024. If a cluster is NOT using any deprecated API; that cluster (release channel or static) will be auto-upgraded starting Oct 31st.\nIf the customer wants to prevent this cluster from the auto-upgrade; they can apply Maintenance Exclusion of 'No Upgrades` to defer the upgrades for 30 days. E.g.; If they apply the maintenance exclusion on Oct 30th; their cluster (control plane + nodepools) will not be upgraded until Nov 30th.",
+      "quality_score": 1,
+      "total_answers": 1,
+      "topic_tags": [
+        "upgrades",
+        "release-channels"
+      ]
+    },
+    {
+      "id": "4848413070910816256",
+      "title": "Do CEP workflows for k8s need to install gke-gcloud-auth-plugin?",
+      "question": "My team runs a number of CEP workflows that create and update Kubernetes resources in GKE clusters, using `kubectl` from the Cloud SDK. I just saw the [announcement](https://cloud.google.com/blog/products/containers-kubernetes/kubectl-auth-changes-in-gke) that later this year k8s clients will need to install `gke-gcloud-auth-plugin` to access GKE clusters. Will CEP workflows like ours need to include a separate step to install that plugin, or will this new auth mechanism be built in?",
+      "best_answer": "The CEP GKE upgrade policy states that we update our GKE clusters quarterly. As such, there may be some latency between the time that Kubernetes rolls out this `gke-gcloud-auth-plugin` and when CEP updates GKE on our clusters. Therefore, I would say that your safest bet here would be to include a separate step which installs this plugin.",
+      "quality_score": 2,
+      "total_answers": 1,
+      "topic_tags": [
+        "tooling"
+      ]
+    },
+    {
+      "id": "4085188174001733632",
+      "title": "Does GKE only update OS patches during version upgrades?",
+      "question": "It's not entirely clear to me that OS patches (to COS or Ubunto) are applied during GKE upgrades only, or do these patches also get applied outside of upgrades. It so, does the customer need to do anything to ensure the OS is patched?",
+      "best_answer": "Per my understanding and having to explain this to PANW ([internal link removed]) as well, Google Kubernetes Engine (GKE) automatically applies OS patches to Kubernetes nodes (on a schedule)- this includes both operating system and Kubernetes software updates by using a process called *rolling upgrades* that allow GKE to update nodes one at a time in order to minimize downtime. Note: The schedule is based on the Kubernetes version in use. For example, GKE applies OS patches every 24 hours for Kubernetes 1.19. Customers can manually apply OS patches to nodes using the gcloud command-line tool. If you are using a managed Kubernetes service other than GKE, you should check with the service provider to see how they handle OS patching. The things the customer should keep in mind include: - Keep Kubernetes version up to date (at least upto n-1 variance where n is the latest release so as to comply with the latest security patches) - Use a managed Kubernetes services which automatically apply OS patches is management overhead isnt something they would like to deal with\n- Monitor Kubernetes nodes for security vulnerabilities using tools like Kubernetes Security Scanner to scan nodes for vulnerabilities ( May be keep eyes on msa's sent out by google teams to essential contacts proactively regarding security vulnerabilities/ deprecations etc ) *This might be a good line item in monthly cloud newsletters you send to your customer*\n- Patch nodes as soon as possible after a vulnerability is discovered to avoid flunking yearly vendor audit programs most enterprises are subscribed too",
+      "quality_score": 1,
+      "total_answers": 1,
+      "topic_tags": [
+        "upgrades",
+        "patching"
+      ]
+    },
+    {
+      "id": "3573389700527816704",
+      "title": "GKE Cluster's KCP Upgrades Requirements",
+      "question": "I was wondering if there are any requirements for customers to perform upgrades/auto-upgrade for KCP/Node upgrades/restarts (i.e. GKE clusters' KCPs are upgraded at least once a year). If so, are there any exceptions that certain customers may have/how do we identify those customers? Is there any enforcement or is it more of a guideline?",
+      "best_answer": "The documentation suggests that Google Kubernetes Engine (GKE) automatically upgrades cluster control planes (KCPs) on a regular basis for security and stability. This process appears to be mandatory and cannot be disabled, as it is part of GKE's shared responsibility model (GKE Auto-Upgrade FAQ, internal FAQ: No upgrades in GKE). This policy seems to be enforced, as GKE will forcibly upgrade clusters once their version reaches its End of Life (EOL) date (Document minor version end of life exceptions). According to the documentation, each minor version has a supported lifespan of 14 months, after which it is considered EOL and subject to a forced upgrade (GKE Version Policy). There appear to be ways to temporarily postpone upgrades. One method is by configuring maintenance exclusions, which can prevent automatic upgrades for a specific time period (How to prevent Control Plane upgrade?). For more significant exceptions, a process called \"version freeze\" exists to freeze a control plane's version. However, this is described as a last resort for special cases, requires a high bar for approval, and is not a permanent solution (Preventing auto-upgrades (Control Plane version freeze), internal FAQ: Is it possible to have an indefinite pause on GKE upgrades for a cluster?). You can identify a snowflaked cluster by looking for a \"version freeze\" status banner on its monitoring dashboard (Check if version freeze is enabled).",
+      "quality_score": 1,
+      "total_answers": 1,
+      "topic_tags": [
+        "upgrades"
+      ]
+    },
+    {
+      "id": "8367069082607943680",
+      "title": "GKE Release Channels - Question on minor upgrades within a release channel",
+      "question": "Hi there, I am working through some GKE Upgrade questions from one of my customers. They are using Release Channels for upgrades to their clusters. I am struggling to fully understand the auto-upgrade logic, particularly in scenarios where a customer is using a minor version that is lower than the current release channel default. My understanding is as follows: 1. Each release channel will contain a selection of available versions that have met the qualification criteria for that channel, for example, in the `REGULAR` channel in `europe-west2` - we support minor versions `.26` through to `.29`\u00b9 1. Each release channel will contain a default version. For example on the `REGULAR` channel in `europe-west2` this is `1.28.8-gke.1095000`. The automated upgrades of the Control Plane and Nodes will always target this default version when upgrading customer clusters - usually targeted within 10 days of it becoming default. 1. A customer can manually upgrade to versions `>` than the default version in the release channel as long as it is available in that release channel. They will not get upgrades until the default version becomes `>` than the version they have manually upgraded to. 1. A customer can also select a version earlier than the default version, but they will get automatically upgraded to the latest default version unless they have a maintenance exclusion\u00b3. What I am struggling to understand is our [release notes](https://cloud.google.com/kubernetes-engine/docs/release-notes). For example - taking [May 17, 2024 Regular Channel Release Notes](https://cloud.google.com/kubernetes-engine/docs/release-notes#regular-channel_2) as an example: It states: `Version 1.28.8-gke.1095000 is now the default version in the Regular channel.` So based on my understanding - all clusters in this release channel with versions `< 1.28.8-gke.1095000` should be auto upgrading to `1.28.8-gke.1095000`. However further down in the notes it states: ```\nControl planes and nodes with auto-upgrade enabled in the Regular channel will be upgraded from version 1.26 to version 1.27.12-gke.1115000 with this release. Control planes and nodes with auto-upgrade enabled in the Regular channel will be upgraded from version 1.27 to version 1.27.12-gke.1115000 with this release. Control planes and nodes with auto-upgrade enabled in the Regular channel will be upgraded from version 1.28 to version 1.28.8-gke.1095000 with this release. Control planes and nodes with auto-upgrade enabled in the Regular channel will be upgraded from version 1.29 to version 1.29.1-gke.1589020 with this release.\n``` I am struggling to understand why there is a different matrix for upgrades depending on the current version that the clusters are running on. Specifically: 1. For clusters on `1.26` - should we not do a step-upgrade automatically to `1.27` and then to `1.28`\n1. For clusters on `1.27` - why are they not upgraded directly to `1.28.8-gke.1095000` which is the default version? Any help on understanding this would be greatly appreciated. --- [1]\n```\nbenmaynard-macbookpro:~ benmaynard$ gcloud container get-server-config --flatten=\"channels\" --filter=\"channels.channel=REGULAR\" --format=\"yaml(channels.channel,channels.validVersions)\" --location=europe-west2\nFetching server config for europe-west2\n---\nchannels: channel: REGULAR validVersions: - 1.29.4-gke.1043001 - 1.29.1-gke.1589020 - 1.28.9-gke.1069000 - 1.28.9-gke.1000000 - 1.28.8-gke.1095000 - 1.27.13-gke.1070000 - 1.27.13-gke.1000000 - 1.27.12-gke.1115000 - 1.26.15-gke.1243000 - 1.26.15-gke.1090000\n``` [2]\n```\nbenmaynard-macbookpro:~ benmaynard$ gcloud container get-server-config --flatten=\"channels\" --filter=\"channels.channel=REGULAR\" --format=\"yaml(channels.channel,channels.defaultVersion)\" --location=europe-west2\nFetching server config for europe-west2\n---\nchannels: channel: REGULAR defaultVersion: 1.28.8-gke.1095000\n``` [3]\n[internal screenshot removed]\n```\nNote: When you create a cluster in a release channel, if you specify an earlier version than the default version in that release channel, GKE might automatically upgrade the cluster to the default version. If you want to temporarily prevent the cluster from being automatically upgraded when you select the new channel, configure a maintenance exclusion before selecting the new channel.\n```",
+      "best_answer": "* Each release channel will contain a selection of available versions that have met the qualification criteria for that channel. * Each release channel will contain a default version. Default version is used for creation (not to be confused with auto-upgrade target although they could be the same). * Each release channel will contain auto-upgrade targets: The minor auto-upgrade target without cluster constraints can be found on [GKE release schedule](https://cloud.google.com/kubernetes-engine/docs/release-schedule) (Futures are best efforts). Other auto-upgrade targets are for cluster with constraints (say you have a maintenance exclusion of type \u201cno minor\u201d and you are on v1.26 in stable, then your auto-upgrade target will be latest auto-upgrade target patch for 1.26 in stable (not 1.27 patch since you have the maintenance exclusion that prevents minor upgrades) * A customer can manually upgrade to MINOR versions available in the release channel or ANY PATCH version for a given minor available in the release channel (ex. Allow for fedramp compliance, security vulnerability patches at faster pace). They will not get upgraded until the auto-upgrade target is a higher version than currently on cluster. Example (For example - taking [May 17, 2024 Regular Channel Release Notes](https://cloud.google.com/kubernetes-engine/docs/release-notes#regular-channel_2) as an example:) * The key here is to understand the difference between default and auto-upgrade target I am struggling to understand why there is a different matrix for upgrades depending on the current version that the clusters are running on. * The key here is to understand that you can place constraints on auto-upgrade. The control types are: maintenance window, maintenance exclusions. GKE/Google can also put constraints in place as explained here ([internal screenshot removed] ) Specifically: 1. For clusters on 1.26 \\- should we not do a step-upgrade automatically to 1.27 and then to 1.28 <Not if you have constraints in place and keep in mind that default is NOT auto-upgrade target> 2. For clusters on 1.27 \\- why are they not upgraded directly to 1.28.8-gke.1095000 which is the default version? <Not if you have constraints in place and keep in mind that default is NOT auto-upgrade target> Feel free to setup time to discuss and let us know where documentation needs to be revamped. In 2H24 we are planning a documentation revamp including to help understand these topics better. We are also planning to work on upgrade assist to provide more signals for you and your customer to help demystify auto-upgrades, so your input would help.",
+      "quality_score": 1,
+      "total_answers": 1,
+      "topic_tags": [
+        "upgrades",
+        "release-channels"
+      ]
+    },
+    {
+      "id": "5638301124793466880",
+      "title": "GKE Upgrades notifications",
+      "question": "My customer would like to know if the notifications received through this : https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-upgrades#upgrade-notifications contain minor updates in addition to major updates ?",
+      "best_answer": "Minor version gets released every 4 months or so (3 minor versions in a calendar year). I have seen customer implementing Upgrade-notifications process for security alerts and patch updates but since we already have a predetermined release dates for every minor versions, I'm not sure these (pub-sub) notifications would help much. https://cloud.google.com/kubernetes-engine/docs/release-schedule#schedule-for-release-channels",
+      "quality_score": 1,
+      "total_answers": 1,
+      "topic_tags": [
+        "upgrades",
+        "notifications"
+      ]
+    },
+    {
+      "id": "1987357371600470016",
+      "title": "GKE auto-upgrade process for standard and autopilot clusters when there are critical patches",
+      "question": "As part of security bulletin notifier and surfacing work our team is doing, could someone on the GKE upgrades team give greater detail on how GKE auto-upgrade versions are determined for both standard and auto-pilot clusters? Specifically, how auto-upgrades for patches within minor versions are chosen and upgraded to? What's the process today when there are patches for critical fixes? Do we also change the default version? Our team was interested in seeing if patched versions could have priority over the default versions but we weren't sure if that's already in place in the current process.",
+      "best_answer": "> how GKE auto-upgrade versions are determined for both standard and auto-pilot clusters? We use GKE rollout server to manage the auto upgrade for both cluster kinds. The RS will match cluster with a bunch of gke rollout policies and upgrade the eligible clusters to the desired state given by the policies. google3/production/borg/cloud-kubernetes/config/rollout_config.textpb > Specifically, how auto-upgrades for patches within minor versions are chosen and upgraded to? We have master patch policies. > Do we also change the default version? Yes if necessary. Eve will generate a list of versions weekly at each rollout cut. The version selection algorithm will pick the best versions to be default or upgrade target. And we will use this version to generate rollout policies. > if patched versions could have priority over the default versions I am not sure I get your idea. But there is no priority between versions. Under which condition, you want such behavior?",
+      "quality_score": 1,
+      "total_answers": 1,
+      "topic_tags": [
+        "upgrades",
+        "autopilot",
+        "patching"
+      ]
+    },
+    {
+      "id": "1184034385138024448",
+      "title": "GKE upgrade process causes performance issues for customer",
+      "question": "Hello, A question of the customer: They have a GKE cluster with 4 nodes, running a large amount of Java Spring applications. While in \"running state\" the resources are more than enough, when upgrades happen, 20+ applications on one node are rescheduled all at the same time to a new node.\nWith Spring being resource-hungry at startup, apps throttle, they cant start in time, readiness/liveness start failing and they get restart of pods constantly until 1 by 1 they start, but this takes time. Is there any setting on tip to mitigate this?",
+      "best_answer": "Hi dariobanfi@\nHow come 20+ applications are being reassigned to 1 node out of 4? I'm guessing they are using `Surge` Upgrade strategy which (by default) creates only 1 extra node at a time? Please take a look here. Instead of `maxSurge=1` (default), they can use `maxSurge=2 or 3`. If they still see the same issue then, increase this parameter again.. 4 or 5. https://cloud.google.com/kubernetes-engine/docs/concepts/node-pool-upgrade-strategies#optimizing-surge Alternative solution can be the `blue/green` upgrade strategy. https://cloud.google.com/kubernetes-engine/docs/concepts/node-pool-upgrade-strategies#blue-green-upgrade-strategy In `Blue/Green` upgrades, GKE creates equal number of extra nodes (~ 4 nodes in this case). cordon and drain the old nodes and reassigns applications to these new 4 nodes. You have much more control and flexibility with `Blue/Green` as compared to `Surge`. Hope it helps!",
+      "quality_score": 1,
+      "total_answers": 1,
+      "topic_tags": [
+        "upgrades",
+        "reliability"
+      ]
+    },
+    {
+      "id": "5499120544903069696",
+      "title": "GKE upgrade test coverage for OS images",
+      "question": "During OS image qualification, do we have upgrade test coverage between different OS images? Specifically, do we test upgrades within GKE versions that have different underlying COS milestones/versions? This could happen between different GKE minor versions, and in the future with LTS, it might be happen between different GKE patch versions. From the current osimage 1.30 Cohort, it seems there is no upgrade workflow or do we perform such test else where?",
+      "best_answer": "Everything that gets released through EVE has to pass the following test flows: * //cloud/kubernetes/engprod/guitar/components/eve:cohort_set_qual_all_cohort_set_autopilot\n* //cloud/kubernetes/engprod/guitar/components/eve:cohort_set_qual_all_cohort_set_regional\n* //cloud/kubernetes/engprod/guitar/components/eve:cohort_set_qual_all_cohort_set_zonal Included in those flows are the following tests:\n* //cloud/kubernetes/test:master_skew_test\n* //cloud/kubernetes/test:master_upgrade_test Those run skewed control plane and nodes, and perform a patch and minor upgrade to the target version from the closest available lower patch and minor in the existing configuration. For example: [internal screenshot removed]",
+      "quality_score": 1,
+      "total_answers": 1,
+      "topic_tags": [
+        "upgrades",
+        "patching"
+      ]
+    },
+    {
+      "id": "8219484935346454528",
+      "title": "Maintenance exclusions to prevent GKE upgrades",
+      "question": "I would like to share this since I had to explore this with Eng. to find right answers so feel this might be helpful to broader TAM community. IHAC looking to set up a maintenance exclusion window for more than 30 days or a long term one (more than 100 days), they tried setting up one but facing this error. Error: googleapi: Error 400: Error validating maintenance policy: maintenance policy would go longer than 32d without 48h maintenance availability of >= 4h contiguous duration (in time range [2022-07-24T00:00:00Z, 2022-08-25T00:00:00Z])., badRequest I see there are multiple limitations [https://cloud.google.com/kubernetes-engine/docs/concepts/maintenance-windows-and-exclusions#limitations-maint-exclusions] to set the maintenance exclusion but they want to know what alternate options customers can have to ensure no upgrades. how can they setup 180 days exclusion without contradicting this rule You can add a maximum of three maintenance exclusions that exclude all upgrades (that is, a scope of \"no upgrades\"). These exclusions must be configured to allow for at least 48 hours of maintenance availability in a 32-day rolling window.",
+      "best_answer": "that 30 days rule only applies to control plane upgrades and not to node upgrades. We will not go more than 30 days without upgrading the control plane to a patch version. The \"No Upgrades\" exclusion used to be the only exclusion and was limited to 30 days because that as long as we are willing to go in terms of not upgrading the control plane. Of course with \"No Upgrades\" we also did not upgrade nodes for 30 days.\nOur understanding from most customers is that they were concerned about upgrading nodes (as it can be disruptive to workloads) and concerned with upgrading the control plane to a new Kubernetes minor version as perhaps they may be using deprecated APIs or they are worried about compatibility.\nThe \"No minor or node upgrades\" exclusion should meet the needs of our more conservative customers. We don't upgrade nodes at all for 180 days (and then you can actually create another exclusion after that is up that lasts until EOS for the GKE minor version) and we only do patch upgrades on the control plane. and this is the command - https://cloud.google.com/kubernetes-engine/docs/how-to/maintenance-windows-and-exclusions#existing-maintenance-exclusion For more detailed convo you can refer to this Group post [https://groups.google.com/a/google.com/g/containers-discuss/c/5Lzo3HbPE9k]",
+      "quality_score": 1,
+      "total_answers": 1,
+      "topic_tags": [
+        "upgrades",
+        "maintenance-windows"
+      ]
+    },
+    {
+      "id": "4176610366828052480",
+      "title": "Minimizing Disruption due to Upgrades",
+      "question": "Hello, GDCV Baremetal team is currently using a GKE cluster as a prow build cluster for scheduling CI workloads. The cluster is currently configured for auto upgrades and upgrade operations result in heavy disruptions to our workloads. Since vast majority of the workloads are single invocation pods, the upgrades result in these workloads being evicted prematurely. An ideal upgrade flow in our case would be to 1) Create new nodepool\n2) Cordon the old nodepool\n3) Wait for x amount of time before triggering evictions so that pods in old nodepool run to completion\n4) Drain and delete old nodepool Does the GKE Upgrades team have any recommendations on an upgrade configuration to achieve this? Thanks.",
+      "best_answer": "you can use autoscale blue green upgrade, its private preview only feature however and requires CA enabled. But the upgrade flow is as you described, workloads are allowed to run upto 14 days",
+      "quality_score": 1,
+      "total_answers": 2,
+      "topic_tags": [
+        "upgrades",
+        "reliability"
+      ]
+    },
+    {
+      "id": "3087958615399596032",
+      "title": "Mitosis component upgrade notification",
+      "question": "Recently we have released a component upgrade for a Mitosis component, and the customer asked whether there's a way to receive notification when certain component is upgraded in their existing cluster. What they expect is something similar to https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-notifications, notification which they could subscribe to when cluster upgrade happens. I learned from and random conversation that component upgrade time is based on various aspects (auto-upgrade, maintainence window, rollout status, etc), I do feel like a notification would be a plus for customers. Is there any existing pipeline that I'm not aware of, which could register my component to send notification to subscribed customers?",
+      "best_answer": "We don't currently expose component version to customer, they are notified of gke upgrade by the [internal link removed]. You could explore integrating with [internal link removed] to send notification for your component. I also added following ticket to our backlog [internal bug removed]",
+      "quality_score": 1,
+      "total_answers": 1,
+      "topic_tags": [
+        "upgrades",
+        "notifications",
+        "patching"
+      ]
+    },
+    {
+      "id": "6298279680831127552",
+      "title": "What triggers GKE upgrades?",
+      "question": "There are very clear moments in time in which GKE upgrades clusters in a release channel, for example (for Regular) 1.20.8 clearly was rolled out in July 29 2021 and then 1.20.9 on September 2 2021. See screenshots below (source). Question is: Where can I find (in code) the CL/change that caused this? Images: https://docs.google.com/document/d/1FJM0Rx2QDRdSiUw6lSf3tq3UwP0swfXf_M-IlaFBK50/edit",
+      "best_answer": "The file in question is google3/production/borg/cloud-kubernetes/config/rollout_config.textpb. But it's not merely enough to look at when a change is submitted. You also need to look at when it rolls out. These are dynamically pushed but there's an extensive and often slow qualification process (that sometimes adds multiple week delays). http://cl-status/#/summary/Cloud%20Kubernetes%20-%20Rollout%20Server%20Microservice%20-%20Components/<cl-num> is usually the simplest way to verify a CL to that file being actually live. In addition, see [internal link removed]#duration for further things that can cause delays even when a CL is live. In this case, kill switches are to blame. We used them to freeze auto-upgrades over the holidays, then even once we removed that kill switch, an unrelated bug had added _new_ kill switches that also had to be removed. That removal is a ~4 day slow rollout. [internal bug removed] is a sample customer issue about this.",
+      "quality_score": 1,
+      "total_answers": 1,
+      "topic_tags": [
+        "upgrades"
+      ]
+    },
+    {
+      "id": "4792775636287488",
+      "title": "[Lessons learned] GKE upgrade delayed due to a stockout",
+      "question": "Hey all TAMs,\nWe wanted to share our experience with a GKE upgrade delayed due to a stockout and lessons learnt.\nPlease find below the executive summary and full details in the [post mortem document](https://docs.google.com/document/d/1fX4FK8mS235DDei_0ttNb9hvNXgZ8YRSrUbBLCT7cn4/edit?usp=sharing) **Executive Summary**\n**Impact** - Broadcom BlazeMeter were not able to perform a manual upgrade of prod+staging GKE clusters to apply a security patch since Sep 16, 2020 until Oct 5, 2020 **Root Cause** - GKE clusters upgrade failed in Us-east4-b due to a stockout of RAM for N1-standard-8 Machines **Resolution** - BM workloads were migrated to a different cell with available resources",
+      "best_answer": "## Postmortem lessons learned **GKE upgrade might require additional capacity for a limited time** * As GKE does not support in-place upgrade, new nodes are spinned up and once installed, old nodes are removed (see [\u201csurge upgrades\u201d](https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-upgrades#surge) for more details)\n* It is recommended for TAM to validate prior to GKE upgrade capacity is available for required machine shapes **Reservations are not a solution for stock outs** if there are ongoing capacity constraints in the specific region, zone, cell **Capacity issues playbook** (capacity team)\n* Need to check capacity availability for all GCE / GKE components (Cores, VM family and machine shape, Storage, RAM and other related products)\n* Check stockout details by investigating the error messages that can be captured by the support team - Capacity 360 provides very limited data related to a stockout event.\n* Improve capacity planning tools and systems to capture RAM signals **Support team** * Communicate all related information to the account team and capacity planning team related to Machine shapes, RAM requirements and storage needs. * Improve Support Stockout playbook to contain comprehensive information on Cloud AC stockout issues and potential root causes (current link: [internal link removed]) **TAM**\n* TAM should be thorough: TAM scheduled an additional upgrade without a root cause identified; TAM should make sure to identify root cause prior to scheduling an additional upgrade attempt\n* Make sure to create a chat room for a P1 case for continuity and transparency between TSE/capacity/account team Encourage BCOM BlazeMeter team to **share any major updates for on demand capacity usage** so we can proactively review the availability and mitigate any risks upfront",
+      "quality_score": 1,
+      "total_answers": 1,
+      "topic_tags": [
+        "upgrades",
+        "incidents"
+      ]
+    },
+    {
+      "id": "1645314697362145280",
+      "title": "is GKE upgrade not restrict the application which was tested for the previous control plane version?",
+      "question": "Can we consider any update to GKE master version is always backward compatible? so the upgrade does not restrict any GKE feature that is used by our application? for example, if the application has been tested on GKE master version 1.27.7-gke.1121002 and GKE control plane is upgraded to the next available version. The application needs to be working for a much longer time (2 years). Will it cause any issues to the gke features that are used by the application if control plane version upgrade happened?",
+      "best_answer": "The short answer is No. GKE or k8s does deprecate APIs first and then stop supporting them. So if an application is making a non-supported API calls, the call will fail. https://cloud.google.com/kubernetes-engine/docs/deprecations Example: In GKE v1.27, `storage.k8s.io/v1beta1` API is no longer [supported](https://cloud.google.com/kubernetes-engine/docs/deprecations/apis-1-27#removed-apis-v127). So if a cluster upgrades from 1.26 to 1.27 and the app still calls `storage.k8s.io/v1beta1` API, it would fail. And checkout this [table](https://cloud.google.com/kubernetes-engine/docs/release-schedule#schedule-for-release-channels) to understand how long GKE supports a minor version",
+      "quality_score": 1,
+      "total_answers": 1,
+      "topic_tags": [
+        "upgrades"
+      ]
+    },
+    {
+      "id": "pub-001",
+      "title": "GKE version skew policy and sequential upgrade requirements",
+      "question": "Can I skip minor versions when upgrading my GKE cluster? What's the version skew policy between control plane and nodes?",
+      "best_answer": "GKE does not allow skipping minor versions for the cluster control plane. You must upgrade one minor version at a time (e.g., 1.28 to 1.29, then 1.29 to 1.30). However, worker node pools can skip minor versions. The version skew policy requires nodes to run within two minor versions of the control plane. For example, if your control plane runs 1.31, nodes can run 1.31, 1.30, or 1.29, but not 1.28 or earlier. To upgrade across multiple minor versions, upgrade the control plane one version at a time, upgrade worker nodes to match, then repeat. This sequential approach ensures API compatibility and allows you to validate each step before proceeding.",
+      "quality_score": 2,
+      "total_answers": 1,
+      "topic_tags": [
+        "upgrades",
+        "release-channels"
+      ],
+      "sources": [
+        "https://docs.cloud.google.com/kubernetes-engine/versioning",
+        "https://docs.cloud.google.com/kubernetes-engine/docs/concepts/cluster-upgrades"
+      ]
+    },
+    {
+      "id": "pub-002",
+      "title": "GKE node pool surge upgrade settings (maxSurge and maxUnavailable)",
+      "question": "How do surge upgrade settings work in GKE? What do maxSurge and maxUnavailable control?",
+      "best_answer": "Surge upgrades are the default node pool upgrade strategy in GKE. maxSurge controls the maximum number of additional nodes created during an upgrade (per zone), while maxUnavailable controls how many nodes can be simultaneously unavailable. The default is maxSurge=1, maxUnavailable=0, meaning GKE creates one extra node, migrates workloads, then removes the old node \u2014 slow but zero-disruption. For large pools where workloads tolerate disruption, maxSurge=0, maxUnavailable=20 maximizes speed without extra resources. The total nodes upgraded simultaneously equals maxSurge + maxUnavailable. GKE provisions a new surge node, waits for it to be ready, cordons the old node, then drains it respecting PodDisruptionBudgets and graceful termination for up to one hour per node. Choose settings per pool based on workload sensitivity: stateful workloads need maxUnavailable=0, while batch jobs can tolerate higher maxUnavailable values.",
+      "quality_score": 2,
+      "total_answers": 1,
+      "topic_tags": [
+        "upgrades",
+        "reliability"
+      ],
+      "sources": [
+        "https://docs.cloud.google.com/kubernetes-engine/docs/concepts/node-pool-upgrade-strategies"
+      ]
+    },
+    {
+      "id": "pub-003",
+      "title": "Blue-green node pool upgrade strategy in GKE",
+      "question": "What is the blue-green upgrade strategy for GKE node pools and when should I use it?",
+      "best_answer": "Blue-green node pool upgrades create a complete new set of nodes (green) alongside the existing set (blue) before migrating workloads. You control batch size via BATCH_NODE_COUNT or BATCH_PERCENT (default is 1 node at a time). This strategy temporarily doubles the node count, so your project needs sufficient quota and IP space. Use blue-green when you need maximum safety for critical workloads: all green nodes are verified healthy before any blue nodes are drained. It's especially valuable for stateful workloads, GPU workloads, or any pool where you want a clean rollback path \u2014 if green nodes fail validation, you can abort without having modified any blue nodes. The tradeoff is cost and time: you pay for double capacity during the upgrade window.",
+      "quality_score": 2,
+      "total_answers": 1,
+      "topic_tags": [
+        "upgrades",
+        "reliability"
+      ],
+      "sources": [
+        "https://docs.cloud.google.com/kubernetes-engine/docs/concepts/node-pool-upgrade-strategies"
+      ]
+    },
+    {
+      "id": "pub-004",
+      "title": "PodDisruptionBudget (PDB) blocking GKE node drain during upgrades",
+      "question": "My GKE node pool upgrade is slow or stuck. Could PodDisruptionBudgets be blocking the drain?",
+      "best_answer": "PDBs are the most common cause of slow or stuck GKE node upgrades. When GKE drains a node, it respects PDB settings, waiting up to one hour per node before timing out. Problematic PDB configurations include: maxUnavailable=0 (no disruptions allowed), minAvailable >= total replicas, or pods managed by multiple PDBs. To diagnose, check for PDBs allowing zero disruptions: kubectl get pdb --all-namespaces -o jsonpath='{range .items[?(@.status.disruptionsAllowed==0)]}{.metadata.name}/{.metadata.namespace}{\"\\n\"}{end}'. Also check Cloud Logging for 'Cannot evict pod as it would violate the pod's disruption budget.' Solutions: relax PDB settings temporarily during the upgrade window, scale up the Deployment or HPA to allow the drain while respecting the PDB, or increase the replica count so minAvailable can still be satisfied after eviction.",
+      "quality_score": 2,
+      "total_answers": 1,
+      "topic_tags": [
+        "upgrades",
+        "reliability"
+      ],
+      "sources": [
+        "https://docs.cloud.google.com/kubernetes-engine/docs/troubleshooting/upgrades",
+        "https://cloud.google.com/kubernetes-engine/docs/how-to/workload-disruption-readiness"
+      ]
+    },
+    {
+      "id": "pub-005",
+      "title": "GKE Autopilot vs Standard cluster upgrade differences",
+      "question": "How do upgrades differ between GKE Autopilot and Standard clusters?",
+      "best_answer": "Key upgrade differences: Autopilot always uses surge upgrades (no blue-green option). Automatic upgrades cannot be disabled on Autopilot \u2014 you can only control timing via maintenance windows and exclusions. Autopilot enforces mandatory resource requests on all containers; if not specified, defaults are applied automatically. You cannot SSH into Autopilot nodes, which limits troubleshooting options during upgrades. Autopilot manages node pools automatically, so you don't control node count, machine type, or node-level configuration. For upgrade planning, focus on workload readiness (PDBs, graceful shutdown, resource requests) rather than infrastructure. Use maintenance windows to schedule upgrades during low-traffic periods, and test new versions on dev Autopilot clusters (Rapid channel) before they auto-roll to prod (Stable channel).",
+      "quality_score": 2,
+      "total_answers": 1,
+      "topic_tags": [
+        "upgrades",
+        "autopilot"
+      ],
+      "sources": [
+        "https://docs.cloud.google.com/kubernetes-engine/docs/concepts/cluster-upgrades-autopilot",
+        "https://docs.cloud.google.com/kubernetes-engine/docs/resources/autopilot-standard-feature-comparison"
+      ]
+    },
+    {
+      "id": "pub-006",
+      "title": "GKE Autopilot mandatory resource requests",
+      "question": "What are the mandatory resource request requirements in GKE Autopilot?",
+      "best_answer": "Autopilot enforces minimum and maximum resource requests based on the compute class or hardware configuration. If your specified requests are below the minimums, Autopilot automatically modifies pods to increase requests during scheduling. If you don't specify requests for some containers, Autopilot assigns default values. For anti-affinity configurations, Autopilot rejects pods that don't meet minimums instead of modifying them. This matters for upgrades because: pods without explicit resource requests may behave differently than expected when rescheduled on new nodes, and resource request changes can affect scheduling decisions during node drain. Always define explicit resource requests and limits in your pod specs to ensure predictable behavior during upgrades.",
+      "quality_score": 2,
+      "total_answers": 1,
+      "topic_tags": [
+        "autopilot"
+      ],
+      "sources": [
+        "https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-resource-requests"
+      ]
+    },
+    {
+      "id": "pub-007",
+      "title": "GKE release channels: Rapid, Regular, Stable, Extended",
+      "question": "How do GKE release channels work and what's the version progression between them?",
+      "best_answer": "GKE has four release channels representing adoption stages: Rapid (early adopters), Regular (early majority, default), Stable (majority), and Extended (long-term support). Versions progress Rapid -> Regular -> Stable based on demonstrated stability. Standard support for a minor version begins when it reaches Regular channel and lasts approximately 14 months. Extended support adds roughly 10 additional months (24 months total from Regular availability). During standard support, all channels receive patches at similar cadence. During extended support, only Extended channel clusters continue receiving security patches. All new clusters default to Regular channel. Strategy: use Rapid for dev/test to get early exposure to upcoming versions, Regular for most production, Stable for risk-averse production, and Extended for workloads requiring maximum version stability (e.g., regulated environments).",
+      "quality_score": 2,
+      "total_answers": 1,
+      "topic_tags": [
+        "release-channels"
+      ],
+      "sources": [
+        "https://docs.cloud.google.com/kubernetes-engine/docs/concepts/release-channels",
+        "https://docs.cloud.google.com/kubernetes-engine/docs/release-schedule"
+      ]
+    },
+    {
+      "id": "pub-008",
+      "title": "GKE maintenance windows and exclusions configuration",
+      "question": "How do I configure maintenance windows and exclusions to control when GKE upgrades happen?",
+      "best_answer": "Maintenance windows define when automatic maintenance (including upgrades) CAN occur. Maintenance exclusions define when it CANNOT. Exclusion scopes include: 'no upgrades' (blocks all upgrades for up to 180 days or until version EOL), 'no minor upgrades' (allows patches but blocks minor version changes), and 'no minor or node upgrades' (prevents node disruption entirely). Configure via gcloud: add exclusions with --add-maintenance-exclusion-name, --add-maintenance-exclusion-start, --add-maintenance-exclusion-end, and --add-maintenance-exclusion-scope flags. Limitation: keep exclusions under 6 months \u2014 longer exclusions can force GKE to perform multiple minor version jumps at once when the exclusion expires, increasing risk. Maintenance windows apply to both Standard and Autopilot clusters. Manual upgrades can still be performed outside maintenance windows.",
+      "quality_score": 2,
+      "total_answers": 1,
+      "topic_tags": [
+        "maintenance-windows",
+        "upgrades"
+      ],
+      "sources": [
+        "https://cloud.google.com/kubernetes-engine/docs/concepts/maintenance-windows-and-exclusions",
+        "https://docs.cloud.google.com/kubernetes-engine/docs/how-to/maintenance-windows-and-exclusions"
+      ]
+    },
+    {
+      "id": "pub-009",
+      "title": "GPU node pool upgrade considerations in GKE",
+      "question": "What special considerations apply when upgrading GKE node pools with GPUs?",
+      "best_answer": "GPU node pool upgrades require extra care around driver compatibility. A GKE version upgrade may install a newer NVIDIA GPU driver, which can cause workload incompatibilities. Key considerations: verify CUDA toolkit compatibility with the new driver version before upgrading (check NVIDIA's CUDA compatibility matrix). GKE offers two driver management modes: Google-managed (automatic install of default or latest driver) and customer-managed (you install manually). For production GPU pools, test the new GKE version in a staging environment first. Consider disabling auto-upgrades on GPU node pools and upgrading manually after validation. Use maxSurge=1, maxUnavailable=0 to ensure GPU workloads are rescheduled onto verified-healthy new nodes before old ones are removed. Coordinate with ML teams to schedule GPU pool upgrades during model training gaps.",
+      "quality_score": 2,
+      "total_answers": 1,
+      "topic_tags": [
+        "upgrades",
+        "reliability"
+      ],
+      "sources": [
+        "https://docs.cloud.google.com/kubernetes-engine/docs/how-to/gpus",
+        "https://docs.cloud.google.com/kubernetes-engine/docs/concepts/gpus"
+      ]
+    },
+    {
+      "id": "pub-010",
+      "title": "GKE upgrade rollback procedures",
+      "question": "Can I roll back a GKE upgrade if something goes wrong?",
+      "best_answer": "Rollback is available for node pool upgrades that were cancelled, failed, or timed out before completion. Use gcloud container node-pools rollback to revert nodes to the previous version. Critical limitations: you cannot roll back a node pool that has successfully completed its upgrade \u2014 you must instead downgrade by creating a new node pool at the old version. Control plane upgrades cannot be rolled back at all. To cancel an in-progress upgrade, use gcloud container operations cancel. Common failure causes include: new nodes failing to register, IP address exhaustion, or insufficient resource quotas. Best practice: for critical upgrades, use blue-green strategy which gives you a clean abort path \u2014 if the new (green) nodes fail validation, the original (blue) nodes are untouched. Always have a tested rollback plan before starting production upgrades.",
+      "quality_score": 2,
+      "total_answers": 1,
+      "topic_tags": [
+        "upgrades"
+      ],
+      "sources": [
+        "https://docs.cloud.google.com/kubernetes-engine/docs/how-to/upgrading-a-cluster",
+        "https://docs.cloud.google.com/kubernetes-engine/docs/reference/rest/v1/projects.locations.clusters.nodePools/rollback"
+      ]
+    },
+    {
+      "id": "pub-011",
+      "title": "Admission webhooks blocking GKE upgrades",
+      "question": "Can admission webhooks cause GKE upgrades to fail or get stuck?",
+      "best_answer": "Yes, admission webhooks are a known cause of stuck or failed GKE upgrades. During control plane upgrades, GKE re-creates the API server, and webhooks that block system RBAC role creation can prevent the API server from starting. During node upgrades, webhooks that intercept pod creation can block new pods from scheduling on surge nodes. Unsafe webhook configurations include: intercepting resources in kube-system namespace, intercepting Leases in kube-node-lease namespace, and intercepting cluster-scoped resources like Nodes and TokenReviews. To diagnose: check if webhook endpoints are available and not returning errors. If a webhook has no available endpoints, an admission deadlock may occur. Fix: adjust webhooks to exclude system namespaces using namespaceSelector, set failurePolicy to Ignore for non-critical webhooks during upgrades, or temporarily delete the ValidatingWebhookConfiguration to break circular dependencies.",
+      "quality_score": 2,
+      "total_answers": 1,
+      "topic_tags": [
+        "upgrades",
+        "reliability"
+      ],
+      "sources": [
+        "https://docs.cloud.google.com/kubernetes-engine/docs/how-to/optimize-webhooks",
+        "https://docs.cloud.google.com/kubernetes-engine/docs/troubleshooting/upgrades"
+      ]
+    },
+    {
+      "id": "pub-012",
+      "title": "StatefulSet and database operator upgrade handling in GKE",
+      "question": "How should I handle StatefulSet workloads like databases during GKE node pool upgrades?",
+      "best_answer": "StatefulSets require special care during node upgrades because pods have stable identities and persistent storage. Key practices: ensure PDBs allow controlled disruption (e.g., maxUnavailable=1 for a 3-replica database). Use maxSurge=1, maxUnavailable=0 for pools hosting StatefulSets so new nodes are ready before old ones drain. Verify PersistentVolume reclaim policy is set to Retain (not Delete) so data survives pod rescheduling. For database operators (Postgres, MySQL, etc.), verify operator version compatibility with the target Kubernetes version before upgrading. Take backups before starting. Order your upgrade: upgrade the operator CRD and controller first if needed, then proceed with node pool upgrades. Monitor replication lag and failover events during the upgrade. For critical databases, consider blue-green node pool upgrades for a clean rollback path. Always test the full upgrade sequence in a staging environment with representative data volumes.",
+      "quality_score": 2,
+      "total_answers": 1,
+      "topic_tags": [
+        "upgrades",
+        "reliability"
+      ],
+      "sources": [
+        "https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/",
+        "https://docs.cloud.google.com/kubernetes-engine/docs/concepts/node-pool-upgrade-strategies"
+      ]
+    }
+  ]
+}

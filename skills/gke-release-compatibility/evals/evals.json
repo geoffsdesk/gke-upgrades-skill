@@ -1,0 +1,1 @@
+{"skill_name": "gke-release-compatibility", "evals": [{"id": 1, "prompt": "Tell me about GKE Release Channels - Question on minor upgrades within a release channel", "expected_output": "Should match FAQ", "expectations": ["Matches CSV content"]}]}

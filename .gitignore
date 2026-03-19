@@ -14,3 +14,9 @@ feedback.json
 
 # Node
 node_modules/
+
+# Raw internal data (never commit)
+data/plx_*.csv
+data/*_raw.*
+data/*_internal.*
+tools/eval-app/__pycache__/

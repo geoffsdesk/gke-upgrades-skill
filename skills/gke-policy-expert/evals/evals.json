@@ -1,0 +1,1 @@
+{"skill_name": "gke-policy-expert", "evals": [{"id": 1, "prompt": "Tell me about GKE Cluster's KCP Upgrades Requirements", "expected_output": "Should match FAQ", "expectations": ["Matches CSV content"]}]}

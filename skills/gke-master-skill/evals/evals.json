@@ -1,0 +1,165 @@
+{
+  "skill_name": "gke-master-skill",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Recently we have released a component upgrade for a Mitosis component, and the customer asked whether there's a way to receive notification when certain component is upgraded in their existing cluster.\n\nWhat they expect is something similar to https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-notifications, notification which they could subscribe to when cluster upgrade happens.\n\nI learned from https://yaqs.corp.google.com/eng/q/2010940796504637440 and random conversation that com",
+      "expected_output": "Should accurately reflect the policy for: Mitosis component upgrade notification",
+      "expectations": [
+        "Matches the core answer for Mitosis component upgrade notification",
+        "Addresses the specific nuances in the user's question",
+        "Cites GKE version policy or maintenance windows if applicable"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Hi there,\n\nI am working through some GKE Upgrade questions from one of my customers. They are using Release Channels for upgrades to their clusters.\n\nI am struggling to fully understand the auto-upgrade logic, particularly in scenarios where a customer is using a minor version that is lower than the current release channel default.\n\nMy understanding is as follows:\n\n1. Each release channel will contain a selection of available versions that have met the qualification criteria for that channel, fo",
+      "expected_output": "Should accurately reflect the policy for: GKE Release Channels - Question on minor upgrades within a release channel",
+      "expectations": [
+        "Matches the core answer for GKE Release Channels - Question on minor upgrades within a release channel",
+        "Addresses the specific nuances in the user's question",
+        "Cites GKE version policy or maintenance windows if applicable"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "My team runs a number of CEP workflows that create and update Kubernetes resources in GKE clusters, using `kubectl` from the Cloud SDK. I just saw the [announcement](https://cloud.google.com/blog/products/containers-kubernetes/kubectl-auth-changes-in-gke) that later this year k8s clients will need to install `gke-gcloud-auth-plugin` to access GKE clusters.\n\nWill CEP workflows like ours need to include a separate step to install that plugin, or will this new auth mechanism be built in?",
+      "expected_output": "Should accurately reflect the policy for: Do CEP workflows for k8s need to install gke-gcloud-auth-plugin?",
+      "expectations": [
+        "Matches the core answer for Do CEP workflows for k8s need to install gke-gcloud-auth-plugin?",
+        "Addresses the specific nuances in the user's question",
+        "Cites GKE version policy or maintenance windows if applicable"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Can we consider any update to GKE master version is always backward compatible? so the upgrade does not restrict any GKE feature that is used by our application? \n\nfor example, if the application has been tested on GKE master version 1.27.7-gke.1121002 and GKE control plane is upgraded to the next available version. The application needs to be working for a much longer time (2 years). Will it cause any issues to the gke features that are used by the application if control plane version upgrade h",
+      "expected_output": "Should accurately reflect the policy for: is GKE upgrade not restrict the application which was tested for the previous control plane version?",
+      "expectations": [
+        "Matches the core answer for is GKE upgrade not restrict the application which was tested for the previous control plane version?",
+        "Addresses the specific nuances in the user's question",
+        "Cites GKE version policy or maintenance windows if applicable"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "I was wondering if there are any requirements for customers to perform upgrades/auto-upgrade for KCP/Node upgrades/restarts (i.e. GKE clusters' KCPs are upgraded at least once a year).\n\nIf so, are there any exceptions that certain customers may have/how do we identify those customers? Is there any enforcement or is it more of a guideline?",
+      "expected_output": "Should accurately reflect the policy for: GKE Cluster's KCP Upgrades Requirements",
+      "expectations": [
+        "Matches the core answer for GKE Cluster's KCP Upgrades Requirements",
+        "Addresses the specific nuances in the user's question",
+        "Cites GKE version policy or maintenance windows if applicable"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Hello -- \n\nWe've been facing some probers that fairly consistently hit an error `CANCELED: context canceled`. Now from what I've read:\n\n* There was an [OMG two weeks ago](https://yaqs.corp.google.com/eng/q/5099328221439066112) regarding pods being evicted and additional latency. We did hit this (we believe).\n* [CANCELED implies CEP](http://go/cep-radar-user-guide#error-histograms) didn't finish a workflow successfully, for potentially various reasons.\n\nHowever, previous to this it didn't seem li",
+      "expected_output": "Should accurately reflect the policy for: CEP Probers failing due to Context Cancelled",
+      "expectations": [
+        "Matches the core answer for CEP Probers failing due to Context Cancelled",
+        "Addresses the specific nuances in the user's question",
+        "Cites GKE version policy or maintenance windows if applicable"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "I would like to share this since I had to explore this with Eng. to find right answers so feel this might be helpful to broader TAM community. \n\nIHAC looking to set up a maintenance exclusion window for more than 30 days or a long term one (more than 100 days), they tried setting up one but facing this error. \n\n Error: googleapi: Error 400: Error validating maintenance policy: maintenance policy would go longer than 32d without 48h maintenance availability of >= 4h contiguous duration (in time r",
+      "expected_output": "Should accurately reflect the policy for: Maintenance exclusions to prevent GKE upgrades",
+      "expectations": [
+        "Matches the core answer for Maintenance exclusions to prevent GKE upgrades",
+        "Addresses the specific nuances in the user's question",
+        "Cites GKE version policy or maintenance windows if applicable"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Hey all TAMs,\nWe wanted to share our experience with a GKE upgrade delayed due to a stockout and lessons learnt.\nPlease find below the executive summary and full details in the [post mortem document](https://docs.google.com/document/d/1fX4FK8mS235DDei_0ttNb9hvNXgZ8YRSrUbBLCT7cn4/edit?usp=sharing)\n\n**Executive Summary**\n**Impact** - Broadcom BlazeMeter were not able to perform a manual  upgrade of prod+staging GKE clusters to apply a security patch since Sep 16, 2020 until Oct 5, 2020\n\n**Root Cau",
+      "expected_output": "Should accurately reflect the policy for: [Lessons learned] GKE upgrade delayed due to a stockout",
+      "expectations": [
+        "Matches the core answer for [Lessons learned] GKE upgrade delayed due to a stockout",
+        "Addresses the specific nuances in the user's question",
+        "Cites GKE version policy or maintenance windows if applicable"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Hello,\n\nA question of the customer:\n\nThey have a GKE cluster with 4 nodes, running a large amount of Java Spring applications.\n\nWhile in \"running state\" the resources are more than enough, when upgrades happen, 20+ applications on one node are rescheduled all at the same time to a new node.\nWith Spring being resource-hungry at startup, apps throttle, they cant start in time, readiness/liveness start failing and they get restart of pods constantly until 1 by 1 they start, but this takes time.\n\nIs",
+      "expected_output": "Should accurately reflect the policy for: GKE upgrade process causes performance issues for customer",
+      "expectations": [
+        "Matches the core answer for GKE upgrade process causes performance issues for customer",
+        "Addresses the specific nuances in the user's question",
+        "Cites GKE version policy or maintenance windows if applicable"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "My customer would like to know if the notifications received through this : https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-upgrades#upgrade-notifications contain minor updates in addition to major updates ?",
+      "expected_output": "Should accurately reflect the policy for: GKE Upgrades notifications",
+      "expectations": [
+        "Matches the core answer for GKE Upgrades notifications",
+        "Addresses the specific nuances in the user's question",
+        "Cites GKE version policy or maintenance windows if applicable"
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "It's not entirely clear to me that OS patches (to COS or Ubunto) are applied during GKE upgrades only, or do these patches also get applied outside of upgrades. It so, does the customer need to do anything to ensure the OS is patched?",
+      "expected_output": "Should accurately reflect the policy for: Does GKE only update OS patches during version upgrades?",
+      "expectations": [
+        "Matches the core answer for Does GKE only update OS patches during version upgrades?",
+        "Addresses the specific nuances in the user's question",
+        "Cites GKE version policy or maintenance windows if applicable"
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "I have a customer who has GKE clusters running on a static release that are on v1.24 which is going EOL on 10/31/2023. On 11/1/2023 the customer wants to pause upgrades for a code freeze - they are running Static (no channel). Docs state that control planes will still auto upgrade at EoL is it possible to freeze those upgrades during the time of their code freeze?",
+      "expected_output": "Should accurately reflect the policy for: Can static release GKE upgrades be paused for a customer code freeze?",
+      "expectations": [
+        "Matches the core answer for Can static release GKE upgrades be paused for a customer code freeze?",
+        "Addresses the specific nuances in the user's question",
+        "Cites GKE version policy or maintenance windows if applicable"
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "During OS image qualification, do we have upgrade test coverage between different OS images? Specifically, do we test upgrades within GKE versions that have different underlying COS milestones/versions? This could happen between different GKE minor versions, and in the future with LTS, it might be happen between different GKE patch versions.\n\nFrom the current [osimage 1.30 Cohort](https://evedashboard.corp.google.com/cohorts/osimage/versions/1.30.7), it seems there is no upgrade workflow or do w",
+      "expected_output": "Should accurately reflect the policy for: GKE upgrade test coverage for OS images",
+      "expectations": [
+        "Matches the core answer for GKE upgrade test coverage for OS images",
+        "Addresses the specific nuances in the user's question",
+        "Cites GKE version policy or maintenance windows if applicable"
+      ]
+    },
+    {
+      "id": 14,
+      "prompt": "There are very clear moments in time in which GKE upgrades clusters in a release channel, for example (for Regular) 1.20.8 clearly was rolled out in July 29 2021 and then 1.20.9 on September 2 2021. See screenshots below ([source](https://monitoring.corp.google.com/explorer?duration=31536000&redirect_from=https:%2F%2Fpcon.corp.google.com&utc_end=1642614458&refresh=14400&expr=CpsBCpgBCpUBEkkKGGNsb3VkLmNvbnRhaW5lci5Cb3JnVGFzaxItCisvY2xvdWQva3ViZXJuZXRlcy9tb25pdG9yaW5nL3RvdGFsX2NsdXN0ZXJzGiEKCWJvcm",
+      "expected_output": "Should accurately reflect the policy for: What triggers GKE upgrades?",
+      "expectations": [
+        "Matches the core answer for What triggers GKE upgrades?",
+        "Addresses the specific nuances in the user's question",
+        "Cites GKE version policy or maintenance windows if applicable"
+      ]
+    },
+    {
+      "id": 15,
+      "prompt": "Hello,\n\nGDCV Baremetal team is currently using a GKE cluster as a prow build cluster for scheduling CI workloads. The cluster is currently configured for auto upgrades and upgrade operations result in heavy disruptions to our workloads.\n\nSince vast majority of the workloads are single invocation pods, the upgrades result in these workloads being evicted prematurely.\n\nAn ideal upgrade flow in our case would be to\n\n1) Create new nodepool\n2) Cordon the old nodepool\n3) Wait for x amount of time befo",
+      "expected_output": "Should accurately reflect the policy for: Minimizing Disruption due to Upgrades",
+      "expectations": [
+        "Matches the core answer for Minimizing Disruption due to Upgrades",
+        "Addresses the specific nuances in the user's question",
+        "Cites GKE version policy or maintenance windows if applicable"
+      ]
+    },
+    {
+      "id": 16,
+      "prompt": "As part of security bulletin notifier and surfacing work our team is doing, could someone on the GKE upgrades team give greater detail on how GKE auto-upgrade versions are determined for both standard and auto-pilot clusters? Specifically, how auto-upgrades for patches within minor versions are chosen and upgraded to? What's the process today when there are patches for critical fixes? Do we also change the default version?\n\nOur team was interested in seeing if patched versions could have priorit",
+      "expected_output": "Should accurately reflect the policy for: GKE auto-upgrade process for standard and autopilot clusters when there are critical patches",
+      "expectations": [
+        "Matches the core answer for GKE auto-upgrade process for standard and autopilot clusters when there are critical patches",
+        "Addresses the specific nuances in the user's question",
+        "Cites GKE version policy or maintenance windows if applicable"
+      ]
+    }
+  ]
+}
