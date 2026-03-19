@@ -259,16 +259,92 @@ def load_feedback(iteration_path: Path) -> dict | None:
     return None
 
 
+def normalize_grading(grading: dict | None) -> dict | None:
+    """Normalize grading data to a consistent format:
+    {expectations: [{text, passed, evidence}], summary: {passed, total, pass_rate}}
+    """
+    if not grading:
+        return None
+    out = dict(grading)
+    # Handle iter-3 format: {assertions: [{expectation, passed, reason}]}
+    if "assertions" in out and "expectations" not in out:
+        out["expectations"] = [
+            {"text": a.get("expectation", ""), "passed": a.get("passed", False),
+             "evidence": a.get("reason", "")}
+            for a in out["assertions"]
+        ]
+    if "expectations" in out and "summary" not in out:
+        exps = out["expectations"]
+        passed = sum(1 for e in exps if e.get("passed"))
+        total = len(exps)
+        out["summary"] = {"passed": passed, "total": total,
+                          "pass_rate": passed / total if total else 0}
+    return out
+
+
+def normalize_benchmark(benchmark: dict | None) -> dict | None:
+    """Normalize benchmark to a consistent format with run_summary."""
+    if not benchmark:
+        return None
+    # Already has run_summary — it's the iter-1/2 format
+    if "run_summary" in benchmark:
+        return benchmark
+    # Iter-3 format: {with_skill: {overall_pass_rate, evals}, without_skill: {...}, delta}
+    out = dict(benchmark)
+    if "with_skill" in out and isinstance(out["with_skill"], dict) and "overall_pass_rate" in out["with_skill"]:
+        ws = out["with_skill"]
+        wos = out.get("without_skill", {})
+        delta = out.get("delta", {})
+        run_summary = {}
+        for label, src in [("with_skill", ws), ("without_skill", wos)]:
+            if not src:
+                continue
+            pr = src.get("overall_pass_rate", 0)
+            run_summary[label] = {
+                "pass_rate": {"mean": pr, "stddev": 0},
+                "time_seconds": {"mean": 0, "stddev": 0},
+                "tokens": {"mean": 0, "stddev": 0},
+            }
+        if delta:
+            run_summary["delta"] = {"pass_rate": delta.get("pass_rate_improvement", 0)}
+        out["run_summary"] = run_summary
+        # Build runs array from evals
+        runs = []
+        for label, src in [("with_skill", ws), ("without_skill", wos)]:
+            if not src or "evals" not in src:
+                continue
+            for ev in src["evals"]:
+                runs.append({
+                    "eval_id": ev.get("eval_id"),
+                    "eval_name": f"eval-{ev.get('eval_id', '?')}",
+                    "configuration": label,
+                    "result": {
+                        "pass_rate": ev.get("pass_rate", 0),
+                        "passed": ev.get("pass_count", 0),
+                        "total": ev.get("total", 0),
+                        "time_seconds": 0,
+                    },
+                })
+        out["runs"] = runs
+    return out
+
+
 def build_api_data(repo_root: Path, workspace: Path) -> dict:
     iterations = discover_iterations(workspace)
     iter_data = []
     for it in iterations:
         ip = Path(it["path"])
+        evals = discover_evals(ip)
+        # Normalize grading in each eval's configs
+        for ev in evals:
+            for cfg_name, run in ev.get("configs", {}).items():
+                if run and "grading" in run:
+                    run["grading"] = normalize_grading(run["grading"])
         iter_data.append({
             "name": it["name"],
             "number": it["number"],
-            "evals": discover_evals(ip),
-            "benchmark": load_benchmark(ip),
+            "evals": evals,
+            "benchmark": normalize_benchmark(load_benchmark(ip)),
             "feedback": load_feedback(ip),
         })
     return {"skills": discover_skills(repo_root), "iterations": iter_data, "repo_root": str(repo_root)}
