@@ -56,8 +56,7 @@ gke-upgrades-skill/
 │   ├── iteration-2/
 │   ├── iteration-3/                    # 3 evals, 100% vs 44% (+56%)
 │   └── iteration-4/                    # 23 evals, Claude + Gemini head-to-head
-├── GKE-Upgrade-Skill-Overview.html     # 1-pager overview (importable to Google Docs)
-└── GKE-Upgrade-Skill-UserGuide.docx    # Comprehensive user guide (Word)
+└── GKE-Upgrade-Skill-Overview.html     # 1-pager overview (importable to Google Docs)
 ```
 
 ## Installation
@@ -202,7 +201,6 @@ All internal/proprietary references have been scrubbed. Only public `cloud.googl
 ## Documentation
 
 - **[GKE-Upgrade-Skill-Overview.html](GKE-Upgrade-Skill-Overview.html)** — 1-pager overview (open in browser or import to Google Docs)
-- **[GKE-Upgrade-Skill-UserGuide.docx](GKE-Upgrade-Skill-UserGuide.docx)** — Comprehensive user guide covering architecture, eval system, results, and extension guide
 
 ## License
 
