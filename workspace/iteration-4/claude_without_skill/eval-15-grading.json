@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "First step: check the operation status to understand why it failed (gcloud container operations list)",
+      "passed": true,
+      "reason": "Response includes 'gcloud container operations list --filter=\"targetId:CLUSTER_NAME\"' and 'gcloud container operations describe OPERATION_ID --zone=ZONE' commands to check operation status"
+    },
+    {
+      "expectation": "Recommends checking events and logs for the specific failure reason",
+      "passed": true,
+      "reason": "Response includes commands to describe operations and check specific errors, and asks 'What specific error did the upgrade operation show?' to understand the failure reason"
+    },
+    {
+      "expectation": "Explains that the cluster is in a mixed-version state (8 nodes at 1.30, 12 at 1.29) which is within skew policy",
+      "passed": true,
+      "reason": "Response explicitly mentions 'Your mixed-version nodes should work fine temporarily since control plane is already 1.30' indicating understanding of the mixed-version state and skew policy"
+    },
+    {
+      "expectation": "Notes that the mixed state is functional but not ideal \u2014 workloads can run on both versions",
+      "passed": true,
+      "reason": "Response states the mixed-version nodes 'should work fine temporarily' and includes monitoring commands for 'pod distribution and health', indicating workloads can run but situation needs resolution"
+    },
+    {
+      "expectation": "Provides options: retry the upgrade after fixing the root cause, or rollback the 8 upgraded nodes",
+      "passed": false,
+      "reason": "Response provides retry and manual replacement options but does not mention rollback of the 8 upgraded nodes as an option"
+    },
+    {
+      "expectation": "Explains that retrying is usually better than rollback (rolling back means creating a new pool at old version)",
+      "passed": false,
+      "reason": "Response recommends retry as 'Option 1: Resume the Failed Upgrade (Recommended)' but does not explain why retry is better than rollback or mention that rollback requires creating a new pool"
+    },
+    {
+      "expectation": "Addresses the remaining 2 node pools: they can still be upgraded once the failed pool issue is resolved",
+      "passed": true,
+      "reason": "Response includes a section 'For Remaining Node Pools' with specific commands to upgrade them 'After fixing the main pool'"
+    },
+    {
+      "expectation": "Includes commands to diagnose the failure (operation details, node status, pod events)",
+      "passed": true,
+      "reason": "Response includes multiple diagnostic commands: operation describe/list, node status checks with 'kubectl get nodes', pod monitoring with 'kubectl get pods', and resource utilization checks"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the difference between Rapid and Stable channels (Stable gets versions later, more validated)",
+      "passed": true,
+      "reason": "Response explains that Stable channel runs older versions and typically lags 2-3 months behind Rapid, indicating more validation time"
+    },
+    {
+      "expectation": "Notes that channel changes don't trigger an immediate upgrade or downgrade",
+      "passed": false,
+      "reason": "Response doesn't explicitly explain that changing channels is just a configuration change that doesn't immediately change the cluster version"
+    },
+    {
+      "expectation": "Warns that if 1.30 isn't yet available on Stable, the cluster may not receive patches until Stable catches up",
+      "passed": false,
+      "reason": "While it mentions waiting until Stable catches up, it doesn't specifically warn about patch availability being affected during the gap period"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "Provides the exact gcloud command: 'gcloud container clusters update CLUSTER_NAME --release-channel=stable --region=YOUR_REGION'"
+    },
+    {
+      "expectation": "Recommends checking version availability on Stable before switching (gcloud container get-server-config)",
+      "passed": true,
+      "reason": "Explicitly shows the command 'gcloud container get-server-config --region=YOUR_REGION' and recommends checking current Stable channel version"
+    },
+    {
+      "expectation": "Discusses the impact on auto-upgrade timing going forward",
+      "passed": false,
+      "reason": "Response doesn't discuss how the change will affect future automatic upgrade timing and scheduling"
+    },
+    {
+      "expectation": "Mentions that the Extended channel is an option if they need even slower cadence (with cost implications)",
+      "passed": false,
+      "reason": "Response doesn't mention the Extended channel as an alternative option"
+    },
+    {
+      "expectation": "Advises coordinating the change during a maintenance window",
+      "passed": true,
+      "reason": "Response includes 'Plan maintenance window' in the pre-migration checklist"
+    }
+  ]
+}

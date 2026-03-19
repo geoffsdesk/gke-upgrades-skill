@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that Extended channel provides up to 24 months of support vs 14 months for standard channels",
+      "passed": true,
+      "reason": "Response clearly states Extended channel provides 24-month support vs 14 months for Regular channel"
+    },
+    {
+      "expectation": "Mentions that Extended channel has additional cost (it's not free)",
+      "passed": false,
+      "reason": "Response does not mention any cost implications or that Extended channel has additional costs"
+    },
+    {
+      "expectation": "Notes that Extended channel gets the same versions as Regular but keeps them available longer",
+      "passed": false,
+      "reason": "Response mentions delayed features and limited version choices but doesn't clearly explain that Extended gets the same versions as Regular, just keeps them available longer"
+    },
+    {
+      "expectation": "Warns that staying on older versions longer means missing new features and accumulating technical debt",
+      "passed": true,
+      "reason": "Response mentions 'Fewer new features: Latest Kubernetes features arrive much later' and discusses delayed ecosystem updates"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel to Extended",
+      "passed": true,
+      "reason": "Response provides the exact gcloud command: 'gcloud container clusters update CLUSTER_NAME --region=YOUR_REGION --release-channel=extended'"
+    },
+    {
+      "expectation": "Advises checking that the current version (1.29) is available on Extended before switching",
+      "passed": true,
+      "reason": "Response specifically mentions checking if 1.29 is available on Extended and provides commands to check availability"
+    },
+    {
+      "expectation": "Recommends Extended for environments with compliance requirements or slow internal change processes",
+      "passed": true,
+      "reason": "Response mentions 'Better for compliance: Longer validation periods for regulated environments' and discusses predictable upgrade cycles"
+    },
+    {
+      "expectation": "Mentions that Extended doesn't mean you can skip upgrades forever \u2014 you still must upgrade within 24 months",
+      "passed": false,
+      "reason": "Response discusses upgrade cycles but doesn't explicitly state that upgrades are still mandatory within the 24-month window"
+    }
+  ]
+}

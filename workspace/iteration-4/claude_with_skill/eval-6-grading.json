@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the difference between Rapid and Stable channels (Stable gets versions later, more validated)",
+      "passed": true,
+      "reason": "Response clearly explains that Stable versions arrive 8-12 weeks later after validation in Regular channel, while Rapid gets versions first"
+    },
+    {
+      "expectation": "Notes that channel changes don't trigger an immediate upgrade or downgrade",
+      "passed": true,
+      "reason": "Response explicitly states 'Change release channel (no immediate version change)' in the migration command section"
+    },
+    {
+      "expectation": "Warns that if 1.30 isn't yet available on Stable, the cluster may not receive patches until Stable catches up",
+      "passed": true,
+      "reason": "Response identifies this as a 'Critical decision point' and warns that if 1.30.x isn't available in Stable, they need to either wait or downgrade"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "Response provides the exact command: 'gcloud container clusters update CLUSTER_NAME --zone ZONE --release-channel stable'"
+    },
+    {
+      "expectation": "Recommends checking version availability on Stable before switching (gcloud container get-server-config)",
+      "passed": true,
+      "reason": "Response includes specific commands to check version availability in Stable channel using gcloud container get-server-config"
+    },
+    {
+      "expectation": "Discusses the impact on auto-upgrade timing going forward",
+      "passed": true,
+      "reason": "Response explains that auto-upgrades will happen within maintenance windows but following Stable's schedule, and discusses new upgrade timeline expectations"
+    },
+    {
+      "expectation": "Mentions that the Extended channel is an option if they need even slower cadence (with cost implications)",
+      "passed": false,
+      "reason": "Response mentions 'Extended support (24 months) available on Stable if needed for compliance' but doesn't discuss Extended channel as an alternative release channel option"
+    },
+    {
+      "expectation": "Advises coordinating the change during a maintenance window",
+      "passed": true,
+      "reason": "Response recommends executing during scheduled maintenance window and provides specific gcloud command with maintenance window parameters"
+    }
+  ]
+}

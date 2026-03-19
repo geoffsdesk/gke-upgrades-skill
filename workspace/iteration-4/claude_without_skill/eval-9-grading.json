@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends increasing maxSurge significantly (e.g., 10-20 or higher) to parallelize node replacements",
+      "passed": true,
+      "reason": "Response recommends increasing maxSurge to 50% which is significantly higher than default of 1 and would parallelize upgrades"
+    },
+    {
+      "expectation": "Explains that higher maxSurge means more nodes upgrading simultaneously but requires more compute quota",
+      "passed": false,
+      "reason": "While the response mentions increasing maxSurge for parallel upgrades, it does not explain the compute quota implications or requirements"
+    },
+    {
+      "expectation": "Advises checking and requesting increased compute quota before the upgrade",
+      "passed": false,
+      "reason": "The response does not mention checking or requesting increased compute quota at all"
+    },
+    {
+      "expectation": "Suggests staggering node pool upgrades or running non-conflicting pools in parallel",
+      "passed": true,
+      "reason": "Response includes a parallel upgrade strategy section with script showing how to upgrade pools in parallel batches"
+    },
+    {
+      "expectation": "Mentions that maxUnavailable can be set >0 for non-critical pools to speed things up further",
+      "passed": true,
+      "reason": "Response sets maxUnavailable to 25% in examples and mentions balancing between speed and availability"
+    },
+    {
+      "expectation": "Recommends expanding the maintenance window or splitting across multiple weekends",
+      "passed": false,
+      "reason": "The response focuses on technical solutions to fit within the existing 8-hour window but does not suggest expanding the window or splitting across weekends"
+    },
+    {
+      "expectation": "Provides the gcloud command for updating surge settings on each pool",
+      "passed": true,
+      "reason": "Response provides gcloud container node-pools update command with --max-surge and --max-unavailable flags"
+    },
+    {
+      "expectation": "Includes monitoring commands to track upgrade progress in real-time",
+      "passed": true,
+      "reason": "Response includes kubectl get nodes command with custom columns to monitor node versions and status, plus time command for upgrade duration"
+    }
+  ]
+}

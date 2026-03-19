@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Checks for deprecated API usage that may have changed behavior in 1.30",
+      "passed": false,
+      "reason": "The response does not address deprecated API usage or API version changes that could affect behavior in 1.30"
+    },
+    {
+      "expectation": "Recommends checking admission webhooks \u2014 they may be rejecting or slowing down requests on the new version",
+      "passed": true,
+      "reason": "The response includes checking for stuck webhooks with the command 'kubectl get validatingwebhookconfigurations,mutatingwebhookconfigurations'"
+    },
+    {
+      "expectation": "Advises checking if resource requests/limits need adjusting for any system components that changed",
+      "passed": true,
+      "reason": "The response addresses resource constraints with commands to check allocated resources and mentions that node pools may need more resources due to updated system components"
+    },
+    {
+      "expectation": "Suggests examining kube-system pods for any that are crashlooping or restarting",
+      "passed": true,
+      "reason": "The response includes commands to check kube-system components and pod restart patterns with specific kubectl commands"
+    },
+    {
+      "expectation": "Includes commands to check API server metrics and latency (kubectl get --raw /metrics)",
+      "passed": true,
+      "reason": "The response includes multiple kubectl get --raw /metrics commands for checking API server latency, inflight requests, and flow control metrics"
+    },
+    {
+      "expectation": "Recommends checking if NetworkPolicy or service mesh components need updating for the new version",
+      "passed": true,
+      "reason": "The response addresses CNI/networking changes and includes a specific section on service mesh considerations with commands to check mesh components"
+    },
+    {
+      "expectation": "Advises reviewing pod events for scheduling delays or readiness probe failures",
+      "passed": true,
+      "reason": "The response includes kubectl get events command to check for warnings and mentions checking pod status and resource constraints"
+    },
+    {
+      "expectation": "Mentions checking if HPA or VPA are behaving differently on the new version",
+      "passed": true,
+      "reason": "The response includes 'kubectl get hpa -A' command to check if HPAs are scaling erratically"
+    }
+  ]
+}

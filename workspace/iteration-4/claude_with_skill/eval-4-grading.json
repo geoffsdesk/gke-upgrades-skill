@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that regional clusters have multiple control plane replicas and the upgrade is rolling",
+      "passed": true,
+      "reason": "Response clearly explains 'Regional GKE clusters have zero API server downtime' because 'cluster has multiple control plane replicas across zones, and GKE upgrades them one at a time' and mentions 'Rolling upgrade: GKE upgrades control plane replicas sequentially across the 3 zones'"
+    },
+    {
+      "expectation": "States that regional control plane upgrades have near-zero API server downtime",
+      "passed": true,
+      "reason": "Response explicitly states 'Regional GKE clusters have zero API server downtime during control plane upgrades' and explains 'API server remains available: At least 2 replicas stay online throughout the process'"
+    },
+    {
+      "expectation": "Contrasts with zonal clusters where there IS a brief API server outage during upgrade",
+      "passed": false,
+      "reason": "The response does not mention zonal clusters or contrast them with regional clusters regarding API server downtime during upgrades"
+    },
+    {
+      "expectation": "Provides the gcloud command for control plane upgrade (--master flag)",
+      "passed": true,
+      "reason": "Response provides the exact command 'gcloud container clusters upgrade YOUR_CLUSTER_NAME --region us-central1 --master --cluster-version 1.30.x-gke.xxxx' with the required --master flag"
+    },
+    {
+      "expectation": "Mentions expected duration for control plane upgrade (roughly 10-30 minutes)",
+      "passed": true,
+      "reason": "Response states 'Duration: Typically 10-15 minutes total' which falls within the expected 10-30 minute range"
+    },
+    {
+      "expectation": "Includes a command to verify the control plane version after upgrade",
+      "passed": true,
+      "reason": "Response includes the verification command 'gcloud container clusters describe YOUR_CLUSTER_NAME --region us-central1 --format=\"value(currentMasterVersion)\"' in the Validation section"
+    },
+    {
+      "expectation": "Recommends checking kube-system pods health after upgrade",
+      "passed": true,
+      "reason": "Response includes 'kubectl get pods -n kube-system' in both pre-flight checks and validation sections to verify system pod health"
+    },
+    {
+      "expectation": "Advises checking deprecated API usage before upgrading",
+      "passed": true,
+      "reason": "Response mentions under safety considerations 'Deprecated API usage \u2192 Check deprecation insights dashboard first' as a potential risk to address before upgrading"
+    }
+  ]
+}

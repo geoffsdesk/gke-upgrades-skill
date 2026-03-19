@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Checks for deprecated API usage that may have changed behavior in 1.30",
+      "passed": true,
+      "reason": "The response includes specific commands to check for deprecated API usage: 'kubectl get events --all-namespaces | grep -i deprecat' and mentions that Kubernetes 1.30 removed several beta APIs"
+    },
+    {
+      "expectation": "Recommends checking admission webhooks \u2014 they may be rejecting or slowing down requests on the new version",
+      "passed": false,
+      "reason": "The response does not mention admission webhooks at all, which is a common source of API latency and 503 errors after upgrades"
+    },
+    {
+      "expectation": "Advises checking if resource requests/limits need adjusting for any system components that changed",
+      "passed": true,
+      "reason": "The response includes commands to check resource constraints and allocated resources: 'kubectl describe nodes | grep -A 5 \"Allocated resources\"' and mentions checking for resource pressure"
+    },
+    {
+      "expectation": "Suggests examining kube-system pods for any that are crashlooping or restarting",
+      "passed": true,
+      "reason": "The response includes specific commands to check kube-system pods: 'kubectl get pods -n kube-system | grep apiserver' and 'kubectl get pods -n kube-system | grep etcd', plus checking for failing pods"
+    },
+    {
+      "expectation": "Includes commands to check API server metrics and latency (kubectl get --raw /metrics)",
+      "passed": true,
+      "reason": "The response includes the exact command 'kubectl get --raw=/metrics | grep apiserver_request_duration' to monitor API response times"
+    },
+    {
+      "expectation": "Recommends checking if NetworkPolicy or service mesh components need updating for the new version",
+      "passed": true,
+      "reason": "The response includes commands to check network policies and service mesh components: 'kubectl get networkpolicies --all-namespaces' and specific checks for Istio/Linkerd proxy versions"
+    },
+    {
+      "expectation": "Advises reviewing pod events for scheduling delays or readiness probe failures",
+      "passed": true,
+      "reason": "The response includes multiple commands to check events: 'kubectl get events --field-selector reason=FailedScheduling', 'kubectl get events --sort-by='.lastTimestamp'', and 'kubectl describe pods <failing-pod> | grep -A 5 \"Events:\"'"
+    },
+    {
+      "expectation": "Mentions checking if HPA or VPA are behaving differently on the new version",
+      "passed": false,
+      "reason": "The response does not mention Horizontal Pod Autoscaler (HPA) or Vertical Pod Autoscaler (VPA) at all, which could be sources of issues after version upgrades"
+    }
+  ]
+}

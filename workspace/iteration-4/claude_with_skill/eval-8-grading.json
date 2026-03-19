@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the key difference: surge upgrades nodes in-place with rolling replacement, blue-green creates an entirely new pool",
+      "passed": true,
+      "reason": "Response clearly explains surge does rolling replacement of nodes while blue-green would create an entirely new pool/ring"
+    },
+    {
+      "expectation": "Recommends blue-green for this scenario due to local SSDs (data can't migrate between nodes)",
+      "passed": false,
+      "reason": "Response recommends surge upgrade, not blue-green, despite the local SSD constraints that would favor blue-green"
+    },
+    {
+      "expectation": "Explains that local SSD data is lost when a node is drained during surge upgrade",
+      "passed": true,
+      "reason": "Response mentions that local SSDs are ephemeral and discusses the implications for data during upgrades"
+    },
+    {
+      "expectation": "Describes the blue-green process: create new pool, cordon old pool, migrate workloads, delete old pool",
+      "passed": false,
+      "reason": "Response does not describe the blue-green process steps as it recommends against blue-green"
+    },
+    {
+      "expectation": "Addresses Cassandra-specific concerns: need to decommission from the ring before draining, rebuild on new nodes",
+      "passed": true,
+      "reason": "Response discusses Cassandra ring behavior, graceful shutdown, rejoining the ring, and data streaming during node replacement"
+    },
+    {
+      "expectation": "Provides gcloud commands for creating the new node pool with matching configuration",
+      "passed": false,
+      "reason": "Response provides gcloud commands for configuring surge upgrade, not for creating a new node pool for blue-green"
+    },
+    {
+      "expectation": "Includes kubectl commands for cordoning and draining",
+      "passed": false,
+      "reason": "Response does not include kubectl commands for cordoning and draining nodes"
+    },
+    {
+      "expectation": "Mentions PDB configuration to protect the Cassandra quorum during migration",
+      "passed": true,
+      "reason": "Response includes a PodDisruptionBudget configuration to maintain quorum safety during upgrades"
+    }
+  ]
+}

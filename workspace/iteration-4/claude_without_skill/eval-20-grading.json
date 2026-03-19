@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Starts with pre-flight checks: current versions, cluster health, node status",
+      "passed": true,
+      "reason": "Phase 1 includes comprehensive pre-flight checks with commands for cluster info, current versions, node status, and health checks"
+    },
+    {
+      "expectation": "Includes the gcloud command to check available versions in the release channel",
+      "passed": true,
+      "reason": "Step 3 includes 'gcloud container get-server-config --zone=$ZONE --project=$PROJECT_ID' and specifically checks Regular channel versions"
+    },
+    {
+      "expectation": "Includes the API deprecation check command before upgrading",
+      "passed": false,
+      "reason": "No API deprecation check command is provided. The runbook lacks commands like 'kubectl get --raw /api/v1' or checking for deprecated APIs"
+    },
+    {
+      "expectation": "Provides the exact gcloud command for control plane upgrade to 1.29 first (--master flag)",
+      "passed": false,
+      "reason": "The runbook skips 1.29 and goes directly from 1.28 to 1.30, not following the sequential upgrade path through 1.29"
+    },
+    {
+      "expectation": "Includes a verification step after control plane upgrade with expected output",
+      "passed": true,
+      "reason": "Step 7 includes verification commands to check cluster version, API server response, and system pods after master upgrade"
+    },
+    {
+      "expectation": "Provides the exact gcloud command for each node pool upgrade to 1.29",
+      "passed": false,
+      "reason": "Node pool upgrades target 1.30 directly, not 1.29 as expected for sequential upgrading"
+    },
+    {
+      "expectation": "Includes monitoring commands to watch node pool upgrade progress",
+      "passed": true,
+      "reason": "Steps 9 and 11 include monitoring commands like 'kubectl get nodes -w' and 'watch -n 30' for tracking upgrade progress"
+    },
+    {
+      "expectation": "Repeats the full sequence for 1.29\u21921.30 (sequential, not skipping)",
+      "passed": false,
+      "reason": "The runbook does not follow sequential upgrade pattern (1.28\u21921.29\u21921.30), instead jumps directly from 1.28 to 1.30"
+    },
+    {
+      "expectation": "Includes post-upgrade validation: node versions, pod health, kube-system pods",
+      "passed": true,
+      "reason": "Phase 4 includes comprehensive validation with commands to check node versions, pod health, and kube-system pods"
+    },
+    {
+      "expectation": "Provides a rollback section explaining what to do if something goes wrong",
+      "passed": true,
+      "reason": "Emergency Rollback Procedure section provides gcloud commands for rolling back node pools and explains limitations"
+    }
+  ]
+}

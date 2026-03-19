@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Response clearly states 'node pools can't be more than 2 minor versions behind the control plane'"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (3 minor versions)",
+      "passed": true,
+      "reason": "Response explicitly states 'you're at the 3-version limit where things start breaking'"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Response lists immediate risks including API compatibility issues, workload scheduling problems, and potential cluster instability"
+    },
+    {
+      "expectation": "Recommends sequential node pool upgrades (1.28\u21921.29\u21921.30\u21921.31) not a direct jump",
+      "passed": false,
+      "reason": "While the response mentions sequential upgrades as Option B, it actually recommends Option A (direct upgrade 1.28\u21921.31) as the preferred approach, contrary to best practices"
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Response includes multiple gcloud commands for checking versions, configuring surge settings, and executing upgrades"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": true,
+      "reason": "Response explicitly shows setting max-surge-upgrade 1 and max-unavailable-upgrade 0"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": false,
+      "reason": "While the response mentions monitoring during upgrades, it doesn't specifically advise monitoring between each version bump since it recommends a direct upgrade approach"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": false,
+      "reason": "Response mentions maintenance windows but does not mention release channel enrollment as a prevention strategy"
+    }
+  ]
+}

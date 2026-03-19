@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that GKE respects terminationGracePeriodSeconds during pod eviction, but surge upgrades have a max eviction timeout",
+      "passed": false,
+      "reason": "Response mentions terminationGracePeriodSeconds in example YAML but doesn't explain GKE's specific behavior regarding surge upgrades having a max eviction timeout that overrides this setting"
+    },
+    {
+      "expectation": "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour \u2014 far less than 8-16 hour jobs",
+      "passed": false,
+      "reason": "Response does not mention GKE's 1-hour default eviction timeout during surge upgrades or how this conflicts with 8-16 hour job durations"
+    },
+    {
+      "expectation": "Recommends pausing new batch job submissions before starting the upgrade",
+      "passed": true,
+      "reason": "Response recommends cordoning old nodes to prevent new workloads and shows updating job scheduling to use new nodes, effectively pausing submissions to old pools"
+    },
+    {
+      "expectation": "Advises waiting for in-flight jobs to complete naturally before upgrading their node pool",
+      "passed": true,
+      "reason": "Response provides a monitoring script to check for active jobs and explicitly states to wait until no active jobs remain before cleanup, showing the wait-for-completion approach"
+    },
+    {
+      "expectation": "Suggests using node affinity or taints to isolate batch workloads on a dedicated node pool",
+      "passed": true,
+      "reason": "Response demonstrates using nodeSelector to control job placement on specific node pools, which achieves workload isolation similar to node affinity"
+    },
+    {
+      "expectation": "Recommends upgrading non-batch node pools first while batch jobs complete on the old pool",
+      "passed": true,
+      "reason": "Response shows creating new node pool with v1.30, directing new jobs there while keeping existing batch jobs on old pool, then deleting old pool after jobs complete"
+    },
+    {
+      "expectation": "Mentions scheduling the upgrade during a natural gap in batch processing if one exists",
+      "passed": true,
+      "reason": "Response includes a section on using maintenance windows with predictable quiet periods and provides gcloud command for scheduled upgrades"
+    },
+    {
+      "expectation": "Provides commands for cordoning batch nodes to prevent new scheduling while jobs finish",
+      "passed": true,
+      "reason": "Response provides specific kubectl cordon commands targeting nodes by node pool label and shows verification steps"
+    }
+  ]
+}

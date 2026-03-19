@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies this as an admission webhook compatibility issue \u2014 the webhook is rejecting pod creation requests",
+      "passed": true,
+      "reason": "Response correctly identifies this as an admission webhook compatibility issue where 'the admission webhook configuration becomes incompatible with the new Kubernetes version'"
+    },
+    {
+      "expectation": "Provides commands to identify the problematic webhook (kubectl get validatingwebhookconfigurations / mutatingwebhookconfigurations)",
+      "passed": true,
+      "reason": "Response includes commands 'kubectl get validatingwebhookconfigurations | grep cert-manager' and 'kubectl get mutatingwebhookconfigurations | grep cert-manager'"
+    },
+    {
+      "expectation": "Offers an immediate fix: temporarily disable or remove the problematic webhook",
+      "passed": true,
+      "reason": "Response provides Option 1 to 'Temporarily Disable the Webhook' as the fastest solution"
+    },
+    {
+      "expectation": "Provides the kubectl delete command for the webhook configuration as emergency mitigation",
+      "passed": true,
+      "reason": "Response includes 'kubectl delete validatingwebhookconfigurations cert-manager-webhook' and 'kubectl delete mutatingwebhookconfigurations cert-manager-webhook' commands"
+    },
+    {
+      "expectation": "Warns that deleting the webhook removes validation \u2014 it's a temporary fix",
+      "passed": true,
+      "reason": "Response explicitly calls it 'Temporarily delete' and describes it as an immediate fix followed by permanent fix section, indicating it's temporary"
+    },
+    {
+      "expectation": "Recommends checking cert-manager version compatibility with Kubernetes 1.30",
+      "passed": true,
+      "reason": "Response includes section 'Check your cert-manager version and upgrade to one compatible with Kubernetes 1.30' with command to check current version"
+    },
+    {
+      "expectation": "Advises upgrading cert-manager to a version that supports 1.30 as the permanent fix",
+      "passed": true,
+      "reason": "Response has 'Permanent Fix: Upgrade Cert-Manager' section with kubectl apply command to upgrade to v1.15.3"
+    },
+    {
+      "expectation": "Mentions setting failurePolicy to Ignore as a less drastic alternative to deletion",
+      "passed": true,
+      "reason": "Response provides Option 2 with kubectl patch commands to set failurePolicy to 'Ignore' as a 'Safer' alternative"
+    },
+    {
+      "expectation": "Includes commands to verify pods can be created after the fix",
+      "passed": true,
+      "reason": "Response includes verification commands like 'kubectl run test-pod' and 'kubectl get pods -A | grep -E \"Pending|ContainerCreating\"'"
+    }
+  ]
+}

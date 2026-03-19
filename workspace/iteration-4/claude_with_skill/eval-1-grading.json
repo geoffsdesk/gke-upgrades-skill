@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends sequential upgrade path (1.28\u21921.29\u21921.30) rather than skipping",
+      "passed": true,
+      "reason": "Explicitly recommends two-phase sequential upgrade (1.28 \u2192 1.29 \u2192 1.30) with rationale that sequential upgrades are safer for catching compatibility issues"
+    },
+    {
+      "expectation": "Specifies control plane upgrades before node pool upgrades",
+      "passed": true,
+      "reason": "Clearly states 'control plane first, then node pools' and shows control plane upgrade as step 1 in the rollout sequence"
+    },
+    {
+      "expectation": "Provides different node pool upgrade ordering with rationale for the sequence",
+      "passed": true,
+      "reason": "Specifies upgrade order as general-purpose \u2192 high-memory \u2192 GPU with rationales (criticality-based ordering, conservative approach for stateful workloads, expensive GPU consideration)"
+    },
+    {
+      "expectation": "Includes specific surge upgrade settings (maxSurge/maxUnavailable) for each pool",
+      "passed": true,
+      "reason": "Provides specific surge settings for each pool: general-purpose (maxSurge=3, maxUnavailable=0), high-memory (maxSurge=1, maxUnavailable=0), GPU (maxSurge=1, maxUnavailable=0)"
+    },
+    {
+      "expectation": "Addresses Postgres-specific concerns (PDB, backup, operator compatibility, PV reclaim)",
+      "passed": true,
+      "reason": "Mentions Postgres operator compatibility checks, PDB requirements, backup completion, PV reclaim policies, and conservative upgrade settings for stateful workloads"
+    },
+    {
+      "expectation": "Addresses GPU-specific concerns (driver compatibility, workload coordination)",
+      "passed": true,
+      "reason": "Mentions GPU driver compatibility verification, expensive GPU consideration for upgrade settings, and includes GPU workloads in risk mitigation section"
+    },
+    {
+      "expectation": "Includes actual gcloud commands for the upgrade steps",
+      "passed": false,
+      "reason": "Only provides gcloud commands for maintenance window configuration and compatibility checks, but lacks actual upgrade commands like 'gcloud container clusters upgrade' for control plane and node pools"
+    },
+    {
+      "expectation": "Provides a pre-upgrade checklist",
+      "passed": true,
+      "reason": "Includes comprehensive pre-upgrade requirements with specific items like PDB configuration, deprecated API checks, compatibility verification, and timeline with checklist items"
+    },
+    {
+      "expectation": "Provides a post-upgrade checklist with validation commands",
+      "passed": true,
+      "reason": "Includes success criteria sections with validation checklists for per-phase and final validation, plus some kubectl commands for compatibility checks"
+    },
+    {
+      "expectation": "Includes rollback procedure or guidance",
+      "passed": true,
+      "reason": "Provides rollback strategy section covering control plane downgrade (requires GKE support), node pool rollback (create new pools at previous version), and preparation steps"
+    }
+  ]
+}

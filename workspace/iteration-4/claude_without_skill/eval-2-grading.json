@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Distinguishes between dev (Rapid) and prod (Stable) clusters in the checklists",
+      "passed": true,
+      "reason": "Response explicitly mentions upgrading dev clusters first on Rapid channel before prod, and suggests staggering prod cluster upgrades"
+    },
+    {
+      "expectation": "Recognizes Autopilot limitations (no node management, no SSH, mandatory resource requests)",
+      "passed": true,
+      "reason": "Includes Autopilot-specific section noting node pools are managed by Google and mentions focus on workload readiness rather than node management"
+    },
+    {
+      "expectation": "Includes API deprecation checks with kubectl commands",
+      "passed": true,
+      "reason": "Mentions API removals verification and includes kubectl commands for version checking and validation"
+    },
+    {
+      "expectation": "Mentions mandatory resource requests as an Autopilot-specific concern",
+      "passed": false,
+      "reason": "While it mentions Autopilot resource limits and optimization, it does not specifically address mandatory resource requests requirement"
+    },
+    {
+      "expectation": "Pre-upgrade checklist includes workload readiness items (PDBs, bare pods, graceful shutdown)",
+      "passed": true,
+      "reason": "Includes PodDisruptionBudgets verification, multi-replica deployments check, and workload assessment items"
+    },
+    {
+      "expectation": "Post-upgrade checklist includes version verification commands",
+      "passed": true,
+      "reason": "Explicitly includes 'kubectl version' command to validate cluster version"
+    },
+    {
+      "expectation": "Post-upgrade checklist includes workload health validation",
+      "passed": true,
+      "reason": "Comprehensive workload health checks including deployments, pods, services, and application testing sections"
+    },
+    {
+      "expectation": "Recommends testing on dev clusters before prod auto-upgrade",
+      "passed": true,
+      "reason": "Explicitly states to upgrade dev clusters first and run full testing suite before prod upgrades"
+    },
+    {
+      "expectation": "Includes monitoring/observability validation items",
+      "passed": true,
+      "reason": "Includes monitoring dashboard preparation, performance metrics comparison, and logging system validation"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Proposes a phased rollout: dev first, then staging, then prod",
+      "passed": true,
+      "reason": "Response clearly outlines Phase 1 (Development), Phase 2 (Staging), Phase 3 (Production) in sequential order"
+    },
+    {
+      "expectation": "Includes soak time between environment phases (e.g., 24-48 hours for dev, 1 week for staging before prod)",
+      "passed": true,
+      "reason": "Timeline shows Week 1-2 for dev, Week 3-4 for staging, then Week 6-8 for prod, providing soak time between phases"
+    },
+    {
+      "expectation": "Defines go/no-go criteria between phases (error rates, latency, pod health)",
+      "passed": true,
+      "reason": "Includes explicit 'Go/No-Go Criteria' section with checks for cluster upgrades, node status, application health, performance metrics, and security scans"
+    },
+    {
+      "expectation": "Addresses version availability differences across channels (1.30 may be on Rapid but not yet on Stable)",
+      "passed": false,
+      "reason": "Does not explicitly address that 1.30 may not yet be available on Stable channel for prod clusters, which could affect the upgrade timeline"
+    },
+    {
+      "expectation": "Recommends upgrading sequentially within each environment (1.28\u21921.29\u21921.30)",
+      "passed": true,
+      "reason": "Upgrade commands show sequential upgrades '1.28 \u2192 1.29 \u2192 1.30' and control plane upgrade example uses 1.29.x as intermediate version"
+    },
+    {
+      "expectation": "Suggests not upgrading all prod clusters simultaneously \u2014 do one or two first as canary",
+      "passed": true,
+      "reason": "Production phase shows sequential approach: Week 6 has 1 cluster, Week 7 has 1 cluster, Week 8 has 2 clusters, demonstrating canary approach"
+    },
+    {
+      "expectation": "Includes rollback triggers and criteria for halting the rollout",
+      "passed": true,
+      "reason": "Includes 'Risk Mitigation' section with rollback plan and specific gcloud commands for rolling back node pools if upgrade fails"
+    },
+    {
+      "expectation": "Provides a timeline or schedule estimate for the full rollout",
+      "passed": true,
+      "reason": "Detailed timeline provided in 'Timeline Summary' table showing 56-day total duration with specific phases and completion dates"
+    },
+    {
+      "expectation": "Mentions maintenance window coordination across clusters",
+      "passed": false,
+      "reason": "Does not explicitly mention coordinating maintenance windows or scheduling upgrades during specific time periods to minimize business impact"
+    }
+  ]
+}

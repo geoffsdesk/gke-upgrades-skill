@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "The response clearly categorizes all notification types in the classification matrix and identifies key phrases for each: security patches, end-of-life warnings, auto-upgrade scheduled, new version available, and also includes maintenance window and deprecated API notifications"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "The response uses a clear urgency system with red/high priority for security patches and EOL warnings, yellow/medium for auto-upgrades, and green/low for new version available notifications"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "The response specifically addresses EOL warnings as high priority with a detailed playbook including 'Schedule upgrades with buffer time before EOL date' and 'Plan upgrade path'"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "The response provides a specific checklist for auto-upgrade notifications including reviewing timing, checking PDBs and surge settings, and monitoring upgrade progress"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "The response explicitly mentions 'Schedule emergency maintenance window if critical' and 'Upgrade production within 7 days' for security patches, indicating expedited timelines"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "The response clearly states for new version notifications: 'No immediate action required' and 'Plan upgrade within 30-90 days to stay current', emphasizing their informational nature"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": false,
+      "reason": "The response mentions email filtering and Slack integration but does not specifically recommend Pub/Sub or Cloud Monitoring alerts for GKE upgrade events"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": true,
+      "reason": "The response mentions 'Review release notes for new features/fixes' in the low priority playbook for new version notifications"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Proposes a phased rollout: dev first, then staging, then prod",
+      "passed": true,
+      "reason": "Clearly outlines Phase 1 (Dev), Phase 2 (Staging), Phase 3 (Production) with proper sequencing"
+    },
+    {
+      "expectation": "Includes soak time between environment phases (e.g., 24-48 hours for dev, 1 week for staging before prod)",
+      "passed": true,
+      "reason": "Specifies 7-10 day soak time for dev, 7-10 days for staging, and 9-14 days extended soak time for production"
+    },
+    {
+      "expectation": "Defines go/no-go criteria between phases (error rates, latency, pod health)",
+      "passed": true,
+      "reason": "Includes specific Success Criteria & Gates sections with checkboxes for application regressions, performance baselines, workload health, and error rates"
+    },
+    {
+      "expectation": "Addresses version availability differences across channels (1.30 may be on Rapid but not yet on Stable)",
+      "passed": true,
+      "reason": "Explicitly addresses channel availability with version flow timing and includes commands to check version availability across channels"
+    },
+    {
+      "expectation": "Recommends upgrading sequentially within each environment (1.28\u21921.29\u21921.30)",
+      "passed": true,
+      "reason": "Clearly states 'Upgrade path: 1.28 \u2192 1.29 \u2192 1.30 (sequential minor versions recommended)' and follows this pattern throughout"
+    },
+    {
+      "expectation": "Suggests not upgrading all prod clusters simultaneously \u2014 do one or two first as canary",
+      "passed": true,
+      "reason": "Production phase shows staggered approach: Day 1-2 Prod-cluster-1, Day 3-4 Prod-cluster-2, etc., with cluster-1 identified as lowest risk workloads"
+    },
+    {
+      "expectation": "Includes rollback triggers and criteria for halting the rollout",
+      "passed": true,
+      "reason": "Includes Risk Mitigation section with rollback plan, ability to pause rollout if issues detected, and monitoring alerts for specific failure conditions"
+    },
+    {
+      "expectation": "Provides a timeline or schedule estimate for the full rollout",
+      "passed": true,
+      "reason": "Provides detailed timeline with specific weeks for each phase and estimates 6-8 weeks total duration"
+    },
+    {
+      "expectation": "Mentions maintenance window coordination across clusters",
+      "passed": true,
+      "reason": "Includes specific maintenance window configurations with different schedules for dev (business hours), staging (off-hours), and production (weekend off-peak)"
+    }
+  ]
+}

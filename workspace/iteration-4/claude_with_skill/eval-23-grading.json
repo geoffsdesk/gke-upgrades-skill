@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies Service A (minAvailable=100%) as a guaranteed upgrade blocker \u2014 no disruptions allowed at all",
+      "passed": true,
+      "reason": "Response clearly identifies Service A as HIGH risk, stating '100% availability means zero pods can ever be disrupted' and 'will definitely block upgrades'"
+    },
+    {
+      "expectation": "Identifies Service B (maxUnavailable=0) as also blocking upgrades \u2014 same effect as 100% minAvailable",
+      "passed": true,
+      "reason": "Response identifies Service B as HIGH risk, explicitly stating 'Equivalent to minAvailable=100%' and 'Zero unavailable pods = no disruptions allowed'"
+    },
+    {
+      "expectation": "States Service C (minAvailable=2 with 3 replicas) is safe \u2014 allows 1 pod disruption at a time",
+      "passed": true,
+      "reason": "Response marks Service C as SAFE with LOW risk, stating 'Allows 1 pod disruption (3-2=1)' and 'No changes needed'"
+    },
+    {
+      "expectation": "States Service D (maxUnavailable=1 with 5 replicas) is safe \u2014 allows 1 pod down at a time",
+      "passed": true,
+      "reason": "Response marks Service D as SAFE with LOW risk, stating 'Explicitly allows 1 pod disruption' and 'No changes needed'"
+    },
+    {
+      "expectation": "Recommends fixing Service A: change to minAvailable=N-1 or maxUnavailable=1",
+      "passed": true,
+      "reason": "Response provides fix for Service A: 'Change to minAvailable=80% or maxUnavailable=1' and includes a YAML example with minAvailable: 80%"
+    },
+    {
+      "expectation": "Recommends fixing Service B: change to maxUnavailable=1",
+      "passed": true,
+      "reason": "Response recommends 'Change to maxUnavailable=1' for Service B and provides YAML example with 'maxUnavailable: 1'"
+    },
+    {
+      "expectation": "Explains that GKE respects PDBs for up to 1 hour during surge upgrades, then may force-drain",
+      "passed": true,
+      "reason": "Response states 'GKE will wait up to 1 hour trying to drain nodes before timing out' in the opening section"
+    },
+    {
+      "expectation": "Provides kubectl patch commands to fix the problematic PDBs",
+      "passed": false,
+      "reason": "Response provides YAML examples for fixing PDBs but does not provide kubectl patch commands specifically - only shows complete YAML manifests and kubectl get commands for checking"
+    },
+    {
+      "expectation": "Recommends testing PDB changes in a non-production environment first",
+      "passed": false,
+      "reason": "Response does not mention testing PDB changes in non-production environments before applying them to production"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Configures a recurring maintenance window for weekends only",
+      "passed": true,
+      "reason": "Shows gcloud command with --maintenance-window-recurrence \"FREQ=WEEKLY;BYDAY=SA\" and Saturday 2:00 AM timing"
+    },
+    {
+      "expectation": "Provides the gcloud command with --maintenance-window-start/end and --maintenance-window-recurrence for weekly weekend schedule",
+      "passed": true,
+      "reason": "Includes complete gcloud command with --maintenance-window-start, --maintenance-window-end, and --maintenance-window-recurrence parameters"
+    },
+    {
+      "expectation": "Sets up maintenance exclusions for quarterly code freezes (up to 30 days each)",
+      "passed": true,
+      "reason": "Shows four quarterly exclusions with example dates, each around 15-17 days duration"
+    },
+    {
+      "expectation": "Sets up a maintenance exclusion for the November audit period",
+      "passed": true,
+      "reason": "Includes specific exclusion 'Q4-freeze-audit-2024' covering November 1 - December 15"
+    },
+    {
+      "expectation": "Notes the 30-day maximum for maintenance exclusions and how to handle longer freezes",
+      "passed": false,
+      "reason": "Does not mention the 30-day maximum limit for maintenance exclusions or how to handle longer freeze periods"
+    },
+    {
+      "expectation": "Explains that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
+      "passed": true,
+      "reason": "Shows manual upgrade command under 'Emergency Override Process' section with note that it bypasses maintenance window"
+    },
+    {
+      "expectation": "Recommends combining maintenance windows with Stable or Extended channel for maximum upgrade control",
+      "passed": true,
+      "reason": "Suggests using stable channel for production and mentions Extended channel (24 months) for critical systems"
+    },
+    {
+      "expectation": "Provides gcloud commands for each exclusion (--add-maintenance-exclusion-name/start-time/end-time)",
+      "passed": true,
+      "reason": "Shows complete gcloud commands with --add-maintenance-exclusion-name, --add-maintenance-exclusion-start-time, and --add-maintenance-exclusion-end-time for multiple exclusions"
+    },
+    {
+      "expectation": "Warns about the risk of falling too far behind on versions during long exclusion periods",
+      "passed": false,
+      "reason": "Does not explicitly warn about version drift risks during extended exclusion periods"
+    }
+  ]
+}

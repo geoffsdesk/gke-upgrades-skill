@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that regional clusters have multiple control plane replicas and the upgrade is rolling",
+      "passed": true,
+      "reason": "Response explicitly states 'Regional clusters have multiple control plane replicas across different zones' and mentions 'Rolling upgrade process - GKE upgrades control plane components one replica at a time'"
+    },
+    {
+      "expectation": "States that regional control plane upgrades have near-zero API server downtime",
+      "passed": true,
+      "reason": "Response states 'There should be minimal to no API server downtime' and explains the reasons for this with regional cluster architecture"
+    },
+    {
+      "expectation": "Contrasts with zonal clusters where there IS a brief API server outage during upgrade",
+      "passed": false,
+      "reason": "Response does not mention zonal clusters or contrast the downtime behavior between regional and zonal clusters"
+    },
+    {
+      "expectation": "Provides the gcloud command for control plane upgrade (--master flag)",
+      "passed": true,
+      "reason": "Response provides the correct command: 'gcloud container clusters upgrade YOUR_CLUSTER_NAME --region=us-central1 --master --cluster-version=1.30.5-gke.1014001 --quiet'"
+    },
+    {
+      "expectation": "Mentions expected duration for control plane upgrade (roughly 10-30 minutes)",
+      "passed": true,
+      "reason": "Response states 'Control plane upgrades typically take 10-30 minutes' and mentions this timeframe multiple times"
+    },
+    {
+      "expectation": "Includes a command to verify the control plane version after upgrade",
+      "passed": true,
+      "reason": "Response includes 'gcloud container clusters describe YOUR_CLUSTER_NAME --region=us-central1 --format=\"value(status,currentMasterVersion)\"' to check cluster status and version"
+    },
+    {
+      "expectation": "Recommends checking kube-system pods health after upgrade",
+      "passed": true,
+      "reason": "Response includes 'kubectl get pods -n kube-system' in the 'Verify Control Plane Health' section"
+    },
+    {
+      "expectation": "Advises checking deprecated API usage before upgrading",
+      "passed": true,
+      "reason": "Response includes a command to 'Check for deprecated APIs that might break in 1.30' using kubectl get events"
+    }
+  ]
+}

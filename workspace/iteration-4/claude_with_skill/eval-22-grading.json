@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains this is related to the interaction between maxSurge, drain order, and pod scheduling",
+      "passed": true,
+      "reason": "Response clearly explains the interaction between maxSurge/maxUnavailable settings and how pods get shuffled during draining, describing the surge upgrade process in detail"
+    },
+    {
+      "expectation": "Notes that GKE cordons nodes before draining them \u2014 pods should prefer scheduling onto uncordoned (upgraded) nodes",
+      "passed": false,
+      "reason": "Response doesn't mention cordoning at all or explain that pods should prefer uncordoned nodes"
+    },
+    {
+      "expectation": "Identifies possible cause: too many nodes being drained simultaneously (high maxSurge) before enough upgraded nodes exist",
+      "passed": true,
+      "reason": "Response identifies that maxSurge being too low or maxUnavailable being too high causes insufficient stable nodes to absorb evicted pods"
+    },
+    {
+      "expectation": "Recommends reducing maxSurge to 1 to ensure upgraded nodes are available before draining the next batch",
+      "passed": false,
+      "reason": "Response recommends maxSurge of 3 and later suggests 1 for stateful workloads, but doesn't specifically recommend reducing to 1 as the primary solution"
+    },
+    {
+      "expectation": "Suggests using pod anti-affinity or node affinity to prefer already-upgraded nodes",
+      "passed": false,
+      "reason": "Response doesn't mention pod anti-affinity or node affinity rules as a solution"
+    },
+    {
+      "expectation": "Mentions checking if any taints or tolerations are causing pods to land on the wrong nodes",
+      "passed": false,
+      "reason": "Response doesn't discuss taints or tolerations as potential causes"
+    },
+    {
+      "expectation": "Provides kubectl commands to check node cordoned status and pod scheduling events",
+      "passed": false,
+      "reason": "Provides commands to check node versions and terminating pods, but not specifically cordoned status or pod scheduling events"
+    },
+    {
+      "expectation": "Recommends setting maxUnavailable=0 to ensure old nodes aren't removed until pods are safely rescheduled",
+      "passed": true,
+      "reason": "Response explicitly recommends maxUnavailable=0 and explains this prevents old nodes from draining until new nodes are ready"
+    }
+  ]
+}

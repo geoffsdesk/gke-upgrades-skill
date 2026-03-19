@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies PDB as the most likely/common cause of stuck upgrades",
+      "passed": true,
+      "reason": "Response explicitly states 'that's the most common culprit for stuck upgrades' and lists PDBs as the first and primary issue to check"
+    },
+    {
+      "expectation": "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
+      "passed": true,
+      "reason": "Provides multiple PDB commands including 'kubectl get pdb --all-namespaces' and 'kubectl get pdb --all-namespaces -o wide'"
+    },
+    {
+      "expectation": "Provides commands to identify which pods are blocking the drain",
+      "passed": true,
+      "reason": "Includes commands to check pods that can't be evicted, pods stuck in terminating state, and specific kubectl commands to identify problematic pods"
+    },
+    {
+      "expectation": "Includes resource constraint diagnosis (capacity issues, pending pods)",
+      "passed": true,
+      "reason": "Section 5 includes 'kubectl describe nodes' and 'kubectl top nodes' commands to check for resource constraints and capacity issues"
+    },
+    {
+      "expectation": "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+      "passed": true,
+      "reason": "Provides specific kubectl patch command to adjust PDBs and suggests temporary deletion as an option"
+    },
+    {
+      "expectation": "Includes guidance on surge upgrade settings as a potential fix",
+      "passed": true,
+      "reason": "Section 6 includes gcloud command to configure max-surge and max-unavailable settings for future upgrades"
+    },
+    {
+      "expectation": "Mentions webhook issues as a possible cause",
+      "passed": false,
+      "reason": "Response does not mention webhook issues at all as a potential cause of stuck upgrades"
+    },
+    {
+      "expectation": "Includes validation steps to confirm the fix is working",
+      "passed": false,
+      "reason": "While it mentions the upgrade should resume automatically within 5-10 minutes, it doesn't provide specific commands or steps to validate that the fix is actually working"
+    }
+  ]
+}

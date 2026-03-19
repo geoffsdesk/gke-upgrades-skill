@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends sequential upgrade path (1.28\u21921.29\u21921.30) rather than skipping",
+      "passed": true,
+      "reason": "Explicitly states '1.28 \u2192 1.29 \u2192 1.30 (GKE requires sequential minor version upgrades)' and follows this path throughout the plan"
+    },
+    {
+      "expectation": "Specifies control plane upgrades before node pool upgrades",
+      "passed": true,
+      "reason": "Plan clearly shows Phase 1: Control Plane Upgrade to 1.29, followed by Phase 2: Node Pool Upgrades to 1.29, then repeats this pattern for 1.30"
+    },
+    {
+      "expectation": "Provides different node pool upgrade ordering with rationale for the sequence",
+      "passed": true,
+      "reason": "Specifies order: general-purpose pool first (least critical), then GPU pool (monitor ML inference impact), then high-memory pool (coordinate with DB maintenance window) with clear rationale for each"
+    },
+    {
+      "expectation": "Includes specific surge upgrade settings (maxSurge/maxUnavailable) for each pool",
+      "passed": false,
+      "reason": "No mention of maxSurge or maxUnavailable settings in any of the gcloud commands or upgrade configuration"
+    },
+    {
+      "expectation": "Addresses Postgres-specific concerns (PDB, backup, operator compatibility, PV reclaim)",
+      "passed": true,
+      "reason": "Mentions PodDisruptionBudgets, backup strategies, Postgres operator compatibility verification, and scheduling during maintenance windows"
+    },
+    {
+      "expectation": "Addresses GPU-specific concerns (driver compatibility, workload coordination)",
+      "passed": true,
+      "reason": "Specifically mentions NVIDIA driver compatibility checks, monitoring inference request queues, and coordinating with ML inference workloads"
+    },
+    {
+      "expectation": "Includes actual gcloud commands for the upgrade steps",
+      "passed": true,
+      "reason": "Provides specific gcloud container clusters update and gcloud container node-pools update commands for each phase"
+    },
+    {
+      "expectation": "Provides a pre-upgrade checklist",
+      "passed": true,
+      "reason": "Includes comprehensive pre-upgrade checklist with kubectl commands for checking cluster status, backing up resources, and checking deprecated APIs"
+    },
+    {
+      "expectation": "Provides a post-upgrade checklist with validation commands",
+      "passed": true,
+      "reason": "Includes post-upgrade validation section with specific kubectl commands to verify cluster health, check nodes, and test critical applications"
+    },
+    {
+      "expectation": "Includes rollback procedure or guidance",
+      "passed": true,
+      "reason": "Provides rollback commands using 'gcloud container node-pools rollback' and mentions having rollback plan ready as part of risk mitigation"
+    }
+  ]
+}

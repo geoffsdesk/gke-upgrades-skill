@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies PDB as the most likely/common cause of stuck upgrades",
+      "passed": true,
+      "reason": "Response explicitly states 'Check for PDB blocking drain (most common cause)' and mentions 'these cause 80% of stuck drain issues'"
+    },
+    {
+      "expectation": "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
+      "passed": true,
+      "reason": "Provides 'kubectl get pdb -A -o wide' command which is equivalent to checking PDBs across all namespaces"
+    },
+    {
+      "expectation": "Provides commands to identify which pods are blocking the drain",
+      "passed": true,
+      "reason": "Includes multiple commands to identify blocking pods: checking Terminating/Pending pods, FailedScheduling events, and bare pods without owner references"
+    },
+    {
+      "expectation": "Includes resource constraint diagnosis (capacity issues, pending pods)",
+      "passed": true,
+      "reason": "Provides 'kubectl top nodes' and 'kubectl describe nodes' commands to check resource constraints and allocated resources"
+    },
+    {
+      "expectation": "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+      "passed": true,
+      "reason": "Includes specific kubectl patch command to temporarily adjust PDB maxUnavailable to 50% and mentions backing up original PDB"
+    },
+    {
+      "expectation": "Includes guidance on surge upgrade settings as a potential fix",
+      "passed": true,
+      "reason": "Provides gcloud command to update node pool with max-surge-upgrade and max-unavailable-upgrade settings as Fix #3"
+    },
+    {
+      "expectation": "Mentions webhook issues as a possible cause",
+      "passed": true,
+      "reason": "Includes section about checking admission webhooks with kubectl commands for validatingwebhookconfigurations and mutatingwebhookconfigurations"
+    },
+    {
+      "expectation": "Includes validation steps to confirm the fix is working",
+      "passed": true,
+      "reason": "Provides 'Monitor Progress' section with watch commands and gcloud operations list to track upgrade progress"
+    }
+  ]
+}

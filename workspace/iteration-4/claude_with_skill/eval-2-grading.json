@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Distinguishes between dev (Rapid) and prod (Stable) clusters in the checklists",
+      "passed": true,
+      "reason": "Response clearly identifies the clusters as '2 prod clusters | Autopilot | Stable channel' and mentions using Rapid channel dev clusters for testing first"
+    },
+    {
+      "expectation": "Recognizes Autopilot limitations (no node management, no SSH, mandatory resource requests)",
+      "passed": true,
+      "reason": "Response explicitly mentions no SSH access, mandatory resource requests, automatic node upgrades, and limited troubleshooting options in Autopilot-specific notes section"
+    },
+    {
+      "expectation": "Includes API deprecation checks with kubectl commands",
+      "passed": false,
+      "reason": "While mentions checking GKE deprecation insights dashboard, it doesn't provide specific kubectl commands for checking deprecated API usage"
+    },
+    {
+      "expectation": "Mentions mandatory resource requests as an Autopilot-specific concern",
+      "passed": true,
+      "reason": "Explicitly states 'ALL containers have resource requests (CPU/memory) - mandatory in Autopilot' and includes validation commands for resource request violations"
+    },
+    {
+      "expectation": "Pre-upgrade checklist includes workload readiness items (PDBs, bare pods, graceful shutdown)",
+      "passed": true,
+      "reason": "Pre-upgrade checklist includes PDBs configuration, no bare pods requirement, and terminationGracePeriodSeconds limits"
+    },
+    {
+      "expectation": "Post-upgrade checklist includes version verification commands",
+      "passed": true,
+      "reason": "Provides specific gcloud commands to verify control plane version for both clusters"
+    },
+    {
+      "expectation": "Post-upgrade checklist includes workload health validation",
+      "passed": true,
+      "reason": "Includes comprehensive workload health checks like deployment replica counts, pod status, StatefulSets, and application health checks"
+    },
+    {
+      "expectation": "Recommends testing on dev clusters before prod auto-upgrade",
+      "passed": true,
+      "reason": "Explicitly states 'Rapid channel dev clusters already upgraded to 1.30 and validated' and mentions using dev clusters as testing ground in the final note"
+    },
+    {
+      "expectation": "Includes monitoring/observability validation items",
+      "passed": true,
+      "reason": "Post-upgrade checklist includes metrics pipeline, Cloud Logging, error rates, latency baselines, and resource throttling events"
+    }
+  ]
+}

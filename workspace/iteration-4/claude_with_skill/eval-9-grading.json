@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends increasing maxSurge significantly (e.g., 10-20 or higher) to parallelize node replacements",
+      "passed": true,
+      "reason": "Response recommends maxSurge values of 20 for stateless pools, 5 for database pools, and 3 for GPU pools, clearly explaining parallelization benefits"
+    },
+    {
+      "expectation": "Explains that higher maxSurge means more nodes upgrading simultaneously but requires more compute quota",
+      "passed": true,
+      "reason": "Response explicitly explains that higher surge means more nodes in parallel and includes quota verification section with specific commands and mentions needing quota for ~100+ additional nodes"
+    },
+    {
+      "expectation": "Advises checking and requesting increased compute quota before the upgrade",
+      "passed": true,
+      "reason": "Response includes detailed quota checking commands using gcloud compute regions describe and specifically mentions verifying compute quota vs surge needs"
+    },
+    {
+      "expectation": "Suggests staggering node pool upgrades or running non-conflicting pools in parallel",
+      "passed": true,
+      "reason": "Response provides explicit parallel pool upgrade strategy with commands to start all pools simultaneously using background processes (&)"
+    },
+    {
+      "expectation": "Mentions that maxUnavailable can be set >0 for non-critical pools to speed things up further",
+      "passed": false,
+      "reason": "Response consistently shows maxUnavailable=0 for all pool examples and does not mention setting it >0 for non-critical pools as a speed optimization"
+    },
+    {
+      "expectation": "Recommends expanding the maintenance window or splitting across multiple weekends",
+      "passed": false,
+      "reason": "Response focuses on optimizing within the existing 8-hour window and does not suggest expanding the maintenance window or splitting across multiple weekends as alternatives"
+    },
+    {
+      "expectation": "Provides the gcloud command for updating surge settings on each pool",
+      "passed": true,
+      "reason": "Response provides specific gcloud container node-pools update commands with max-surge-upgrade and max-unavailable-upgrade parameters for different pool types"
+    },
+    {
+      "expectation": "Includes monitoring commands to track upgrade progress in real-time",
+      "passed": true,
+      "reason": "Response includes comprehensive monitoring section with watch commands for node status, operations tracking, and pod scheduling events"
+    }
+  ]
+}

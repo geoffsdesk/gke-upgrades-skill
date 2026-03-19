@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends upgrading the control plane first before any node pools",
+      "passed": true,
+      "reason": "Response clearly shows control plane upgrade in step 3 before node pool upgrades in steps 4-5"
+    },
+    {
+      "expectation": "Provides a specific node pool upgrade order with rationale (coordinating\u2192data\u2192master, or similar logical sequence)",
+      "passed": true,
+      "reason": "Response specifies Master \u2192 Data \u2192 Coordinating sequence with rationale that it's most to least critical"
+    },
+    {
+      "expectation": "Addresses PV safety: regional pd-ssd volumes can reattach to nodes in other zones, which is good for upgrades",
+      "passed": true,
+      "reason": "Response mentions in risk mitigation section that 'Regional pd-ssd PVs survive node replacement' and in rollback section states 'Regional PVs will reattach to new nodes in same zone'"
+    },
+    {
+      "expectation": "Recommends setting PDB for Elasticsearch master nodes to ensure quorum (minAvailable=2 for 3-master setup)",
+      "passed": true,
+      "reason": "Response includes in pre-upgrade checklist: 'Masters: minAvailable=2 (maintains quorum)'"
+    },
+    {
+      "expectation": "Recommends maxSurge=1, maxUnavailable=0 for all ES node pools (conservative, data-safe)",
+      "passed": true,
+      "reason": "Response shows specific gcloud commands setting maxSurge=1 and maxUnavailable=0 for master and data pools, with maxSurge=2 for coordinating (still with maxUnavailable=0)"
+    },
+    {
+      "expectation": "Advises verifying Elasticsearch cluster health (green status) between each node pool upgrade",
+      "passed": true,
+      "reason": "Response includes health checks after master upgrades and a wait for green status in post-upgrade configuration"
+    },
+    {
+      "expectation": "Mentions checking PV reclaim policy is set to Retain (not Delete) as a safety measure",
+      "passed": true,
+      "reason": "Response includes in pre-upgrade checklist: 'Regional pd-ssd PVs verified as reclaimPolicy=Retain'"
+    },
+    {
+      "expectation": "Includes kubectl commands for checking StatefulSet rollout status",
+      "passed": false,
+      "reason": "Response uses 'kubectl get pods' and 'watch' commands for monitoring but does not include specific 'kubectl rollout status' commands for StatefulSets"
+    },
+    {
+      "expectation": "Recommends taking an Elasticsearch snapshot backup before starting",
+      "passed": true,
+      "reason": "Response includes in pre-upgrade checklist: 'Elasticsearch snapshot completed to GCS/external storage'"
+    }
+  ]
+}

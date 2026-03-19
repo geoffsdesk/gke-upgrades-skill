@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies Service A (minAvailable=100%) as a guaranteed upgrade blocker \u2014 no disruptions allowed at all",
+      "passed": true,
+      "reason": "Response correctly identifies Service A with minAvailable=100% as risky and explains it 'prevents any pod from being terminated during upgrades' and 'blocks ALL disruptions'"
+    },
+    {
+      "expectation": "Identifies Service B (maxUnavailable=0) as also blocking upgrades \u2014 same effect as 100% minAvailable",
+      "passed": true,
+      "reason": "Response correctly identifies Service B with maxUnavailable=0 as problematic and explicitly states it has 'Same effect as minAvailable=100%' and 'blocks rolling updates completely'"
+    },
+    {
+      "expectation": "States Service C (minAvailable=2 with 3 replicas) is safe \u2014 allows 1 pod disruption at a time",
+      "passed": true,
+      "reason": "Response marks Service C as 'SAFE' and explains 'Can terminate 1 pod while maintaining 2 running instances' which correctly shows it allows 1 pod disruption"
+    },
+    {
+      "expectation": "States Service D (maxUnavailable=1 with 5 replicas) is safe \u2014 allows 1 pod down at a time",
+      "passed": true,
+      "reason": "Response marks Service D as 'SAFE' and explains 'Can terminate 1 pod while keeping 4 running instances' which correctly shows it allows 1 pod down at a time"
+    },
+    {
+      "expectation": "Recommends fixing Service A: change to minAvailable=N-1 or maxUnavailable=1",
+      "passed": true,
+      "reason": "Response provides recommended fix for Service A showing minAvailable=80% and mentions 'Or specific number like minAvailable: 2' which aligns with N-1 concept"
+    },
+    {
+      "expectation": "Recommends fixing Service B: change to maxUnavailable=1",
+      "passed": true,
+      "reason": "Response provides specific recommended fix for Service B showing maxUnavailable=1 and mentions 'Or percentage like maxUnavailable: 25%'"
+    },
+    {
+      "expectation": "Explains that GKE respects PDBs for up to 1 hour during surge upgrades, then may force-drain",
+      "passed": false,
+      "reason": "Response does not mention GKE-specific behavior, the 1-hour timeout, or force-drain mechanics during surge upgrades"
+    },
+    {
+      "expectation": "Provides kubectl patch commands to fix the problematic PDBs",
+      "passed": false,
+      "reason": "Response provides complete YAML manifests for fixes but does not include kubectl patch commands to directly modify existing PDBs"
+    },
+    {
+      "expectation": "Recommends testing PDB changes in a non-production environment first",
+      "passed": true,
+      "reason": "Response recommends testing with 'Verify: Services C & D should work but test in staging first' and asks 'Would you like me to help you test these PDB changes in a staging environment first?'"
+    }
+  ]
+}

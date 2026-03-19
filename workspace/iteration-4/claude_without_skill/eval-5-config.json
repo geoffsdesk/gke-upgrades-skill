@@ -1,0 +1,12 @@
+{
+  "eval_id": 5,
+  "mode": "claude_without_skill",
+  "iteration": 4,
+  "prompt": "We somehow let our Standard cluster get into a bad state. The control plane is at 1.31 but one of our node pools is still at 1.28. We're getting warnings about version skew. What are we dealing with and how do we fix it?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-19T02:56:32.242768+00:00",
+  "input_tokens": 64,
+  "output_tokens": 777,
+  "time_seconds": 16.85
+}

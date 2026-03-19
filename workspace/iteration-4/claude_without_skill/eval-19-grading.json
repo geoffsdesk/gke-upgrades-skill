@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all four notification types: auto-upgrade scheduled (HIGH PRIORITY), new version available (MEDIUM/INFORMATIONAL), end-of-life warnings (CRITICAL), and security patches (CRITICAL)"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response uses color-coded urgency levels with security patches and EOL warnings as CRITICAL (highest), auto-upgrades as HIGH PRIORITY, version updates as MEDIUM, and new version announcements as INFORMATIONAL (lowest)"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response explicitly states EOL warnings require 'Schedule upgrade immediately' and notes 'Usually 30-60 days before EOL' with impact that cluster will stop receiving security patches"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response provides detailed 'Pre-Upgrade Checklist' with specific items to verify and includes actions like 'Verify maintenance windows are appropriate' and 'Test applications against target version'"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response categorizes security patches as CRITICAL with 'Timeline: As soon as possible' and 'Action: Apply immediately or verify auto-upgrade is enabled', indicating urgency beyond normal schedules"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response categorizes 'New Version Announcements' as INFORMATIONAL with 'No Immediate Action' and suggests 'Review release notes, plan testing' for planning purposes"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": false,
+      "reason": "Response mentions monitoring integration with example alerts but does not specifically recommend Pub/Sub or Cloud Monitoring alerts for GKE upgrade events, only shows a generic monitoring alert example"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": true,
+      "reason": "Response specifically mentions 'Review release notes and breaking changes' in the Pre-Upgrade Checklist and 'Review release notes, plan testing' for new version announcements"
+    }
+  ]
+}

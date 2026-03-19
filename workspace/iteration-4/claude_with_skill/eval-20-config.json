@@ -1,0 +1,12 @@
+{
+  "eval_id": 20,
+  "mode": "claude_with_skill",
+  "iteration": 4,
+  "prompt": "We've never done a GKE upgrade before. Our team just inherited a Standard cluster on the Regular channel at 1.28 in us-west1-b and we need to get it to 1.30. There are 2 node pools \u2014 default-pool and workload-pool. We need a complete step-by-step runbook that someone with basic kubectl knowledge can follow. Include every command.",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-19T02:14:32.615410+00:00",
+  "input_tokens": 4675,
+  "output_tokens": 2604,
+  "time_seconds": 52.45
+}
