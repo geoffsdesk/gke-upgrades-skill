@@ -9,11 +9,10 @@ This skill helps AI assistants produce high-quality GKE upgrade artifacts:
 - **Upgrade plans** with version paths, node pool ordering, and per-workload surge settings
 - **Pre/post-upgrade checklists** tailored to Standard or Autopilot clusters
 - **Maintenance runbooks** with copy-paste gcloud/kubectl commands
-- **Troubleshooting guides** for stuck or failing upgrades
+- **Troubleshooting guides** for stuck or failing upgrades (PDBs, webhooks, quota, partial failures)
 - **Release channel strategy** across Rapid, Regular, Stable, and Extended
-- **Policy expertise** on EOL enforcement, snowflaking, maintenance exclusions
-- **Release compatibility** and OS patching guidance
-- **Reliability/performance** insights during upgrade operations
+- **Workload-specific guidance** for StatefulSets, GPU pools, batch jobs, service mesh
+- **Compliance configuration** for maintenance windows, exclusions, and notification triage
 
 ## Repo Structure
 
@@ -21,7 +20,7 @@ This skill helps AI assistants produce high-quality GKE upgrade artifacts:
 gke-upgrades-skill/
 ├── skill/                              # Core Claude skill (install this)
 │   ├── SKILL.md
-│   ├── evals/evals.json                # 3 test cases, 27 assertions
+│   ├── evals/evals.json                # 23 eval scenarios, 194 assertions
 │   └── references/
 │       ├── checklists.md
 │       ├── runbook-template.md
@@ -35,43 +34,31 @@ gke-upgrades-skill/
 │   ├── GEMINI.md                       # System prompt for Gemini
 │   ├── gemini-extension.json           # Extension manifest
 │   ├── skills/                         # Gemini-specific skills
-│   │   ├── control-plane-upgrade/
-│   │   ├── node-pool-strategy/
-│   │   └── troubleshooting/
-│   ├── commands/                       # Slash commands (/gke:check, /gke:plan, /gke:diagnose)
-│   │   ├── check_upgrade.toml
-│   │   ├── upgrade_plan.toml
-│   │   └── diagnose_stuck.toml
+│   │   ├── control-plane-upgrade/      # Regional/zonal control plane upgrade
+│   │   ├── node-pool-strategy/         # Surge vs blue-green, per-pool settings
+│   │   └── troubleshooting/            # Diagnostic flowchart and fixes
+│   ├── commands/                       # Slash commands
+│   │   ├── check_upgrade.toml          # /gke:check — pre-upgrade health check
+│   │   ├── upgrade_plan.toml           # /gke:plan — generate upgrade plan
+│   │   └── diagnose_stuck.toml         # /gke:diagnose — troubleshoot stuck upgrades
 │   └── references/
-│       ├── version-matrix.md
-│       └── api-deprecations.md
+│       ├── version-matrix.md           # Release channel versions, skew policy
+│       └── api-deprecations.md         # API deprecation detection and remediation
 ├── data/
-│   └── gke_maint_knowledge.json        # 28 curated Q&A entries, scored & tagged
+│   └── gke_maint_knowledge.json        # 28 curated entries, scored (v2.0)
 ├── tools/
-│   └── eval-app/                       # Web-based eval viewer (app.py + index.html)
-├── workspace/                          # Eval results (3 iterations)
+│   ├── eval-app/                       # Standalone eval web app (zero dependencies)
+│   │   ├── app.py                      # Python stdlib HTTP server + API proxy
+│   │   └── index.html                  # Side-by-side viewer, benchmarks, live API runs
+│   └── run-evals.py                    # Automated eval runner (Claude, Gemini, or both)
+├── workspace/                          # Eval results by iteration
 │   ├── iteration-1/
 │   ├── iteration-2/
-│   └── iteration-3/
-├── reviews/                            # Static eval viewer HTML
-└── gke-upgrades.skill                  # Packaged skill file
+│   ├── iteration-3/                    # 3 evals, 100% vs 44% (+56%)
+│   └── iteration-4/                    # 23 evals, Claude + Gemini head-to-head
+├── GKE-Upgrade-Skill-Overview.html     # 1-pager overview (importable to Google Docs)
+└── GKE-Upgrade-Skill-UserGuide.docx    # Comprehensive user guide (Word)
 ```
-
-## Knowledge Base: gke_maint_knowledge.json
-
-The `data/` directory contains a curated, sanitized knowledge base (v2.0) with 28 GKE maintenance Q&A entries — 16 original entries from internal FAQs (fully sanitized) plus 12 entries enriched from public GKE documentation.
-
-| Field | Description |
-|-------|-------------|
-| id | Unique question identifier |
-| title | Question title |
-| question | Full question text |
-| best_answer | Best available answer (sanitized, no internal references) |
-| quality_score | 0 = unverified, 1 = accepted OR recommended, 2 = accepted AND recommended |
-| topic_tags | Tags: upgrades, release-channels, maintenance-windows, autopilot, reliability, etc. |
-| sources | Public documentation URLs (for enriched entries) |
-
-**9 topic areas:** upgrades, release-channels, maintenance-windows, autopilot, reliability, notifications, patching, tooling, incidents.
 
 ## Installation
 
@@ -85,87 +72,137 @@ cp -r skill/ ~/.claude/skills/gke-upgrades/
 cp -r skills/* ~/.claude/skills/
 ```
 
+The skill activates automatically when you ask about GKE upgrades, version bumps, maintenance windows, or stuck upgrades.
+
 ### Gemini CLI
 
 ```bash
-# Copy the Gemini extension to your Gemini CLI extensions directory
-cp -r gemini/ ~/.gemini/extensions/gke-mgmt-lifecycle/
-
-# Or reference it in your Gemini CLI config
-# The extension manifest is at gemini/gemini-extension.json
+mkdir -p ~/.gemini/extensions/gke-mgmt-lifecycle
+cp -r gemini/* ~/.gemini/extensions/gke-mgmt-lifecycle/
 ```
 
 **Gemini slash commands:**
-- `/gke:check` — Pre-upgrade health check (API deprecations, PDBs, capacity)
-- `/gke:plan` — Generate a complete upgrade plan with commands and checklists
-- `/gke:diagnose` — Troubleshoot a stuck or failing upgrade
+
+| Command | What It Does |
+|---------|-------------|
+| `/gke:check` | Pre-upgrade health check with GREEN/YELLOW/RED risk assessment |
+| `/gke:plan` | Generate a complete upgrade plan with gcloud commands and checklists |
+| `/gke:diagnose` | Systematic troubleshooting for stuck or failing upgrades |
 
 ## Eval Results
 
-### Iteration 3 (current best)
+### Iteration 3 (3 evals, 27 assertions)
 
 | Metric | With Skill | Without Skill | Delta |
 |--------|-----------|---------------|-------|
-| Pass Rate | 100% (27/27) | 44% (12/27) | +56% |
+| Pass Rate | 100% (27/27) | 44% (12/27) | **+56%** |
 
-Key differentiators (assertions that only pass with skill):
-- Sequential upgrade path (1.28 → 1.29 → 1.30) with rationale
-- Per-pool surge settings (different for general, stateful, GPU) with specific values
-- Postgres-specific concerns (PDB, backup, operator compat, PV reclaim)
-- GPU-specific concerns (driver compat, CUDA matrix, workload coordination)
-- Autopilot constraints (mandatory resource requests, no SSH, no node management)
-- Webhook troubleshooting for stuck upgrades
-- Rollback procedures with blue-green strategy
+### Iteration 4 (23 evals, 194 assertions — Claude + Gemini)
+
+Running with `--provider both` for head-to-head comparison. See `workspace/iteration-4/benchmark.json` for full results.
 
 ### Iteration History
 
-| Iteration | With Skill | Without Skill | Delta |
-|-----------|-----------|---------------|-------|
-| 1 | 100% | 78% | +22% |
-| 2 | 100% | 78% | +22% |
-| 3 | 100% | 44% | +56% |
+| Iteration | Evals | With Skill | Without Skill | Delta |
+|-----------|-------|-----------|---------------|-------|
+| 1 | 3 | 100% | 78% | +22% |
+| 2 | 3 | 100% | 78% | +22% |
+| 3 | 3 | 100% | 44% | +56% |
+| 4 | 23 | *pending* | *pending* | *pending* |
 
 ## Running Evals
 
-### Using the Eval Web App
+### Automated Runner (recommended)
+
+The `tools/run-evals.py` script runs all 23 evals, grades outputs, and computes benchmarks. Zero dependencies beyond Python 3.10+ stdlib.
 
 ```bash
-cd tools/eval-app
-python app.py
-# Opens at http://localhost:5000
-# Auto-discovers all skills, iterations, and grading data
+# Run both providers head-to-head
+python3 tools/run-evals.py \
+  --provider both \
+  --api-key sk-ant-... \
+  --gemini-key AIza... \
+  --iteration 5
+
+# Run Claude only
+python3 tools/run-evals.py --provider claude --api-key sk-ant-... --iteration 5
+
+# Run Gemini only
+python3 tools/run-evals.py --provider gemini --api-key AIza... --iteration 5 --model flash
+
+# Run specific evals
+python3 tools/run-evals.py --provider claude --api-key sk-ant-... --iteration 5 --evals 4,5,6
+
+# Grade existing outputs without re-running
+python3 tools/run-evals.py --grade-only --iteration 5 --provider claude --api-key sk-ant-...
+
+# Dry run (no API calls)
+python3 tools/run-evals.py --dry-run --iteration 5
 ```
 
-### Using Claude's Skill Creator
+**Model aliases:** Claude: `sonnet`/`opus`/`haiku`. Gemini: `flash`/`pro`/`flash-lite`.
 
-1. Open a Claude session with the skill-creator skill available
-2. Point it at `skill/evals/evals.json` for the test cases
-3. Results go into `workspace/iteration-N/`
-4. Grade against the assertions in evals.json
+### Eval Web App
 
-The `reviews/*.html` files are standalone — open in any browser.
+```bash
+python3 tools/eval-app/app.py
+# Opens at http://localhost:8000
+```
+
+Features: side-by-side output comparison, benchmark dashboards, grading drill-down, and **live API runs** (enter your API key and run any eval prompt in real-time).
+
+## Eval Scenarios (23 total, 194 assertions)
+
+| # | Category | Scenario | Assertions |
+|---|----------|----------|-----------|
+| 1 | Upgrade Planning | Multi-pool Standard upgrade (general + Postgres + GPU) | 10 |
+| 2 | Checklists | Autopilot fleet pre/post-upgrade checklists | 9 |
+| 3 | Troubleshooting | Stuck node pool drain (3/12 nodes) | 8 |
+| 4 | Control Plane | Regional control plane upgrade mechanics | 8 |
+| 5 | Version Mgmt | Version skew recovery (3 minor versions behind) | 8 |
+| 6 | Release Channels | Channel migration (Rapid → Stable) | 8 |
+| 7 | Multi-Cluster | 12-cluster fleet rollout across 3 environments | 9 |
+| 8 | Node Pool | Blue-green vs surge for Cassandra on local SSDs | 8 |
+| 9 | Node Pool | Large cluster (600 nodes) speed optimization | 8 |
+| 10 | Node Pool | Spot VM node pool upgrade considerations | 8 |
+| 11 | Workload | StatefulSet Elasticsearch cluster upgrade | 9 |
+| 12 | Workload | Istio service mesh interaction | 8 |
+| 13 | Workload | Long-running batch jobs (8-16h) | 8 |
+| 14 | Troubleshooting | Post-upgrade performance degradation | 8 |
+| 15 | Troubleshooting | Partial node pool failure recovery (8/20) | 8 |
+| 16 | Troubleshooting | Webhook blocking pod creation (cert-manager) | 9 |
+| 17 | Troubleshooting | Quota-constrained upgrade workarounds | 8 |
+| 18 | Operational | SOX compliance maintenance windows | 9 |
+| 19 | Operational | Notification triage system | 8 |
+| 20 | Upgrade Planning | Complete beginner runbook (first upgrade ever) | 10 |
+| 21 | Release Channels | Extended channel tradeoffs (24-month support) | 8 |
+| 22 | Troubleshooting | Pod scheduling during rolling upgrade | 8 |
+| 23 | Operational | PDB audit for upgrade safety | 9 |
+
+## Knowledge Base
+
+The `data/gke_maint_knowledge.json` (v2.0) contains 28 curated entries from public GKE documentation:
+
+| Quality Score | Count | Meaning |
+|--------------|-------|---------|
+| 2 | 14 | Verified and recommended — directly used in skill references |
+| 1 | 14 | Accepted as accurate — available for future expansion |
+| 0 | 0 | Needs review |
+
+All internal/proprietary references have been scrubbed. Only public `cloud.google.com` URLs remain.
 
 ## Improving the Skill
 
-1. Clone this repo
-2. Edit `skill/SKILL.md`, `skill/references/*.md`, or the specialized `skills/`
-3. For Gemini: edit `gemini/GEMINI.md` and `gemini/skills/*/SKILL.md`
-4. Use data from `data/gke_maint_knowledge.json` to enrich reference files
-5. Rerun evals into `workspace/iteration-N/`
-6. Grade, benchmark, review
-7. Commit and push
+1. Run evals → identify which assertions fail with_skill (these are gaps in the skill)
+2. Add content to the appropriate reference `.md` file to address the gap
+3. Re-run evals → confirm the fix works without regressing other assertions
+4. Add new eval scenarios for untested domains
+5. Expand the knowledge base with scored entries from public docs
 
-## Test Cases
+## Documentation
 
-| # | Scenario | Assertions |
-|---|----------|-----------|
-| 1 | Standard cluster 1.28→1.30, 3 pools (general, Postgres, GPU) | 10 |
-| 2 | 4 Autopilot clusters (dev Rapid + prod Stable), pre/post checklists | 9 |
-| 3 | Stuck upgrade: 3/12 nodes, pods not draining | 8 |
-
-## Origins
-
-Built with Claude Agent Skills 2.0, extended for Gemini CLI. Includes specialized sub-skills, slash commands, and a curated GKE maintenance knowledge base enriched from public GKE documentation.
+- **[GKE-Upgrade-Skill-Overview.html](GKE-Upgrade-Skill-Overview.html)** — 1-pager overview (open in browser or import to Google Docs)
+- **[GKE-Upgrade-Skill-UserGuide.docx](GKE-Upgrade-Skill-UserGuide.docx)** — Comprehensive user guide covering architecture, eval system, results, and extension guide
 
 ## License
 
