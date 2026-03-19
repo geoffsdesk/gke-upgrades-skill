@@ -78,6 +78,19 @@ def discover_iterations(workspace: Path) -> list:
 
 
 def discover_evals(iteration_path: Path) -> list:
+    """Discover evals in two supported layouts:
+
+    Layout A (nested): iteration-N/eval-name/with_skill/outputs/*.md
+    Layout B (flat):   iteration-N/with_skill/eval-1-output.md
+    """
+    import re as _re
+    has_flat = any((iteration_path / c).is_dir() for c in ["with_skill", "without_skill"])
+    if has_flat:
+        return _discover_evals_flat(iteration_path, _re)
+    return _discover_evals_nested(iteration_path)
+
+
+def _discover_evals_nested(iteration_path: Path) -> list:
     evals = []
     for d in sorted(iteration_path.iterdir()):
         if not d.is_dir():
@@ -108,6 +121,76 @@ def discover_evals(iteration_path: Path) -> list:
                 eval_entry["configs"][config] = run
         evals.append(eval_entry)
     return evals
+
+
+def _discover_evals_flat(iteration_path: Path, re) -> list:
+    eval_ids = set()
+    for config in ["with_skill", "without_skill"]:
+        config_dir = iteration_path / config
+        if not config_dir.is_dir():
+            continue
+        for f in config_dir.iterdir():
+            m = re.match(r"eval-(\d+)-", f.name)
+            if m:
+                eval_ids.add(int(m.group(1)))
+    evals = []
+    for eval_id in sorted(eval_ids):
+        eval_entry = {
+            "name": f"eval-{eval_id}",
+            "eval_id": eval_id,
+            "prompt": "",
+            "assertions": [],
+            "configs": {},
+        }
+        for config in ["with_skill", "without_skill"]:
+            config_dir = iteration_path / config
+            if not config_dir.is_dir():
+                continue
+            run = _build_run_flat(config_dir, eval_id)
+            if run:
+                eval_entry["configs"][config] = run
+        for config in ["with_skill", "without_skill"]:
+            config_dir = iteration_path / config
+            config_path = config_dir / f"eval-{eval_id}-config.json"
+            if config_path.exists():
+                try:
+                    cfg = json.loads(config_path.read_text())
+                    if cfg.get("prompt"):
+                        eval_entry["prompt"] = cfg["prompt"]
+                    if cfg.get("expectations"):
+                        eval_entry["assertions"] = cfg["expectations"]
+                    break
+                except (json.JSONDecodeError, OSError):
+                    pass
+        evals.append(eval_entry)
+    return evals
+
+
+def _build_run_flat(config_dir: Path, eval_id: int) -> dict | None:
+    output_files = []
+    for ext in [".md", ".html", ".txt"]:
+        output_path = config_dir / f"eval-{eval_id}-output{ext}"
+        if output_path.exists():
+            output_files.append(embed_file(output_path))
+    if not output_files:
+        return None
+    grading = None
+    grading_path = config_dir / f"eval-{eval_id}-grading.json"
+    if grading_path.exists():
+        try:
+            grading = json.loads(grading_path.read_text())
+        except (json.JSONDecodeError, OSError):
+            pass
+    timing = None
+    config_path = config_dir / f"eval-{eval_id}-config.json"
+    if config_path.exists():
+        try:
+            cfg = json.loads(config_path.read_text())
+            if "start_time" in cfg:
+                timing = {"start_time": cfg["start_time"]}
+        except (json.JSONDecodeError, OSError):
+            pass
+    return {"outputs": output_files, "grading": grading, "timing": timing}
 
 
 def build_run(run_dir: Path) -> dict | None:
