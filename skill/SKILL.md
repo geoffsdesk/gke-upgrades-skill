@@ -93,18 +93,68 @@ GKE rollout sequencing allows customers to define the order in which clusters ar
 Recommend surge upgrade as the default, with per-pool `maxSurge`/`maxUnavailable` settings tailored to workload type:
 - **Stateless pools**: Higher `maxSurge` (2-3) for speed, `maxUnavailable=0` for safety
 - **Stateful/database pools**: `maxSurge=1, maxUnavailable=0` — conservative, let PDBs protect data
-- **GPU pools**: `maxSurge=1, maxUnavailable=0` — GPUs are expensive, minimize temporary overcapacity
-- **Large clusters**: `maxSurge=20, maxUnavailable=0` for faster completion
+- **GPU pools**: `maxSurge=1, maxUnavailable=0` — GPUs are expensive, minimize temporary overcapacity. If GPU quota/capacity is too scarce for surge, use `maxSurge=0, maxUnavailable=1` (drains before creating — zero extra GPUs needed, but causes downtime).
+- **Large clusters**: `maxSurge=20, maxUnavailable=0` for faster completion. Note: GKE's maximum upgrade parallelism is ~20 nodes simultaneously regardless of `maxSurge` setting.
 
-Recommend blue-green only when the user needs instant rollback or has particularly fragile stateful workloads.
+Recommend blue-green only when the user needs instant rollback or has particularly fragile stateful workloads. For GPU pools, blue-green avoids the surge capacity problem but requires the full duplicate pool quota upfront.
 
 ### Workload readiness
 - PDBs for critical workloads (GKE respects them for up to 1 hour during surge upgrades)
 - No bare pods (won't be rescheduled)
 - Adequate `terminationGracePeriodSeconds` for graceful shutdown
 - Stateful: verify PV reclaim policies and backup status
-- GPU: confirm driver compatibility with target node image
+- GPU: confirm driver compatibility with target node image — GKE auto-installs drivers matching the target version, which may change the CUDA version
 - Autopilot: all containers must have resource requests
+
+## Large-scale AI/ML cluster upgrades
+
+Frontier AI customers running large GPU/TPU clusters face unique upgrade challenges. Apply this guidance whenever the cluster has 500+ nodes, GPU/TPU node pools, or long-running training workloads.
+
+### GPU node pool upgrade constraints
+
+- **GPU VMs do not support live migration.** Every upgrade requires pod restart — there is no graceful in-place update.
+- **Surge capacity scarcity:** Surge upgrades need temporary extra GPU nodes (A100, H100, H200). These machines are in high demand and often unavailable. If surge nodes can't be provisioned, the upgrade stalls.
+- **Strategy selection for GPU pools:**
+  - If GPU quota/capacity is available: surge with `maxSurge=1, maxUnavailable=0` (safest)
+  - If GPU quota is scarce: `maxSurge=0, maxUnavailable=1` (drains first, no extra GPUs needed, but causes capacity dip)
+  - For large GPU pools needing fast upgrades: blue-green (creates full replacement pool, then migrates — but needs 2x quota temporarily)
+- **GPU driver version coupling:** GKE automatically installs the GPU driver matching the target GKE version. This can change CUDA versions silently. Always test the target GKE version in a staging cluster to verify driver + CUDA + framework compatibility before production.
+- **Reservation interaction:** GPU reservations guarantee capacity but surge upgrades consume reservation slots. Verify reservation has headroom for surge, or use `maxUnavailable` mode instead.
+
+### Long-running training job protection
+
+Multi-day or multi-week training runs (LLM pre-training, large-scale RL, etc.) cannot tolerate mid-job eviction. GKE's default pod eviction timeout during surge upgrades is 1 hour — far shorter than a training run.
+
+- **Maintenance exclusions are critical:** Use "no minor or node upgrades" exclusion during active training campaigns. This blocks node pool upgrades while still allowing control plane security patches.
+- **Dedicated training node pools:** Isolate training workloads on their own node pool with auto-upgrade disabled. Upgrade this pool only during scheduled gaps between training runs.
+- **PDB protection:** Configure PDBs on training workloads to prevent eviction. GKE respects PDBs for up to 1 hour, then may force-drain — this buys time but does not fully protect multi-day jobs.
+- **Checkpoint before upgrading:** Ensure training jobs have checkpointing enabled so they can resume after the upgrade rather than restarting from scratch.
+- **Cordon and wait pattern:** Cordon training nodes, wait for current jobs to complete naturally, then upgrade the empty pool.
+
+### Very large clusters (1,000–15,000+ nodes)
+
+- **Maximum upgrade parallelism:** GKE upgrades ~20 nodes simultaneously regardless of `maxSurge` setting. For a 2,000-node pool, this means ~100 batches minimum.
+- **Upgrade duration:** Large clusters can take days to weeks. Plan maintenance windows accordingly — an 8-hour weekend window may not suffice.
+- **Cluster size limits:** Standard limit is 15,000 nodes per cluster; GKE 1.31+ supports up to 65,000 nodes for AI workloads (requires contacting Cloud Customer Care).
+- **Stagger node pool upgrades:** Don't upgrade all pools simultaneously. Prioritize non-GPU pools first, then GPU pools during training gaps.
+- **Cluster autoscaler constraint:** Can only scale one node pool at a time — this interacts with upgrade scheduling.
+
+### Networking-sensitive upgrades (GPUDirect, RDMA, multi-NIC)
+
+High-performance GPU interconnect has strict GKE version requirements:
+- **GPUDirect-TCPX:** Requires GKE 1.27.7-gke.1121000+
+- **GPUDirect-TCPXO:** Requires specific versions for A3 Mega machines
+- **Custom high-MTU VPC:** Required for RDMA traffic — verify network config survives upgrade
+- If upgrading FROM a version below these thresholds, the upgrade may break GPU interconnect. If upgrading TO a version above, verify the networking stack is properly configured post-upgrade.
+- **Compact placement policies:** Upgrade can break physical co-location requirements. Test that surge/replacement nodes land in the same placement group.
+
+### TPU multislice upgrades
+
+TPU multislice environments have fundamentally different upgrade behavior:
+- **Atomic recreation:** Multi-host TPU slices are recreated entirely in a single step — not rolling. All pods on the slice restart simultaneously.
+- **Cascading restart:** A maintenance event on ANY slice in a multislice environment triggers restart of ALL slices.
+- **Capacity dependency:** If insufficient TPU resources exist during recreation, the slice blocks until hardware is available. This can cause extended downtime.
+- Plan TPU upgrades during scheduled maintenance gaps. Ensure training checkpoints are saved before any maintenance window.
 
 ## End of Support (EoS) enforcement
 

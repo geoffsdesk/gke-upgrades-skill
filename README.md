@@ -20,7 +20,7 @@ This skill helps AI assistants produce high-quality GKE upgrade artifacts:
 gke-upgrades-skill/
 ├── skill/                              # Core Claude skill (install this)
 │   ├── SKILL.md
-│   ├── evals/evals.json                # 23 eval scenarios, 194 assertions
+│   ├── evals/evals.json                # 37 eval scenarios, 310 assertions
 │   └── references/
 │       ├── checklists.md
 │       ├── runbook-template.md
@@ -194,7 +194,7 @@ python3 tools/eval-app/app.py
 
 Features: side-by-side output comparison, benchmark dashboards, grading drill-down, and **live API runs** (enter your API key and run any eval prompt in real-time).
 
-## Eval Scenarios (23 total, 194 assertions)
+## Eval Scenarios (37 total, 310 assertions)
 
 | # | Category | Scenario | Assertions |
 |---|----------|----------|-----------|
@@ -221,6 +221,20 @@ Features: side-by-side output comparison, benchmark dashboards, grading drill-do
 | 21 | Release Channels | Extended channel tradeoffs (24-month support) | 8 |
 | 22 | Troubleshooting | Pod scheduling during rolling upgrade | 8 |
 | 23 | Operational | PDB audit for upgrade safety | 9 |
+| 24 | Release Channels | "No channel" to release channel migration | 8 |
+| 25 | Version Mgmt | Available vs default vs auto-upgrade target | 8 |
+| 26 | EoS | End of Support enforcement by channel type | 8 |
+| 27 | Operational | Maximum upgrade control for regulated environments | 8 |
+| 28 | Operational | Upgrade predictability and visibility tools | 8 |
+| 29 | Operational | Maintenance exclusion types deep dive | 8 |
+| 30 | Operational | Fleet assessment and self-service tools | 9 |
+| 31 | AI/ML | 512-node H100 training cluster with GPUDirect | 10 |
+| 32 | AI/ML | 3,000-node cluster upgrade window constraints | 8 |
+| 33 | AI/ML | Mixed inference/fine-tuning GPU upgrade | 8 |
+| 34 | AI/ML | TPU multislice maintenance event | 8 |
+| 35 | AI/ML | Day-one cluster config for training resilience | 8 |
+| 36 | AI/ML | GPU surge capacity unavailable workaround | 8 |
+| 37 | AI/ML | 5,000-node mixed AI/ML fleet phased upgrade | 9 |
 
 ## Knowledge Base
 

@@ -491,6 +491,121 @@
         "Recommends configuring rollout sequencing to control upgrade ordering across the fleet",
         "Mentions GKE Insights and Recommendations in the console for identifying issues like version skew"
       ]
+    },
+    {
+      "id": 31,
+      "prompt": "We run a large-scale LLM training cluster on GKE Standard with 512 H100 GPU nodes (A3 Mega, 8 GPUs each) using GPUDirect-TCPXO for inter-node communication. Our training runs last 2-3 weeks. We're on GKE 1.29 and need to upgrade to 1.30. How do we do this without destroying an active training run or breaking our GPU interconnect?",
+      "expected_output": "Detailed upgrade plan for a large GPU training cluster addressing training job protection, GPU driver compatibility, GPUDirect networking, and capacity constraints.",
+      "files": [],
+      "expectations": [
+        "Warns that GPU VMs do not support live migration — every upgrade forces pod restart, which kills training",
+        "Recommends waiting for the current training run to complete or reach a checkpoint before upgrading the GPU node pool",
+        "Suggests the cordon-and-wait pattern: cordon GPU nodes, let training finish naturally, then upgrade the empty pool",
+        "Addresses GPU driver version coupling — GKE auto-installs drivers matching the target version, which may change CUDA versions and break framework compatibility",
+        "Recommends testing the target GKE version in a staging cluster first to verify driver + CUDA + framework compatibility",
+        "Addresses GPUDirect-TCPXO version requirements — verify the target GKE version supports the networking stack",
+        "Notes that surge upgrades need extra H100 nodes which are scarce — recommends maxSurge=0/maxUnavailable=1 or blue-green if surge quota is unavailable",
+        "Recommends upgrading the control plane first (can be done independently without affecting running training)",
+        "Mentions maintenance exclusions ('no minor or node upgrades') to protect against auto-upgrades during active training campaigns",
+        "Addresses compact placement — verify that replacement nodes land in the same placement group to preserve RDMA topology"
+      ]
+    },
+    {
+      "id": 32,
+      "prompt": "We have a GKE Standard cluster with 3,000 nodes across 8 node pools — 4 GPU pools (A100, H100, L4, T4) and 4 CPU pools. Our maintenance window is Saturday 2am-10am. Upgrades keep timing out because only a fraction of nodes get upgraded before the window closes. How do we handle this at our scale?",
+      "expected_output": "Strategy for upgrading very large clusters within constrained maintenance windows, addressing parallelism limits and pool prioritization.",
+      "files": [],
+      "expectations": [
+        "Explains that GKE's maximum upgrade parallelism is approximately 20 nodes simultaneously, regardless of maxSurge setting",
+        "Calculates that at 20-node parallelism, upgrading 3,000 nodes requires ~150 batches — far more than an 8-hour window allows",
+        "Recommends splitting upgrades across multiple maintenance windows (weekends) rather than attempting all at once",
+        "Suggests upgrading CPU pools and GPU pools separately, prioritizing CPU pools first as they're less disruptive",
+        "Recommends upgrading GPU pools during scheduled gaps between training/inference workloads",
+        "Suggests expanding the maintenance window or using multiple consecutive windows for large pool upgrades",
+        "Mentions that cluster autoscaler can only scale one node pool at a time — this interacts with upgrade scheduling",
+        "Addresses the 15,000 node standard limit and notes GKE 1.31+ supports up to 65,000 for AI workloads"
+      ]
+    },
+    {
+      "id": 33,
+      "prompt": "Our ML platform team runs inference workloads on a GKE Standard cluster with 200 L4 GPU nodes and 100 A100 GPU nodes on separate node pools. We auto-scale based on traffic. We need to upgrade from 1.29 to 1.30 with minimal impact to inference latency and availability. The A100 pool also handles fine-tuning jobs that run 4-8 hours.",
+      "expected_output": "Upgrade plan for mixed inference/fine-tuning GPU cluster addressing availability, auto-scaling interaction, and job protection.",
+      "files": [],
+      "expectations": [
+        "Recommends upgrading the L4 inference pool and A100 pool separately with different strategies",
+        "For L4 inference pool: recommends surge upgrade with maxSurge=1 or 2 to maintain capacity during rolling replacement",
+        "Addresses GPU driver version compatibility — auto-installed drivers must be compatible with inference framework (TensorRT, vLLM, etc.)",
+        "For A100 fine-tuning pool: recommends scheduling the upgrade during a gap between fine-tuning jobs",
+        "Notes that GPU VMs do not support live migration — inference pods will restart during node upgrade, causing brief latency spikes",
+        "Recommends PDBs on inference deployments to ensure enough replicas stay available during the rolling upgrade",
+        "Addresses auto-scaler interaction — new nodes created by auto-scaler during upgrade will be at the old version until their pool upgrade completes",
+        "Recommends testing driver + CUDA compatibility in staging before production upgrade"
+      ]
+    },
+    {
+      "id": 34,
+      "prompt": "We run a TPU multislice training environment on GKE with 4 TPU v5e slices (each 256 chips) for a large language model. GKE is telling us a maintenance event is coming. What will actually happen to our training job, and how should we prepare?",
+      "expected_output": "Explanation of TPU multislice maintenance behavior and preparation steps for protecting training.",
+      "files": [],
+      "expectations": [
+        "Explains that multi-host TPU slices are recreated atomically in a single step — not a rolling upgrade",
+        "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+        "Notes that all pods on all affected slices will restart simultaneously — the training job will be interrupted",
+        "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed — potentially causing extended downtime",
+        "Recommends saving a training checkpoint immediately before the maintenance window",
+        "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+        "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+        "Mentions maintenance windows to control when the event occurs — schedule it during a planned break in training"
+      ]
+    },
+    {
+      "id": 35,
+      "prompt": "We're planning a new GKE cluster for foundation model training with H100 GPUs. We want to minimize upgrade disruption from day one. What cluster configuration, release channel, maintenance settings, and node pool strategy should we set up to protect multi-week training runs while staying secure?",
+      "expected_output": "Day-one cluster architecture recommendations optimized for AI/ML training upgrade resilience.",
+      "files": [],
+      "expectations": [
+        "Recommends Stable or Extended release channel to minimize upgrade frequency",
+        "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
+        "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
+        "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
+        "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
+        "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
+        "Mentions GPU driver version testing — always validate in staging before applying to production GPU pools",
+        "Notes that GPUDirect/RDMA networking has strict GKE version requirements — verify compatibility before upgrading"
+      ]
+    },
+    {
+      "id": 36,
+      "prompt": "Our GPU node pool upgrade failed because surge nodes couldn't be created — we're told there's no H100 capacity available in our zone for temporary surge nodes. The pool has 64 A3-mega nodes. What are our options to proceed with the upgrade without additional GPU quota?",
+      "expected_output": "Workaround strategies for GPU node pool upgrades when surge capacity is unavailable.",
+      "files": [],
+      "expectations": [
+        "Explains that surge upgrades create NEW nodes before draining old ones — this requires extra GPU capacity that may not exist for scarce hardware like H100",
+        "Recommends switching to maxSurge=0, maxUnavailable=1 — this drains a node first then creates the replacement, requiring zero extra GPU capacity",
+        "Warns that maxUnavailable=1 means reduced cluster capacity during upgrade — 63/64 nodes available at any time",
+        "Mentions blue-green as an alternative if a full replacement pool can be provisioned (requires 2x quota but gives instant rollback)",
+        "Suggests upgrading during off-peak when some GPU nodes are idle — scale down non-critical workloads to free capacity",
+        "Notes that with maxUnavailable=1 on 64 nodes at ~20-node parallelism, the upgrade will take significantly longer",
+        "Recommends checking if GPU reservations have headroom that could be used for surge nodes",
+        "Advises scheduling the upgrade during a gap between training runs when nodes can be drained without impacting workloads"
+      ]
+    },
+    {
+      "id": 37,
+      "prompt": "We run a mixed AI/ML platform on GKE with 5,000 total nodes: 2,000 H100 GPU nodes for training, 1,500 A100 GPU nodes for inference, 500 T4 nodes for development, and 1,000 CPU nodes for services. We need to upgrade from 1.29 to 1.30 across the entire fleet. Create a phased upgrade plan that prioritizes training continuity and inference availability.",
+      "expected_output": "Comprehensive phased upgrade plan for a very large mixed AI/ML fleet with per-pool strategies and timeline.",
+      "files": [],
+      "expectations": [
+        "Proposes a phased approach: control plane first, then CPU pools, then T4 dev, then inference (A100), then training (H100) last",
+        "Control plane can be upgraded independently without affecting running workloads",
+        "CPU service pools upgraded first as lowest risk — use standard surge settings (maxSurge=2-3)",
+        "T4 dev pool upgraded next — dev workloads are tolerant of interruption",
+        "A100 inference pool upgraded with careful surge settings (maxSurge=1) and PDBs to maintain serving capacity",
+        "H100 training pool upgraded last, during a scheduled gap between training runs — with cordon-and-wait or maxSurge=0/maxUnavailable=1",
+        "Notes the 20-node parallelism limit — at 5,000 nodes, the full upgrade will take weeks and must span multiple maintenance windows",
+        "Mentions GPU driver compatibility testing in staging before each GPU pool upgrade",
+        "Addresses GPUDirect/RDMA networking validation after upgrading the H100 pool"
+      ]
     }
   ]
 }

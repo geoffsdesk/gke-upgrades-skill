@@ -51,6 +51,19 @@ Recommend blue-green only when the user needs instant rollback or has fragile st
 - No SSH access; debugging via Cloud Logging and `kubectl debug` only
 - Release channel enrollment is mandatory
 
+### Large-Scale AI/ML Clusters (GPU/TPU)
+
+For clusters with GPU/TPU node pools, long-running training, or 500+ nodes:
+
+- **GPU VMs do not support live migration** -- every upgrade forces pod restart
+- **Surge capacity scarcity:** H100/A100 surge nodes may be unavailable. Use `maxSurge=0, maxUnavailable=1` (drains first, no extra GPUs) or blue-green
+- **GPU driver coupling:** GKE auto-installs drivers matching target version, which may change CUDA versions. Always test in staging first
+- **Training job protection:** Use maintenance exclusions ("no minor or node upgrades") during active training campaigns. Cordon GPU nodes and wait for jobs to complete before upgrading
+- **20-node parallelism limit:** Maximum ~20 nodes upgrade simultaneously regardless of maxSurge. For 2,000+ node pools, upgrades take days/weeks
+- **TPU multislice:** Slices are recreated atomically (not rolling). Maintenance on one slice restarts ALL slices in the environment
+- **GPUDirect/RDMA:** Has strict GKE version requirements (TCPX needs 1.27.7+). Verify networking survives the upgrade
+- **Compact placement:** Verify replacement nodes land in the same placement group to preserve RDMA topology
+
 ## Troubleshooting Priority
 
 When a user reports a stuck or failing upgrade, diagnose in this order:
