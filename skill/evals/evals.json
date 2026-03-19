@@ -51,6 +51,333 @@
         "Mentions webhook issues as a possible cause",
         "Includes validation steps to confirm the fix is working"
       ]
+    },
+    {
+      "id": 4,
+      "prompt": "We're running a regional Standard GKE cluster in us-central1 on Regular channel at 1.29. We need to upgrade the control plane to 1.30. Our team is worried about API server downtime during the upgrade. Can you explain what will happen and give us the commands to do it safely?",
+      "expected_output": "Explanation of regional control plane upgrade mechanics (multiple replicas, rolling upgrade, near-zero downtime) with commands and monitoring steps.",
+      "files": [],
+      "expectations": [
+        "Explains that regional clusters have multiple control plane replicas and the upgrade is rolling",
+        "States that regional control plane upgrades have near-zero API server downtime",
+        "Contrasts with zonal clusters where there IS a brief API server outage during upgrade",
+        "Provides the gcloud command for control plane upgrade (--master flag)",
+        "Mentions expected duration for control plane upgrade (roughly 10-30 minutes)",
+        "Includes a command to verify the control plane version after upgrade",
+        "Recommends checking kube-system pods health after upgrade",
+        "Advises checking deprecated API usage before upgrading"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "We somehow let our Standard cluster get into a bad state. The control plane is at 1.31 but one of our node pools is still at 1.28. We're getting warnings about version skew. What are we dealing with and how do we fix it?",
+      "expected_output": "Explanation of the version skew policy (nodes within 2 minor versions), the implications of being 3 versions behind, and a recovery plan.",
+      "files": [],
+      "expectations": [
+        "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+        "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (3 minor versions)",
+        "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+        "Recommends sequential node pool upgrades (1.28→1.29→1.30→1.31) not a direct jump",
+        "Provides gcloud commands for the node pool upgrade steps",
+        "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+        "Advises monitoring closely between each version bump for issues",
+        "Mentions that future prevention includes setting up release channel enrollment and maintenance windows"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Our CTO wants us to move our production Standard cluster from the Rapid release channel to Stable. We're currently at 1.30 on Rapid. What are the implications and how do we do it?",
+      "expected_output": "Guide covering release channel migration mechanics, version availability differences, and the transition process.",
+      "files": [],
+      "expectations": [
+        "Explains the difference between Rapid and Stable channels (Stable gets versions later, more validated)",
+        "Notes that channel changes don't trigger an immediate upgrade or downgrade",
+        "Warns that if 1.30 isn't yet available on Stable, the cluster may not receive patches until Stable catches up",
+        "Provides the gcloud command to change the release channel",
+        "Recommends checking version availability on Stable before switching (gcloud container get-server-config)",
+        "Discusses the impact on auto-upgrade timing going forward",
+        "Mentions that the Extended channel is an option if they need even slower cadence (with cost implications)",
+        "Advises coordinating the change during a maintenance window"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "We need to upgrade 12 GKE clusters across 3 environments (dev, staging, prod) with 4 clusters each. Dev is on Rapid, staging on Regular, prod on Stable. All are Standard clusters running 1.28 and we need to get to 1.30. Can you create a rollout strategy?",
+      "expected_output": "A phased multi-cluster rollout strategy with environment ordering, soak times, go/no-go criteria, and rollback triggers.",
+      "files": [],
+      "expectations": [
+        "Proposes a phased rollout: dev first, then staging, then prod",
+        "Includes soak time between environment phases (e.g., 24-48 hours for dev, 1 week for staging before prod)",
+        "Defines go/no-go criteria between phases (error rates, latency, pod health)",
+        "Addresses version availability differences across channels (1.30 may be on Rapid but not yet on Stable)",
+        "Recommends upgrading sequentially within each environment (1.28→1.29→1.30)",
+        "Suggests not upgrading all prod clusters simultaneously — do one or two first as canary",
+        "Includes rollback triggers and criteria for halting the rollout",
+        "Provides a timeline or schedule estimate for the full rollout",
+        "Mentions maintenance window coordination across clusters"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "We have a Standard cluster and we need to choose between surge upgrade and blue-green upgrade for our stateful workload node pool. It runs a Cassandra ring with 9 nodes using local SSDs. Help us decide and configure whichever approach you recommend.",
+      "expected_output": "Comparison of surge vs blue-green for stateful workloads, with a recommendation and configuration commands.",
+      "files": [],
+      "expectations": [
+        "Explains the key difference: surge upgrades nodes in-place with rolling replacement, blue-green creates an entirely new pool",
+        "Recommends blue-green for this scenario due to local SSDs (data can't migrate between nodes)",
+        "Explains that local SSD data is lost when a node is drained during surge upgrade",
+        "Describes the blue-green process: create new pool, cordon old pool, migrate workloads, delete old pool",
+        "Addresses Cassandra-specific concerns: need to decommission from the ring before draining, rebuild on new nodes",
+        "Provides gcloud commands for creating the new node pool with matching configuration",
+        "Includes kubectl commands for cordoning and draining",
+        "Mentions PDB configuration to protect the Cassandra quorum during migration"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "We have a large Standard cluster with 600 nodes across 4 node pools. Upgrades are taking over 24 hours to complete and our maintenance window is only 8 hours on weekends. How can we speed up the node pool upgrades?",
+      "expected_output": "Optimization strategy for large cluster upgrades focusing on surge settings, parallelism, and maintenance window configuration.",
+      "files": [],
+      "expectations": [
+        "Recommends increasing maxSurge significantly (e.g., 10-20 or higher) to parallelize node replacements",
+        "Explains that higher maxSurge means more nodes upgrading simultaneously but requires more compute quota",
+        "Advises checking and requesting increased compute quota before the upgrade",
+        "Suggests staggering node pool upgrades or running non-conflicting pools in parallel",
+        "Mentions that maxUnavailable can be set >0 for non-critical pools to speed things up further",
+        "Recommends expanding the maintenance window or splitting across multiple weekends",
+        "Provides the gcloud command for updating surge settings on each pool",
+        "Includes monitoring commands to track upgrade progress in real-time"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "Our Standard cluster has a node pool running workloads that include a mix of spot instances and on-demand instances. We're planning to upgrade from 1.29 to 1.30. Are there any special considerations for upgrading node pools that use spot VMs?",
+      "expected_output": "Guidance on spot VM node pool upgrades covering preemption interaction, surge settings, and workload resilience.",
+      "files": [],
+      "expectations": [
+        "Explains that spot VMs can be preempted at any time, which interacts with the upgrade drain process",
+        "Notes that spot node pools may already have workloads designed for interruption (good for upgrades)",
+        "Recommends higher maxSurge for spot pools since the workloads should already be fault-tolerant",
+        "Advises setting maxUnavailable >0 for spot pools since workloads are already preemption-tolerant",
+        "Mentions that spot VM availability may affect surge node creation (not guaranteed to get spot instances)",
+        "Recommends having PDBs even for spot workloads to ensure orderly drain during upgrade",
+        "Provides the gcloud command for configuring surge settings on the spot pool",
+        "Suggests upgrading spot pools before on-demand pools since they're lower risk"
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "We run a StatefulSet-based Elasticsearch cluster on GKE Standard. It has 3 master nodes, 5 data nodes, and 2 coordinating nodes, each on separate node pools. PVs are regional pd-ssd. We need to upgrade from 1.29 to 1.30. Walk me through how to do this without losing data or availability.",
+      "expected_output": "Detailed upgrade plan for a StatefulSet-heavy Elasticsearch deployment with per-pool ordering and data safety steps.",
+      "files": [],
+      "expectations": [
+        "Recommends upgrading the control plane first before any node pools",
+        "Provides a specific node pool upgrade order with rationale (coordinating→data→master, or similar logical sequence)",
+        "Addresses PV safety: regional pd-ssd volumes can reattach to nodes in other zones, which is good for upgrades",
+        "Recommends setting PDB for Elasticsearch master nodes to ensure quorum (minAvailable=2 for 3-master setup)",
+        "Recommends maxSurge=1, maxUnavailable=0 for all ES node pools (conservative, data-safe)",
+        "Advises verifying Elasticsearch cluster health (green status) between each node pool upgrade",
+        "Mentions checking PV reclaim policy is set to Retain (not Delete) as a safety measure",
+        "Includes kubectl commands for checking StatefulSet rollout status",
+        "Recommends taking an Elasticsearch snapshot backup before starting"
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "We run an Istio service mesh on our Standard GKE cluster at 1.29 and need to upgrade to 1.30. We've heard horror stories about mesh upgrades breaking things. What's the right order of operations and what should we watch out for?",
+      "expected_output": "Guidance on GKE upgrade interaction with Istio/service mesh covering version compatibility, sidecar injection, and upgrade ordering.",
+      "files": [],
+      "expectations": [
+        "Addresses Istio control plane version compatibility with the target Kubernetes version",
+        "Recommends checking the Istio-Kubernetes version compatibility matrix before upgrading GKE",
+        "Advises upgrading Istio first if the current Istio version doesn't support the target Kubernetes version",
+        "Explains that sidecar injection happens via mutating webhook and may cause issues during node drain/recreation",
+        "Mentions that new pods on upgraded nodes will get sidecar injected — verify the sidecar version matches",
+        "Recommends monitoring Istio proxy version consistency across the mesh after upgrade",
+        "Includes commands to check Istio version and proxy sync status (istioctl or kubectl)",
+        "Warns about potential traffic disruption if Istio control plane and sidecar versions are mismatched"
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "We have batch processing jobs that run for 8-16 hours on our Standard GKE cluster. We need to upgrade from 1.29 to 1.30 but can't afford to kill these jobs mid-execution. How should we handle this?",
+      "expected_output": "Strategy for upgrading around long-running batch workloads covering graceful drain, scheduling pauses, and termination grace periods.",
+      "files": [],
+      "expectations": [
+        "Explains that GKE respects terminationGracePeriodSeconds during pod eviction, but surge upgrades have a max eviction timeout",
+        "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour — far less than 8-16 hour jobs",
+        "Recommends pausing new batch job submissions before starting the upgrade",
+        "Advises waiting for in-flight jobs to complete naturally before upgrading their node pool",
+        "Suggests using node affinity or taints to isolate batch workloads on a dedicated node pool",
+        "Recommends upgrading non-batch node pools first while batch jobs complete on the old pool",
+        "Mentions scheduling the upgrade during a natural gap in batch processing if one exists",
+        "Provides commands for cordoning batch nodes to prevent new scheduling while jobs finish"
+      ]
+    },
+    {
+      "id": 14,
+      "prompt": "After upgrading our Standard cluster from 1.29 to 1.30, we're seeing increased API latency and some 503 errors from our services. The upgrade completed successfully — all nodes are at 1.30 and showing Ready. What could be wrong?",
+      "expected_output": "Post-upgrade troubleshooting for performance degradation covering API deprecations, webhook issues, resource changes, and networking.",
+      "files": [],
+      "expectations": [
+        "Checks for deprecated API usage that may have changed behavior in 1.30",
+        "Recommends checking admission webhooks — they may be rejecting or slowing down requests on the new version",
+        "Advises checking if resource requests/limits need adjusting for any system components that changed",
+        "Suggests examining kube-system pods for any that are crashlooping or restarting",
+        "Includes commands to check API server metrics and latency (kubectl get --raw /metrics)",
+        "Recommends checking if NetworkPolicy or service mesh components need updating for the new version",
+        "Advises reviewing pod events for scheduling delays or readiness probe failures",
+        "Mentions checking if HPA or VPA are behaving differently on the new version"
+      ]
+    },
+    {
+      "id": 15,
+      "prompt": "We upgraded our Standard cluster's control plane to 1.30 successfully, but the node pool upgrade for our main workload pool failed partway through. 8 out of 20 nodes upgraded, then it stopped with an error. The other two node pools haven't been touched yet. What do we do?",
+      "expected_output": "Recovery plan for a partially failed node pool upgrade covering diagnosis, options for the failed pool, and how to proceed with remaining pools.",
+      "files": [],
+      "expectations": [
+        "First step: check the operation status to understand why it failed (gcloud container operations list)",
+        "Recommends checking events and logs for the specific failure reason",
+        "Explains that the cluster is in a mixed-version state (8 nodes at 1.30, 12 at 1.29) which is within skew policy",
+        "Notes that the mixed state is functional but not ideal — workloads can run on both versions",
+        "Provides options: retry the upgrade after fixing the root cause, or rollback the 8 upgraded nodes",
+        "Explains that retrying is usually better than rollback (rolling back means creating a new pool at old version)",
+        "Addresses the remaining 2 node pools: they can still be upgraded once the failed pool issue is resolved",
+        "Includes commands to diagnose the failure (operation details, node status, pod events)"
+      ]
+    },
+    {
+      "id": 16,
+      "prompt": "We upgraded our control plane from 1.29 to 1.30 and now some of our workloads are failing with admission webhook errors. The webhook is from a third-party operator (cert-manager). Pods can't be created. How do we fix this urgently?",
+      "expected_output": "Urgent troubleshooting for webhook-related pod creation failures after upgrade, with immediate fix and longer-term resolution.",
+      "files": [],
+      "expectations": [
+        "Identifies this as an admission webhook compatibility issue — the webhook is rejecting pod creation requests",
+        "Provides commands to identify the problematic webhook (kubectl get validatingwebhookconfigurations / mutatingwebhookconfigurations)",
+        "Offers an immediate fix: temporarily disable or remove the problematic webhook",
+        "Provides the kubectl delete command for the webhook configuration as emergency mitigation",
+        "Warns that deleting the webhook removes validation — it's a temporary fix",
+        "Recommends checking cert-manager version compatibility with Kubernetes 1.30",
+        "Advises upgrading cert-manager to a version that supports 1.30 as the permanent fix",
+        "Mentions setting failurePolicy to Ignore as a less drastic alternative to deletion",
+        "Includes commands to verify pods can be created after the fix"
+      ]
+    },
+    {
+      "id": 17,
+      "prompt": "Our node pool upgrade is stuck and we've determined it's a resource constraint issue — surge nodes can't be created because we've hit our compute quota in the region. We can't get a quota increase approved for another week. Is there any way to proceed with the upgrade?",
+      "expected_output": "Workaround strategies for quota-constrained upgrades including maxUnavailable, scaling down, and alternative approaches.",
+      "files": [],
+      "expectations": [
+        "Explains that surge upgrades require extra compute capacity (maxSurge creates NEW nodes before draining old ones)",
+        "Recommends setting maxUnavailable >0 instead of relying on maxSurge (drains first, then creates — uses less quota)",
+        "Warns that maxUnavailable >0 means reduced capacity during upgrade — some pods won't have nodes",
+        "Suggests temporarily scaling down non-critical deployments to free up quota for surge nodes",
+        "Mentions that reducing maxSurge to 1 minimizes extra quota needed (slower but fits within constraints)",
+        "Provides the gcloud command to update surge settings (maxSurge=0, maxUnavailable=1 for zero-extra-capacity mode)",
+        "Recommends doing the upgrade in off-peak hours when fewer pods are running",
+        "Mentions requesting a temporary quota increase as a faster alternative to a permanent increase"
+      ]
+    },
+    {
+      "id": 18,
+      "prompt": "We're in a regulated environment (financial services, SOX compliance) and need to set up maintenance windows and exclusions for our 3 GKE Standard clusters. We have quarterly code freezes, an annual audit in November, and want auto-upgrades to only happen on weekends. Can you configure this?",
+      "expected_output": "Maintenance window and exclusion configuration for a compliance-heavy environment with specific gcloud commands.",
+      "files": [],
+      "expectations": [
+        "Configures a recurring maintenance window for weekends only",
+        "Provides the gcloud command with --maintenance-window-start/end and --maintenance-window-recurrence for weekly weekend schedule",
+        "Sets up maintenance exclusions for quarterly code freezes (up to 30 days each)",
+        "Sets up a maintenance exclusion for the November audit period",
+        "Notes the 30-day maximum for maintenance exclusions and how to handle longer freezes",
+        "Explains that manual upgrades bypass maintenance windows — only auto-upgrades respect them",
+        "Recommends combining maintenance windows with Stable or Extended channel for maximum upgrade control",
+        "Provides gcloud commands for each exclusion (--add-maintenance-exclusion-name/start-time/end-time)",
+        "Warns about the risk of falling too far behind on versions during long exclusion periods"
+      ]
+    },
+    {
+      "id": 19,
+      "prompt": "We keep getting GKE upgrade notifications and we're not sure which ones require action and which are informational. We get emails about auto-upgrades scheduled, available version updates, end-of-life warnings, and security patches. Can you help us create a triage system?",
+      "expected_output": "Notification triage framework categorizing GKE notifications by urgency and required action.",
+      "files": [],
+      "expectations": [
+        "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+        "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+        "End-of-life warnings require action: plan upgrade before the support window closes",
+        "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+        "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+        "New version available notifications are informational — use for planning, not immediate action",
+        "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+        "Mentions GKE release notes as the source for understanding what changed in each version"
+      ]
+    },
+    {
+      "id": 20,
+      "prompt": "We've never done a GKE upgrade before. Our team just inherited a Standard cluster on the Regular channel at 1.28 in us-west1-b and we need to get it to 1.30. There are 2 node pools — default-pool and workload-pool. We need a complete step-by-step runbook that someone with basic kubectl knowledge can follow. Include every command.",
+      "expected_output": "A complete, beginner-friendly runbook with every gcloud and kubectl command needed, explanations of what each step does, and clear go/no-go checkpoints.",
+      "files": [],
+      "expectations": [
+        "Starts with pre-flight checks: current versions, cluster health, node status",
+        "Includes the gcloud command to check available versions in the release channel",
+        "Includes the API deprecation check command before upgrading",
+        "Provides the exact gcloud command for control plane upgrade to 1.29 first (--master flag)",
+        "Includes a verification step after control plane upgrade with expected output",
+        "Provides the exact gcloud command for each node pool upgrade to 1.29",
+        "Includes monitoring commands to watch node pool upgrade progress",
+        "Repeats the full sequence for 1.29→1.30 (sequential, not skipping)",
+        "Includes post-upgrade validation: node versions, pod health, kube-system pods",
+        "Provides a rollback section explaining what to do if something goes wrong"
+      ]
+    },
+    {
+      "id": 21,
+      "prompt": "We want to use the Extended release channel for our production GKE clusters to get 24-month support. Currently we're on Regular channel at 1.29. What are the tradeoffs and how do we switch?",
+      "expected_output": "Analysis of Extended channel tradeoffs covering cost, support timeline, version availability, and migration steps.",
+      "files": [],
+      "expectations": [
+        "Explains that Extended channel provides up to 24 months of support vs 14 months for standard channels",
+        "Mentions that Extended channel has additional cost (it's not free)",
+        "Notes that Extended channel gets the same versions as Regular but keeps them available longer",
+        "Warns that staying on older versions longer means missing new features and accumulating technical debt",
+        "Provides the gcloud command to change the release channel to Extended",
+        "Advises checking that the current version (1.29) is available on Extended before switching",
+        "Recommends Extended for environments with compliance requirements or slow internal change processes",
+        "Mentions that Extended doesn't mean you can skip upgrades forever — you still must upgrade within 24 months"
+      ]
+    },
+    {
+      "id": 22,
+      "prompt": "During our node pool upgrade, we see that pods are getting evicted from nodes being drained, but they're landing on nodes that are ALSO about to be drained. It's like a game of musical chairs. The pods keep getting shuffled around instead of landing on already-upgraded nodes. What's happening and how do we fix it?",
+      "expected_output": "Explanation of pod scheduling during rolling upgrades and how to ensure pods land on upgraded nodes.",
+      "files": [],
+      "expectations": [
+        "Explains this is related to the interaction between maxSurge, drain order, and pod scheduling",
+        "Notes that GKE cordons nodes before draining them — pods should prefer scheduling onto uncordoned (upgraded) nodes",
+        "Identifies possible cause: too many nodes being drained simultaneously (high maxSurge) before enough upgraded nodes exist",
+        "Recommends reducing maxSurge to 1 to ensure upgraded nodes are available before draining the next batch",
+        "Suggests using pod anti-affinity or node affinity to prefer already-upgraded nodes",
+        "Mentions checking if any taints or tolerations are causing pods to land on the wrong nodes",
+        "Provides kubectl commands to check node cordoned status and pod scheduling events",
+        "Recommends setting maxUnavailable=0 to ensure old nodes aren't removed until pods are safely rescheduled"
+      ]
+    },
+    {
+      "id": 23,
+      "prompt": "We have PDBs configured for all our critical services but we're worried they might actually block our upgrade if they're too restrictive. Can you audit our PDB configuration and tell us what's safe vs risky for upgrades? Here's what we have: Service A has minAvailable=100%, Service B has maxUnavailable=0, Service C has minAvailable=2 with 3 replicas, Service D has maxUnavailable=1 with 5 replicas.",
+      "expected_output": "PDB audit analyzing each configuration for upgrade safety, identifying blockers, and recommending fixes.",
+      "files": [],
+      "expectations": [
+        "Identifies Service A (minAvailable=100%) as a guaranteed upgrade blocker — no disruptions allowed at all",
+        "Identifies Service B (maxUnavailable=0) as also blocking upgrades — same effect as 100% minAvailable",
+        "States Service C (minAvailable=2 with 3 replicas) is safe — allows 1 pod disruption at a time",
+        "States Service D (maxUnavailable=1 with 5 replicas) is safe — allows 1 pod down at a time",
+        "Recommends fixing Service A: change to minAvailable=N-1 or maxUnavailable=1",
+        "Recommends fixing Service B: change to maxUnavailable=1",
+        "Explains that GKE respects PDBs for up to 1 hour during surge upgrades, then may force-drain",
+        "Provides kubectl patch commands to fix the problematic PDBs",
+        "Recommends testing PDB changes in a non-production environment first"
+      ]
     }
   ]
 }
