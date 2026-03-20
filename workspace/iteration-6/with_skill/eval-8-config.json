@@ -1,0 +1,19 @@
+{
+  "eval_id": 8,
+  "mode": "with_skill",
+  "iteration": 6,
+  "prompt": "We have a Standard cluster and we need to choose between surge upgrade and blue-green upgrade for our stateful workload node pool. It runs a Cassandra ring with 9 nodes using local SSDs. Help us decide and configure whichever approach you recommend.",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-19T20:31:35.365780+00:00",
+  "input_tokens": 7995,
+  "output_tokens": 1470,
+  "time_seconds": 29.82,
+  "skill_files": [
+    "skill/SKILL.md",
+    "skill/evals/evals.json",
+    "skill/references/checklists.md",
+    "skill/references/runbook-template.md",
+    "skill/references/troubleshooting.md"
+  ]
+}

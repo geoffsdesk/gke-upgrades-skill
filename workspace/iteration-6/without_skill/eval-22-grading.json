@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains this is related to the interaction between maxSurge, drain order, and pod scheduling",
+      "passed": true,
+      "reason": "Response explains the interaction between upgrade strategy (maxSurge), scheduler behavior, and pod scheduling, identifying this as the core issue"
+    },
+    {
+      "expectation": "Notes that GKE cordons nodes before draining them \u2014 pods should prefer scheduling onto uncordoned (upgraded) nodes",
+      "passed": false,
+      "reason": "Response doesn't specifically explain GKE's cordoning behavior or that pods should prefer uncordoned nodes - only mentions cordoning in a separate blue-green strategy section"
+    },
+    {
+      "expectation": "Identifies possible cause: too many nodes being drained simultaneously (high maxSurge) before enough upgraded nodes exist",
+      "passed": true,
+      "reason": "Response clearly identifies 'upgrade strategy is too aggressive - draining multiple nodes simultaneously' as a root cause"
+    },
+    {
+      "expectation": "Recommends reducing maxSurge to 1 to ensure upgraded nodes are available before draining the next batch",
+      "passed": true,
+      "reason": "Response provides specific YAML configuration showing maxSurge: 1 and maxUnavailable: 0 for both GKE and EKS"
+    },
+    {
+      "expectation": "Suggests using pod anti-affinity or node affinity to prefer already-upgraded nodes",
+      "passed": true,
+      "reason": "Response provides detailed YAML example of nodeAffinity configuration to prefer nodes with upgrade-status=completed"
+    },
+    {
+      "expectation": "Mentions checking if any taints or tolerations are causing pods to land on the wrong nodes",
+      "passed": true,
+      "reason": "Response discusses using taints during upgrades and provides commands to taint nodes scheduled for upgrade"
+    },
+    {
+      "expectation": "Provides kubectl commands to check node cordoned status and pod scheduling events",
+      "passed": true,
+      "reason": "Response provides kubectl commands to watch nodes, check node status, and monitor the upgrade process"
+    },
+    {
+      "expectation": "Recommends setting maxUnavailable=0 to ensure old nodes aren't removed until pods are safely rescheduled",
+      "passed": true,
+      "reason": "Response explicitly shows maxUnavailable: 0 in the YAML configuration and explains this prevents draining until new nodes are ready"
+    }
+  ]
+}

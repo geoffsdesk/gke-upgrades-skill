@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains this is related to the interaction between maxSurge, drain order, and pod scheduling",
+      "passed": true,
+      "reason": "Response clearly explains the interaction between maxSurge settings, drain timing, and how the scheduler sees available nodes, describing the 'wave' of nodes being cordoned simultaneously"
+    },
+    {
+      "expectation": "Notes that GKE cordons nodes before draining them \u2014 pods should prefer scheduling onto uncordoned (upgraded) nodes",
+      "passed": true,
+      "reason": "Response explicitly mentions 'Nodes are cordoned at the start of their upgrade slot, but may not drain immediately' and explains scheduler visibility issues"
+    },
+    {
+      "expectation": "Identifies possible cause: too many nodes being drained simultaneously (high maxSurge) before enough upgraded nodes exist",
+      "passed": true,
+      "reason": "Response identifies that GKE drains up to ~20 nodes in parallel and explains how default surge settings create too few stable landing spots"
+    },
+    {
+      "expectation": "Recommends reducing maxSurge to 1 to ensure upgraded nodes are available before draining the next batch",
+      "passed": false,
+      "reason": "Response recommends INCREASING maxSurge to 3, not reducing it to 1. This is the opposite of what the expectation requires"
+    },
+    {
+      "expectation": "Suggests using pod anti-affinity or node affinity to prefer already-upgraded nodes",
+      "passed": true,
+      "reason": "Response provides detailed node affinity configuration example to prefer nodes with target Kubernetes version"
+    },
+    {
+      "expectation": "Mentions checking if any taints or tolerations are causing pods to land on the wrong nodes",
+      "passed": false,
+      "reason": "Response does not mention taints or tolerations as a potential cause or troubleshooting step"
+    },
+    {
+      "expectation": "Provides kubectl commands to check node cordoned status and pod scheduling events",
+      "passed": true,
+      "reason": "Response includes multiple kubectl commands to check nodes, monitor upgrade progress, and verify pod scheduling events"
+    },
+    {
+      "expectation": "Recommends setting maxUnavailable=0 to ensure old nodes aren't removed until pods are safely rescheduled",
+      "passed": true,
+      "reason": "Response explicitly recommends maxUnavailable=0 and explains that this prevents old nodes from being removed before pods are safely moved"
+    }
+  ]
+}

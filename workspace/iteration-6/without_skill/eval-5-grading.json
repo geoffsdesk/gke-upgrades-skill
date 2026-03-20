@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Response clearly states 'Node pool versions must be within 2 minor versions of the control plane' and explains the violation"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (3 minor versions)",
+      "passed": true,
+      "reason": "Response explicitly states 'Control plane (1.31) vs Node pool (1.28) = 3 versions apart \u274c' and identifies this as a violation"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Response lists multiple issues including API compatibility problems, workload scheduling failures, and unpredictable cluster behavior"
+    },
+    {
+      "expectation": "Recommends sequential node pool upgrades (1.28\u21921.29\u21921.30\u21921.31) not a direct jump",
+      "passed": true,
+      "reason": "Response provides step-by-step incremental upgrade commands from 1.29 to 1.30 to 1.31 and explicitly states 'don't jump directly to 1.31'"
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Response includes specific gcloud container clusters upgrade commands with proper syntax and parameters for each upgrade step"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": false,
+      "reason": "Response does not mention surge settings or maxSurge/maxUnavailable parameters in the upgrade commands"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": true,
+      "reason": "Response includes 'Wait for completion' between steps and mentions 'Monitor cluster health during and after upgrades'"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": false,
+      "reason": "Response mentions enabling auto-upgrade but does not specifically mention release channel enrollment or maintenance windows"
+    }
+  ]
+}

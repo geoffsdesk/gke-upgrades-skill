@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Proposes a phased rollout: dev first, then staging, then prod",
+      "passed": true,
+      "reason": "Response clearly structures rollout as Phase 1: Dev Environment, Phase 3: Staging Environment, Phase 4: Production Environment"
+    },
+    {
+      "expectation": "Includes soak time between environment phases (e.g., 24-48 hours for dev, 1 week for staging before prod)",
+      "passed": true,
+      "reason": "Response includes 48h soak time between dev clusters, 2-day intervals for staging, and 72h soak between prod clusters"
+    },
+    {
+      "expectation": "Defines go/no-go criteria between phases (error rates, latency, pod health)",
+      "passed": true,
+      "reason": "Response includes validation gates with specific criteria like system pod health, performance within baseline, and abort criteria with >1% error rate increase and >50ms p95 latency regression"
+    },
+    {
+      "expectation": "Addresses version availability differences across channels (1.30 may be on Rapid but not yet on Stable)",
+      "passed": true,
+      "reason": "Response explicitly addresses channel availability with prerequisites like '1.30 available in Rapid' and 'after 1.30 appears in Regular channel' and 'versions available in Stable'"
+    },
+    {
+      "expectation": "Recommends upgrading sequentially within each environment (1.28\u21921.29\u21921.30)",
+      "passed": true,
+      "reason": "Response clearly states 'Version Path: 1.28 \u2192 1.29 \u2192 1.30 (sequential minor upgrades recommended)' and implements this throughout all phases"
+    },
+    {
+      "expectation": "Suggests not upgrading all prod clusters simultaneously \u2014 do one or two first as canary",
+      "passed": true,
+      "reason": "Response shows staggered production rollout with specific sequencing: Day 1 Prod cluster 1, Day 4 cluster 2, Day 7 cluster 3, Day 10 cluster 4"
+    },
+    {
+      "expectation": "Includes rollback triggers and criteria for halting the rollout",
+      "passed": true,
+      "reason": "Response includes emergency brake mechanisms, maintenance exclusions to halt auto-upgrades, and specific abort criteria like error rate increases and latency regressions"
+    },
+    {
+      "expectation": "Provides a timeline or schedule estimate for the full rollout",
+      "passed": true,
+      "reason": "Response provides detailed 6-8 week timeline with specific week-by-week breakdown in the Timeline Summary table"
+    },
+    {
+      "expectation": "Mentions maintenance window coordination across clusters",
+      "passed": true,
+      "reason": "Response includes specific maintenance window configuration commands and examples with Saturday 2-6 AM UTC windows"
+    }
+  ]
+}

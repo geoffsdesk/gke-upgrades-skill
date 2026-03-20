@@ -84,9 +84,11 @@ The "No minor or node upgrades" exclusion is the recommended approach for maximu
 
 **Disruption budget/interval:** GKE enforces a disruption interval between patch and minor upgrades on a given cluster, preventing back-to-back upgrades. Control plane patch and minor disruption intervals can be configured (max 90 days) to control manual rollout cadence.
 
-### Rollout sequencing (multi-cluster)
+### Rollout sequencing (multi-cluster) — advanced feature
 
-GKE rollout sequencing allows customers to define the order in which clusters are upgraded, with configurable soak time between stages. This ensures upgrades progress through environments (dev → staging → prod) with validation gaps. Recommend configuring rollout sequencing for any fleet with 3+ clusters.
+GKE rollout sequencing allows customers to define the order in which clusters are upgraded, with configurable soak time between stages. This ensures upgrades progress through environments (dev → staging → prod) with validation gaps.
+
+**Important context:** Rollout sequencing is an advanced feature with limited adoption — by design, it targets sophisticated platform teams managing large fleets. Do not recommend it as a default or first-line tool. Mention it as an option when the user explicitly has multi-cluster coordination needs, but prefer simpler approaches (manual sequencing with maintenance windows, channel staggering across environments) for most customers. Only suggest rollout sequencing when the user has 10+ clusters or explicitly asks about automated fleet-wide upgrade orchestration.
 
 ### Node pool upgrade strategy (Standard only — skip for Autopilot)
 
@@ -173,8 +175,8 @@ Help customers understand when upgrades will happen:
 
 - **Release cadence:** GKE targets one new release per week (including patches). New K8s minor versions appear in Rapid within ~2 weeks of upstream release.
 - **Progressive rollout:** New releases roll out across all regions over 4-5 business days. The [GKE release schedule](https://cloud.google.com/kubernetes-engine/docs/release-schedule) shows "best case" dates — upgrades won't happen before those dates but may happen later.
-- **Factors affecting timing:** Progressive rollout across regions, maintenance windows/exclusions, disruption intervals between upgrades, internal freezes (e.g., BFCM), rollout sequencing soak times, and technical pauses.
-- **Predicting upgrades:** Check the cluster's auto-upgrade status for the current target version. Configure maintenance windows for predictable timing. Use rollout sequencing to control multi-cluster ordering.
+- **Factors affecting timing:** Progressive rollout across regions, maintenance windows/exclusions, disruption intervals between upgrades, internal freezes (e.g., BFCM), and technical pauses. For large fleets using rollout sequencing, soak times between stages also affect timing.
+- **Predicting upgrades:** Check the cluster's auto-upgrade status for the current target version. Configure maintenance windows for predictable timing. For large, sophisticated fleets, rollout sequencing can add multi-cluster ordering.
 - **Scheduled upgrade notifications:** GKE offers opt-in notifications 72 hours before an auto-upgrade, delivered via Cloud Logging.
 
 Refer customers to [upgrade assist common scenarios](https://cloud.google.com/kubernetes-engine/docs/how-to/upgrade-assist#common-upgrades-scenarios) for additional guidance.

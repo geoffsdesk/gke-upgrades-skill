@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends Stable or Extended release channel to minimize upgrade frequency",
+      "passed": true,
+      "reason": "Specifically recommends Extended release channel with detailed explanation of 24-month support window vs 14 months for other channels"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
+      "passed": true,
+      "reason": "Explicitly shows gcloud commands using '--add-maintenance-exclusion-scope no_minor_or_node_upgrades' and explains this blocks disruption while allowing CP patches"
+    },
+    {
+      "expectation": "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
+      "passed": true,
+      "reason": "Configures maintenance window for Sunday 6-10 AM (4-hour window) with specific recurrence pattern 'FREQ=WEEKLY;BYDAY=SU'"
+    },
+    {
+      "expectation": "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
+      "passed": true,
+      "reason": "Creates three separate node pools: system pool, dedicated H100 training pool with node taints, and separate inference pool with different GPU types"
+    },
+    {
+      "expectation": "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
+      "passed": true,
+      "reason": "Uses '--no-enable-autoupgrade' flag for training pool and provides detailed manual upgrade execution plan for gaps between training campaigns"
+    },
+    {
+      "expectation": "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
+      "passed": true,
+      "reason": "Provides specific checkpointing strategy with environment variables for checkpoint frequency, GCS storage mounting, and terminationGracePeriodSeconds configuration"
+    },
+    {
+      "expectation": "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
+      "passed": true,
+      "reason": "Includes detailed 'Driver compatibility validation' section with commands to create staging pools and test CUDA/PyTorch compatibility before production upgrades"
+    },
+    {
+      "expectation": "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading",
+      "passed": true,
+      "reason": "Specifically mentions GPUDirect-TCPX configuration, compact placement groups, and custom MTU settings can break during upgrades, with NCCL bandwidth testing validation"
+    }
+  ]
+}

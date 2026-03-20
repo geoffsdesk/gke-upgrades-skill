@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Starts with pre-flight checks: current versions, cluster health, node status",
+      "passed": true,
+      "reason": "Phase 1 includes comprehensive pre-flight checks with commands to verify current cluster state, check versions, verify node pools, and check node status using both gcloud and kubectl commands"
+    },
+    {
+      "expectation": "Includes the gcloud command to check available versions in the release channel",
+      "passed": true,
+      "reason": "Step 3 includes 'gcloud container get-server-config --zone=$ZONE --format=\"yaml(validMasterVersions)\"' and 'gcloud container get-server-config --zone=$ZONE --format=\"table(validMasterVersions[0:5])\"' to check available versions"
+    },
+    {
+      "expectation": "Includes the API deprecation check command before upgrading",
+      "passed": false,
+      "reason": "The runbook does not include any commands to check for API deprecations before upgrading, which is a critical pre-upgrade step for Kubernetes version upgrades"
+    },
+    {
+      "expectation": "Provides the exact gcloud command for control plane upgrade to 1.29 first (--master flag)",
+      "passed": true,
+      "reason": "Step 6 provides the exact command: 'gcloud container clusters upgrade $CLUSTER_NAME --zone=$ZONE --master --cluster-version=$MASTER_VERSION --project=$PROJECT_ID'"
+    },
+    {
+      "expectation": "Includes a verification step after control plane upgrade with expected output",
+      "passed": true,
+      "reason": "Step 7 includes verification commands to check master version and cluster health with 'gcloud container clusters describe' and 'kubectl cluster-info'"
+    },
+    {
+      "expectation": "Provides the exact gcloud command for each node pool upgrade to 1.29",
+      "passed": true,
+      "reason": "Steps 8 and 10 provide exact commands for upgrading both default-pool and workload-pool: 'gcloud container clusters upgrade $CLUSTER_NAME --zone=$ZONE --node-pool=POOL_NAME --project=$PROJECT_ID'"
+    },
+    {
+      "expectation": "Includes monitoring commands to watch node pool upgrade progress",
+      "passed": true,
+      "reason": "Multiple steps include 'watch kubectl get nodes' and 'watch kubectl get nodes -o wide' commands to monitor node pool upgrade progress"
+    },
+    {
+      "expectation": "Repeats the full sequence for 1.29\u21921.30 (sequential, not skipping)",
+      "passed": true,
+      "reason": "Phase 3 completely repeats the upgrade sequence for 1.29\u21921.30 with control plane upgrade first (Step 14), then each node pool (Steps 16-17)"
+    },
+    {
+      "expectation": "Includes post-upgrade validation: node versions, pod health, kube-system pods",
+      "passed": true,
+      "reason": "Phase 4 includes comprehensive post-upgrade validation with commands to check node versions, workload health, pod status across all namespaces, and functional testing"
+    },
+    {
+      "expectation": "Provides a rollback section explaining what to do if something goes wrong",
+      "passed": true,
+      "reason": "Includes 'Emergency Rollback' section explaining that GKE doesn't support direct rollbacks and provides alternatives like restoring from backups or creating new clusters"
+    }
+  ]
+}

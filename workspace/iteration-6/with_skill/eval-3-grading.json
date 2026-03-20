@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies PDB as the most likely/common cause of stuck upgrades",
+      "passed": true,
+      "reason": "Response explicitly states PDBs are the most common cause and mentions '90% chance this is your issue' and 'Most likely scenario: You have a PDB with minAvailable set too high'"
+    },
+    {
+      "expectation": "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
+      "passed": true,
+      "reason": "Provides 'kubectl get pdb -A -o wide' and additional commands to check PDB details and find problematic ones"
+    },
+    {
+      "expectation": "Provides commands to identify which pods are blocking the drain",
+      "passed": true,
+      "reason": "Includes commands to check bare pods, terminating pods, and provides detailed PDB analysis commands to identify blocking pods"
+    },
+    {
+      "expectation": "Includes resource constraint diagnosis (capacity issues, pending pods)",
+      "passed": true,
+      "reason": "Includes commands to check for pending pods and FailedScheduling events, plus mentions resource constraints as a potential issue"
+    },
+    {
+      "expectation": "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+      "passed": true,
+      "reason": "Provides specific kubectl patch commands to relax PDBs by adjusting maxUnavailable and minAvailable settings"
+    },
+    {
+      "expectation": "Includes guidance on surge upgrade settings as a potential fix",
+      "passed": true,
+      "reason": "Provides gcloud commands to increase max-surge-upgrade and adjust max-unavailable-upgrade settings"
+    },
+    {
+      "expectation": "Mentions webhook issues as a possible cause",
+      "passed": false,
+      "reason": "The response does not mention admission webhooks or validating/mutating webhooks as a potential cause of stuck upgrades"
+    },
+    {
+      "expectation": "Includes validation steps to confirm the fix is working",
+      "passed": true,
+      "reason": "Includes a 'Monitor Progress' section with commands to watch node upgrade progress, check operation status, and verify no stuck pods"
+    }
+  ]
+}

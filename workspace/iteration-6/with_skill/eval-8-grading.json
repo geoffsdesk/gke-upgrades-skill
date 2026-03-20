@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the key difference: surge upgrades nodes in-place with rolling replacement, blue-green creates an entirely new pool",
+      "passed": true,
+      "reason": "The response clearly explains surge upgrade as 'node-by-node replacement' and blue-green as creating 'an entirely new pool' or 'parallel node pool'"
+    },
+    {
+      "expectation": "Recommends blue-green for this scenario due to local SSDs (data can't migrate between nodes)",
+      "passed": false,
+      "reason": "The response recommends surge upgrade instead of blue-green, contradicting this expectation"
+    },
+    {
+      "expectation": "Explains that local SSD data is lost when a node is drained during surge upgrade",
+      "passed": true,
+      "reason": "The response explicitly states 'Local SSD data is ephemeral anyway \u2014 you can't preserve local SSD data during upgrades regardless of strategy'"
+    },
+    {
+      "expectation": "Describes the blue-green process: create new pool, cordon old pool, migrate workloads, delete old pool",
+      "passed": true,
+      "reason": "The response provides detailed blue-green steps including creating parallel pool, scaling StatefulSet, cordoning old nodes, scaling back, and deleting old pool"
+    },
+    {
+      "expectation": "Addresses Cassandra-specific concerns: need to decommission from the ring before draining, rebuild on new nodes",
+      "passed": true,
+      "reason": "The response addresses data rebuilding from replicas, ring status monitoring, and Cassandra's ability to handle node changes gracefully"
+    },
+    {
+      "expectation": "Provides gcloud commands for creating the new node pool with matching configuration",
+      "passed": true,
+      "reason": "Multiple gcloud commands are provided for node pool operations including creation with machine type and SSD configuration"
+    },
+    {
+      "expectation": "Includes kubectl commands for cordoning and draining",
+      "passed": true,
+      "reason": "The response includes kubectl cordon commands and scaling operations for workload migration"
+    },
+    {
+      "expectation": "Mentions PDB configuration to protect the Cassandra quorum during migration",
+      "passed": true,
+      "reason": "The response includes a complete PodDisruptionBudget configuration with minAvailable set to protect against simultaneous evictions"
+    }
+  ]
+}

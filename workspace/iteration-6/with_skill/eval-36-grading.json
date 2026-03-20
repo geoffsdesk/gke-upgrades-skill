@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that surge upgrades create NEW nodes before draining old ones \u2014 this requires extra GPU capacity that may not exist for scarce hardware like H100",
+      "passed": true,
+      "reason": "The response clearly explains that surge operations require additional GPU quota/capacity and identifies this as the root cause of the failure with H100/A3-mega scarcity"
+    },
+    {
+      "expectation": "Recommends switching to maxSurge=0, maxUnavailable=1 \u2014 this drains a node first then creates the replacement, requiring zero extra GPU capacity",
+      "passed": true,
+      "reason": "The response explicitly recommends Option 1 with the exact command showing --max-surge-upgrade 0 and --max-unavailable-upgrade 1, explaining this avoids needing surge capacity"
+    },
+    {
+      "expectation": "Warns that maxUnavailable=1 means reduced cluster capacity during upgrade \u2014 63/64 nodes available at any time",
+      "passed": true,
+      "reason": "The response explicitly mentions 'Temporary capacity reduction (1 node down at a time)' as a trade-off and explains the impact on available capacity"
+    },
+    {
+      "expectation": "Mentions blue-green as an alternative if a full replacement pool can be provisioned (requires 2x quota but gives instant rollback)",
+      "passed": true,
+      "reason": "Option 2 presents blue-green approach with commands for creating a new pool, explicitly noting it 'requires double GPU quota (128 H100s temporarily)' and provides zero downtime"
+    },
+    {
+      "expectation": "Suggests upgrading during off-peak when some GPU nodes are idle \u2014 scale down non-critical workloads to free capacity",
+      "passed": true,
+      "reason": "Option 3 specifically addresses coordinating with ML teams on timing, waiting for training jobs to complete, and identifying nodes with no running workloads before draining"
+    },
+    {
+      "expectation": "Notes that with maxUnavailable=1 on 64 nodes at ~20-node parallelism, the upgrade will take significantly longer",
+      "passed": false,
+      "reason": "While the response mentions the drain-first approach will be slower, it doesn't provide specific timing estimates or mention the parallelism constraints that would make it significantly longer"
+    },
+    {
+      "expectation": "Recommends checking if GPU reservations have headroom that could be used for surge nodes",
+      "passed": true,
+      "reason": "The response mentions 'Consider GPU reservations that include headroom for surge operations' in the prevention section, addressing this recommendation"
+    },
+    {
+      "expectation": "Advises scheduling the upgrade during a gap between training runs when nodes can be drained without impacting workloads",
+      "passed": true,
+      "reason": "Option 3 explicitly suggests waiting for training jobs to complete naturally and coordinating with ML teams on timing, and the prevention section mentions upgrading during scheduled training gaps"
+    }
+  ]
+}

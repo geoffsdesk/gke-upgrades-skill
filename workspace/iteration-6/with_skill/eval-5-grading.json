@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Clearly states GKE only supports nodes within 2 minor versions of the control plane and identifies this as a version skew violation"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (3 minor versions)",
+      "passed": true,
+      "reason": "Explicitly states nodes are 3 minor versions behind the control plane (1.28 vs 1.31) which exceeds the maximum supported skew"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Lists specific issues including API calls may fail, newer Kubernetes features unavailable, kubectl commands may not work properly, and workload instability"
+    },
+    {
+      "expectation": "Recommends sequential node pool upgrades (1.28\u21921.29\u21921.30\u21921.31) not a direct jump",
+      "passed": true,
+      "reason": "Explicitly outlines upgrade path through 1.29 \u2192 1.30 \u2192 1.31 with sequential minor versions recommended, and provides three-phase upgrade plan"
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Provides specific gcloud container node-pools upgrade commands for each phase of the upgrade process"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": true,
+      "reason": "Explicitly recommends configuring conservative surge settings with max-surge-upgrade 1 and max-unavailable-upgrade 0"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": true,
+      "reason": "Includes validation steps after each upgrade phase and provides commands to check node status and workload health"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": true,
+      "reason": "Discusses prevention strategies including keeping node pools on auto-upgrade, using maintenance windows instead of disabling upgrades, and monitoring version skew"
+    }
+  ]
+}

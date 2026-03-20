@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends combining release channels with maintenance exclusions as the approach for maximum control",
+      "passed": true,
+      "reason": "The response clearly recommends using Regular/Stable release channels combined with maintenance exclusion strategy, specifically stating this gives 'the most granular control available in GKE'"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' exclusion to prevent disruptive changes while allowing control plane security patches",
+      "passed": true,
+      "reason": "The response explicitly recommends 'No minor or node upgrades' maintenance exclusion strategy and clearly explains it allows control plane security patches while blocking disruptive minor version and node upgrades"
+    },
+    {
+      "expectation": "Recommends maintenance windows to control WHEN patches are applied (e.g., weekend windows only)",
+      "passed": true,
+      "reason": "The response includes a dedicated section on maintenance windows with gcloud commands showing how to set predictable windows aligned with change control, including a Saturday weekly recurrence example"
+    },
+    {
+      "expectation": "Mentions the disruption interval between patch and minor upgrades to prevent back-to-back upgrades",
+      "passed": false,
+      "reason": "The response does not mention disruption intervals or preventing back-to-back upgrades. It focuses on maintenance exclusions and windows but doesn't discuss this specific timing control mechanism"
+    },
+    {
+      "expectation": "Suggests Stable or Extended channel for production clusters in regulated environments",
+      "passed": true,
+      "reason": "The response recommends Regular or Stable channels for maximum control, mentions Extended channel for 24-month support window for compliance, and specifically suggests Regular or Stable channel for production in the multi-environment strategy"
+    },
+    {
+      "expectation": "Notes that disabling control plane patches entirely is not recommended due to security risks \u2014 monthly patches at minimum",
+      "passed": true,
+      "reason": "The response emphasizes that the recommended approach 'Allows control plane security patches (automatic, non-disruptive)' and states this ensures 'you don't miss critical security patches' while maintaining control"
+    },
+    {
+      "expectation": "May mention rollout sequencing as an advanced option for controlling upgrade order across multiple clusters \u2014 should not be positioned as a default recommendation",
+      "passed": false,
+      "reason": "The response does not mention rollout sequencing as an advanced option. It discusses multi-environment strategy and staggered timelines but not rollout sequencing specifically"
+    },
+    {
+      "expectation": "Provides gcloud commands for configuring the recommended exclusion type and maintenance window",
+      "passed": true,
+      "reason": "The response provides multiple detailed gcloud commands including maintenance exclusion configuration with 'no_minor_or_node_upgrades' scope and maintenance window configuration with specific parameters"
+    }
+  ]
+}

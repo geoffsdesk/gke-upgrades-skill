@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Proposes a phased rollout: dev first, then staging, then prod",
+      "passed": true,
+      "reason": "Response clearly outlines Phase 1 (Dev), Phase 2 (Staging), and Phase 3 (Prod) in sequential order"
+    },
+    {
+      "expectation": "Includes soak time between environment phases (e.g., 24-48 hours for dev, 1 week for staging before prod)",
+      "passed": true,
+      "reason": "Includes 24-48 hour waits in staging, 1 week monitoring periods in production, and clear timeline separation between phases"
+    },
+    {
+      "expectation": "Defines go/no-go criteria between phases (error rates, latency, pod health)",
+      "passed": true,
+      "reason": "Provides detailed validation checklists including pod health, application functionality, performance benchmarking, and health check scripts"
+    },
+    {
+      "expectation": "Addresses version availability differences across channels (1.30 may be on Rapid but not yet on Stable)",
+      "passed": false,
+      "reason": "Does not address potential version availability differences between Rapid, Regular, and Stable channels or contingency plans if 1.30 isn't available on all channels"
+    },
+    {
+      "expectation": "Recommends upgrading sequentially within each environment (1.28\u21921.29\u21921.30)",
+      "passed": false,
+      "reason": "Response shows direct upgrade from 1.28 to 1.30 without intermediate 1.29 step, which may not be supported for multi-version jumps"
+    },
+    {
+      "expectation": "Suggests not upgrading all prod clusters simultaneously \u2014 do one or two first as canary",
+      "passed": true,
+      "reason": "Production strategy explicitly states 'strict sequential' upgrades with 1 week monitoring between clusters and identifies first cluster as primary"
+    },
+    {
+      "expectation": "Includes rollback triggers and criteria for halting the rollout",
+      "passed": true,
+      "reason": "Provides emergency rollback procedures, health validation scripts, and backup/restore strategy for rollback scenarios"
+    },
+    {
+      "expectation": "Provides a timeline or schedule estimate for the full rollout",
+      "passed": true,
+      "reason": "Clear timeline provided: Week 1-2 for dev, Week 3-4 for staging, Week 5-7 for production with specific daily schedules"
+    },
+    {
+      "expectation": "Mentions maintenance window coordination across clusters",
+      "passed": true,
+      "reason": "Explicitly defines maintenance windows for each environment (dev: business hours, staging: Tue/Thu 10AM-2PM, prod: Saturday 2AM-6AM)"
+    }
+  ]
+}

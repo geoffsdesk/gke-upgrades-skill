@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that 'No channel' is a legacy configuration that lacks granular maintenance exclusion types",
+      "passed": false,
+      "reason": "The response does not specifically mention that 'No channel' is a legacy configuration or that it lacks granular maintenance exclusion types"
+    },
+    {
+      "expectation": "Mentions that 'No channel' does not support 'no minor or node upgrades' exclusion scope \u2014 only the 30-day 'no upgrades' type",
+      "passed": false,
+      "reason": "The response does not discuss maintenance exclusion scopes or the limitation to only 30-day 'no upgrades' exclusions"
+    },
+    {
+      "expectation": "Notes that Extended support (24 months) is only available on release channels, not 'No channel'",
+      "passed": false,
+      "reason": "The response does not mention Extended support or the 24-month support period being exclusive to release channels"
+    },
+    {
+      "expectation": "Notes that rollout sequencing (an advanced feature) is not available on 'No channel'",
+      "passed": false,
+      "reason": "The response does not mention rollout sequencing or this advanced feature being unavailable on 'No channel'"
+    },
+    {
+      "expectation": "Recommends Regular or Stable channel as the closest migration target (legacy behavior matches Stable for minors, Regular for patches)",
+      "passed": true,
+      "reason": "The response recommends Regular channel as the primary migration target and mentions it provides balanced stability and features"
+    },
+    {
+      "expectation": "Mentions Extended channel as an option for customers who want maximum flexibility around EoS",
+      "passed": true,
+      "reason": "The response mentions Extended channel and describes it as providing 'maximum stability' for critical workloads"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "The response provides specific gcloud commands to update clusters to use release channels, including 'gcloud container clusters update CLUSTER_NAME --release-channel=regular'"
+    },
+    {
+      "expectation": "References the comparison table at cloud.google.com/kubernetes-engine/docs/concepts/release-channels",
+      "passed": false,
+      "reason": "The response does not reference the specific documentation URL for the release channels comparison table"
+    }
+  ]
+}

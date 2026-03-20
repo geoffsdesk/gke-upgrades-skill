@@ -388,7 +388,7 @@
         "Explains that 'No channel' is a legacy configuration that lacks granular maintenance exclusion types",
         "Mentions that 'No channel' does not support 'no minor or node upgrades' exclusion scope — only the 30-day 'no upgrades' type",
         "Notes that Extended support (24 months) is only available on release channels, not 'No channel'",
-        "Notes that rollout sequencing is not available on 'No channel'",
+        "Notes that rollout sequencing (an advanced feature) is not available on 'No channel'",
         "Recommends Regular or Stable channel as the closest migration target (legacy behavior matches Stable for minors, Regular for patches)",
         "Mentions Extended channel as an option for customers who want maximum flexibility around EoS",
         "Provides the gcloud command to change the release channel",
@@ -439,7 +439,7 @@
         "Mentions the disruption interval between patch and minor upgrades to prevent back-to-back upgrades",
         "Suggests Stable or Extended channel for production clusters in regulated environments",
         "Notes that disabling control plane patches entirely is not recommended due to security risks — monthly patches at minimum",
-        "Mentions rollout sequencing for controlling the order of upgrades across multiple clusters",
+        "May mention rollout sequencing as an advanced option for controlling upgrade order across multiple clusters — should not be positioned as a default recommendation",
         "Provides gcloud commands for configuring the recommended exclusion type and maintenance window"
       ]
     },
@@ -456,7 +456,7 @@
         "Recommends configuring maintenance windows so upgrades only happen during known time slots",
         "Mentions scheduled upgrade notifications (72h advance, opt-in via Cloud Logging)",
         "Notes that GKE upgrade visibility shows the cluster's target version and EoL timeline",
-        "Mentions rollout sequencing with configurable soak times for multi-cluster predictability"
+        "May mention rollout sequencing (advanced feature, limited adoption) as an option for multi-cluster predictability — not a primary recommendation"
       ]
     },
     {
@@ -488,7 +488,7 @@
         "Mentions GKE EoS notifications via Cloud Logging as an ongoing monitoring tool",
         "Recommends enrolling in scheduled upgrade notifications (72h advance) for all clusters",
         "Suggests standardizing on a channel strategy: dev→Rapid, staging→Regular, prod→Stable/Extended",
-        "Recommends configuring rollout sequencing to control upgrade ordering across the fleet",
+        "May mention rollout sequencing as an advanced option for fleet-wide upgrade ordering — should not be the primary recommendation for fleet remediation",
         "Mentions GKE Insights and Recommendations in the console for identifying issues like version skew"
       ]
     },

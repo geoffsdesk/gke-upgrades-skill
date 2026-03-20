@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends increasing maxSurge significantly (e.g., 10-20 or higher) to parallelize node replacements",
+      "passed": true,
+      "reason": "Response shows specific examples with maxSurge values of 5, 8, and 10, demonstrating the concept of increasing surge for parallelization"
+    },
+    {
+      "expectation": "Explains that higher maxSurge means more nodes upgrading simultaneously but requires more compute quota",
+      "passed": false,
+      "reason": "While maxSurge is discussed, there is no explanation about compute quota requirements or the relationship between higher surge and quota needs"
+    },
+    {
+      "expectation": "Advises checking and requesting increased compute quota before the upgrade",
+      "passed": false,
+      "reason": "No mention of checking or requesting increased compute quota before upgrades"
+    },
+    {
+      "expectation": "Suggests staggering node pool upgrades or running non-conflicting pools in parallel",
+      "passed": true,
+      "reason": "Response includes automated upgrade pipeline showing staggered upgrades and parallel execution of pool upgrades using async flags"
+    },
+    {
+      "expectation": "Mentions that maxUnavailable can be set >0 for non-critical pools to speed things up further",
+      "passed": true,
+      "reason": "Response shows maxUnavailable set to 1 and 2 in examples, demonstrating the concept of allowing unavailable nodes to speed upgrades"
+    },
+    {
+      "expectation": "Recommends expanding the maintenance window or splitting across multiple weekends",
+      "passed": false,
+      "reason": "No recommendation to expand maintenance window or split across multiple weekends; response focuses on fitting within existing 8-hour window"
+    },
+    {
+      "expectation": "Provides the gcloud command for updating surge settings on each pool",
+      "passed": true,
+      "reason": "Multiple gcloud commands provided showing how to update maxSurge and maxUnavailable settings for node pools"
+    },
+    {
+      "expectation": "Includes monitoring commands to track upgrade progress in real-time",
+      "passed": true,
+      "reason": "Response includes monitoring script with gcloud container operations list and kubectl get nodes commands for tracking progress"
+    }
+  ]
+}

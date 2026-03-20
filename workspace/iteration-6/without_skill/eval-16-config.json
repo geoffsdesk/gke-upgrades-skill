@@ -1,0 +1,12 @@
+{
+  "eval_id": 16,
+  "mode": "without_skill",
+  "iteration": 6,
+  "prompt": "We upgraded our control plane from 1.29 to 1.30 and now some of our workloads are failing with admission webhook errors. The webhook is from a third-party operator (cert-manager). Pods can't be created. How do we fix this urgently?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-19T21:01:42.100591+00:00",
+  "input_tokens": 68,
+  "output_tokens": 1015,
+  "time_seconds": 18.44
+}

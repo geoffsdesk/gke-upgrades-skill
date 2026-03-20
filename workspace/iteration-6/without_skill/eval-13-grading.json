@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that GKE respects terminationGracePeriodSeconds during pod eviction, but surge upgrades have a max eviction timeout",
+      "passed": false,
+      "reason": "The response does not explain GKE's respect for terminationGracePeriodSeconds or mention surge upgrade eviction timeout limits"
+    },
+    {
+      "expectation": "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour \u2014 far less than 8-16 hour jobs",
+      "passed": false,
+      "reason": "The response does not mention the 1-hour default pod eviction timeout during surge upgrades"
+    },
+    {
+      "expectation": "Recommends pausing new batch job submissions before starting the upgrade",
+      "passed": true,
+      "reason": "The response shows tainting old nodes with NoSchedule to prevent new scheduling and mentions monitoring jobs completion"
+    },
+    {
+      "expectation": "Advises waiting for in-flight jobs to complete naturally before upgrading their node pool",
+      "passed": true,
+      "reason": "The response explicitly mentions monitoring job completion and deleting old pools only after jobs complete in the blue-green strategy"
+    },
+    {
+      "expectation": "Suggests using node affinity or taints to isolate batch workloads on a dedicated node pool",
+      "passed": true,
+      "reason": "The response provides specific examples of taints, tolerations, and nodeAffinity configuration for isolating batch workloads"
+    },
+    {
+      "expectation": "Recommends upgrading non-batch node pools first while batch jobs complete on the old pool",
+      "passed": true,
+      "reason": "The blue-green node pool strategy explicitly demonstrates creating new pools while maintaining old ones for running jobs"
+    },
+    {
+      "expectation": "Mentions scheduling the upgrade during a natural gap in batch processing if one exists",
+      "passed": true,
+      "reason": "The response includes maintenance window approach with exclusions during peak job times and scheduling upgrades during low-activity periods"
+    },
+    {
+      "expectation": "Provides commands for cordoning batch nodes to prevent new scheduling while jobs finish",
+      "passed": true,
+      "reason": "The response provides kubectl taint commands to prevent new scheduling on nodes and includes job monitoring scripts that check for node cordoning"
+    }
+  ]
+}

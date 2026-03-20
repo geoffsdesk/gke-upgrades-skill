@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that exact upgrade dates are difficult to predict but several tools help narrow the window",
+      "passed": false,
+      "reason": "The response does not explicitly explain that exact upgrade dates are difficult to predict. Instead, it focuses on control methods and predictable timelines without acknowledging the inherent uncertainty in GKE upgrade timing."
+    },
+    {
+      "expectation": "Mentions the GKE release schedule as a 'best case' timeline \u2014 upgrades won't happen before listed dates",
+      "passed": false,
+      "reason": "The response does not mention the GKE release schedule or explain it as a 'best case' timeline. It focuses on release channels and available versions but doesn't reference the official release schedule."
+    },
+    {
+      "expectation": "Recommends checking the cluster's auto-upgrade status for the current target version and any pauses",
+      "passed": true,
+      "reason": "The response includes scripts that check auto-upgrade status and node pool configurations, showing management settings including auto_upgrade status."
+    },
+    {
+      "expectation": "Mentions that new releases roll out progressively across regions over 4-5 business days",
+      "passed": false,
+      "reason": "The response does not mention the progressive regional rollout of new releases or the 4-5 business day timeframe."
+    },
+    {
+      "expectation": "Recommends configuring maintenance windows so upgrades only happen during known time slots",
+      "passed": true,
+      "reason": "The response explicitly shows how to configure maintenance windows with specific start times and demonstrates this in the Terraform configuration examples."
+    },
+    {
+      "expectation": "Mentions scheduled upgrade notifications (72h advance, opt-in via Cloud Logging)",
+      "passed": false,
+      "reason": "The response does not mention the 72-hour advance upgrade notifications or the Cloud Logging opt-in mechanism. It shows custom monitoring and alerting but not the built-in GKE notification system."
+    },
+    {
+      "expectation": "Notes that GKE upgrade visibility shows the cluster's target version and EoL timeline",
+      "passed": false,
+      "reason": "The response does not specifically mention GKE upgrade visibility features that show target versions and End-of-Life timelines, though it does show how to check current and available versions."
+    },
+    {
+      "expectation": "May mention rollout sequencing (advanced feature, limited adoption) as an option for multi-cluster predictability \u2014 not a primary recommendation",
+      "passed": false,
+      "reason": "The response does not mention rollout sequencing as an advanced feature for multi-cluster predictability."
+    }
+  ]
+}

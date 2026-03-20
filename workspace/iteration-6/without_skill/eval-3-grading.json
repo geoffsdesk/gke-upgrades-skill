@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies PDB as the most likely/common cause of stuck upgrades",
+      "passed": true,
+      "reason": "Response explicitly states 'Most common cause of stuck drains' for PDBs and calls them '#1 cause of stuck upgrades'"
+    },
+    {
+      "expectation": "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
+      "passed": true,
+      "reason": "Includes 'kubectl get pdb --all-namespaces' command in multiple places"
+    },
+    {
+      "expectation": "Provides commands to identify which pods are blocking the drain",
+      "passed": true,
+      "reason": "Includes 'kubectl get pods --all-namespaces --field-selector=status.phase!=Succeeded -o wide | grep <old-node-names>' command to identify problematic pods"
+    },
+    {
+      "expectation": "Includes resource constraint diagnosis (capacity issues, pending pods)",
+      "passed": false,
+      "reason": "Response does not address resource constraints, capacity issues, or pending pods as potential causes"
+    },
+    {
+      "expectation": "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+      "passed": true,
+      "reason": "Provides kubectl patch commands to adjust minAvailable to 0 and increase maxUnavailable for PDBs"
+    },
+    {
+      "expectation": "Includes guidance on surge upgrade settings as a potential fix",
+      "passed": true,
+      "reason": "Shows gcloud commands to set max-surge and max-unavailable parameters for upgrade strategy"
+    },
+    {
+      "expectation": "Mentions webhook issues as a possible cause",
+      "passed": false,
+      "reason": "Response does not mention admission controllers, validating webhooks, or webhook-related issues"
+    },
+    {
+      "expectation": "Includes validation steps to confirm the fix is working",
+      "passed": true,
+      "reason": "Includes 'Monitor Progress' section with watch commands to monitor upgrade progress and pod rescheduling"
+    }
+  ]
+}

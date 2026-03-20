@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies this as an admission webhook compatibility issue \u2014 the webhook is rejecting pod creation requests",
+      "passed": true,
+      "reason": "Response clearly identifies this as 'a common issue when upgrading Kubernetes versions due to API changes and webhook compatibility' and explains that webhooks are blocking pod creation"
+    },
+    {
+      "expectation": "Provides commands to identify the problematic webhook (kubectl get validatingwebhookconfigurations / mutatingwebhookconfigurations)",
+      "passed": true,
+      "reason": "Provides both commands: 'kubectl get validatingwebhookconfigurations' and 'kubectl get mutatingwebhookconfigurations' with additional grep commands to find cert-manager specific webhooks"
+    },
+    {
+      "expectation": "Offers an immediate fix: temporarily disable or remove the problematic webhook",
+      "passed": true,
+      "reason": "Offers multiple immediate fixes including webhook disabling via patch commands and complete removal via delete commands"
+    },
+    {
+      "expectation": "Provides the kubectl delete command for the webhook configuration as emergency mitigation",
+      "passed": true,
+      "reason": "Provides explicit delete commands: 'kubectl delete validatingwebhookconfigurations cert-manager-webhook' and 'kubectl delete mutatingwebhookconfigurations cert-manager-webhook'"
+    },
+    {
+      "expectation": "Warns that deleting the webhook removes validation \u2014 it's a temporary fix",
+      "passed": true,
+      "reason": "Includes warning '\u26a0\ufe0f Only use this as a last resort for immediate pod creation' and labels the webhook bypass section as 'URGENT ONLY', and mentions 'Re-enable webhooks if you disabled them temporarily' in post-fix actions"
+    },
+    {
+      "expectation": "Recommends checking cert-manager version compatibility with Kubernetes 1.30",
+      "passed": true,
+      "reason": "Provides command to check cert-manager version and explicitly states 'Kubernetes 1.30 requires cert-manager v1.13.0 or later'"
+    },
+    {
+      "expectation": "Advises upgrading cert-manager to a version that supports 1.30 as the permanent fix",
+      "passed": true,
+      "reason": "Lists upgrading cert-manager as 'Option 1: Upgrade Cert-Manager (Recommended)' and provides specific commands to upgrade to v1.13.3"
+    },
+    {
+      "expectation": "Mentions setting failurePolicy to Ignore as a less drastic alternative to deletion",
+      "passed": true,
+      "reason": "Provides patch commands to set failurePolicy to Ignore: 'kubectl patch validatingwebhookconfigurations cert-manager-webhook --type='merge' -p='{\"webhooks\":[{\"name\":\"webhook.cert-manager.io\",\"failurePolicy\":\"Ignore\"}]}'"
+    },
+    {
+      "expectation": "Includes commands to verify pods can be created after the fix",
+      "passed": true,
+      "reason": "Includes verification section with 'kubectl run test-pod --image=nginx --rm -it --restart=Never -- echo \"success\"' command to test pod creation"
+    }
+  ]
+}

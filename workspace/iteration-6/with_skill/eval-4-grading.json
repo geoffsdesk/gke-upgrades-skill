@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that regional clusters have multiple control plane replicas and the upgrade is rolling",
+      "passed": true,
+      "reason": "Response clearly states 'Regional GKE clusters have multiple control plane replicas across zones. During the upgrade, GKE performs a rolling update of these replicas'"
+    },
+    {
+      "expectation": "States that regional control plane upgrades have near-zero API server downtime",
+      "passed": true,
+      "reason": "Response explicitly states 'Good news: Zero API server downtime' and 'the API server remains available throughout'"
+    },
+    {
+      "expectation": "Contrasts with zonal clusters where there IS a brief API server outage during upgrade",
+      "passed": false,
+      "reason": "The response does not mention zonal clusters or contrast them with regional clusters regarding API server downtime during upgrades"
+    },
+    {
+      "expectation": "Provides the gcloud command for control plane upgrade (--master flag)",
+      "passed": true,
+      "reason": "Response includes the exact command 'gcloud container clusters upgrade CLUSTER_NAME --region us-central1 --master --cluster-version 1.30' with proper --master flag"
+    },
+    {
+      "expectation": "Mentions expected duration for control plane upgrade (roughly 10-30 minutes)",
+      "passed": true,
+      "reason": "Response states 'Control plane upgrades typically take 10-15 minutes for regional clusters' which falls within the expected range"
+    },
+    {
+      "expectation": "Includes a command to verify the control plane version after upgrade",
+      "passed": true,
+      "reason": "Response includes the command 'gcloud container clusters describe CLUSTER_NAME --region us-central1 --format=\"value(currentMasterVersion)\"' in the monitoring section"
+    },
+    {
+      "expectation": "Recommends checking kube-system pods health after upgrade",
+      "passed": true,
+      "reason": "Response includes 'kubectl get pods -n kube-system' both in pre-flight checks and post-upgrade monitoring sections"
+    },
+    {
+      "expectation": "Advises checking deprecated API usage before upgrading",
+      "passed": true,
+      "reason": "Response includes the specific command 'kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated' with explanation about deprecated API usage being a common upgrade blocker"
+    }
+  ]
+}

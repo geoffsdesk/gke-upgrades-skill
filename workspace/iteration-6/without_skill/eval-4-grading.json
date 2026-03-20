@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that regional clusters have multiple control plane replicas and the upgrade is rolling",
+      "passed": true,
+      "reason": "Response clearly explains that regional clusters use multiple control plane replicas across zones and upgrades are performed in a rolling fashion with replicas upgraded one at a time"
+    },
+    {
+      "expectation": "States that regional control plane upgrades have near-zero API server downtime",
+      "passed": true,
+      "reason": "Response explicitly states 'Zero API server downtime!' and explains that the load balancer continues routing to healthy replicas during the rolling upgrade"
+    },
+    {
+      "expectation": "Contrasts with zonal clusters where there IS a brief API server outage during upgrade",
+      "passed": false,
+      "reason": "Response does not mention zonal clusters or contrast them with regional clusters regarding downtime during upgrades"
+    },
+    {
+      "expectation": "Provides the gcloud command for control plane upgrade (--master flag)",
+      "passed": true,
+      "reason": "Response provides the correct gcloud command with --master flag: 'gcloud container clusters upgrade YOUR_CLUSTER_NAME --region=us-central1 --master --cluster-version=1.30.X-gke.XXXX'"
+    },
+    {
+      "expectation": "Mentions expected duration for control plane upgrade (roughly 10-30 minutes)",
+      "passed": true,
+      "reason": "Response states 'The upgrade typically takes 10-30 minutes' in the additional safety recommendations section"
+    },
+    {
+      "expectation": "Includes a command to verify the control plane version after upgrade",
+      "passed": true,
+      "reason": "Response includes 'kubectl version --short' command in the 'After control plane upgrade' section to verify the control plane version"
+    },
+    {
+      "expectation": "Recommends checking kube-system pods health after upgrade",
+      "passed": false,
+      "reason": "While the response mentions checking pods with 'kubectl get pods --all-namespaces | grep -v Running', it doesn't specifically mention kube-system pods or checking their health after the upgrade"
+    },
+    {
+      "expectation": "Advises checking deprecated API usage before upgrading",
+      "passed": true,
+      "reason": "Response includes 'kubectl get apiservices --sort-by=.metadata.name' command in the 'Before the upgrade' section to check for deprecated APIs"
+    }
+  ]
+}

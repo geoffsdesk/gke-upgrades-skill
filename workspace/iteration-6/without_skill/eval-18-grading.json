@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Configures a recurring maintenance window for weekends only",
+      "passed": true,
+      "reason": "The Terraform configuration includes recurring_window blocks for both Saturday and Sunday (FREQ=WEEKLY;BYDAY=SA and FREQ=WEEKLY;BYDAY=SU) with 6 AM UTC start times"
+    },
+    {
+      "expectation": "Provides the gcloud command with --maintenance-window-start/end and --maintenance-window-recurrence for weekly weekend schedule",
+      "passed": true,
+      "reason": "The bash script includes gcloud container clusters update command with --maintenance-window-start, --maintenance-window-end, and --maintenance-window-recurrence flags set for weekend schedule"
+    },
+    {
+      "expectation": "Sets up maintenance exclusions for quarterly code freezes (up to 30 days each)",
+      "passed": true,
+      "reason": "The configuration includes quarterly exclusions in variables and dynamic blocks, with periods like March 25 - April 1, June 24 - July 1, etc., each approximately 7-8 days long"
+    },
+    {
+      "expectation": "Sets up a maintenance exclusion for the November audit period",
+      "passed": true,
+      "reason": "Both Terraform and bash script configurations include specific November audit exclusions covering the entire month (2024-11-01 to 2024-11-30)"
+    },
+    {
+      "expectation": "Notes the 30-day maximum for maintenance exclusions and how to handle longer freezes",
+      "passed": false,
+      "reason": "The response does not mention the 30-day maximum limitation for maintenance exclusions or provide guidance on handling longer freeze periods"
+    },
+    {
+      "expectation": "Explains that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
+      "passed": false,
+      "reason": "The response does not explain the distinction between manual and automatic upgrades or that maintenance windows only apply to auto-upgrades"
+    },
+    {
+      "expectation": "Recommends combining maintenance windows with Stable or Extended channel for maximum upgrade control",
+      "passed": false,
+      "reason": "The configuration uses 'REGULAR' channel instead of 'STABLE' or 'EXTENDED', and doesn't explain the benefits of using more conservative channels for compliance environments"
+    },
+    {
+      "expectation": "Provides gcloud commands for each exclusion (--add-maintenance-exclusion-name/start-time/end-time)",
+      "passed": true,
+      "reason": "The bash script includes multiple gcloud commands with --add-maintenance-exclusion-name, --add-maintenance-exclusion-start, and --add-maintenance-exclusion-end flags for each exclusion period"
+    },
+    {
+      "expectation": "Warns about the risk of falling too far behind on versions during long exclusion periods",
+      "passed": false,
+      "reason": "The response does not mention the risks associated with extended exclusion periods or falling behind on security updates and version compatibility"
+    }
+  ]
+}

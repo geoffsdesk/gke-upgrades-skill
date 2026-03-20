@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": false,
+      "reason": "The response mentions slice recreation but doesn't explicitly explain the atomic nature or contrast it with rolling upgrades"
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": false,
+      "reason": "While it mentions interruption will occur, it doesn't specifically explain that a single slice maintenance triggers restart of all 4 slices"
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "The response clearly states the training job will be interrupted and mentions the challenges with inter-slice dependencies"
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": true,
+      "reason": "The response mentions resource fragmentation and availability issues in the worst-case scenario section, noting 4-8 hours if there are resource availability issues"
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "The response includes 'Schedule Downtime: If possible, pause training gracefully before the maintenance window' and emphasizes checkpoint preparation"
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "The response provides specific code examples for checkpoint recovery and auto-restart logic with resume_training() function"
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": false,
+      "reason": "The response does not mention maintenance exclusions or the option to defer maintenance events"
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": false,
+      "reason": "While it mentions monitoring maintenance window details with kubectl, it doesn't explain how to configure or control maintenance windows for scheduling"
+    }
+  ]
+}

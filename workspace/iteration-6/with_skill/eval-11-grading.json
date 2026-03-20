@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends upgrading the control plane first before any node pools",
+      "passed": true,
+      "reason": "Explicitly shows Phase 1: Control Plane upgrade before any node pools, with command 'gcloud container clusters upgrade YOUR_CLUSTER --master'"
+    },
+    {
+      "expectation": "Provides a specific node pool upgrade order with rationale (coordinating\u2192data\u2192master, or similar logical sequence)",
+      "passed": true,
+      "reason": "Clearly specifies Phase 2: Coordinating Nodes (Least Critical First), Phase 3: Data Nodes, Phase 4: Master Nodes (Most Critical) with rationale for each"
+    },
+    {
+      "expectation": "Addresses PV safety: regional pd-ssd volumes can reattach to nodes in other zones, which is good for upgrades",
+      "passed": true,
+      "reason": "Mentions 'Regional pd-ssd PVs (good - can reattach across zones)' and later states 'Regional PVs are your friend - They can reattach to nodes in any zone'"
+    },
+    {
+      "expectation": "Recommends setting PDB for Elasticsearch master nodes to ensure quorum (minAvailable=2 for 3-master setup)",
+      "passed": true,
+      "reason": "Provides complete PDB YAML with 'minAvailable: 2' for masters with comment '# Maintain master quorum (2 out of 3)'"
+    },
+    {
+      "expectation": "Recommends maxSurge=1, maxUnavailable=0 for all ES node pools (conservative, data-safe)",
+      "passed": true,
+      "reason": "Shows gcloud commands setting --max-surge-upgrade 1 --max-unavailable-upgrade 0 for master pool and similar conservative settings for all pools"
+    },
+    {
+      "expectation": "Advises verifying Elasticsearch cluster health (green status) between each node pool upgrade",
+      "passed": true,
+      "reason": "Multiple health checks throughout including 'kubectl exec -n elasticsearch es-master-0 -- curl -s localhost:9200/_cluster/health' between phases and continuous monitoring commands"
+    },
+    {
+      "expectation": "Mentions checking PV reclaim policy is set to Retain (not Delete) as a safety measure",
+      "passed": false,
+      "reason": "No mention of checking or setting PV reclaim policy to Retain anywhere in the response"
+    },
+    {
+      "expectation": "Includes kubectl commands for checking StatefulSet rollout status",
+      "passed": false,
+      "reason": "No kubectl rollout status commands for StatefulSets are provided; only general pod and node monitoring commands"
+    },
+    {
+      "expectation": "Recommends taking an Elasticsearch snapshot backup before starting",
+      "passed": true,
+      "reason": "Includes detailed snapshot creation commands in 'Data Protection' section before upgrade begins, with repository setup and snapshot creation"
+    }
+  ]
+}

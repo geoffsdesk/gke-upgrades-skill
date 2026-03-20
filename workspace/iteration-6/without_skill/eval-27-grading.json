@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends combining release channels with maintenance exclusions as the approach for maximum control",
+      "passed": false,
+      "reason": "The response recommends using Rapid channel with maintenance windows but does not mention or recommend maintenance exclusions as the primary approach for maximum control"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' exclusion to prevent disruptive changes while allowing control plane security patches",
+      "passed": false,
+      "reason": "The response does not mention or recommend maintenance exclusions for preventing minor or node upgrades while allowing security patches"
+    },
+    {
+      "expectation": "Recommends maintenance windows to control WHEN patches are applied (e.g., weekend windows only)",
+      "passed": true,
+      "reason": "The response clearly recommends maintenance windows with specific configuration showing Sunday 2-6 AM UTC window to control when upgrades happen"
+    },
+    {
+      "expectation": "Mentions the disruption interval between patch and minor upgrades to prevent back-to-back upgrades",
+      "passed": false,
+      "reason": "The response does not mention disruption intervals or preventing back-to-back upgrades between patch and minor upgrades"
+    },
+    {
+      "expectation": "Suggests Stable or Extended channel for production clusters in regulated environments",
+      "passed": false,
+      "reason": "The response actually recommends the Rapid channel for financial services, which contradicts the expectation of using Stable or Extended channels for regulated environments"
+    },
+    {
+      "expectation": "Notes that disabling control plane patches entirely is not recommended due to security risks \u2014 monthly patches at minimum",
+      "passed": false,
+      "reason": "The response does not explicitly warn against disabling control plane patches entirely or mention a monthly minimum requirement"
+    },
+    {
+      "expectation": "May mention rollout sequencing as an advanced option for controlling upgrade order across multiple clusters \u2014 should not be positioned as a default recommendation",
+      "passed": false,
+      "reason": "The response does not mention rollout sequencing for controlling upgrade order across multiple clusters"
+    },
+    {
+      "expectation": "Provides gcloud commands for configuring the recommended exclusion type and maintenance window",
+      "passed": false,
+      "reason": "While the response provides gcloud commands for upgrades and monitoring, it does not provide commands for configuring maintenance exclusions, which is the expected recommended approach"
+    }
+  ]
+}

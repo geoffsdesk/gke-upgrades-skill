@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": true,
+      "reason": "Explicitly states 'Each TPU slice (256 chips) is recreated entirely in a single step \u2014 not rolling upgrades like CPU/GPU nodes' and emphasizes atomic recreation"
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": true,
+      "reason": "Clearly states 'Any maintenance event on ANY of your 4 slices triggers restart of ALL slices' and 'if GKE touches just one slice, your entire 1,024-chip training environment goes down'"
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "States 'Complete Training Interruption: Your LLM training will be fully interrupted' and 'All pods on each slice restart simultaneously, losing any in-memory state'"
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": true,
+      "reason": "Explicitly states 'If insufficient TPU v5e capacity exists in your zone during recreation, slices will block until hardware becomes available' and mentions downtime could extend to several hours"
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "Includes 'Force Checkpoint Save' section with specific commands and emphasizes 'Checkpoint saved at latest training step' in the checklist"
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "States 'Training script handles checkpoint resume correctly' in checklist and provides 'Resume Training' section with checkpoint loading verification"
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": true,
+      "reason": "Provides detailed gcloud command for maintenance exclusions and suggests using them 'during critical training phases'"
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": true,
+      "reason": "References 'Maintenance window timing confirmed with GKE' in checklist and 'BEFORE maintenance window' in preparation steps"
+    }
+  ]
+}

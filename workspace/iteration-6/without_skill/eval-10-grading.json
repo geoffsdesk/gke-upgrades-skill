@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that spot VMs can be preempted at any time, which interacts with the upgrade drain process",
+      "passed": true,
+      "reason": "Response clearly explains spot VMs can be preempted during upgrade process, creating 'double jeopardy' with both planned upgrade disruptions and potential spot preemptions"
+    },
+    {
+      "expectation": "Notes that spot node pools may already have workloads designed for interruption (good for upgrades)",
+      "passed": false,
+      "reason": "Response doesn't mention that spot workloads are typically designed for interruption, which would make them more suitable for upgrades"
+    },
+    {
+      "expectation": "Recommends higher maxSurge for spot pools since the workloads should already be fault-tolerant",
+      "passed": true,
+      "reason": "Response shows using 33% maxSurge and mentions surge upgrade strategy for mixed node pools"
+    },
+    {
+      "expectation": "Advises setting maxUnavailable >0 for spot pools since workloads are already preemption-tolerant",
+      "passed": false,
+      "reason": "Response doesn't discuss maxUnavailable settings or mention that spot workloads' preemption-tolerance allows for higher unavailability"
+    },
+    {
+      "expectation": "Mentions that spot VM availability may affect surge node creation (not guaranteed to get spot instances)",
+      "passed": false,
+      "reason": "Response doesn't discuss the potential issue of spot VM availability affecting the ability to create surge nodes during upgrade"
+    },
+    {
+      "expectation": "Recommends having PDBs even for spot workloads to ensure orderly drain during upgrade",
+      "passed": true,
+      "reason": "Response includes a PDB example and emphasizes verifying Pod Disruption Budgets as part of pre-upgrade preparations"
+    },
+    {
+      "expectation": "Provides the gcloud command for configuring surge settings on the spot pool",
+      "passed": false,
+      "reason": "Response provides Azure CLI commands (az aks) instead of gcloud commands for GCP/GKE"
+    },
+    {
+      "expectation": "Suggests upgrading spot pools before on-demand pools since they're lower risk",
+      "passed": false,
+      "reason": "Response actually recommends upgrading on-demand nodes first, then spot nodes, which is opposite to the expectation"
+    }
+  ]
+}

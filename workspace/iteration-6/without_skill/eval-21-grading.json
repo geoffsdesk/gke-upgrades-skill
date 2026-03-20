@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that Extended channel provides up to 24 months of support vs 14 months for standard channels",
+      "passed": true,
+      "reason": "Response clearly states '24-month support lifecycle (vs 14 months for Regular/Rapid)'"
+    },
+    {
+      "expectation": "Mentions that Extended channel has additional cost (it's not free)",
+      "passed": true,
+      "reason": "Response explicitly mentions 'Higher cost - Extended channel has additional pricing' and provides specific cost estimate of ~$0.10/hour per cluster"
+    },
+    {
+      "expectation": "Notes that Extended channel gets the same versions as Regular but keeps them available longer",
+      "passed": false,
+      "reason": "Response doesn't explicitly explain that Extended gets the same versions as Regular but maintains them longer - it only mentions quarterly releases and delayed features"
+    },
+    {
+      "expectation": "Warns that staying on older versions longer means missing new features and accumulating technical debt",
+      "passed": true,
+      "reason": "Response mentions 'Delayed feature access - New Kubernetes features arrive later' as a con, addressing the technical debt concern"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel to Extended",
+      "passed": true,
+      "reason": "Response provides the specific command: 'gcloud container clusters update CLUSTER_NAME --release-channel extended --region YOUR_REGION'"
+    },
+    {
+      "expectation": "Advises checking that the current version (1.29) is available on Extended before switching",
+      "passed": true,
+      "reason": "Response includes checking version compatibility with 'gcloud container get-server-config --region=YOUR_REGION' and discusses checking Extended channel availability"
+    },
+    {
+      "expectation": "Recommends Extended for environments with compliance requirements or slow internal change processes",
+      "passed": true,
+      "reason": "Response mentions 'Compliance friendly - Easier to maintain certified environments' and emphasizes production stability benefits"
+    },
+    {
+      "expectation": "Mentions that Extended doesn't mean you can skip upgrades forever \u2014 you still must upgrade within 24 months",
+      "passed": false,
+      "reason": "While the response implies ongoing maintenance through various upgrade commands and maintenance windows, it doesn't explicitly warn that upgrades are still required within the 24-month window"
+    }
+  ]
+}

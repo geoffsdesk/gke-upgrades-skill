@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends sequential upgrade path (1.28\u21921.29\u21921.30) rather than skipping",
+      "passed": true,
+      "reason": "Explicitly states sequential upgrade path is REQUIRED with Step 1: 1.28\u21921.29 and Step 2: 1.29\u21921.30, and explains why skipping versions is not recommended"
+    },
+    {
+      "expectation": "Specifies control plane upgrades before node pool upgrades",
+      "passed": true,
+      "reason": "Timeline clearly shows control plane upgrades on Day 3 and Day 4 of respective weeks, followed by node pool upgrades on subsequent days"
+    },
+    {
+      "expectation": "Provides different node pool upgrade ordering with rationale for the sequence",
+      "passed": true,
+      "reason": "Specifies upgrade order as general-purpose \u2192 high-memory \u2192 GPU pools, with specific rationales for each pool's strategy and timing considerations"
+    },
+    {
+      "expectation": "Includes specific surge upgrade settings (maxSurge/maxUnavailable) for each pool",
+      "passed": true,
+      "reason": "Provides specific settings for each pool: general-purpose (maxSurge=2, maxUnavailable=0), high-memory (maxSurge=1, maxUnavailable=0), GPU (maxSurge=1, maxUnavailable=0)"
+    },
+    {
+      "expectation": "Addresses Postgres-specific concerns (PDB, backup, operator compatibility, PV reclaim)",
+      "passed": true,
+      "reason": "Covers PDB configuration, recent backups, PV reclaim policies, Postgres operator compatibility checks, and coordination with DB team"
+    },
+    {
+      "expectation": "Addresses GPU-specific concerns (driver compatibility, workload coordination)",
+      "passed": true,
+      "reason": "Addresses GPU driver compatibility, CUDA version changes, ML inference workload testing, and GPU quota considerations"
+    },
+    {
+      "expectation": "Includes actual gcloud commands for the upgrade steps",
+      "passed": true,
+      "reason": "Provides specific gcloud commands for checking versions, setting maintenance windows, and configuring surge settings for each node pool"
+    },
+    {
+      "expectation": "Provides a pre-upgrade checklist",
+      "passed": true,
+      "reason": "Includes comprehensive pre-upgrade checks including deprecated API usage, operator compatibility, and workload readiness requirements with checkboxes"
+    },
+    {
+      "expectation": "Provides a post-upgrade checklist with validation commands",
+      "passed": true,
+      "reason": "Includes success criteria checklist with specific validation points like node versions, replica counts, database accessibility, and includes some validation commands like kubectl metrics check"
+    },
+    {
+      "expectation": "Includes rollback procedure or guidance",
+      "passed": false,
+      "reason": "Only briefly mentions rollback plan in risk mitigation section noting control plane downgrade requires GKE support, but does not provide actual rollback procedures or detailed guidance"
+    }
+  ]
+}
