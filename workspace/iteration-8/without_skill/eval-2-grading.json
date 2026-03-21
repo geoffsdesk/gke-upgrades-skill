@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Distinguishes between dev (Rapid) and prod (Stable) clusters in the checklists",
+      "passed": true,
+      "reason": "The response explicitly mentions upgrading dev clusters first since they're on Rapid channel and will auto-upgrade before prod clusters"
+    },
+    {
+      "expectation": "Recognizes Autopilot limitations (no node management, no SSH, mandatory resource requests)",
+      "passed": false,
+      "reason": "While it mentions some Autopilot-specific features like node auto-provisioning, it doesn't explicitly address key limitations like no SSH access or mandatory resource requests"
+    },
+    {
+      "expectation": "Includes API deprecation checks with kubectl commands",
+      "passed": true,
+      "reason": "Includes specific kubectl commands for API validation: 'kubectl apply --dry-run=server --validate=true' and mentions reviewing deprecated APIs"
+    },
+    {
+      "expectation": "Mentions mandatory resource requests as an Autopilot-specific concern",
+      "passed": false,
+      "reason": "Does not mention mandatory resource requests, which is a key Autopilot requirement that could affect upgrades"
+    },
+    {
+      "expectation": "Pre-upgrade checklist includes workload readiness items (PDBs, bare pods, graceful shutdown)",
+      "passed": false,
+      "reason": "Does not explicitly mention Pod Disruption Budgets, bare pods, or graceful shutdown configurations in the pre-upgrade checklist"
+    },
+    {
+      "expectation": "Post-upgrade checklist includes version verification commands",
+      "passed": true,
+      "reason": "Includes specific commands like 'kubectl version', 'kubectl cluster-info', and 'gcloud container clusters describe' for version verification"
+    },
+    {
+      "expectation": "Post-upgrade checklist includes workload health validation",
+      "passed": true,
+      "reason": "Includes comprehensive workload health checks including deployment status, pod status, application endpoints, and services validation"
+    },
+    {
+      "expectation": "Recommends testing on dev clusters before prod auto-upgrade",
+      "passed": true,
+      "reason": "Explicitly recommends upgrading dev clusters first and running full test suite on dev clusters after upgrade"
+    },
+    {
+      "expectation": "Mentions that checking the GKE release schedule gives ~1 month best-case advance notice for new minor upgrades, beyond the 72h notification",
+      "passed": false,
+      "reason": "Does not mention the GKE release schedule or the typical 1-month advance notice timeline for planning upgrades"
+    },
+    {
+      "expectation": "Includes monitoring/observability validation items",
+      "passed": true,
+      "reason": "Has a dedicated 'Monitoring & Observability' section with specific checks for metrics, logging, alerting, dashboards, and tracing"
+    }
+  ]
+}

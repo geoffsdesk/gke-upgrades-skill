@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Addresses Istio control plane version compatibility with the target Kubernetes version",
+      "passed": true,
+      "reason": "Response includes checking Istio compatibility with GKE 1.32 and downloading compatible Istio version for the target Kubernetes version"
+    },
+    {
+      "expectation": "Recommends checking the Istio-Kubernetes version compatibility matrix before upgrading GKE",
+      "passed": true,
+      "reason": "Response includes commands to check Istio compatibility with GKE 1.32 and verify current versions before upgrade"
+    },
+    {
+      "expectation": "Advises upgrading Istio first if the current Istio version doesn't support the target Kubernetes version",
+      "passed": true,
+      "reason": "Response explicitly recommends 'Upgrade Istio First (If Needed)' as step 1 in the upgrade order, before upgrading GKE"
+    },
+    {
+      "expectation": "Explains that sidecar injection happens via mutating webhook and may cause issues during node drain/recreation",
+      "passed": true,
+      "reason": "Response addresses webhook configurations and includes commands to verify mutating webhook configurations, and discusses sidecar injection testing"
+    },
+    {
+      "expectation": "Mentions that new pods on upgraded nodes will get sidecar injected \u2014 verify the sidecar version matches",
+      "passed": true,
+      "reason": "Response includes checking sidecar injection with 'kubectl label namespace default istio-injection=enabled' and monitoring for sidecar restart if needed"
+    },
+    {
+      "expectation": "Recommends monitoring Istio proxy version consistency across the mesh after upgrade",
+      "passed": true,
+      "reason": "Response includes monitoring scripts with 'istioctl proxy-status' and 'istioctl proxy-config' commands to check proxy consistency"
+    },
+    {
+      "expectation": "Includes commands to check Istio version and proxy sync status (istioctl or kubectl)",
+      "passed": true,
+      "reason": "Response provides specific commands like 'istioctl proxy-status', checking Istio version via kubectl, and multiple istioctl proxy-config commands"
+    },
+    {
+      "expectation": "Warns about potential traffic disruption if Istio control plane and sidecar versions are mismatched",
+      "passed": false,
+      "reason": "While the response addresses version compatibility and includes monitoring, it doesn't explicitly warn about traffic disruption from control plane and sidecar version mismatches"
+    }
+  ]
+}

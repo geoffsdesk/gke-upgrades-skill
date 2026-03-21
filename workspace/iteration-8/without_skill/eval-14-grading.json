@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Checks for deprecated API usage that may have changed behavior in 1.30",
+      "passed": true,
+      "reason": "Response includes specific commands to check for deprecated API usage: 'kubectl get events --all-namespaces | grep -i deprecated' and 'kubectl get apiservices | grep False' with a dedicated section on deprecated API cleanup"
+    },
+    {
+      "expectation": "Recommends checking admission webhooks \u2014 they may be rejecting or slowing down requests on the new version",
+      "passed": true,
+      "reason": "Response specifically mentions checking admission controllers with commands: 'kubectl get validatingwebhookconfigurations' and 'kubectl get mutatingwebhookconfigurations' and notes they could be causing bottlenecks"
+    },
+    {
+      "expectation": "Advises checking if resource requests/limits need adjusting for any system components that changed",
+      "passed": true,
+      "reason": "Response includes commands to check system pod resource requests/limits and specifically mentions that Kubernetes 1.32 may have higher resource requirements, with example patch command for API server resources"
+    },
+    {
+      "expectation": "Suggests examining kube-system pods for any that are crashlooping or restarting",
+      "passed": true,
+      "reason": "Response includes multiple commands to check kube-system pods status: 'kubectl get pods -n kube-system | grep apiserver', 'kubectl get pods -n kube-system | grep etcd', and 'kubectl get pods -n kube-system | grep coredns'"
+    },
+    {
+      "expectation": "Includes commands to check API server metrics and latency (kubectl get --raw /metrics)",
+      "passed": true,
+      "reason": "Response includes the exact command 'kubectl get --raw /metrics | grep apiserver_request_duration' in the monitoring setup section"
+    },
+    {
+      "expectation": "Recommends checking if NetworkPolicy or service mesh components need updating for the new version",
+      "passed": false,
+      "reason": "The response does not mention NetworkPolicy or service mesh components at all"
+    },
+    {
+      "expectation": "Advises reviewing pod events for scheduling delays or readiness probe failures",
+      "passed": false,
+      "reason": "While the response mentions checking events for deprecated APIs, it does not specifically advise checking for scheduling delays or readiness probe failures"
+    },
+    {
+      "expectation": "Mentions checking if HPA or VPA are behaving differently on the new version",
+      "passed": false,
+      "reason": "The response does not mention HPA (Horizontal Pod Autoscaler) or VPA (Vertical Pod Autoscaler) at all"
+    }
+  ]
+}

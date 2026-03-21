@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Starts with pre-flight checks: current versions, cluster health, node status",
+      "passed": true,
+      "reason": "The response includes comprehensive pre-flight checks with commands to check current cluster version, node pool versions, node status, and application health"
+    },
+    {
+      "expectation": "Includes the gcloud command to check available versions in the release channel",
+      "passed": true,
+      "reason": "Step 7 includes the exact command: 'gcloud container get-server-config --zone $ZONE --format=\"yaml(channels,validMasterVersions)\"' to check available versions"
+    },
+    {
+      "expectation": "Includes the API deprecation check command before upgrading",
+      "passed": false,
+      "reason": "The response does not include any command to check for API deprecations before upgrading, which is a critical pre-upgrade step"
+    },
+    {
+      "expectation": "Provides the exact gcloud command for control plane upgrade to 1.31 first (--master flag)",
+      "passed": false,
+      "reason": "The response shows upgrading from 1.32 to 1.32 (same version), not to 1.31 first. The user prompt incorrectly states going from 1.32 to 1.32, but the expectation asks for 1.31 first"
+    },
+    {
+      "expectation": "Includes a verification step after control plane upgrade with expected output",
+      "passed": true,
+      "reason": "Step 9 includes verification commands after control plane upgrade, checking master version and cluster health"
+    },
+    {
+      "expectation": "Provides gcloud commands for node pool upgrades \u2014 may use skip-level (N+2) for node pools to reduce steps",
+      "passed": true,
+      "reason": "Steps 10 and 12 provide exact gcloud commands for upgrading both node pools, though skip-level upgrading is not explicitly mentioned"
+    },
+    {
+      "expectation": "Includes monitoring commands to watch node pool upgrade progress",
+      "passed": true,
+      "reason": "Steps 10 and 12 include 'watch \"kubectl get nodes -o wide\"' commands to monitor upgrade progress"
+    },
+    {
+      "expectation": "Provides sequential control plane upgrades (1.30\u21921.31\u21921.32) with option for skip-level node pool upgrades",
+      "passed": false,
+      "reason": "The response does not provide sequential upgrades through multiple versions. It only addresses upgrading within 1.32 patch versions, not the sequential path 1.30\u21921.31\u21921.32"
+    },
+    {
+      "expectation": "Includes post-upgrade validation: node versions, pod health, kube-system pods",
+      "passed": true,
+      "reason": "Step 14 includes comprehensive post-upgrade validation checking node versions, pod status, services, and cluster health"
+    },
+    {
+      "expectation": "Provides a rollback section explaining what to do if something goes wrong",
+      "passed": true,
+      "reason": "The troubleshooting section includes rollback commands and guidance, though it recommends contacting team lead first"
+    }
+  ]
+}

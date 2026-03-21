@@ -48,6 +48,7 @@
         "Provides commands to identify which pods are blocking the drain",
         "Includes resource constraint diagnosis (capacity issues, pending pods)",
         "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+        "Mentions that GKE has a PDB timeout (up to 1 hour) after which it may force-drain, and that GKE sends notifications when eviction is blocked by PDB",
         "Includes guidance on surge upgrade settings as a potential fix",
         "Mentions webhook issues as a possible cause",
         "Includes validation steps to confirm the fix is working"
@@ -206,7 +207,7 @@
       "expected_output": "Strategy for upgrading around long-running batch workloads covering auto-scale blue-green, graceful drain, scheduling pauses, and release channel recommendations.",
       "files": [],
       "expectations": [
-        "Recommends GKE's auto-scale blue-green node pool upgrade strategy as the primary approach for batch workloads \u2014 it cordons the old pool and auto-scales the replacement",
+        "Recommends GKE's autoscaled blue-green node pool upgrade strategy as the primary approach for batch workloads \u2014 it supports wait-for-drain time, longer graceful termination, and PDB upgrade timeout to let jobs complete",
         "Explains that GKE respects terminationGracePeriodSeconds during pod eviction, but surge upgrades have a max eviction timeout",
         "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour \u2014 far less than 8-16 hour jobs",
         "Recommends pausing new batch job submissions before starting the upgrade",
@@ -363,7 +364,7 @@
         "Mentions checking if any taints or tolerations are causing pods to land on the wrong nodes",
         "Provides kubectl commands to check node cordoned status and pod scheduling events",
         "Recommends setting maxUnavailable=0 to ensure old nodes aren't removed until pods are safely rescheduled",
-        "May mention GKE's auto-scale blue-green upgrade strategy as an alternative that avoids this issue by cordoning the entire old pool before migrating"
+        "May mention GKE's autoscaled blue-green upgrade strategy as an alternative that avoids this issue by cordoning the entire old pool before migrating workloads to new nodes"
       ]
     },
     {
@@ -390,11 +391,12 @@
       "files": [],
       "expectations": [
         "Explains that 'No channel' is a legacy configuration that lacks granular maintenance exclusion types",
-        "Mentions that 'No channel' does not support 'no minor or node upgrades' exclusion scope \u2014 only the 30-day 'no upgrades' type",
+        "Mentions that 'No channel' does not support 'no minor or node upgrades' exclusion scope \u2014 only the 30-day 'no upgrades' type, AND per-nodepool maintenance exclusion is also limited",
         "Notes that Extended support (24 months) is only available on release channels, not 'No channel'",
         "Notes that rollout sequencing (an advanced feature) is not available on 'No channel'",
         "Recommends Regular or Stable channel as the closest migration target (legacy behavior matches Stable for minors, Regular for patches)",
-        "Mentions Extended channel as an option for customers who want maximum flexibility around EoS",
+        "Mentions Extended channel as a migration path for customers who want maximum flexibility around EoS enforcement",
+        "Warns about exclusion translation: when moving from 'No channel' to release channels, some exclusions don't translate 1:1 and may be ignored — only 'no_upgrades' type translates between the two. Recommends adding a temporary 'no upgrades' exclusion during the transition",
         "Provides the gcloud command to change the release channel",
         "References the comparison table at cloud.google.com/kubernetes-engine/docs/concepts/release-channels"
       ]
@@ -406,12 +408,12 @@
       "files": [],
       "expectations": [
         "Defines 'available' as versions officially available in the channel that customers can manually upgrade to",
-        "Defines 'default' as the version used for new cluster creation \u2014 NOT necessarily the auto-upgrade target",
-        "Defines 'auto-upgrade target' as the version GKE will actually upgrade existing clusters to automatically",
+        "Defines 'default' as the version used for new cluster creation \u2014 typically the same as auto-upgrade target but can differ especially during new minor version introduction (separate promotion stage)",
+        "Defines 'auto-upgrade target' as the version GKE will actually upgrade existing clusters to automatically \u2014 this is cluster-specific based on policies",
         "Explains that default and auto-upgrade target are often the same but CAN differ, especially during new minor version rollouts",
-        "Notes that the auto-upgrade target depends on cluster constraints (maintenance windows, maintenance exclusions)",
+        "Notes that the auto-upgrade target depends on cluster constraints (maintenance windows, maintenance exclusions) and is cluster-specific \u2014 different clusters on the same channel can have different targets",
         "Explains that a cluster with a 'no minor' exclusion will have a patch-only auto-upgrade target for its current minor",
-        "Recommends checking the cluster's auto-upgrade status to see the actual target version",
+        "Recommends using gcloud container clusters get-upgrade-info to check the actual auto-upgrade status, target versions, and EoS timestamps",
         "Points to the GKE release schedule or release notes for tracking version availability"
       ]
     },
@@ -423,7 +425,7 @@
       "expectations": [
         "Explains that clusters on Regular channel will be force-upgraded to the next minor version (1.31) when 1.30 hits EoS",
         "Explains that clusters on Extended channel get up to 24 months of support, so 1.30 EoS is significantly later \u2014 they have more time",
-        "Explains that legacy 'No channel' clusters face systematic node-level EoS enforcement \u2014 nodes on EoS versions are force-upgraded",
+        "Explains that legacy 'No channel' clusters: control plane EoS minor versions are auto-upgraded to next supported minor, AND EoS node pools are force-upgraded even when 'no auto-upgrade' is configured",
         "Mentions that a 'no upgrades' maintenance exclusion (30 days) can temporarily defer even EoS force-upgrades",
         "Recommends proactive upgrade planning rather than waiting for EoS enforcement",
         "Mentions GKE EoS notifications via Cloud Logging as a planning tool",
@@ -438,12 +440,12 @@
       "files": [],
       "expectations": [
         "Recommends combining release channels with maintenance exclusions as the approach for maximum control",
-        "Recommends 'no minor or node upgrades' exclusion to prevent disruptive changes while allowing control plane security patches",
+        "Recommends 'no minor or node upgrades' exclusion to prevent disruptive changes while allowing control plane security patches. May also mention persistent exclusions with --add-maintenance-exclusion-until-end-of-support (no longer a 6-month max, auto-tracks EoS)",
         "Recommends maintenance windows to control WHEN patches are applied (e.g., weekend windows only)",
-        "Mentions the disruption interval between patch and minor upgrades to prevent back-to-back upgrades",
-        "Suggests Stable or Extended channel for production clusters in regulated environments",
+        "Mentions the cluster disruption budget (disruption interval) to control upgrade frequency \u2014 patch interval default 7d (max 90d), minor interval default 30d (max 90d)",
+        "Suggests Stable or Extended channel for production clusters in regulated environments. Extended channel provides maximum flexibility around EoS enforcement (additional cost only during extended period)",
         "Notes that disabling control plane patches entirely is not recommended due to security risks \u2014 monthly patches at minimum",
-        "May mention rollout sequencing as an advanced option for controlling upgrade order across multiple clusters \u2014 should not be positioned as a default recommendation",
+        "May mention rollout sequencing as an advanced option for controlling upgrade order across multiple clusters, and/or the cluster disruption budget for controlling CP patch frequency",
         "Provides gcloud commands for configuring the recommended exclusion type and maintenance window"
       ]
     },
@@ -456,9 +458,9 @@
         "Explains that exact upgrade dates are difficult to predict but several tools help narrow the window",
         "Mentions the GKE release schedule as a 'best case' timeline \u2014 upgrades won't happen before listed dates",
         "Recommends checking the cluster's auto-upgrade status for the current target version and any pauses",
-        "Mentions that new releases roll out progressively across regions over 4-5 business days",
-        "Recommends configuring maintenance windows so upgrades only happen during known time slots",
-        "Mentions scheduled upgrade notifications (72h advance, opt-in via Cloud Logging)",
+        "Mentions that new releases roll out progressively across regions over 4-5 business days, and the version promotion path includes channel promotion (Rapid \u2192 Regular \u2192 Stable)",
+        "Recommends configuring maintenance windows so upgrades only happen during known time slots. May note that for ultimate predictability, customers can initiate upgrades themselves instead of waiting for auto-upgrade",
+        "Mentions scheduled upgrade notifications (72h advance, opt-in via Cloud Logging) or the get-upgrade-info API for checking target versions programmatically",
         "Notes that GKE upgrade visibility shows the cluster's target version and EoL timeline",
         "May mention rollout sequencing (advanced feature, limited adoption) as an option for multi-cluster predictability \u2014 not a primary recommendation"
       ]
@@ -471,7 +473,7 @@
       "expectations": [
         "Uses 'no upgrades' exclusion (30-day max) for the BFCM period \u2014 blocks everything including patches",
         "Uses 'no upgrades' exclusion for the June code freeze period",
-        "Uses 'no minor or node upgrades' exclusion for ongoing minor upgrade control \u2014 allows CP patches but blocks disruptive changes",
+        "For permanent minor version control: uses 'no minor upgrades' (scope 'no_minor') if they only want to block minor versions, or 'no minor or node upgrades' (scope 'no_minor_or_node') if they also want to stop node upgrades. May recommend persistent exclusion with --add-maintenance-exclusion-until-end-of-support which auto-tracks EoS date",
         "Notes the 30-day maximum for 'no upgrades' exclusions vs up-to-EoS for 'no minor or node upgrades'",
         "Provides specific gcloud commands with --add-maintenance-exclusion-scope flags for each exclusion type",
         "Notes that you can have a maximum of three 'no upgrades' exclusions, and they must allow 48h of maintenance in any 32-day window",
@@ -486,7 +488,7 @@
       "files": [],
       "expectations": [
         "Recommends migrating all 'No channel' clusters to release channels as a first priority",
-        "Mentions GKE upgrade visibility for checking each cluster's auto-upgrade status and target version",
+        "Mentions using gcloud container clusters get-upgrade-info to check each cluster's auto-upgrade status, target versions, and EoS timestamps",
         "Mentions the deprecation insights dashboard for identifying clusters using deprecated APIs",
         "Recommends checking EoS timelines for each cluster and prioritizing those closest to EoS",
         "Mentions GKE EoS notifications via Cloud Logging as an ongoing monitoring tool",
@@ -587,7 +589,7 @@
         "Explains that surge upgrades create NEW nodes before draining old ones \u2014 this requires extra GPU capacity that may not exist for scarce hardware like H100",
         "Recommends switching to maxSurge=0, maxUnavailable=1 \u2014 this drains a node first then creates the replacement, requiring zero extra GPU capacity. Notes that maxUnavailable is the primary lever for GPU pools with fixed reservations",
         "Warns that maxUnavailable=1 means reduced cluster capacity during upgrade \u2014 63/64 nodes available at any time. Suggests increasing maxUnavailable for faster completion if capacity dip is acceptable",
-        "Mentions GKE's auto-scale blue-green upgrade strategy as an alternative (cordons old pool, auto-scales replacement)",
+        "Notes that with limited capacity and a fixed reservation, there is no room for blue-green (which requires 2x resources). Surge with maxUnavailable is the appropriate strategy, or follows GPU-specific maintenance guidance",
         "Suggests upgrading during off-peak when some GPU nodes are idle \u2014 scale down non-critical workloads to free capacity",
         "Notes that with maxUnavailable=1 on 64 nodes at ~20-node parallelism, the upgrade will take significantly longer",
         "Recommends checking if GPU reservations have headroom that could be used for surge nodes",

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends increasing maxSurge for CPU pools (e.g., 10-20) to parallelize node replacements, with justification for the value",
+      "passed": true,
+      "reason": "Response recommends max_surge: 50% for CPU pools with justification that higher values are acceptable 'if workload allows'"
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends increasing maxUnavailable (not maxSurge) as the primary lever since surge capacity is typically unavailable",
+      "passed": false,
+      "reason": "Response recommends both max_surge: 25% and max_unavailable: 10% for GPU pools but doesn't explain that maxUnavailable should be the primary lever due to fixed reservations limiting surge capacity"
+    },
+    {
+      "expectation": "Advises checking and requesting increased compute quota before the upgrade for CPU pools",
+      "passed": false,
+      "reason": "Response does not mention checking or requesting increased compute quota before upgrades"
+    },
+    {
+      "expectation": "Suggests staggering node pool upgrades or running non-conflicting pools in parallel",
+      "passed": true,
+      "reason": "Response suggests both parallel pool upgrades with gcloud commands using --async and staggered upgrade schedules splitting across multiple weekends"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as an option for GPU pools",
+      "passed": false,
+      "reason": "Response mentions blue-green strategy but describes manual blue-green deployment, not GKE's specific auto-scale blue-green upgrade feature"
+    },
+    {
+      "expectation": "Recommends expanding the maintenance window or splitting across multiple weekends",
+      "passed": true,
+      "reason": "Response explicitly recommends staggered upgrade schedule splitting into multiple smaller maintenance windows across weeks"
+    },
+    {
+      "expectation": "Provides the gcloud command for updating surge settings on each pool",
+      "passed": false,
+      "reason": "Response shows YAML configuration for surge settings but does not provide the actual gcloud command to update these settings on existing pools"
+    },
+    {
+      "expectation": "Includes monitoring commands to track upgrade progress in real-time",
+      "passed": true,
+      "reason": "Response provides monitoring commands including 'watch kubectl get nodes -o wide' and commands to check pod distribution"
+    }
+  ]
+}

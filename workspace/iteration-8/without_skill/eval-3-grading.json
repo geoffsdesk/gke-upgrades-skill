@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies PDB as the most likely/common cause of stuck upgrades",
+      "passed": true,
+      "reason": "Response explicitly identifies PodDisruptionBudgets (PDBs) as a common cause and dedicates a specific section to addressing them"
+    },
+    {
+      "expectation": "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
+      "passed": true,
+      "reason": "Response includes 'kubectl get pdb --all-namespaces' and 'kubectl describe pdb --all-namespaces' commands"
+    },
+    {
+      "expectation": "Provides commands to identify which pods are blocking the drain",
+      "passed": true,
+      "reason": "Response includes multiple commands like 'kubectl get pods --all-namespaces --field-selector=status.phase!=Running' and commands to check events related to drainage"
+    },
+    {
+      "expectation": "Includes resource constraint diagnosis (capacity issues, pending pods)",
+      "passed": true,
+      "reason": "Response includes section 5 'Check Resource Constraints' with commands like 'kubectl top nodes' and checking for 'FailedScheduling' events"
+    },
+    {
+      "expectation": "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+      "passed": true,
+      "reason": "Response includes 'kubectl patch pdb [PDB_NAME] -n [NAMESPACE] --type='merge' -p='{\"spec\":{\"minAvailable\":0}}'' command to temporarily relax PDBs"
+    },
+    {
+      "expectation": "Mentions that GKE has a PDB timeout (up to 1 hour) after which it may force-drain, and that GKE sends notifications when eviction is blocked by PDB",
+      "passed": false,
+      "reason": "Response does not mention GKE's PDB timeout behavior or notification system for blocked evictions"
+    },
+    {
+      "expectation": "Includes guidance on surge upgrade settings as a potential fix",
+      "passed": true,
+      "reason": "Response includes surge upgrade configuration in section 8 with '--max-surge-upgrade=3 --max-unavailable-upgrade=1' parameters"
+    },
+    {
+      "expectation": "Mentions webhook issues as a possible cause",
+      "passed": false,
+      "reason": "Response does not mention webhook issues as a potential cause of stuck upgrades"
+    },
+    {
+      "expectation": "Includes validation steps to confirm the fix is working",
+      "passed": false,
+      "reason": "Response does not include specific steps to validate that the fixes are working or the upgrade is proceeding successfully"
+    }
+  ]
+}

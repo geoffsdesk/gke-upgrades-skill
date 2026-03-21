@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes notifications including auto-upgrade scheduled, version available, end-of-life warning, and security patch in both the table and decision tree"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": false,
+      "reason": "While urgency levels are assigned, security patches are listed as 'Medium-High' priority, not highest. End-of-life warnings are marked as 'High' and failed upgrades as 'Critical', making the prioritization inconsistent with the expectation"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response clearly states EoL warnings are HIGH PRIORITY and includes detailed checklist for planning upgrades, applying maintenance exclusions, and adding to upgrade roadmap before the EoL date"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response provides a detailed checklist for auto-upgrade scheduled notifications including checking timing conflicts, verifying maintenance windows, ensuring on-call awareness, and pre-staging rollback plans"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": false,
+      "reason": "Response mentions monitoring application health post-patch but does not address expedited upgrades outside normal maintenance windows for security patches"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response correctly categorizes 'Version available' notifications as LOW PRIORITY (Informational) with 'No action (informational)' and states 'File for future reference, No immediate action required'"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": false,
+      "reason": "Response discusses email filters, Slack integration, and general automation but does not specifically mention Pub/Sub or Cloud Monitoring alerts for GKE upgrade events"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": true,
+      "reason": "Response mentions 'Review release notes if planning near-term upgrades' in the Low Priority section, indicating release notes as a source for understanding version changes"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "eval_id": 26,
+  "mode": "without_skill",
+  "iteration": 8,
+  "prompt": "Our GKE 1.30 clusters are approaching End of Support. We have a mix of clusters: 3 on Regular channel, 2 on Extended channel, and 1 on legacy 'No channel'. What exactly will happen to each when 1.30 hits EoS? What are our options to prepare?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-21T15:34:29.836037+00:00",
+  "input_tokens": 79,
+  "output_tokens": 524,
+  "time_seconds": 12.08
+}

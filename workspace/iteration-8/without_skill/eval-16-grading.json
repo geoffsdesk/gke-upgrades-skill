@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies this as an admission webhook compatibility issue \u2014 the webhook is rejecting pod creation requests",
+      "passed": true,
+      "reason": "Response correctly identifies this as a webhook compatibility issue with the API server after K8s upgrade"
+    },
+    {
+      "expectation": "Provides commands to identify the problematic webhook (kubectl get validatingwebhookconfigurations / mutatingwebhookconfigurations)",
+      "passed": true,
+      "reason": "Provides kubectl get validatingadmissionwebhooks and kubectl get mutatingadmissionwebhooks commands to identify problematic webhooks"
+    },
+    {
+      "expectation": "Offers an immediate fix: temporarily disable or remove the problematic webhook",
+      "passed": true,
+      "reason": "Provides two immediate fix options: patching to disable the webhook and deleting the webhook temporarily"
+    },
+    {
+      "expectation": "Provides the kubectl delete command for the webhook configuration as emergency mitigation",
+      "passed": true,
+      "reason": "Includes kubectl delete validatingadmissionwebhook and mutatingadmissionwebhook commands for emergency mitigation"
+    },
+    {
+      "expectation": "Warns that deleting the webhook removes validation \u2014 it's a temporary fix",
+      "passed": true,
+      "reason": "Clearly labels solutions as 'temporarily' and emphasizes this is for immediate fixes, with permanent fix section provided"
+    },
+    {
+      "expectation": "Recommends checking cert-manager version compatibility with Kubernetes 1.32",
+      "passed": true,
+      "reason": "Includes command to check current cert-manager version and mentions upgrading to version compatible with k8s 1.32"
+    },
+    {
+      "expectation": "Advises upgrading cert-manager to a version that supports 1.30 as the permanent fix",
+      "passed": false,
+      "reason": "Response mentions upgrading cert-manager to support 1.32, not 1.30 as specified in the expectation"
+    },
+    {
+      "expectation": "Mentions setting failurePolicy to Ignore as a less drastic alternative to deletion",
+      "passed": true,
+      "reason": "Shows kubectl patch command that sets failurePolicy to Ignore as Option 1, presented as less drastic than deletion"
+    },
+    {
+      "expectation": "Includes commands to verify pods can be created after the fix",
+      "passed": true,
+      "reason": "Includes kubectl run test-pod --image=nginx --dry-run=server command to test pod creation after fixes"
+    }
+  ]
+}

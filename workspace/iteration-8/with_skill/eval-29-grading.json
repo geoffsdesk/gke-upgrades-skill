@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Uses 'no upgrades' exclusion (30-day max) for the BFCM period \u2014 blocks everything including patches",
+      "passed": true,
+      "reason": "Response correctly uses --add-maintenance-exclusion-scope no_upgrades for the November BFCM period with proper 30-day duration (Nov 1-30)"
+    },
+    {
+      "expectation": "Uses 'no upgrades' exclusion for the June code freeze period",
+      "passed": true,
+      "reason": "Response correctly uses --add-maintenance-exclusion-scope no_upgrades for the June code freeze period with proper 30-day duration (June 1-30)"
+    },
+    {
+      "expectation": "For permanent minor version control: uses 'no minor upgrades' (scope 'no_minor') if they only want to block minor versions, or 'no minor or node upgrades' (scope 'no_minor_or_node') if they also want to stop node upgrades. May recommend persistent exclusion with --add-maintenance-exclusion-until-end-of-support which auto-tracks EoS date",
+      "passed": true,
+      "reason": "Response uses --add-maintenance-exclusion-scope no_minor_or_node_upgrades with --add-maintenance-exclusion-until-end-of-support flag for persistent control, correctly addressing the requirement to block minor upgrades without explicit approval"
+    },
+    {
+      "expectation": "Notes the 30-day maximum for 'no upgrades' exclusions vs up-to-EoS for 'no minor or node upgrades'",
+      "passed": true,
+      "reason": "Response explains that the persistent exclusion 'automatically tracks End of Support indefinitely' and 'No 6-month limit - tracks End of Support indefinitely', clearly distinguishing from the 30-day exclusions"
+    },
+    {
+      "expectation": "Provides specific gcloud commands with --add-maintenance-exclusion-scope flags for each exclusion type",
+      "passed": true,
+      "reason": "Response provides complete gcloud commands with proper --add-maintenance-exclusion-scope flags for all three scenarios: no_minor_or_node_upgrades, no_upgrades for June, and no_upgrades for November"
+    },
+    {
+      "expectation": "Notes that you can have a maximum of three 'no upgrades' exclusions, and they must allow 48h of maintenance in any 32-day window",
+      "passed": false,
+      "reason": "Response does not mention the maximum of three 'no upgrades' exclusions or the 48-hour maintenance requirement in any 32-day window"
+    },
+    {
+      "expectation": "Mentions that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
+      "passed": true,
+      "reason": "Response states 'Even with no_upgrades exclusions, you can still perform manual upgrades if needed for security patches - the exclusions only block auto-upgrades'"
+    },
+    {
+      "expectation": "Warns about the risk of falling too far behind on versions during extended exclusion periods",
+      "passed": false,
+      "reason": "Response does not warn about risks of falling behind on versions during extended exclusion periods, though it does mention when to upgrade manually"
+    }
+  ]
+}

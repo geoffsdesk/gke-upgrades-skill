@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies Service A (minAvailable=100%) as a guaranteed upgrade blocker \u2014 no disruptions allowed at all",
+      "passed": true,
+      "reason": "Response clearly identifies Service A as 'CRITICAL' risk that 'will completely block rolling updates since Kubernetes needs to terminate at least one pod during the upgrade process'"
+    },
+    {
+      "expectation": "Identifies Service B (maxUnavailable=0) as also blocking upgrades \u2014 same effect as 100% minAvailable",
+      "passed": true,
+      "reason": "Response identifies Service B as 'CRITICAL' risk with 'Identical issue to Service A. Zero unavailable pods means no rolling updates possible'"
+    },
+    {
+      "expectation": "States Service C (minAvailable=2 with 3 replicas) is safe \u2014 allows 1 pod disruption at a time",
+      "passed": true,
+      "reason": "Response states Service C is 'SAFE' and explains it 'Maintains 2/3 pods during upgrades while allowing 1 pod disruption'"
+    },
+    {
+      "expectation": "States Service D (maxUnavailable=1 with 5 replicas) is safe \u2014 allows 1 pod down at a time",
+      "passed": true,
+      "reason": "Response states Service D is 'SAFE' with 'Excellent balance of availability (80%) with upgrade flexibility' and notes it allows 1 pod disruption"
+    },
+    {
+      "expectation": "Recommends fixing Service A: change to minAvailable=N-1 or maxUnavailable=1",
+      "passed": true,
+      "reason": "Response provides specific fix for Service A with 'minAvailable: 80%' and mentions 'or specific number like 2'"
+    },
+    {
+      "expectation": "Recommends fixing Service B: change to maxUnavailable=1",
+      "passed": true,
+      "reason": "Response provides specific YAML configuration for Service B with 'maxUnavailable: 1'"
+    },
+    {
+      "expectation": "Explains that GKE respects PDBs for up to 1 hour during surge upgrades, then may force-drain",
+      "passed": false,
+      "reason": "Response does not mention GKE-specific behavior, the 1-hour timeout, or force-drain mechanics"
+    },
+    {
+      "expectation": "Provides kubectl patch commands to fix the problematic PDBs",
+      "passed": false,
+      "reason": "Response provides complete YAML configurations but does not provide specific kubectl patch commands"
+    },
+    {
+      "expectation": "Recommends testing PDB changes in a non-production environment first",
+      "passed": true,
+      "reason": "Response includes a 'Test Your Changes' section with kubectl commands and states 'Before applying fixes, test with:'"
+    }
+  ]
+}

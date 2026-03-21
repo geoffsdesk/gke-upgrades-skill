@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Configures a recurring maintenance window for weekends only",
+      "passed": true,
+      "reason": "Provides gcloud command with Saturday 2:00-8:00 AM UTC window and FREQ=WEEKLY;BYDAY=SA recurrence for weekend-only maintenance"
+    },
+    {
+      "expectation": "Provides the gcloud command with --maintenance-window-start/end and --maintenance-window-recurrence for weekly weekend schedule",
+      "passed": true,
+      "reason": "Shows explicit gcloud container clusters update with --maintenance-window-start, --maintenance-window-end, and --maintenance-window-recurrence 'FREQ=WEEKLY;BYDAY=SA'"
+    },
+    {
+      "expectation": "Sets up maintenance exclusions for quarterly code freezes (up to 30 days each)",
+      "passed": true,
+      "reason": "Provides example Q1 code freeze exclusion with gcloud command using --add-maintenance-exclusion-* flags and mentions repeating for Q2, Q3, Q4"
+    },
+    {
+      "expectation": "Sets up a maintenance exclusion for the November audit period",
+      "passed": true,
+      "reason": "Provides specific gcloud command for annual-audit-2024 exclusion covering November 1-30, 2024 with no_upgrades scope"
+    },
+    {
+      "expectation": "Notes the 30-day maximum for maintenance exclusions and how to handle longer freezes",
+      "passed": true,
+      "reason": "Includes table showing 'Max Duration: 30 days' for no_upgrades exclusions, though doesn't explicitly explain handling longer freezes"
+    },
+    {
+      "expectation": "Explains that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
+      "passed": true,
+      "reason": "States in operational recommendations that 'exclusions don't block manual upgrades, only auto-upgrades' and suggests manually initiating upgrades during maintenance windows"
+    },
+    {
+      "expectation": "Recommends combining maintenance windows with Stable or Extended channel for maximum upgrade control",
+      "passed": true,
+      "reason": "Recommends migrating to Stable channel for SOX compliance, citing better predictability and testing, though doesn't mention Extended channel"
+    },
+    {
+      "expectation": "Provides gcloud commands for each exclusion (--add-maintenance-exclusion-name/start-time/end-time)",
+      "passed": true,
+      "reason": "Shows multiple gcloud commands with --add-maintenance-exclusion-name, --add-maintenance-exclusion-start-time, and --add-maintenance-exclusion-end-time flags"
+    },
+    {
+      "expectation": "Warns about the risk of falling too far behind on versions during long exclusion periods",
+      "passed": false,
+      "reason": "Does not explicitly warn about risks of falling behind on versions during long exclusions, though mentions version monitoring in operational recommendations"
+    }
+  ]
+}

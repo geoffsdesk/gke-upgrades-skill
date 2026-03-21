@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the difference between Rapid and Stable channels \u2014 including that Rapid has no SLA for upgrade stability while Stable carries a full SLA, and clearly distinguishes minor version vs patch version differences between the channels",
+      "passed": false,
+      "reason": "Response mentions timing differences but doesn't explain the SLA differences between channels or clearly distinguish minor vs patch version handling"
+    },
+    {
+      "expectation": "Notes that channel changes don't trigger an immediate upgrade or downgrade",
+      "passed": true,
+      "reason": "Response clearly states 'You cannot directly switch - GKE doesn't allow downgrading versions' and recommends waiting for versions to align"
+    },
+    {
+      "expectation": "Warns that if 1.30 isn't yet available on Stable, the cluster may not receive patches until Stable catches up",
+      "passed": true,
+      "reason": "Response mentions 'you'll miss security patches during the waiting period' in the considerations section"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "Provides the exact command: 'gcloud container clusters update CLUSTER_NAME --zone=ZONE --release-channel=stable'"
+    },
+    {
+      "expectation": "Recommends checking version availability on Stable before switching (gcloud container get-server-config)",
+      "passed": true,
+      "reason": "Includes the command 'gcloud container get-server-config --zone=ZONE --format=\"value(channels.stable.validVersions[])\"' in the step-by-step process"
+    },
+    {
+      "expectation": "Discusses the impact on auto-upgrade timing going forward",
+      "passed": true,
+      "reason": "Mentions 'Stable has slower, more predictable upgrade cycles' and discusses 'More predictable upgrades, longer testing window' in the pros/cons section"
+    },
+    {
+      "expectation": "Mentions that the Extended channel is an option if they need even slower cadence (with cost implications)",
+      "passed": false,
+      "reason": "Response does not mention the Extended channel as an option or its cost implications"
+    },
+    {
+      "expectation": "Advises coordinating the change during a maintenance window",
+      "passed": false,
+      "reason": "Response does not specifically advise scheduling the channel change during a maintenance window"
+    }
+  ]
+}

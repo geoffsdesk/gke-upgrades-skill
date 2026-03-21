@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's native node pool upgrade strategies rather than the manual create/cordon/drain/delete workflow described",
+      "passed": true,
+      "reason": "Response explicitly states 'No, that manual approach isn't necessary' and recommends GKE's native upgrade strategies as better alternatives"
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends surge upgrade with maxSurge=0 and maxUnavailable set as the primary lever (since no surge capacity is available)",
+      "passed": true,
+      "reason": "Response specifically recommends 'max-surge-upgrade 0' and 'max-unavailable-upgrade 4' for GPU pools with fixed reservations, explaining this creates no surge capacity usage"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as a native alternative that handles cordon and migration automatically",
+      "passed": true,
+      "reason": "Response includes a section on 'GKE's Autoscaled Blue-Green (Preview)' with the --enable-autoscaled-blue-green-upgrade command and explains it handles cordoning automatically"
+    },
+    {
+      "expectation": "Explains that native strategies are the supported path and handle edge cases (PDB respect, drain timeouts, progress tracking) that manual workflows miss",
+      "passed": true,
+      "reason": "Response explains native approaches 'Respects PDBs and graceful termination' and 'Supported path with proper error handling', contrasting with manual approach downsides like 'No automatic PDB respect'"
+    },
+    {
+      "expectation": "Only suggests manual blue-green as a last resort if native strategies don't meet a specific requirement",
+      "passed": true,
+      "reason": "Response explicitly states 'Always prefer GKE's native upgrade strategies first. Only use custom workflows when native strategies can't meet specific requirements'"
+    },
+    {
+      "expectation": "Addresses GPU driver compatibility \u2014 need to verify target version's auto-installed driver is compatible",
+      "passed": true,
+      "reason": "Response includes 'Verify CUDA driver compatibility' in the checklist and warns 'GKE 1.32 may install different GPU drivers than 1.31' with recommendation to test first"
+    },
+    {
+      "expectation": "Recommends scheduling the upgrade during a gap in GPU workloads to minimize impact",
+      "passed": true,
+      "reason": "Response recommends applying 'maintenance exclusion until jobs complete' for training jobs and mentions backing up checkpoints, implying timing considerations for workload impact"
+    },
+    {
+      "expectation": "Provides gcloud commands for the recommended native approach",
+      "passed": true,
+      "reason": "Response provides specific gcloud commands for both the surge upgrade approach and blue-green approach, including exact parameter values and cluster upgrade commands"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies PDB as the most likely/common cause of stuck upgrades",
+      "passed": true,
+      "reason": "Response explicitly states 'this is likely a PDB or resource constraint issue' and calls PDB '(most common cause)' and emphasizes 'Start with checking PDBs first - that's the most common cause of stuck drains'"
+    },
+    {
+      "expectation": "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
+      "passed": true,
+      "reason": "Provides 'kubectl get pdb -A -o wide' command which is equivalent to checking PDBs across all namespaces"
+    },
+    {
+      "expectation": "Provides commands to identify which pods are blocking the drain",
+      "passed": true,
+      "reason": "Includes multiple commands: kubectl describe pdb, kubectl get pods -A | grep Pending, kubectl get events for FailedScheduling, and kubectl get pods to find bare pods"
+    },
+    {
+      "expectation": "Includes resource constraint diagnosis (capacity issues, pending pods)",
+      "passed": true,
+      "reason": "Explicitly checks for pending pods with 'kubectl get pods -A | grep Pending' and includes events filtering for FailedScheduling to identify resource constraints"
+    },
+    {
+      "expectation": "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+      "passed": true,
+      "reason": "Provides specific kubectl patch commands to temporarily adjust PDBs, including backing up current PDB and patching with maxUnavailable settings"
+    },
+    {
+      "expectation": "Mentions that GKE has a PDB timeout (up to 1 hour) after which it may force-drain, and that GKE sends notifications when eviction is blocked by PDB",
+      "passed": false,
+      "reason": "Response does not mention GKE's PDB timeout mechanism or notifications about blocked evictions"
+    },
+    {
+      "expectation": "Includes guidance on surge upgrade settings as a potential fix",
+      "passed": true,
+      "reason": "Provides specific gcloud command to update surge settings: 'gcloud container node-pools update ... --max-surge-upgrade 3 --max-unavailable-upgrade 0'"
+    },
+    {
+      "expectation": "Mentions webhook issues as a possible cause",
+      "passed": true,
+      "reason": "In the 'If Still Stuck' section, specifically mentions 'Check for admission webhooks blocking pod creation' with relevant kubectl commands"
+    },
+    {
+      "expectation": "Includes validation steps to confirm the fix is working",
+      "passed": true,
+      "reason": "Provides comprehensive monitoring commands under 'Monitor Progress' section including watching nodes, checking operation status, and monitoring pod movements"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends Stable or Extended release channel to minimize upgrade frequency",
+      "passed": false,
+      "reason": "Recommends Regular channel instead, explicitly stating 'Use Regular channel (not Extended)' and explaining why Regular is preferred over Extended"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
+      "passed": true,
+      "reason": "Explicitly recommends using '--add-maintenance-exclusion-scope no_minor_or_node_upgrades' and explains it 'allows CP security patches, blocks all disruptive changes'"
+    },
+    {
+      "expectation": "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
+      "passed": true,
+      "reason": "Configures a specific weekly Sunday maintenance window with '--maintenance-window-recurrence \"FREQ=WEEKLY;BYDAY=SU\"' from 6-10 AM"
+    },
+    {
+      "expectation": "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
+      "passed": true,
+      "reason": "Provides separate node pool configurations for 'Training Pool (H100s)' and 'System/Inference Pool (no GPUs)' with detailed explanations of their distinct purposes"
+    },
+    {
+      "expectation": "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
+      "passed": true,
+      "reason": "Sets '--enable-autoupgrade=false' on H100 training pool and provides detailed steps for manual upgrades 'Between Training Runs (Planned Upgrades)'"
+    },
+    {
+      "expectation": "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
+      "passed": true,
+      "reason": "Includes checkpointing guidance in emergency procedures with 'kubectl exec training-pod -- /save_checkpoint.sh' and mentions 'wait for natural completion' during upgrades"
+    },
+    {
+      "expectation": "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
+      "passed": true,
+      "reason": "Includes a dedicated 'GPU Driver Compatibility' section with commands to create staging cluster and verify CUDA version compatibility before production upgrades"
+    },
+    {
+      "expectation": "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading",
+      "passed": true,
+      "reason": "Includes 'High-Performance Networking Configuration' section with GPUDirect-TCPX/RDMA setup and 'Networking verification post-upgrade' commands to test RDMA functionality after upgrades"
+    }
+  ]
+}

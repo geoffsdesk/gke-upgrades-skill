@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Clearly states that the gap exceeds the 2-minor-version maximum and explains GKE's version skew policy"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (3 minor versions)",
+      "passed": true,
+      "reason": "Explicitly identifies the 3 minor version gap between 1.28 nodes and 1.31 control plane as violating the policy"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Lists specific problems including API incompatibilities, networking issues, security gaps, and potential workload failures"
+    },
+    {
+      "expectation": "Recommends skip-level (N+2) node pool upgrades where possible to reduce time and disruption (e.g., 1.28\u21921.30 then 1.30\u21921.31), rather than upgrading through every minor",
+      "passed": true,
+      "reason": "Presents Option A as recommended skip-level upgrade (1.28 \u2192 1.30 or 1.31) and explains it's faster with less total disruption"
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Includes multiple gcloud commands for checking cluster status, configuring upgrade settings, and executing the upgrade"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": true,
+      "reason": "Provides specific conservative upgrade settings with maxSurge=1 and maxUnavailable=0 for stateful workloads in the risky state"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": true,
+      "reason": "Includes monitoring commands and validation steps, plus advises sequential upgrades for multiple node pools with validation between each"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": true,
+      "reason": "Provides specific commands for migrating to Regular release channel and setting up maintenance windows for prevention"
+    }
+  ]
+}
