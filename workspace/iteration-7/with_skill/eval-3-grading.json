@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies PDB as the most likely/common cause of stuck upgrades",
+      "passed": true,
+      "reason": "Response explicitly states 'Check for PDB blocking drain (most common cause)' and later mentions 'Start with checking PDBs first - that's the cause in ~80% of stuck drain scenarios'"
+    },
+    {
+      "expectation": "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
+      "passed": true,
+      "reason": "Provides 'kubectl get pdb -A -o wide' command to check PDBs across all namespaces"
+    },
+    {
+      "expectation": "Provides commands to identify which pods are blocking the drain",
+      "passed": true,
+      "reason": "Includes multiple commands: 'kubectl get pods -A | grep Terminating', 'kubectl get pods -A | grep Pending', and event checking commands to identify blocking pods"
+    },
+    {
+      "expectation": "Includes resource constraint diagnosis (capacity issues, pending pods)",
+      "passed": true,
+      "reason": "Includes commands to check for pending pods and scheduling failures, plus mentions increasing surge capacity for resource-constrained scenarios"
+    },
+    {
+      "expectation": "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+      "passed": true,
+      "reason": "Provides explicit kubectl patch command to temporarily relax PDBs by setting maxUnavailable to 100%"
+    },
+    {
+      "expectation": "Includes guidance on surge upgrade settings as a potential fix",
+      "passed": true,
+      "reason": "Provides gcloud command to increase max-surge-upgrade and set max-unavailable-upgrade as Fix 3"
+    },
+    {
+      "expectation": "Mentions webhook issues as a possible cause",
+      "passed": false,
+      "reason": "Response does not mention admission webhooks or webhook-related issues as a potential cause of stuck drains"
+    },
+    {
+      "expectation": "Includes validation steps to confirm the fix is working",
+      "passed": true,
+      "reason": "Includes a dedicated 'Validation' section with commands to watch upgrade progress, check for stuck pods, and monitor operations"
+    }
+  ]
+}

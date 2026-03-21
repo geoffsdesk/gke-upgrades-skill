@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends migrating all 'No channel' clusters to release channels as a first priority",
+      "passed": true,
+      "reason": "The response explicitly states 'Never recommend staying on \"No channel\"' and includes it in the HIGH priority section, with specific migration commands provided"
+    },
+    {
+      "expectation": "Mentions GKE upgrade visibility for checking each cluster's auto-upgrade status and target version",
+      "passed": true,
+      "reason": "The response includes specific commands to check auto-upgrade status and mentions enabling 'Auto-upgrade' columns in the dashboard"
+    },
+    {
+      "expectation": "Mentions the deprecation insights dashboard for identifying clusters using deprecated APIs",
+      "passed": true,
+      "reason": "The response prominently features the GKE deprecation insights dashboard as a 'Critical self-service tool' with detailed navigation instructions"
+    },
+    {
+      "expectation": "Recommends checking EoS timelines for each cluster and prioritizing those closest to EoS",
+      "passed": true,
+      "reason": "The response mentions 'Clusters approaching End of Support (EoS)' as HIGH priority and includes 'Proactive EoS planning: Track upcoming End of Support dates' in the roadmap"
+    },
+    {
+      "expectation": "Mentions GKE EoS notifications via Cloud Logging as an ongoing monitoring tool",
+      "passed": false,
+      "reason": "While Cloud Logging is mentioned for 'upgrade notifications and errors', it doesn't specifically mention EoS notifications via Cloud Logging as a monitoring tool"
+    },
+    {
+      "expectation": "Recommends enrolling in scheduled upgrade notifications (72h advance) for all clusters",
+      "passed": false,
+      "reason": "The response does not mention enrolling in scheduled upgrade notifications or the 72-hour advance notification feature"
+    },
+    {
+      "expectation": "Suggests standardizing on a channel strategy: dev\u2192Rapid, staging\u2192Regular, prod\u2192Stable/Extended",
+      "passed": true,
+      "reason": "The response explicitly recommends 'Dev/Test: Rapid channel', 'Staging: Regular channel', 'Production: Regular or Stable channel' as the standard strategy"
+    },
+    {
+      "expectation": "May mention rollout sequencing as an advanced option for fleet-wide upgrade ordering \u2014 should not be the primary recommendation for fleet remediation",
+      "passed": true,
+      "reason": "The response does not mention rollout sequencing as an option, focusing instead on manual prioritization and sequential environment-based upgrades, which aligns with the expectation"
+    },
+    {
+      "expectation": "Mentions GKE Insights and Recommendations in the console for identifying issues like version skew",
+      "passed": true,
+      "reason": "The response mentions multiple GKE Insights sections including 'Insights \u2192 API Deprecations' and 'Insights \u2192 Security' for identifying cluster issues"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that surge upgrades require extra compute capacity (maxSurge creates NEW nodes before draining old ones)",
+      "passed": true,
+      "reason": "Response clearly explains in Option 1 that surge upgrades create surge nodes first and the trade-off section mentions 'instead of creating surge nodes, drain existing nodes first'"
+    },
+    {
+      "expectation": "Recommends setting maxUnavailable >0 instead of relying on maxSurge (drains first, then creates \u2014 uses less quota)",
+      "passed": true,
+      "reason": "Option 1 explicitly recommends setting max-unavailable-upgrade to 1 while setting max-surge-upgrade to 0, explaining this drains existing nodes first"
+    },
+    {
+      "expectation": "Warns that maxUnavailable >0 means reduced capacity during upgrade \u2014 some pods won't have nodes",
+      "passed": true,
+      "reason": "Response warns about 'temporary capacity dip as nodes are drained before replacement nodes are created' and suggests scaling down non-critical workloads first"
+    },
+    {
+      "expectation": "Suggests temporarily scaling down non-critical deployments to free up quota for surge nodes",
+      "passed": true,
+      "reason": "Option 3 specifically covers scaling down non-critical deployments with kubectl scale commands to free up existing nodes for surge capacity"
+    },
+    {
+      "expectation": "Mentions that reducing maxSurge to 1 minimizes extra quota needed (slower but fits within constraints)",
+      "passed": false,
+      "reason": "While the response mentions setting maxSurge to 0 for zero quota usage, it doesn't discuss reducing maxSurge to 1 as a middle-ground option that minimizes quota needs"
+    },
+    {
+      "expectation": "Provides the gcloud command to update surge settings (maxSurge=0, maxUnavailable=1 for zero-extra-capacity mode)",
+      "passed": true,
+      "reason": "Response provides the exact gcloud command with --max-surge-upgrade 0 and --max-unavailable-upgrade 1 parameters"
+    },
+    {
+      "expectation": "Recommends doing the upgrade in off-peak hours when fewer pods are running",
+      "passed": false,
+      "reason": "Response does not mention timing the upgrade for off-peak hours or when fewer pods are running"
+    },
+    {
+      "expectation": "Mentions requesting a temporary quota increase as a faster alternative to a permanent increase",
+      "passed": false,
+      "reason": "Response does not suggest requesting a temporary quota increase as an alternative to waiting for the permanent increase approval"
+    }
+  ]
+}

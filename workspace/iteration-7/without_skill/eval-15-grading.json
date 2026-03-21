@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "First step: check the operation status to understand why it failed (gcloud container operations list)",
+      "passed": true,
+      "reason": "Response includes 'gcloud container operations list --filter=\"TYPE:UPGRADE_NODES\"' to check upgrade status"
+    },
+    {
+      "expectation": "Recommends checking events and logs for the specific failure reason",
+      "passed": false,
+      "reason": "While it asks for error messages at the end, it doesn't provide specific commands to check GKE operation logs or events for failure diagnosis"
+    },
+    {
+      "expectation": "Explains that the cluster is in a mixed-version state (8 nodes at 1.32, 12 at 1.31) which is within skew policy",
+      "passed": true,
+      "reason": "States 'Mixed versions are supported: Nodes can run N-2 versions behind the control plane' addressing the mixed-version state"
+    },
+    {
+      "expectation": "Notes that the mixed state is functional but not ideal \u2014 workloads can run on both versions",
+      "passed": true,
+      "reason": "Explicitly states 'Your workloads should continue running normally' and mentions mixed versions are supported"
+    },
+    {
+      "expectation": "Provides options: retry the upgrade after fixing the root cause, or rollback the 8 upgraded nodes",
+      "passed": false,
+      "reason": "Provides retry options but does not mention rollback as an alternative - only discusses resuming/retrying the upgrade"
+    },
+    {
+      "expectation": "Explains that retrying is usually better than rollback (rolling back means creating a new pool at old version)",
+      "passed": false,
+      "reason": "Does not discuss rollback options or explain why retrying is preferred over rollback"
+    },
+    {
+      "expectation": "Addresses the remaining 2 node pools: they can still be upgraded once the failed pool issue is resolved",
+      "passed": true,
+      "reason": "States 'Plan remaining pools: Consider upgrading your other two pools during lower-traffic periods'"
+    },
+    {
+      "expectation": "Includes commands to diagnose the failure (operation details, node status, pod events)",
+      "passed": true,
+      "reason": "Provides kubectl commands to check node status, versions, and pod health for diagnosis"
+    }
+  ]
+}

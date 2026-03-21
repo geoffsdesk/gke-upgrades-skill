@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that surge upgrades create NEW nodes before draining old ones \u2014 this requires extra GPU capacity that may not exist for scarce hardware like H100",
+      "passed": false,
+      "reason": "The response does not explicitly explain that surge upgrades create new nodes before draining old ones, nor does it specifically explain why this requires extra GPU capacity for scarce hardware like H100"
+    },
+    {
+      "expectation": "Recommends switching to maxSurge=0, maxUnavailable=1 \u2014 this drains a node first then creates the replacement, requiring zero extra GPU capacity. Notes that maxUnavailable is the primary lever for GPU pools with fixed reservations",
+      "passed": true,
+      "reason": "The response specifically recommends setting max-surge=0 and max-unavailable=1, and explains this upgrades nodes one at a time without requiring surge capacity"
+    },
+    {
+      "expectation": "Warns that maxUnavailable=1 means reduced cluster capacity during upgrade \u2014 63/64 nodes available at any time. Suggests increasing maxUnavailable for faster completion if capacity dip is acceptable",
+      "passed": true,
+      "reason": "The response suggests using max-unavailable=25% for faster rolling updates in the maintenance window approach, implying understanding of the capacity trade-off"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as an alternative (cordons old pool, auto-scales replacement)",
+      "passed": true,
+      "reason": "The response mentions a 'Blue-Green Node Pool' strategy involving creating a new node pool and migrating workloads gradually"
+    },
+    {
+      "expectation": "Suggests upgrading during off-peak when some GPU nodes are idle \u2014 scale down non-critical workloads to free capacity",
+      "passed": true,
+      "reason": "The response recommends scheduling during low-usage periods and coordinating with workload teams for graceful shutdowns"
+    },
+    {
+      "expectation": "Notes that with maxUnavailable=1 on 64 nodes at ~20-node parallelism, the upgrade will take significantly longer",
+      "passed": false,
+      "reason": "The response does not provide specific timing details about how long the upgrade will take with maxUnavailable=1 on 64 nodes or mention the parallelism constraint"
+    },
+    {
+      "expectation": "Recommends checking if GPU reservations have headroom that could be used for surge nodes",
+      "passed": false,
+      "reason": "The response does not mention checking GPU reservations or quota headroom that could potentially be used for surge nodes"
+    },
+    {
+      "expectation": "Advises scheduling the upgrade during a gap between training runs when nodes can be drained without impacting workloads",
+      "passed": true,
+      "reason": "The response suggests performing upgrades during maintenance windows and coordinating with workload teams, which aligns with scheduling during gaps in training runs"
+    }
+  ]
+}

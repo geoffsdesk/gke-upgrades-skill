@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends combining release channels with maintenance exclusions as the approach for maximum control",
+      "passed": true,
+      "reason": "Clearly recommends Extended channel + maintenance exclusions as the primary strategy, with specific gcloud commands showing both components working together"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' exclusion to prevent disruptive changes while allowing control plane security patches",
+      "passed": true,
+      "reason": "Explicitly recommends and demonstrates the 'no_minor_or_node_upgrades' exclusion scope with detailed explanation of how it allows security patches while blocking disruptive changes"
+    },
+    {
+      "expectation": "Recommends maintenance windows to control WHEN patches are applied (e.g., weekend windows only)",
+      "passed": true,
+      "reason": "Provides specific maintenance window configuration examples (Saturday 2-6 AM EST) with gcloud commands and explains how they control timing of patches"
+    },
+    {
+      "expectation": "Mentions the disruption interval between patch and minor upgrades to prevent back-to-back upgrades",
+      "passed": false,
+      "reason": "Does not mention disruption intervals or preventing back-to-back upgrades as a specific configuration consideration"
+    },
+    {
+      "expectation": "Suggests Stable or Extended channel for production clusters in regulated environments",
+      "passed": true,
+      "reason": "Specifically recommends Extended channel for production clusters and explains why it's better for regulated environments, though does not mention Stable as an alternative"
+    },
+    {
+      "expectation": "Notes that disabling control plane patches entirely is not recommended due to security risks \u2014 monthly patches at minimum",
+      "passed": false,
+      "reason": "While it shows how to allow control plane patches, it doesn't explicitly state that disabling them entirely is not recommended or mention a minimum monthly patching requirement"
+    },
+    {
+      "expectation": "May mention rollout sequencing as an advanced option for controlling upgrade order across multiple clusters \u2014 should not be positioned as a default recommendation",
+      "passed": false,
+      "reason": "Does not mention rollout sequencing as an option for controlling upgrade order across multiple clusters"
+    },
+    {
+      "expectation": "Provides gcloud commands for configuring the recommended exclusion type and maintenance window",
+      "passed": true,
+      "reason": "Provides comprehensive gcloud commands for configuring no_minor_or_node_upgrades exclusions, maintenance windows, and related operations"
+    }
+  ]
+}

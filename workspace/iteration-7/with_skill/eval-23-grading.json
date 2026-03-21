@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies Service A (minAvailable=100%) as a guaranteed upgrade blocker \u2014 no disruptions allowed at all",
+      "passed": true,
+      "reason": "Response clearly identifies Service A as 'CRITICAL RISK' and 'WILL BLOCK UPGRADE' explaining that zero pods can be evicted making node drain impossible"
+    },
+    {
+      "expectation": "Identifies Service B (maxUnavailable=0) as also blocking upgrades \u2014 same effect as 100% minAvailable",
+      "passed": true,
+      "reason": "Response identifies Service B as 'CRITICAL RISK' and 'WILL BLOCK UPGRADE' and explicitly states it's 'Functionally identical to Service A' with 'same effect as minAvailable=100%'"
+    },
+    {
+      "expectation": "States Service C (minAvailable=2 with 3 replicas) is safe \u2014 allows 1 pod disruption at a time",
+      "passed": false,
+      "reason": "Response classifies Service C as 'MEDIUM RISK' and 'MAY BLOCK' rather than safe, citing that it only allows 1 pod down and needs surge capacity"
+    },
+    {
+      "expectation": "States Service D (maxUnavailable=1 with 5 replicas) is safe \u2014 allows 1 pod down at a time",
+      "passed": true,
+      "reason": "Response clearly marks Service D as 'SAFE' and 'UPGRADE FRIENDLY' explaining it allows 1 pod eviction while maintaining 4 healthy instances"
+    },
+    {
+      "expectation": "Recommends fixing Service A: change to minAvailable=N-1 or maxUnavailable=1",
+      "passed": true,
+      "reason": "Response provides specific fixes for Service A including 'maxUnavailable: 1' and 'minAvailable: \"80%\"' options"
+    },
+    {
+      "expectation": "Recommends fixing Service B: change to maxUnavailable=1",
+      "passed": true,
+      "reason": "Response provides specific fix for Service B with 'maxUnavailable: 1' in the recommended fix section"
+    },
+    {
+      "expectation": "Explains that GKE respects PDBs for up to 1 hour during surge upgrades, then may force-drain",
+      "passed": true,
+      "reason": "Response mentions 'GKE will wait up to 1 hour, then your upgrade stalls' explaining the timeout behavior"
+    },
+    {
+      "expectation": "Provides kubectl patch commands to fix the problematic PDBs",
+      "passed": true,
+      "reason": "Response includes specific kubectl patch commands in the Emergency Upgrade Procedure section for both Service A and B"
+    },
+    {
+      "expectation": "Recommends testing PDB changes in a non-production environment first",
+      "passed": false,
+      "reason": "Response does not explicitly recommend testing in non-production environments, though it mentions chaos engineering and monitoring"
+    }
+  ]
+}

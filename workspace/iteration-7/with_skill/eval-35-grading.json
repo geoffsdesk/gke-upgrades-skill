@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends Stable or Extended release channel to minimize upgrade frequency",
+      "passed": false,
+      "reason": "Recommends Regular channel instead of Stable or Extended channel, which provides less stability"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
+      "passed": true,
+      "reason": "Explicitly shows using --add-maintenance-exclusion-scope no_minor_or_node_upgrades to protect training periods while allowing control plane security patches"
+    },
+    {
+      "expectation": "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
+      "passed": true,
+      "reason": "Configures Saturday 6-10 AM UTC maintenance window and explains the timing choice"
+    },
+    {
+      "expectation": "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
+      "passed": true,
+      "reason": "Shows clear segregation with separate training-h100 node pool for GPU workloads and infrastructure node pool, including node taints and labels"
+    },
+    {
+      "expectation": "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
+      "passed": true,
+      "reason": "Explicitly uses --no-enable-autoupgrade for training node pool and provides detailed manual upgrade procedure for planned gaps"
+    },
+    {
+      "expectation": "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
+      "passed": true,
+      "reason": "Includes checkpointing configuration example with CHECKPOINT_INTERVAL and RESUME_FROM_CHECKPOINT environment variables"
+    },
+    {
+      "expectation": "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
+      "passed": true,
+      "reason": "States 'Always test target GKE version in staging first' and mentions H100 driver compatibility requirements"
+    },
+    {
+      "expectation": "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading",
+      "passed": false,
+      "reason": "While mentions high-MTU VPC for RDMA/GPUDirect, does not specifically warn about strict GKE version requirements for this networking or need to verify compatibility before upgrading"
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends sequential control plane upgrades (1.30\u21921.31\u21921.32) while using skip-level (N+2) for node pool upgrades where possible to reduce disruption",
+      "passed": false,
+      "reason": "The response correctly identifies that the cluster is already at 1.32 and assumes upgrade to 1.33, showing 1.32\u21921.33 (which is sequential). However, it doesn't discuss skip-level upgrades for node pools - it shows the same version upgrade path for all components without mentioning the possibility of skip-level node pool upgrades to reduce disruption."
+    },
+    {
+      "expectation": "Specifies control plane upgrades before node pool upgrades",
+      "passed": true,
+      "reason": "Clearly states 'Control Plane (First)' in the upgrade strategy section and shows Phase 1 as control plane upgrade followed by node pool phases. The rollout sequence explicitly shows control plane upgrade in Week 1 before any node pool upgrades."
+    },
+    {
+      "expectation": "Provides different node pool upgrade ordering with rationale for the sequence",
+      "passed": true,
+      "reason": "Specifies clear ordering: 1) General-purpose pool (lowest risk), 2) High-memory pool (Postgres - coordinate with DB team), 3) GPU pool (highest complexity). Provides rationale for each position in the sequence based on risk and complexity."
+    },
+    {
+      "expectation": "Includes specific surge upgrade settings (maxSurge/maxUnavailable) for each pool with justification for the chosen values (e.g., explaining why maxSurge is set higher for parallelism)",
+      "passed": true,
+      "reason": "Provides specific settings for each pool: General-purpose (maxSurge=3, maxUnavailable=0 for parallelism), High-memory (maxSurge=1, maxUnavailable=0 for database protection), GPU (maxSurge=0, maxUnavailable=1 due to capacity constraints). Includes clear justifications for each setting."
+    },
+    {
+      "expectation": "Addresses Postgres-specific concerns (PDB, backup, operator compatibility, PV reclaim)",
+      "passed": true,
+      "reason": "Addresses Postgres operator compatibility verification, mentions PDBs in the checklist, includes backup verification for Postgres StatefulSets, and discusses coordination with database team. However, PV reclaim is not explicitly mentioned."
+    },
+    {
+      "expectation": "Addresses GPU-specific concerns (driver compatibility, maxUnavailable as primary lever since surge capacity is typically unavailable)",
+      "passed": true,
+      "reason": "Addresses GPU driver compatibility, mentions GPU driver version changes, discusses GPU quota constraints, uses maxUnavailable=1 with maxSurge=0 specifically because GPU surge capacity is typically unavailable, and includes ML inference framework compatibility testing."
+    },
+    {
+      "expectation": "Includes actual gcloud commands for the upgrade steps",
+      "passed": true,
+      "reason": "Provides specific gcloud commands for checking server config, setting maintenance windows, configuring surge settings, and upgrading both control plane and each node pool. Commands are complete with proper syntax and parameters."
+    },
+    {
+      "expectation": "Provides a pre-upgrade checklist",
+      "passed": true,
+      "reason": "Includes a comprehensive 'Workload Readiness Checklist' with items like PDB configuration, Postgres operator compatibility, ML framework compatibility, GPU driver compatibility, and 'Infrastructure Readiness' checklist with quota and monitoring items."
+    },
+    {
+      "expectation": "Provides a post-upgrade checklist with validation commands",
+      "passed": true,
+      "reason": "Includes 'Success Criteria' section with specific validation items and mentions validation steps like 'system pod validation', 'application validation', 'DB health check', and 'inference pipeline testing'. However, specific validation commands are limited."
+    },
+    {
+      "expectation": "Includes rollback procedure or guidance (noting CP patch downgrades are customer-doable, minor downgrades require GKE support)",
+      "passed": true,
+      "reason": "States 'Rollback: Possible for patches, requires GKE support for minor downgrades' in the control plane section, correctly distinguishing between patch and minor version rollback capabilities."
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": false,
+      "reason": "Response mentions all slices will be affected but doesn't explicitly explain that TPU slices are recreated atomically in a single step rather than as a rolling upgrade"
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": true,
+      "reason": "Response clearly states 'All 4 slices (1024 TPU chips total) will be affected since multislice training requires synchronized execution'"
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "Response explicitly states 'Your training job will be completely interrupted' and 'The job won't gracefully pause - it will terminate when the maintenance window starts'"
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": true,
+      "reason": "Response mentions in worst case section '8+ hours (if TPU resources become temporarily unavailable)' which addresses resource availability issues"
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "Response explicitly recommends 'Plan to trigger a final checkpoint manually before the maintenance window'"
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "Response includes 'Ensure your training code can resume from the latest checkpoint automatically' and shows job restart automation setup"
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": false,
+      "reason": "Response does not mention maintenance exclusions or the option to defer the maintenance event"
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": false,
+      "reason": "Response mentions maintenance windows in terms of duration and timing but doesn't suggest using them to control when the event occurs or scheduling during planned breaks"
+    }
+  ]
+}

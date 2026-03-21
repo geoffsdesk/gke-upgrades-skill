@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies PDB as the most likely/common cause of stuck upgrades",
+      "passed": true,
+      "reason": "Response explicitly states 'PodDisruptionBudgets (most common cause)' and mentions it's 'the most common culprit'"
+    },
+    {
+      "expectation": "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
+      "passed": true,
+      "reason": "Provides 'kubectl get pdb --all-namespaces' command and additional PDB inspection commands"
+    },
+    {
+      "expectation": "Provides commands to identify which pods are blocking the drain",
+      "passed": true,
+      "reason": "Includes commands to check pods on old nodes, standalone pods, and running pods across namespaces"
+    },
+    {
+      "expectation": "Includes resource constraint diagnosis (capacity issues, pending pods)",
+      "passed": false,
+      "reason": "Does not mention checking cluster capacity, resource constraints, or pending pods that might indicate capacity issues"
+    },
+    {
+      "expectation": "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+      "passed": true,
+      "reason": "Provides kubectl patch commands to temporarily relax PDBs with minAvailable=0 and maxUnavailable=100%"
+    },
+    {
+      "expectation": "Includes guidance on surge upgrade settings as a potential fix",
+      "passed": true,
+      "reason": "Provides detailed surge upgrade commands with --max-surge and --max-unavailable parameters, including canceling and restarting with better settings"
+    },
+    {
+      "expectation": "Mentions webhook issues as a possible cause",
+      "passed": false,
+      "reason": "Does not mention admission webhooks, validating webhooks, or webhook-related issues that could block pod eviction"
+    },
+    {
+      "expectation": "Includes validation steps to confirm the fix is working",
+      "passed": false,
+      "reason": "Does not provide specific commands to monitor upgrade progress or validate that the fixes are working after implementation"
+    }
+  ]
+}

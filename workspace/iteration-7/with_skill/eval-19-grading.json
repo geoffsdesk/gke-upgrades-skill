@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all four notification types in the table and throughout the document: End-of-Life warnings, Security patch available, Auto-upgrade scheduled, and New version available"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": false,
+      "reason": "Response assigns End-of-Life warnings as HIGH priority and security patches as MEDIUM priority, contradicting the expectation that security patches should be highest priority"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response clearly states EoS warnings are HIGH priority requiring action to 'Plan upgrade within 30 days of EoS warning' and provides specific upgrade options and commands"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response provides specific actions for auto-upgrade notifications including verifying timing, checking conflicts with code freezes/high-traffic periods, and provides a triage checklist"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response indicates security patches should be reviewed and scheduled within 7-30 days based on severity, and mentions assessing criticality which implies potential for expedited handling"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response clearly categorizes 'New version available' as INFO level with 'No action (unless accelerating manually)' and states 'No immediate action required - these are informational'"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "Response mentions 'Cloud Monitoring alerting policies' and provides specific guidance for notification filtering and routing, though it focuses more on email rules and Slack/PagerDuty integration"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": false,
+      "reason": "Response does not mention GKE release notes anywhere as a source for understanding version changes"
+    }
+  ]
+}

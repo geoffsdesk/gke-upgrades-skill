@@ -27,9 +27,10 @@ Workload Readiness
 - [ ] Postgres/database operator compatibility verified (if applicable)
 
 Infrastructure (Standard only)
-- [ ] Node pool upgrade strategy chosen (surge / blue-green)
-- [ ] Surge settings configured per pool: maxSurge=___ maxUnavailable=___
-- [ ] Sufficient compute quota for surge nodes
+- [ ] Node pool upgrade strategy chosen (surge / auto-scale blue-green / manual blue-green)
+- [ ] Surge settings configured per pool: maxSurge=___ maxUnavailable=___ (for GPU pools: maxUnavailable is the primary lever)
+- [ ] Skip-level (N+2) node pool upgrade evaluated where possible to reduce time and disruption
+- [ ] Sufficient compute quota for surge nodes (N/A for GPU pools using maxUnavailable mode)
 - [ ] Maintenance window configured (off-peak hours)
 - [ ] Maintenance exclusion type selected if needed:
       - "No upgrades" (30-day max, blocks everything including patches)

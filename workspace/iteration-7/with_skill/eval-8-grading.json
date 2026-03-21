@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the key difference: surge upgrades nodes in-place with rolling replacement, blue-green creates an entirely new pool",
+      "passed": true,
+      "reason": "The response clearly explains that surge upgrade uses rolling replacement while blue-green creates a replacement pool, with detailed comparison table showing the differences"
+    },
+    {
+      "expectation": "Recommends blue-green for this scenario due to local SSDs (data can't migrate between nodes)",
+      "passed": true,
+      "reason": "Explicitly recommends auto-scale blue-green upgrade and clearly explains local SSDs are ephemeral storage that can't migrate between nodes"
+    },
+    {
+      "expectation": "Explains that local SSD data is lost when a node is drained during surge upgrade",
+      "passed": true,
+      "reason": "Clearly states 'Local SSDs are ephemeral storage \u2014 when a node is replaced during surge upgrade, all local SSD data is permanently lost' and explains the impact on Cassandra"
+    },
+    {
+      "expectation": "Recommends GKE's auto-scale blue-green upgrade strategy as the native approach, or describes the blue-green process if manual workflow is needed",
+      "passed": true,
+      "reason": "Recommends GKE's auto-scale blue-green as the primary approach with detailed configuration, and also provides alternative manual blue-green process with specific commands"
+    },
+    {
+      "expectation": "Addresses Cassandra-specific concerns: need to decommission from the ring before draining, rebuild on new nodes",
+      "passed": true,
+      "reason": "Discusses using 'nodetool decommission' for graceful data handoff, monitoring ring topology, and provides Cassandra-specific validation commands throughout the migration"
+    },
+    {
+      "expectation": "Provides gcloud commands for creating the new node pool with matching configuration",
+      "passed": true,
+      "reason": "Provides specific gcloud commands for both configuring blue-green upgrade and creating manual replacement pool with matching specifications (machine-type, local-ssd-count, num-nodes)"
+    },
+    {
+      "expectation": "Includes kubectl commands for cordoning and draining",
+      "passed": true,
+      "reason": "Includes kubectl cordon command for the old pool and mentions that GKE handles the draining automatically, plus provides monitoring commands"
+    },
+    {
+      "expectation": "Mentions PDB configuration to protect the Cassandra quorum during migration",
+      "passed": false,
+      "reason": "The response does not mention PodDisruptionBudgets (PDB) or any specific configuration to protect Cassandra quorum during the migration process"
+    }
+  ]
+}

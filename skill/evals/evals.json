@@ -3,25 +3,25 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "We have a Standard GKE cluster on the Regular release channel running 1.28 in us-central1-a. We need to upgrade to 1.30 before end of quarter. We have 3 node pools -- a general-purpose pool, a high-memory pool for our Postgres operator, and a GPU pool for ML inference. Can you put together an upgrade plan?",
-      "expected_output": "A structured upgrade plan covering version path, control plane then node pool ordering, specific handling for Postgres and GPU pools, surge settings, maintenance windows, PDB guidance, and gcloud commands.",
+      "prompt": "We have a Standard GKE cluster on the Regular release channel running 1.32 in us-central1-a. We need to upgrade to 1.32 before end of quarter. We have 3 node pools -- a general-purpose pool, a high-memory pool for our Postgres operator, and a GPU pool for ML inference. Can you put together an upgrade plan?",
+      "expected_output": "A structured upgrade plan covering version path (sequential CP, skip-level node pools), control plane then node pool ordering, specific handling for Postgres and GPU pools, surge settings with justification, maintenance windows, PDB guidance, and gcloud commands.",
       "files": [],
       "expectations": [
-        "Recommends sequential upgrade path (1.28→1.29→1.30) rather than skipping",
+        "Recommends sequential control plane upgrades (1.30\u21921.31\u21921.32) while using skip-level (N+2) for node pool upgrades where possible to reduce disruption",
         "Specifies control plane upgrades before node pool upgrades",
         "Provides different node pool upgrade ordering with rationale for the sequence",
-        "Includes specific surge upgrade settings (maxSurge/maxUnavailable) for each pool",
+        "Includes specific surge upgrade settings (maxSurge/maxUnavailable) for each pool with justification for the chosen values (e.g., explaining why maxSurge is set higher for parallelism)",
         "Addresses Postgres-specific concerns (PDB, backup, operator compatibility, PV reclaim)",
-        "Addresses GPU-specific concerns (driver compatibility, workload coordination)",
+        "Addresses GPU-specific concerns (driver compatibility, maxUnavailable as primary lever since surge capacity is typically unavailable)",
         "Includes actual gcloud commands for the upgrade steps",
         "Provides a pre-upgrade checklist",
         "Provides a post-upgrade checklist with validation commands",
-        "Includes rollback procedure or guidance"
+        "Includes rollback procedure or guidance (noting CP patch downgrades are customer-doable, minor downgrades require GKE support)"
       ]
     },
     {
       "id": 2,
-      "prompt": "I manage 4 Autopilot clusters -- 2 in dev on Rapid channel and 2 in prod on Stable. We've been getting notifications that our prod clusters will auto-upgrade from 1.29 to 1.30 next month. Can you give me pre and post upgrade checklists tailored to our setup?",
+      "prompt": "I manage 4 Autopilot clusters -- 2 in dev on Rapid channel and 2 in prod on Stable. We've been getting notifications that our prod clusters will auto-upgrade from 1.31 to 1.32 next month. Can you give me pre and post upgrade checklists tailored to our setup?",
       "expected_output": "Tailored pre and post upgrade checklists recognizing Autopilot limitations, covering both dev and prod environments, API deprecation checks, and Autopilot-specific items.",
       "files": [],
       "expectations": [
@@ -33,12 +33,13 @@
         "Post-upgrade checklist includes version verification commands",
         "Post-upgrade checklist includes workload health validation",
         "Recommends testing on dev clusters before prod auto-upgrade",
+        "Mentions that checking the GKE release schedule gives ~1 month best-case advance notice for new minor upgrades, beyond the 72h notification",
         "Includes monitoring/observability validation items"
       ]
     },
     {
       "id": 3,
-      "prompt": "Our node pool upgrade has been stuck for 2 hours. It says 3 out of 12 nodes upgraded. We're on a Standard cluster in us-east1, running 1.29, upgrading nodes to 1.30. The pods on the remaining nodes aren't draining. What should we check and how do we fix this?",
+      "prompt": "Our node pool upgrade has been stuck for 2 hours. It says 3 out of 12 nodes upgraded. We're on a Standard cluster in us-east1, running 1.31, upgrading nodes to 1.32. The pods on the remaining nodes aren't draining. What should we check and how do we fix this?",
       "expected_output": "A troubleshooting walkthrough with specific kubectl and gcloud commands to diagnose PDB blocks, resource constraints, webhook issues, and stuck pods.",
       "files": [],
       "expectations": [
@@ -54,7 +55,7 @@
     },
     {
       "id": 4,
-      "prompt": "We're running a regional Standard GKE cluster in us-central1 on Regular channel at 1.29. We need to upgrade the control plane to 1.30. Our team is worried about API server downtime during the upgrade. Can you explain what will happen and give us the commands to do it safely?",
+      "prompt": "We're running a regional Standard GKE cluster in us-central1 on Regular channel at 1.31. We need to upgrade the control plane to 1.32. Our team is worried about API server downtime during the upgrade. Can you explain what will happen and give us the commands to do it safely?",
       "expected_output": "Explanation of regional control plane upgrade mechanics (multiple replicas, rolling upgrade, near-zero downtime) with commands and monitoring steps.",
       "files": [],
       "expectations": [
@@ -65,7 +66,8 @@
         "Mentions expected duration for control plane upgrade (roughly 10-30 minutes)",
         "Includes a command to verify the control plane version after upgrade",
         "Recommends checking kube-system pods health after upgrade",
-        "Advises checking deprecated API usage before upgrading"
+        "Advises checking deprecated API usage before upgrading",
+        "Mentions that GKE supports a 2-step control plane minor upgrade where the first step is rollbackable, or notes that CP patch downgrades can be done by the customer while minor downgrades require GKE support"
       ]
     },
     {
@@ -77,7 +79,7 @@
         "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
         "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (3 minor versions)",
         "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
-        "Recommends sequential node pool upgrades (1.28→1.29→1.30→1.31) not a direct jump",
+        "Recommends skip-level (N+2) node pool upgrades where possible to reduce time and disruption (e.g., 1.28\u21921.30 then 1.30\u21921.31), rather than upgrading through every minor",
         "Provides gcloud commands for the node pool upgrade steps",
         "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
         "Advises monitoring closely between each version bump for issues",
@@ -86,11 +88,11 @@
     },
     {
       "id": 6,
-      "prompt": "Our CTO wants us to move our production Standard cluster from the Rapid release channel to Stable. We're currently at 1.30 on Rapid. What are the implications and how do we do it?",
+      "prompt": "Our CTO wants us to move our production Standard cluster from the Rapid release channel to Stable. We're currently at 1.32 on Rapid. What are the implications and how do we do it?",
       "expected_output": "Guide covering release channel migration mechanics, version availability differences, and the transition process.",
       "files": [],
       "expectations": [
-        "Explains the difference between Rapid and Stable channels (Stable gets versions later, more validated)",
+        "Explains the difference between Rapid and Stable channels \u2014 including that Rapid has no SLA for upgrade stability while Stable carries a full SLA, and clearly distinguishes minor version vs patch version differences between the channels",
         "Notes that channel changes don't trigger an immediate upgrade or downgrade",
         "Warns that if 1.30 isn't yet available on Stable, the cluster may not receive patches until Stable catches up",
         "Provides the gcloud command to change the release channel",
@@ -102,19 +104,19 @@
     },
     {
       "id": 7,
-      "prompt": "We need to upgrade 12 GKE clusters across 3 environments (dev, staging, prod) with 4 clusters each. Dev is on Rapid, staging on Regular, prod on Stable. All are Standard clusters running 1.28 and we need to get to 1.30. Can you create a rollout strategy?",
+      "prompt": "We need to upgrade 12 GKE clusters across 3 environments (dev, staging, prod) with 4 clusters each. All environments are on the Regular release channel. All are Standard clusters running 1.32 and we need to get to 1.32. Can you create a rollout strategy?",
       "expected_output": "A phased multi-cluster rollout strategy with environment ordering, soak times, go/no-go criteria, and rollback triggers.",
       "files": [],
       "expectations": [
         "Proposes a phased rollout: dev first, then staging, then prod",
         "Includes soak time between environment phases (e.g., 24-48 hours for dev, 1 week for staging before prod)",
         "Defines go/no-go criteria between phases (error rates, latency, pod health)",
-        "Addresses version availability differences across channels (1.30 may be on Rapid but not yet on Stable)",
-        "Recommends upgrading sequentially within each environment (1.28→1.29→1.30)",
-        "Suggests not upgrading all prod clusters simultaneously — do one or two first as canary",
+        "Recommends sequential control plane upgrades (1.30\u21921.31\u21921.32) with skip-level node pool upgrades where possible",
+        "Suggests not upgrading all prod clusters simultaneously \u2014 do one or two first as canary",
         "Includes rollback triggers and criteria for halting the rollout",
         "Provides a timeline or schedule estimate for the full rollout",
-        "Mentions maintenance window coordination across clusters"
+        "Mentions maintenance window coordination across clusters",
+        "If rollout sequencing is mentioned, notes that all clusters must be on the same channel for it to work"
       ]
     },
     {
@@ -126,7 +128,7 @@
         "Explains the key difference: surge upgrades nodes in-place with rolling replacement, blue-green creates an entirely new pool",
         "Recommends blue-green for this scenario due to local SSDs (data can't migrate between nodes)",
         "Explains that local SSD data is lost when a node is drained during surge upgrade",
-        "Describes the blue-green process: create new pool, cordon old pool, migrate workloads, delete old pool",
+        "Recommends GKE's auto-scale blue-green upgrade strategy as the native approach, or describes the blue-green process if manual workflow is needed",
         "Addresses Cassandra-specific concerns: need to decommission from the ring before draining, rebuild on new nodes",
         "Provides gcloud commands for creating the new node pool with matching configuration",
         "Includes kubectl commands for cordoning and draining",
@@ -135,15 +137,15 @@
     },
     {
       "id": 9,
-      "prompt": "We have a large Standard cluster with 600 nodes across 4 node pools. Upgrades are taking over 24 hours to complete and our maintenance window is only 8 hours on weekends. How can we speed up the node pool upgrades?",
-      "expected_output": "Optimization strategy for large cluster upgrades focusing on surge settings, parallelism, and maintenance window configuration.",
+      "prompt": "We have a large Standard cluster with 600 nodes across 4 node pools \u2014 2 CPU pools and 2 GPU pools (A100 with fixed reservations). Upgrades are taking over 24 hours to complete and our maintenance window is only 8 hours on weekends. How can we speed up the node pool upgrades?",
+      "expected_output": "Optimization strategy for large cluster upgrades focusing on surge settings, parallelism, GPU-specific constraints, and maintenance window configuration.",
       "files": [],
       "expectations": [
-        "Recommends increasing maxSurge significantly (e.g., 10-20 or higher) to parallelize node replacements",
-        "Explains that higher maxSurge means more nodes upgrading simultaneously but requires more compute quota",
-        "Advises checking and requesting increased compute quota before the upgrade",
+        "Recommends increasing maxSurge for CPU pools (e.g., 10-20) to parallelize node replacements, with justification for the value",
+        "For GPU pools with fixed reservations: recommends increasing maxUnavailable (not maxSurge) as the primary lever since surge capacity is typically unavailable",
+        "Advises checking and requesting increased compute quota before the upgrade for CPU pools",
         "Suggests staggering node pool upgrades or running non-conflicting pools in parallel",
-        "Mentions that maxUnavailable can be set >0 for non-critical pools to speed things up further",
+        "Mentions GKE's auto-scale blue-green upgrade strategy as an option for GPU pools",
         "Recommends expanding the maintenance window or splitting across multiple weekends",
         "Provides the gcloud command for updating surge settings on each pool",
         "Includes monitoring commands to track upgrade progress in real-time"
@@ -151,7 +153,7 @@
     },
     {
       "id": 10,
-      "prompt": "Our Standard cluster has a node pool running workloads that include a mix of spot instances and on-demand instances. We're planning to upgrade from 1.29 to 1.30. Are there any special considerations for upgrading node pools that use spot VMs?",
+      "prompt": "Our Standard cluster has a node pool running workloads that include a mix of spot instances and on-demand instances. We're planning to upgrade from 1.31 to 1.32. Are there any special considerations for upgrading node pools that use spot VMs?",
       "expected_output": "Guidance on spot VM node pool upgrades covering preemption interaction, surge settings, and workload resilience.",
       "files": [],
       "expectations": [
@@ -167,12 +169,12 @@
     },
     {
       "id": 11,
-      "prompt": "We run a StatefulSet-based Elasticsearch cluster on GKE Standard. It has 3 master nodes, 5 data nodes, and 2 coordinating nodes, each on separate node pools. PVs are regional pd-ssd. We need to upgrade from 1.29 to 1.30. Walk me through how to do this without losing data or availability.",
+      "prompt": "We run a StatefulSet-based Elasticsearch cluster on GKE Standard. It has 3 master nodes, 5 data nodes, and 2 coordinating nodes, each on separate node pools. PVs are regional pd-ssd. We need to upgrade from 1.31 to 1.32. Walk me through how to do this without losing data or availability.",
       "expected_output": "Detailed upgrade plan for a StatefulSet-heavy Elasticsearch deployment with per-pool ordering and data safety steps.",
       "files": [],
       "expectations": [
         "Recommends upgrading the control plane first before any node pools",
-        "Provides a specific node pool upgrade order with rationale (coordinating→data→master, or similar logical sequence)",
+        "Provides a specific node pool upgrade order with rationale (coordinating\u2192data\u2192master, or similar logical sequence)",
         "Addresses PV safety: regional pd-ssd volumes can reattach to nodes in other zones, which is good for upgrades",
         "Recommends setting PDB for Elasticsearch master nodes to ensure quorum (minAvailable=2 for 3-master setup)",
         "Recommends maxSurge=1, maxUnavailable=0 for all ES node pools (conservative, data-safe)",
@@ -184,7 +186,7 @@
     },
     {
       "id": 12,
-      "prompt": "We run an Istio service mesh on our Standard GKE cluster at 1.29 and need to upgrade to 1.30. We've heard horror stories about mesh upgrades breaking things. What's the right order of operations and what should we watch out for?",
+      "prompt": "We run an Istio service mesh on our Standard GKE cluster at 1.31 and need to upgrade to 1.32. We've heard horror stories about mesh upgrades breaking things. What's the right order of operations and what should we watch out for?",
       "expected_output": "Guidance on GKE upgrade interaction with Istio/service mesh covering version compatibility, sidecar injection, and upgrade ordering.",
       "files": [],
       "expectations": [
@@ -192,7 +194,7 @@
         "Recommends checking the Istio-Kubernetes version compatibility matrix before upgrading GKE",
         "Advises upgrading Istio first if the current Istio version doesn't support the target Kubernetes version",
         "Explains that sidecar injection happens via mutating webhook and may cause issues during node drain/recreation",
-        "Mentions that new pods on upgraded nodes will get sidecar injected — verify the sidecar version matches",
+        "Mentions that new pods on upgraded nodes will get sidecar injected \u2014 verify the sidecar version matches",
         "Recommends monitoring Istio proxy version consistency across the mesh after upgrade",
         "Includes commands to check Istio version and proxy sync status (istioctl or kubectl)",
         "Warns about potential traffic disruption if Istio control plane and sidecar versions are mismatched"
@@ -200,28 +202,28 @@
     },
     {
       "id": 13,
-      "prompt": "We have batch processing jobs that run for 8-16 hours on our Standard GKE cluster. We need to upgrade from 1.29 to 1.30 but can't afford to kill these jobs mid-execution. How should we handle this?",
-      "expected_output": "Strategy for upgrading around long-running batch workloads covering graceful drain, scheduling pauses, and termination grace periods.",
+      "prompt": "We have batch processing jobs that run for 8-16 hours on our Standard GKE cluster on the Regular release channel. We need to upgrade from 1.30 to 1.31 but can't afford to kill these jobs mid-execution. How should we handle this?",
+      "expected_output": "Strategy for upgrading around long-running batch workloads covering auto-scale blue-green, graceful drain, scheduling pauses, and release channel recommendations.",
       "files": [],
       "expectations": [
+        "Recommends GKE's auto-scale blue-green node pool upgrade strategy as the primary approach for batch workloads \u2014 it cordons the old pool and auto-scales the replacement",
         "Explains that GKE respects terminationGracePeriodSeconds during pod eviction, but surge upgrades have a max eviction timeout",
-        "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour — far less than 8-16 hour jobs",
+        "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour \u2014 far less than 8-16 hour jobs",
         "Recommends pausing new batch job submissions before starting the upgrade",
         "Advises waiting for in-flight jobs to complete naturally before upgrading their node pool",
         "Suggests using node affinity or taints to isolate batch workloads on a dedicated node pool",
         "Recommends upgrading non-batch node pools first while batch jobs complete on the old pool",
-        "Mentions scheduling the upgrade during a natural gap in batch processing if one exists",
-        "Provides commands for cordoning batch nodes to prevent new scheduling while jobs finish"
+        "Does NOT recommend 'No channel' as the approach \u2014 uses release channels with maintenance exclusions instead"
       ]
     },
     {
       "id": 14,
-      "prompt": "After upgrading our Standard cluster from 1.29 to 1.30, we're seeing increased API latency and some 503 errors from our services. The upgrade completed successfully — all nodes are at 1.30 and showing Ready. What could be wrong?",
+      "prompt": "After upgrading our Standard cluster from 1.31 to 1.32, we're seeing increased API latency and some 503 errors from our services. The upgrade completed successfully \u2014 all nodes are at 1.32 and showing Ready. What could be wrong?",
       "expected_output": "Post-upgrade troubleshooting for performance degradation covering API deprecations, webhook issues, resource changes, and networking.",
       "files": [],
       "expectations": [
         "Checks for deprecated API usage that may have changed behavior in 1.30",
-        "Recommends checking admission webhooks — they may be rejecting or slowing down requests on the new version",
+        "Recommends checking admission webhooks \u2014 they may be rejecting or slowing down requests on the new version",
         "Advises checking if resource requests/limits need adjusting for any system components that changed",
         "Suggests examining kube-system pods for any that are crashlooping or restarting",
         "Includes commands to check API server metrics and latency (kubectl get --raw /metrics)",
@@ -232,14 +234,14 @@
     },
     {
       "id": 15,
-      "prompt": "We upgraded our Standard cluster's control plane to 1.30 successfully, but the node pool upgrade for our main workload pool failed partway through. 8 out of 20 nodes upgraded, then it stopped with an error. The other two node pools haven't been touched yet. What do we do?",
+      "prompt": "We upgraded our Standard cluster's control plane to 1.32 successfully, but the node pool upgrade for our main workload pool failed partway through. 8 out of 20 nodes upgraded, then it stopped with an error. The other two node pools haven't been touched yet. What do we do?",
       "expected_output": "Recovery plan for a partially failed node pool upgrade covering diagnosis, options for the failed pool, and how to proceed with remaining pools.",
       "files": [],
       "expectations": [
         "First step: check the operation status to understand why it failed (gcloud container operations list)",
         "Recommends checking events and logs for the specific failure reason",
-        "Explains that the cluster is in a mixed-version state (8 nodes at 1.30, 12 at 1.29) which is within skew policy",
-        "Notes that the mixed state is functional but not ideal — workloads can run on both versions",
+        "Explains that the cluster is in a mixed-version state (8 nodes at 1.32, 12 at 1.31) which is within skew policy",
+        "Notes that the mixed state is functional but not ideal \u2014 workloads can run on both versions",
         "Provides options: retry the upgrade after fixing the root cause, or rollback the 8 upgraded nodes",
         "Explains that retrying is usually better than rollback (rolling back means creating a new pool at old version)",
         "Addresses the remaining 2 node pools: they can still be upgraded once the failed pool issue is resolved",
@@ -248,16 +250,16 @@
     },
     {
       "id": 16,
-      "prompt": "We upgraded our control plane from 1.29 to 1.30 and now some of our workloads are failing with admission webhook errors. The webhook is from a third-party operator (cert-manager). Pods can't be created. How do we fix this urgently?",
+      "prompt": "We upgraded our control plane from 1.31 to 1.32 and now some of our workloads are failing with admission webhook errors. The webhook is from a third-party operator (cert-manager). Pods can't be created. How do we fix this urgently?",
       "expected_output": "Urgent troubleshooting for webhook-related pod creation failures after upgrade, with immediate fix and longer-term resolution.",
       "files": [],
       "expectations": [
-        "Identifies this as an admission webhook compatibility issue — the webhook is rejecting pod creation requests",
+        "Identifies this as an admission webhook compatibility issue \u2014 the webhook is rejecting pod creation requests",
         "Provides commands to identify the problematic webhook (kubectl get validatingwebhookconfigurations / mutatingwebhookconfigurations)",
         "Offers an immediate fix: temporarily disable or remove the problematic webhook",
         "Provides the kubectl delete command for the webhook configuration as emergency mitigation",
-        "Warns that deleting the webhook removes validation — it's a temporary fix",
-        "Recommends checking cert-manager version compatibility with Kubernetes 1.30",
+        "Warns that deleting the webhook removes validation \u2014 it's a temporary fix",
+        "Recommends checking cert-manager version compatibility with Kubernetes 1.32",
         "Advises upgrading cert-manager to a version that supports 1.30 as the permanent fix",
         "Mentions setting failurePolicy to Ignore as a less drastic alternative to deletion",
         "Includes commands to verify pods can be created after the fix"
@@ -265,13 +267,13 @@
     },
     {
       "id": 17,
-      "prompt": "Our node pool upgrade is stuck and we've determined it's a resource constraint issue — surge nodes can't be created because we've hit our compute quota in the region. We can't get a quota increase approved for another week. Is there any way to proceed with the upgrade?",
+      "prompt": "Our node pool upgrade is stuck and we've determined it's a resource constraint issue \u2014 surge nodes can't be created because we've hit our compute quota in the region. We can't get a quota increase approved for another week. Is there any way to proceed with the upgrade?",
       "expected_output": "Workaround strategies for quota-constrained upgrades including maxUnavailable, scaling down, and alternative approaches.",
       "files": [],
       "expectations": [
         "Explains that surge upgrades require extra compute capacity (maxSurge creates NEW nodes before draining old ones)",
-        "Recommends setting maxUnavailable >0 instead of relying on maxSurge (drains first, then creates — uses less quota)",
-        "Warns that maxUnavailable >0 means reduced capacity during upgrade — some pods won't have nodes",
+        "Recommends setting maxUnavailable >0 instead of relying on maxSurge (drains first, then creates \u2014 uses less quota)",
+        "Warns that maxUnavailable >0 means reduced capacity during upgrade \u2014 some pods won't have nodes",
         "Suggests temporarily scaling down non-critical deployments to free up quota for surge nodes",
         "Mentions that reducing maxSurge to 1 minimizes extra quota needed (slower but fits within constraints)",
         "Provides the gcloud command to update surge settings (maxSurge=0, maxUnavailable=1 for zero-extra-capacity mode)",
@@ -290,7 +292,7 @@
         "Sets up maintenance exclusions for quarterly code freezes (up to 30 days each)",
         "Sets up a maintenance exclusion for the November audit period",
         "Notes the 30-day maximum for maintenance exclusions and how to handle longer freezes",
-        "Explains that manual upgrades bypass maintenance windows — only auto-upgrades respect them",
+        "Explains that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
         "Recommends combining maintenance windows with Stable or Extended channel for maximum upgrade control",
         "Provides gcloud commands for each exclusion (--add-maintenance-exclusion-name/start-time/end-time)",
         "Warns about the risk of falling too far behind on versions during long exclusion periods"
@@ -307,32 +309,32 @@
         "End-of-life warnings require action: plan upgrade before the support window closes",
         "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
         "Security patch notifications may require expedited upgrades outside normal maintenance windows",
-        "New version available notifications are informational — use for planning, not immediate action",
+        "New version available notifications are informational \u2014 use for planning, not immediate action",
         "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
         "Mentions GKE release notes as the source for understanding what changed in each version"
       ]
     },
     {
       "id": 20,
-      "prompt": "We've never done a GKE upgrade before. Our team just inherited a Standard cluster on the Regular channel at 1.28 in us-west1-b and we need to get it to 1.30. There are 2 node pools — default-pool and workload-pool. We need a complete step-by-step runbook that someone with basic kubectl knowledge can follow. Include every command.",
+      "prompt": "We've never done a GKE upgrade before. Our team just inherited a Standard cluster on the Regular channel at 1.32 in us-west1-b and we need to get it to 1.32. There are 2 node pools \u2014 default-pool and workload-pool. We need a complete step-by-step runbook that someone with basic kubectl knowledge can follow. Include every command.",
       "expected_output": "A complete, beginner-friendly runbook with every gcloud and kubectl command needed, explanations of what each step does, and clear go/no-go checkpoints.",
       "files": [],
       "expectations": [
         "Starts with pre-flight checks: current versions, cluster health, node status",
         "Includes the gcloud command to check available versions in the release channel",
         "Includes the API deprecation check command before upgrading",
-        "Provides the exact gcloud command for control plane upgrade to 1.29 first (--master flag)",
+        "Provides the exact gcloud command for control plane upgrade to 1.31 first (--master flag)",
         "Includes a verification step after control plane upgrade with expected output",
-        "Provides the exact gcloud command for each node pool upgrade to 1.29",
+        "Provides gcloud commands for node pool upgrades \u2014 may use skip-level (N+2) for node pools to reduce steps",
         "Includes monitoring commands to watch node pool upgrade progress",
-        "Repeats the full sequence for 1.29→1.30 (sequential, not skipping)",
+        "Provides sequential control plane upgrades (1.30\u21921.31\u21921.32) with option for skip-level node pool upgrades",
         "Includes post-upgrade validation: node versions, pod health, kube-system pods",
         "Provides a rollback section explaining what to do if something goes wrong"
       ]
     },
     {
       "id": 21,
-      "prompt": "We want to use the Extended release channel for our production GKE clusters to get 24-month support. Currently we're on Regular channel at 1.29. What are the tradeoffs and how do we switch?",
+      "prompt": "We want to use the Extended release channel for our production GKE clusters to get 24-month support. Currently we're on Regular channel at 1.31. What are the tradeoffs and how do we switch?",
       "expected_output": "Analysis of Extended channel tradeoffs covering cost, support timeline, version availability, and migration steps.",
       "files": [],
       "expectations": [
@@ -341,9 +343,10 @@
         "Notes that Extended channel gets the same versions as Regular but keeps them available longer",
         "Warns that staying on older versions longer means missing new features and accumulating technical debt",
         "Provides the gcloud command to change the release channel to Extended",
-        "Advises checking that the current version (1.29) is available on Extended before switching",
+        "Advises checking that the current version (1.31) is available on Extended before switching",
         "Recommends Extended for environments with compliance requirements or slow internal change processes",
-        "Mentions that Extended doesn't mean you can skip upgrades forever — you still must upgrade within 24 months"
+        "Mentions that Extended doesn't mean you can skip upgrades forever \u2014 you still must upgrade within 24 months",
+        "Notes that minor version upgrades on Extended are NOT automated (except at EoS) \u2014 customers must plan and initiate them manually"
       ]
     },
     {
@@ -353,13 +356,14 @@
       "files": [],
       "expectations": [
         "Explains this is related to the interaction between maxSurge, drain order, and pod scheduling",
-        "Notes that GKE cordons nodes before draining them — pods should prefer scheduling onto uncordoned (upgraded) nodes",
+        "Notes that GKE cordons nodes before draining them \u2014 pods should prefer scheduling onto uncordoned (upgraded) nodes",
         "Identifies possible cause: too many nodes being drained simultaneously (high maxSurge) before enough upgraded nodes exist",
         "Recommends reducing maxSurge to 1 to ensure upgraded nodes are available before draining the next batch",
         "Suggests using pod anti-affinity or node affinity to prefer already-upgraded nodes",
         "Mentions checking if any taints or tolerations are causing pods to land on the wrong nodes",
         "Provides kubectl commands to check node cordoned status and pod scheduling events",
-        "Recommends setting maxUnavailable=0 to ensure old nodes aren't removed until pods are safely rescheduled"
+        "Recommends setting maxUnavailable=0 to ensure old nodes aren't removed until pods are safely rescheduled",
+        "May mention GKE's auto-scale blue-green upgrade strategy as an alternative that avoids this issue by cordoning the entire old pool before migrating"
       ]
     },
     {
@@ -368,10 +372,10 @@
       "expected_output": "PDB audit analyzing each configuration for upgrade safety, identifying blockers, and recommending fixes.",
       "files": [],
       "expectations": [
-        "Identifies Service A (minAvailable=100%) as a guaranteed upgrade blocker — no disruptions allowed at all",
-        "Identifies Service B (maxUnavailable=0) as also blocking upgrades — same effect as 100% minAvailable",
-        "States Service C (minAvailable=2 with 3 replicas) is safe — allows 1 pod disruption at a time",
-        "States Service D (maxUnavailable=1 with 5 replicas) is safe — allows 1 pod down at a time",
+        "Identifies Service A (minAvailable=100%) as a guaranteed upgrade blocker \u2014 no disruptions allowed at all",
+        "Identifies Service B (maxUnavailable=0) as also blocking upgrades \u2014 same effect as 100% minAvailable",
+        "States Service C (minAvailable=2 with 3 replicas) is safe \u2014 allows 1 pod disruption at a time",
+        "States Service D (maxUnavailable=1 with 5 replicas) is safe \u2014 allows 1 pod down at a time",
         "Recommends fixing Service A: change to minAvailable=N-1 or maxUnavailable=1",
         "Recommends fixing Service B: change to maxUnavailable=1",
         "Explains that GKE respects PDBs for up to 1 hour during surge upgrades, then may force-drain",
@@ -381,12 +385,12 @@
     },
     {
       "id": 24,
-      "prompt": "Our company has 8 GKE Standard clusters on the legacy 'No channel' (static version) configuration. We keep hitting issues with forced upgrades and lack of control. Our platform team wants to understand: what are we missing by staying on 'No channel', and what's the migration path to release channels? We're currently at 1.29.",
+      "prompt": "Our company has 8 GKE Standard clusters on the legacy 'No channel' (static version) configuration. We keep hitting issues with forced upgrades and lack of control. Our platform team wants to understand: what are we missing by staying on 'No channel', and what's the migration path to release channels? We're currently at 1.31.",
       "expected_output": "Comprehensive explanation of No channel limitations, comparison with release channels, migration path recommendation, and gcloud commands.",
       "files": [],
       "expectations": [
         "Explains that 'No channel' is a legacy configuration that lacks granular maintenance exclusion types",
-        "Mentions that 'No channel' does not support 'no minor or node upgrades' exclusion scope — only the 30-day 'no upgrades' type",
+        "Mentions that 'No channel' does not support 'no minor or node upgrades' exclusion scope \u2014 only the 30-day 'no upgrades' type",
         "Notes that Extended support (24 months) is only available on release channels, not 'No channel'",
         "Notes that rollout sequencing (an advanced feature) is not available on 'No channel'",
         "Recommends Regular or Stable channel as the closest migration target (legacy behavior matches Stable for minors, Regular for patches)",
@@ -397,12 +401,12 @@
     },
     {
       "id": 25,
-      "prompt": "We're trying to understand GKE's version lifecycle. Our cluster shows version 1.29.6-gke.1000000 as 'available', version 1.29.8-gke.1200000 as 'default', and our auto-upgrade status says the target is 1.29.7-gke.1100000. We're confused — why are these three different? What do they each mean?",
+      "prompt": "We're trying to understand GKE's version lifecycle. Our cluster shows version 1.31.6-gke.1000000 as 'available', version 1.31.8-gke.1200000 as 'default', and our auto-upgrade status says the target is 1.31.7-gke.1100000. We're confused \u2014 why are these three different? What do they each mean?",
       "expected_output": "Clear explanation of the three version concepts (available, default, auto-upgrade target) and why they can differ.",
       "files": [],
       "expectations": [
         "Defines 'available' as versions officially available in the channel that customers can manually upgrade to",
-        "Defines 'default' as the version used for new cluster creation — NOT necessarily the auto-upgrade target",
+        "Defines 'default' as the version used for new cluster creation \u2014 NOT necessarily the auto-upgrade target",
         "Defines 'auto-upgrade target' as the version GKE will actually upgrade existing clusters to automatically",
         "Explains that default and auto-upgrade target are often the same but CAN differ, especially during new minor version rollouts",
         "Notes that the auto-upgrade target depends on cluster constraints (maintenance windows, maintenance exclusions)",
@@ -413,18 +417,18 @@
     },
     {
       "id": 26,
-      "prompt": "Our GKE 1.28 clusters are approaching End of Support. We have a mix of clusters: 3 on Regular channel, 2 on Extended channel, and 1 on legacy 'No channel'. What exactly will happen to each when 1.28 hits EoS? What are our options to prepare?",
+      "prompt": "Our GKE 1.30 clusters are approaching End of Support. We have a mix of clusters: 3 on Regular channel, 2 on Extended channel, and 1 on legacy 'No channel'. What exactly will happen to each when 1.30 hits EoS? What are our options to prepare?",
       "expected_output": "Detailed breakdown of EoS enforcement behavior per channel type with preparation options.",
       "files": [],
       "expectations": [
-        "Explains that clusters on Regular channel will be force-upgraded to the next minor version (1.29) when 1.28 hits EoS",
-        "Explains that clusters on Extended channel get up to 24 months of support, so 1.28 EoS is significantly later — they have more time",
-        "Explains that legacy 'No channel' clusters face systematic node-level EoS enforcement — nodes on EoS versions are force-upgraded",
+        "Explains that clusters on Regular channel will be force-upgraded to the next minor version (1.31) when 1.30 hits EoS",
+        "Explains that clusters on Extended channel get up to 24 months of support, so 1.30 EoS is significantly later \u2014 they have more time",
+        "Explains that legacy 'No channel' clusters face systematic node-level EoS enforcement \u2014 nodes on EoS versions are force-upgraded",
         "Mentions that a 'no upgrades' maintenance exclusion (30 days) can temporarily defer even EoS force-upgrades",
         "Recommends proactive upgrade planning rather than waiting for EoS enforcement",
         "Mentions GKE EoS notifications via Cloud Logging as a planning tool",
         "Mentions the deprecation insights dashboard for checking API compatibility before the forced upgrade",
-        "Warns that 'snowflaking' (manually freezing versions) should be avoided — it creates security and reliability risks"
+        "Warns that 'snowflaking' (manually freezing versions) should be avoided \u2014 it creates security and reliability risks"
       ]
     },
     {
@@ -438,8 +442,8 @@
         "Recommends maintenance windows to control WHEN patches are applied (e.g., weekend windows only)",
         "Mentions the disruption interval between patch and minor upgrades to prevent back-to-back upgrades",
         "Suggests Stable or Extended channel for production clusters in regulated environments",
-        "Notes that disabling control plane patches entirely is not recommended due to security risks — monthly patches at minimum",
-        "May mention rollout sequencing as an advanced option for controlling upgrade order across multiple clusters — should not be positioned as a default recommendation",
+        "Notes that disabling control plane patches entirely is not recommended due to security risks \u2014 monthly patches at minimum",
+        "May mention rollout sequencing as an advanced option for controlling upgrade order across multiple clusters \u2014 should not be positioned as a default recommendation",
         "Provides gcloud commands for configuring the recommended exclusion type and maintenance window"
       ]
     },
@@ -450,13 +454,13 @@
       "files": [],
       "expectations": [
         "Explains that exact upgrade dates are difficult to predict but several tools help narrow the window",
-        "Mentions the GKE release schedule as a 'best case' timeline — upgrades won't happen before listed dates",
+        "Mentions the GKE release schedule as a 'best case' timeline \u2014 upgrades won't happen before listed dates",
         "Recommends checking the cluster's auto-upgrade status for the current target version and any pauses",
         "Mentions that new releases roll out progressively across regions over 4-5 business days",
         "Recommends configuring maintenance windows so upgrades only happen during known time slots",
         "Mentions scheduled upgrade notifications (72h advance, opt-in via Cloud Logging)",
         "Notes that GKE upgrade visibility shows the cluster's target version and EoL timeline",
-        "May mention rollout sequencing (advanced feature, limited adoption) as an option for multi-cluster predictability — not a primary recommendation"
+        "May mention rollout sequencing (advanced feature, limited adoption) as an option for multi-cluster predictability \u2014 not a primary recommendation"
       ]
     },
     {
@@ -465,13 +469,13 @@
       "expected_output": "Specific maintenance exclusion configuration using all three exclusion types with gcloud commands.",
       "files": [],
       "expectations": [
-        "Uses 'no upgrades' exclusion (30-day max) for the BFCM period — blocks everything including patches",
+        "Uses 'no upgrades' exclusion (30-day max) for the BFCM period \u2014 blocks everything including patches",
         "Uses 'no upgrades' exclusion for the June code freeze period",
-        "Uses 'no minor or node upgrades' exclusion for ongoing minor upgrade control — allows CP patches but blocks disruptive changes",
+        "Uses 'no minor or node upgrades' exclusion for ongoing minor upgrade control \u2014 allows CP patches but blocks disruptive changes",
         "Notes the 30-day maximum for 'no upgrades' exclusions vs up-to-EoS for 'no minor or node upgrades'",
         "Provides specific gcloud commands with --add-maintenance-exclusion-scope flags for each exclusion type",
         "Notes that you can have a maximum of three 'no upgrades' exclusions, and they must allow 48h of maintenance in any 32-day window",
-        "Mentions that manual upgrades bypass maintenance windows — only auto-upgrades respect them",
+        "Mentions that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
         "Warns about the risk of falling too far behind on versions during extended exclusion periods"
       ]
     },
@@ -487,58 +491,58 @@
         "Recommends checking EoS timelines for each cluster and prioritizing those closest to EoS",
         "Mentions GKE EoS notifications via Cloud Logging as an ongoing monitoring tool",
         "Recommends enrolling in scheduled upgrade notifications (72h advance) for all clusters",
-        "Suggests standardizing on a channel strategy: dev→Rapid, staging→Regular, prod→Stable/Extended",
-        "May mention rollout sequencing as an advanced option for fleet-wide upgrade ordering — should not be the primary recommendation for fleet remediation",
+        "Suggests standardizing on a channel strategy: dev\u2192Rapid, staging\u2192Regular, prod\u2192Stable/Extended",
+        "May mention rollout sequencing as an advanced option for fleet-wide upgrade ordering \u2014 should not be the primary recommendation for fleet remediation",
         "Mentions GKE Insights and Recommendations in the console for identifying issues like version skew"
       ]
     },
     {
       "id": 31,
-      "prompt": "We run a large-scale LLM training cluster on GKE Standard with 512 H100 GPU nodes (A3 Mega, 8 GPUs each) using GPUDirect-TCPXO for inter-node communication. Our training runs last 2-3 weeks. We're on GKE 1.29 and need to upgrade to 1.30. How do we do this without destroying an active training run or breaking our GPU interconnect?",
+      "prompt": "We run a large-scale LLM training cluster on GKE Standard with 512 H100 GPU nodes (A3 Mega, 8 GPUs each) using GPUDirect-TCPXO for inter-node communication. Our training runs last 2-3 weeks. We're on GKE 1.31 and need to upgrade to 1.32. How do we do this without destroying an active training run or breaking our GPU interconnect?",
       "expected_output": "Detailed upgrade plan for a large GPU training cluster addressing training job protection, GPU driver compatibility, GPUDirect networking, and capacity constraints.",
       "files": [],
       "expectations": [
-        "Warns that GPU VMs do not support live migration — every upgrade forces pod restart, which kills training",
+        "Warns that GPU VMs do not support live migration \u2014 every upgrade forces pod restart, which kills training",
         "Recommends waiting for the current training run to complete or reach a checkpoint before upgrading the GPU node pool",
         "Suggests the cordon-and-wait pattern: cordon GPU nodes, let training finish naturally, then upgrade the empty pool",
-        "Addresses GPU driver version coupling — GKE auto-installs drivers matching the target version, which may change CUDA versions and break framework compatibility",
+        "Addresses GPU driver version coupling \u2014 GKE auto-installs drivers matching the target version, which may change CUDA versions and break framework compatibility",
         "Recommends testing the target GKE version in a staging cluster first to verify driver + CUDA + framework compatibility",
-        "Addresses GPUDirect-TCPXO version requirements — verify the target GKE version supports the networking stack",
-        "Notes that surge upgrades need extra H100 nodes which are scarce — recommends maxSurge=0/maxUnavailable=1 or blue-green if surge quota is unavailable",
+        "Addresses GPUDirect-TCPXO version requirements \u2014 verify the target GKE version supports the networking stack",
+        "Notes that surge upgrades need extra H100 nodes which are scarce \u2014 recommends maxSurge=0/maxUnavailable=1 (maxUnavailable is the primary lever for GPU pools with fixed reservations), or GKE's auto-scale blue-green strategy if surge quota is unavailable",
         "Recommends upgrading the control plane first (can be done independently without affecting running training)",
         "Mentions maintenance exclusions ('no minor or node upgrades') to protect against auto-upgrades during active training campaigns",
-        "Addresses compact placement — verify that replacement nodes land in the same placement group to preserve RDMA topology"
+        "Addresses compact placement \u2014 verify that replacement nodes land in the same placement group to preserve RDMA topology"
       ]
     },
     {
       "id": 32,
-      "prompt": "We have a GKE Standard cluster with 3,000 nodes across 8 node pools — 4 GPU pools (A100, H100, L4, T4) and 4 CPU pools. Our maintenance window is Saturday 2am-10am. Upgrades keep timing out because only a fraction of nodes get upgraded before the window closes. How do we handle this at our scale?",
+      "prompt": "We have a GKE Standard cluster with 3,000 nodes across 8 node pools \u2014 4 GPU pools (A100, H100, L4, T4) and 4 CPU pools. Our maintenance window is Saturday 2am-10am. Upgrades keep timing out because only a fraction of nodes get upgraded before the window closes. How do we handle this at our scale?",
       "expected_output": "Strategy for upgrading very large clusters within constrained maintenance windows, addressing parallelism limits and pool prioritization.",
       "files": [],
       "expectations": [
         "Explains that GKE's maximum upgrade parallelism is approximately 20 nodes simultaneously, regardless of maxSurge setting",
-        "Calculates that at 20-node parallelism, upgrading 3,000 nodes requires ~150 batches — far more than an 8-hour window allows",
+        "Calculates that at 20-node parallelism, upgrading 3,000 nodes requires ~150 batches \u2014 far more than an 8-hour window allows",
         "Recommends splitting upgrades across multiple maintenance windows (weekends) rather than attempting all at once",
         "Suggests upgrading CPU pools and GPU pools separately, prioritizing CPU pools first as they're less disruptive",
         "Recommends upgrading GPU pools during scheduled gaps between training/inference workloads",
         "Suggests expanding the maintenance window or using multiple consecutive windows for large pool upgrades",
-        "Mentions that cluster autoscaler can only scale one node pool at a time — this interacts with upgrade scheduling",
+        "Mentions that cluster autoscaler can only scale one node pool at a time \u2014 this interacts with upgrade scheduling",
         "Addresses the 15,000 node standard limit and notes GKE 1.31+ supports up to 65,000 for AI workloads"
       ]
     },
     {
       "id": 33,
-      "prompt": "Our ML platform team runs inference workloads on a GKE Standard cluster with 200 L4 GPU nodes and 100 A100 GPU nodes on separate node pools. We auto-scale based on traffic. We need to upgrade from 1.29 to 1.30 with minimal impact to inference latency and availability. The A100 pool also handles fine-tuning jobs that run 4-8 hours.",
+      "prompt": "Our ML platform team runs inference workloads on a GKE Standard cluster with 200 L4 GPU nodes and 100 A100 GPU nodes on separate node pools. We auto-scale based on traffic. We need to upgrade from 1.31 to 1.32 with minimal impact to inference latency and availability. The A100 pool also handles fine-tuning jobs that run 4-8 hours.",
       "expected_output": "Upgrade plan for mixed inference/fine-tuning GPU cluster addressing availability, auto-scaling interaction, and job protection.",
       "files": [],
       "expectations": [
         "Recommends upgrading the L4 inference pool and A100 pool separately with different strategies",
         "For L4 inference pool: recommends surge upgrade with maxSurge=1 or 2 to maintain capacity during rolling replacement",
-        "Addresses GPU driver version compatibility — auto-installed drivers must be compatible with inference framework (TensorRT, vLLM, etc.)",
+        "Addresses GPU driver version compatibility \u2014 auto-installed drivers must be compatible with inference framework (TensorRT, vLLM, etc.)",
         "For A100 fine-tuning pool: recommends scheduling the upgrade during a gap between fine-tuning jobs",
-        "Notes that GPU VMs do not support live migration — inference pods will restart during node upgrade, causing brief latency spikes",
+        "Notes that GPU VMs do not support live migration \u2014 inference pods will restart during node upgrade, causing brief latency spikes",
         "Recommends PDBs on inference deployments to ensure enough replicas stay available during the rolling upgrade",
-        "Addresses auto-scaler interaction — new nodes created by auto-scaler during upgrade will be at the old version until their pool upgrade completes",
+        "Addresses auto-scaler interaction \u2014 new nodes created by auto-scaler during upgrade will be at the old version until their pool upgrade completes",
         "Recommends testing driver + CUDA compatibility in staging before production upgrade"
       ]
     },
@@ -548,14 +552,14 @@
       "expected_output": "Explanation of TPU multislice maintenance behavior and preparation steps for protecting training.",
       "files": [],
       "expectations": [
-        "Explains that multi-host TPU slices are recreated atomically in a single step — not a rolling upgrade",
+        "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
         "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
-        "Notes that all pods on all affected slices will restart simultaneously — the training job will be interrupted",
-        "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed — potentially causing extended downtime",
+        "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+        "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
         "Recommends saving a training checkpoint immediately before the maintenance window",
         "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
         "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
-        "Mentions maintenance windows to control when the event occurs — schedule it during a planned break in training"
+        "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training"
       ]
     },
     {
@@ -570,21 +574,21 @@
         "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
         "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
         "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
-        "Mentions GPU driver version testing — always validate in staging before applying to production GPU pools",
-        "Notes that GPUDirect/RDMA networking has strict GKE version requirements — verify compatibility before upgrading"
+        "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
+        "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading"
       ]
     },
     {
       "id": 36,
-      "prompt": "Our GPU node pool upgrade failed because surge nodes couldn't be created — we're told there's no H100 capacity available in our zone for temporary surge nodes. The pool has 64 A3-mega nodes. What are our options to proceed with the upgrade without additional GPU quota?",
+      "prompt": "Our GPU node pool upgrade failed because surge nodes couldn't be created \u2014 we're told there's no H100 capacity available in our zone for temporary surge nodes. The pool has 64 A3-mega nodes. What are our options to proceed with the upgrade without additional GPU quota?",
       "expected_output": "Workaround strategies for GPU node pool upgrades when surge capacity is unavailable.",
       "files": [],
       "expectations": [
-        "Explains that surge upgrades create NEW nodes before draining old ones — this requires extra GPU capacity that may not exist for scarce hardware like H100",
-        "Recommends switching to maxSurge=0, maxUnavailable=1 — this drains a node first then creates the replacement, requiring zero extra GPU capacity",
-        "Warns that maxUnavailable=1 means reduced cluster capacity during upgrade — 63/64 nodes available at any time",
-        "Mentions blue-green as an alternative if a full replacement pool can be provisioned (requires 2x quota but gives instant rollback)",
-        "Suggests upgrading during off-peak when some GPU nodes are idle — scale down non-critical workloads to free capacity",
+        "Explains that surge upgrades create NEW nodes before draining old ones \u2014 this requires extra GPU capacity that may not exist for scarce hardware like H100",
+        "Recommends switching to maxSurge=0, maxUnavailable=1 \u2014 this drains a node first then creates the replacement, requiring zero extra GPU capacity. Notes that maxUnavailable is the primary lever for GPU pools with fixed reservations",
+        "Warns that maxUnavailable=1 means reduced cluster capacity during upgrade \u2014 63/64 nodes available at any time. Suggests increasing maxUnavailable for faster completion if capacity dip is acceptable",
+        "Mentions GKE's auto-scale blue-green upgrade strategy as an alternative (cordons old pool, auto-scales replacement)",
+        "Suggests upgrading during off-peak when some GPU nodes are idle \u2014 scale down non-critical workloads to free capacity",
         "Notes that with maxUnavailable=1 on 64 nodes at ~20-node parallelism, the upgrade will take significantly longer",
         "Recommends checking if GPU reservations have headroom that could be used for surge nodes",
         "Advises scheduling the upgrade during a gap between training runs when nodes can be drained without impacting workloads"
@@ -592,19 +596,67 @@
     },
     {
       "id": 37,
-      "prompt": "We run a mixed AI/ML platform on GKE with 5,000 total nodes: 2,000 H100 GPU nodes for training, 1,500 A100 GPU nodes for inference, 500 T4 nodes for development, and 1,000 CPU nodes for services. We need to upgrade from 1.29 to 1.30 across the entire fleet. Create a phased upgrade plan that prioritizes training continuity and inference availability.",
+      "prompt": "We run a mixed AI/ML platform on GKE with 5,000 total nodes: 2,000 H100 GPU nodes for training, 1,500 A100 GPU nodes for inference, 500 T4 nodes for development, and 1,000 CPU nodes for services. We need to upgrade from 1.31 to 1.32 across the entire fleet. Create a phased upgrade plan that prioritizes training continuity and inference availability.",
       "expected_output": "Comprehensive phased upgrade plan for a very large mixed AI/ML fleet with per-pool strategies and timeline.",
       "files": [],
       "expectations": [
         "Proposes a phased approach: control plane first, then CPU pools, then T4 dev, then inference (A100), then training (H100) last",
         "Control plane can be upgraded independently without affecting running workloads",
-        "CPU service pools upgraded first as lowest risk — use standard surge settings (maxSurge=2-3)",
-        "T4 dev pool upgraded next — dev workloads are tolerant of interruption",
+        "CPU service pools upgraded first as lowest risk \u2014 use standard surge settings (maxSurge=2-3)",
+        "T4 dev pool upgraded next \u2014 dev workloads are tolerant of interruption",
         "A100 inference pool upgraded with careful surge settings (maxSurge=1) and PDBs to maintain serving capacity",
-        "H100 training pool upgraded last, during a scheduled gap between training runs — with cordon-and-wait or maxSurge=0/maxUnavailable=1",
-        "Notes the 20-node parallelism limit — at 5,000 nodes, the full upgrade will take weeks and must span multiple maintenance windows",
+        "H100 training pool upgraded last, during a scheduled gap between training runs \u2014 with cordon-and-wait or maxSurge=0/maxUnavailable=1",
+        "Notes the 20-node parallelism limit \u2014 at 5,000 nodes, the full upgrade will take weeks and must span multiple maintenance windows",
         "Mentions GPU driver compatibility testing in staging before each GPU pool upgrade",
         "Addresses GPUDirect/RDMA networking validation after upgrading the H100 pool"
+      ]
+    },
+    {
+      "id": 38,
+      "prompt": "We just set up 3 new GKE Standard clusters on the Regular channel for our production environment. We want to make sure upgrades are handled properly going forward. Should we manually upgrade our clusters on a schedule, or does GKE handle this automatically? What's the recommended approach?",
+      "expected_output": "Guidance that frames auto-upgrade as the default and recommended model, with maintenance windows and exclusions as the control mechanism.",
+      "files": [],
+      "expectations": [
+        "Clearly states that GKE auto-upgrades clusters automatically as the default and recommended model — this is what differentiates GKE from self-managed Kubernetes",
+        "Recommends configuring maintenance windows to control WHEN auto-upgrades happen (e.g., weekends, off-peak hours)",
+        "Recommends maintenance exclusions to control WHAT auto-upgrades happen (e.g., 'no minor or node upgrades' to block disruptive changes while allowing security patches)",
+        "Does NOT recommend disabling auto-upgrades or switching to a purely manual upgrade cadence as the first option",
+        "Explains that manual upgrades are useful for specific scenarios (emergency patches, accelerating the schedule) but are the exception, not the rule",
+        "Recommends enrolling in scheduled upgrade notifications (72h advance) for visibility into upcoming auto-upgrades",
+        "Suggests checking the GKE release schedule for longer-range planning (~1 month best-case for new minors)",
+        "Mentions release channel selection as the primary lever for upgrade cadence (Stable = slower, Regular = balanced)"
+      ]
+    },
+    {
+      "id": 39,
+      "prompt": "We want to upgrade our GPU node pool (128 A100 nodes with fixed reservations) on our Standard GKE cluster from 1.31 to 1.32. We've been told we should create a new node pool at 1.32, cordon the old pool, drain it manually, and delete it. Is that the right approach? Is there a better way?",
+      "expected_output": "Guidance that steers away from manual custom workflows and toward GKE's native upgrade strategies.",
+      "files": [],
+      "expectations": [
+        "Recommends GKE's native node pool upgrade strategies rather than the manual create/cordon/drain/delete workflow described",
+        "For GPU pools with fixed reservations: recommends surge upgrade with maxSurge=0 and maxUnavailable set as the primary lever (since no surge capacity is available)",
+        "Mentions GKE's auto-scale blue-green upgrade strategy as a native alternative that handles cordon and migration automatically",
+        "Explains that native strategies are the supported path and handle edge cases (PDB respect, drain timeouts, progress tracking) that manual workflows miss",
+        "Only suggests manual blue-green as a last resort if native strategies don't meet a specific requirement",
+        "Addresses GPU driver compatibility — need to verify target version's auto-installed driver is compatible",
+        "Recommends scheduling the upgrade during a gap in GPU workloads to minimize impact",
+        "Provides gcloud commands for the recommended native approach"
+      ]
+    },
+    {
+      "id": 40,
+      "prompt": "We're trying to get maximum control over our GKE upgrades. Someone on our team suggested we move all clusters to 'No channel' so we can control exactly when upgrades happen. Is that a good idea? We're currently on Regular channel.",
+      "expected_output": "Strong recommendation against No channel, explaining that release channels with exclusions provide MORE control, not less.",
+      "files": [],
+      "expectations": [
+        "Strongly advises AGAINST moving to 'No channel' — it provides LESS control, not more",
+        "Explains that 'No channel' only supports the basic 30-day 'no upgrades' exclusion, while release channels support all three exclusion types including 'no minor or node upgrades' (up to EoS)",
+        "Recommends staying on Regular channel (or moving to Stable/Extended) and using maintenance exclusions for control",
+        "Specifically recommends the 'no minor or node upgrades' exclusion as the way to prevent disruptive changes while allowing security patches",
+        "Notes that Extended support (24 months) is only available on release channels, not 'No channel'",
+        "Explains that 'No channel' is a legacy configuration and the industry is moving away from it",
+        "Mentions that maintenance windows control WHEN upgrades happen, while exclusions control WHAT upgrades happen — together they give fine-grained control",
+        "Warns about the risks of 'No channel': no granular exclusions, no Extended support, risk of snowflaking clusters"
       ]
     }
   ]

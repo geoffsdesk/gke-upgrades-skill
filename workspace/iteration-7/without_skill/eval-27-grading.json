@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends combining release channels with maintenance exclusions as the approach for maximum control",
+      "passed": true,
+      "reason": "Response explicitly shows release channel configuration (REGULAR) combined with maintenance exclusions for quarter-end and trading-hours periods"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' exclusion to prevent disruptive changes while allowing control plane security patches",
+      "passed": true,
+      "reason": "Response shows maintenance exclusion with 'scope: NO_MINOR_UPGRADES' for trading hours, allowing security patches while blocking disruptive changes"
+    },
+    {
+      "expectation": "Recommends maintenance windows to control WHEN patches are applied (e.g., weekend windows only)",
+      "passed": true,
+      "reason": "Response provides detailed maintenance window configuration with Sunday weekly windows (FREQ=WEEKLY;BYDAY=SU) and specific time ranges"
+    },
+    {
+      "expectation": "Mentions the disruption interval between patch and minor upgrades to prevent back-to-back upgrades",
+      "passed": false,
+      "reason": "Response does not mention disruption intervals or preventing back-to-back upgrades between patch and minor versions"
+    },
+    {
+      "expectation": "Suggests Stable or Extended channel for production clusters in regulated environments",
+      "passed": false,
+      "reason": "Response recommends REGULAR channel for production, not Stable or Extended channels despite the financial services/regulated environment context"
+    },
+    {
+      "expectation": "Notes that disabling control plane patches entirely is not recommended due to security risks \u2014 monthly patches at minimum",
+      "passed": false,
+      "reason": "Response shows disabling auto-upgrades but doesn't explicitly warn against disabling control plane patches entirely or mention monthly patch minimums"
+    },
+    {
+      "expectation": "May mention rollout sequencing as an advanced option for controlling upgrade order across multiple clusters \u2014 should not be positioned as a default recommendation",
+      "passed": true,
+      "reason": "Response shows multi-environment pipeline (dev\u2192staging\u2192prod) as an advanced pattern but positions basic maintenance windows and exclusions as the primary recommendation"
+    },
+    {
+      "expectation": "Provides gcloud commands for configuring the recommended exclusion type and maintenance window",
+      "passed": true,
+      "reason": "Response provides multiple gcloud commands for cluster upgrades, describes clusters, and shows YAML configuration for maintenance windows and exclusions"
+    }
+  ]
+}

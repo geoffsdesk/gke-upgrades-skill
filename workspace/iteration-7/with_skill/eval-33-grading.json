@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends upgrading the L4 inference pool and A100 pool separately with different strategies",
+      "passed": true,
+      "reason": "Response clearly recommends separate upgrade strategies - aggressive surge for L4 inference pool and conservative approach for A100 pool, with dedicated sections for each pool's strategy"
+    },
+    {
+      "expectation": "For L4 inference pool: recommends surge upgrade with maxSurge=1 or 2 to maintain capacity during rolling replacement",
+      "passed": false,
+      "reason": "Response recommends maxSurge=10 as primary strategy, not 1 or 2. While it mentions maxUnavailable=3 as alternative, it doesn't recommend the specific conservative surge values of 1-2"
+    },
+    {
+      "expectation": "Addresses GPU driver version compatibility \u2014 auto-installed drivers must be compatible with inference framework (TensorRT, vLLM, etc.)",
+      "passed": true,
+      "reason": "Response mentions GPU driver compatibility checks, testing CUDA version compatibility in staging, and verifying compatibility with inference frameworks before production upgrade"
+    },
+    {
+      "expectation": "For A100 fine-tuning pool: recommends scheduling the upgrade during a gap between fine-tuning jobs",
+      "passed": true,
+      "reason": "Response recommends maintenance exclusion during fine-tuning campaigns and job-aware upgrade timing, specifically checking for running jobs and waiting for natural completion before upgrading"
+    },
+    {
+      "expectation": "Notes that GPU VMs do not support live migration \u2014 inference pods will restart during node upgrade, causing brief latency spikes",
+      "passed": true,
+      "reason": "Response explicitly states 'GPU VMs don't support live migration \u2014 every upgrade requires pod restart' and addresses latency impact throughout the plan"
+    },
+    {
+      "expectation": "Recommends PDBs on inference deployments to ensure enough replicas stay available during the rolling upgrade",
+      "passed": false,
+      "reason": "Response only shows PDB configuration for fine-tuning jobs, not for inference deployments. No mention of PDBs to protect inference pod availability during upgrades"
+    },
+    {
+      "expectation": "Addresses auto-scaler interaction \u2014 new nodes created by auto-scaler during upgrade will be at the old version until their pool upgrade completes",
+      "passed": false,
+      "reason": "Response states 'New traffic spikes during upgrade will create new nodes at the target version' which is incorrect - new nodes would be at old version until pool upgrade completes"
+    },
+    {
+      "expectation": "Recommends testing driver + CUDA compatibility in staging before production upgrade",
+      "passed": true,
+      "reason": "Response explicitly recommends testing in staging cluster first, mentions 'Test inference workloads on 1.32 to confirm CUDA/driver compatibility' and 'Verify GPU driver compatibility in staging cluster first'"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Response clearly states 'GKE requires node pools to be within 2 minor versions of the control plane' and explains the violation"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (3 minor versions)",
+      "passed": true,
+      "reason": "Response explicitly identifies '3 minor versions (1.28 \u2192 1.29 \u2192 1.30 \u2192 1.31)' and calls it a 'critical version skew violation'"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Response lists specific issues including 'API compatibility issues (kubelet can't communicate properly with API server)', workload scheduling failures, and cluster instability"
+    },
+    {
+      "expectation": "Recommends skip-level (N+2) node pool upgrades where possible to reduce time and disruption (e.g., 1.28\u21921.30 then 1.30\u21921.31), rather than upgrading through every minor",
+      "passed": false,
+      "reason": "Response recommends 1.28\u21921.31 direct upgrade (N+3) as Option 1, not N+2. While it mentions sequential upgrades as Option 2, it doesn't recommend the specific N+2 pattern mentioned in the expectation"
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Response provides detailed gcloud commands including 'gcloud container node-pools upgrade' with proper parameters and multiple command examples"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": false,
+      "reason": "Response recommends 'maxSurge=2, maxUnavailable=0' which is less conservative than the expected maxSurge=1. While it does recommend maxUnavailable=0, the surge setting is more aggressive than expected"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": true,
+      "reason": "Response includes monitoring commands like 'watch kubectl get nodes' and emphasizes monitoring progress throughout the upgrade process"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": true,
+      "reason": "Response includes a prevention section that specifically mentions 'Ensure your cluster is on a release channel (Regular/Stable) with proper maintenance windows' as prevention measures"
+    }
+  ]
+}

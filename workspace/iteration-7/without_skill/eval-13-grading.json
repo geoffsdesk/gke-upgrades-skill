@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's auto-scale blue-green node pool upgrade strategy as the primary approach for batch workloads \u2014 it cordons the old pool and auto-scales the replacement",
+      "passed": false,
+      "reason": "While it mentions blue-green cluster strategy, it doesn't specifically mention GKE's auto-scale blue-green node pool upgrade feature or the automatic cordoning/auto-scaling behavior"
+    },
+    {
+      "expectation": "Explains that GKE respects terminationGracePeriodSeconds during pod eviction, but surge upgrades have a max eviction timeout",
+      "passed": false,
+      "reason": "The response does not mention terminationGracePeriodSeconds or surge upgrades and their eviction timeout behavior"
+    },
+    {
+      "expectation": "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour \u2014 far less than 8-16 hour jobs",
+      "passed": false,
+      "reason": "The response does not mention the 1-hour default pod eviction timeout during surge upgrades"
+    },
+    {
+      "expectation": "Recommends pausing new batch job submissions before starting the upgrade",
+      "passed": true,
+      "reason": "The blue-green strategy mentions 'Gradually migrate new jobs to new cluster' and 'Let existing jobs complete on old cluster', which implies pausing new submissions to the old cluster"
+    },
+    {
+      "expectation": "Advises waiting for in-flight jobs to complete naturally before upgrading their node pool",
+      "passed": true,
+      "reason": "Multiple options mention waiting for jobs to complete, including 'Wait for jobs to complete, then drain nodes' and 'Let existing jobs complete on old cluster'"
+    },
+    {
+      "expectation": "Suggests using node affinity or taints to isolate batch workloads on a dedicated node pool",
+      "passed": true,
+      "reason": "Option 4 shows using node selectors to control job placement, and Option 3 discusses managing separate node pools for different versions"
+    },
+    {
+      "expectation": "Recommends upgrading non-batch node pools first while batch jobs complete on the old pool",
+      "passed": true,
+      "reason": "The gradual node pool upgrade strategy and blue-green approaches both demonstrate upgrading in stages while preserving running jobs on older pools"
+    },
+    {
+      "expectation": "Does NOT recommend 'No channel' as the approach \u2014 uses release channels with maintenance exclusions instead",
+      "passed": true,
+      "reason": "The response consistently uses --release-channel=regular in examples and mentions maintenance windows rather than suggesting no release channel"
+    }
+  ]
+}

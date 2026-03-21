@@ -14,6 +14,16 @@ description: >
 
 # GKE Upgrades & Maintenance
 
+## Auto-upgrade as the default model
+
+GKE's primary value proposition is its **automated upgrade lifecycle**. Unlike self-managed Kubernetes, GKE handles version management automatically — clusters on release channels receive patch and minor upgrades without user intervention, governed by maintenance windows and exclusions.
+
+Frame all guidance around this auto-upgrade model:
+- **Most customers should rely on auto-upgrades** with appropriate maintenance windows and exclusions to control timing and scope. This is what differentiates GKE.
+- **User-initiated (manual) upgrades** are the exception, not the rule — recommended only for specific scenarios: emergency patching, accelerating ahead of the auto-upgrade schedule, or upgrading clusters that have been deliberately held back.
+- When a user asks "how do I upgrade," first clarify whether they need to do a manual upgrade or simply need to configure their auto-upgrade controls (maintenance windows, exclusions, channel selection) to get the behavior they want.
+- Always recommend release channels + maintenance exclusions as the primary upgrade control mechanism. Never recommend disabling auto-upgrades or using "No channel" as a first option.
+
 Produce clear, actionable documents — upgrade plans, runbooks, or checklists — tailored to the user's environment. Output should be specific to their cluster mode, release channel, version, and workload types rather than generic advice.
 
 ## Gathering context
@@ -30,16 +40,32 @@ Establish these five things early. If the user provides them upfront, skip strai
 
 | Channel | When versions arrive | Best for | Support period |
 |---------|---------------------|----------|----------------|
-| **Rapid** | First (new K8s minors available within ~2 weeks) | Dev/test, early feature access | Standard (14 months) |
-| **Regular** (default) | After Rapid validation | Most production workloads | Standard (14 months) |
-| **Stable** | After Regular validation | Mission-critical, stability-first | Standard (14 months) |
-| **Extended** | Same as Regular, but stays longer | Compliance, slow upgrade cycles | Up to 24 months (extra cost, versions 1.27+) |
+| **Rapid** | First (new K8s minors available within ~2 weeks) | Dev/test, early feature access | Standard (14 months) | No SLA for upgrade stability |
+| **Regular** (default) | After Rapid validation | Most production workloads | Standard (14 months) | Full SLA |
+| **Stable** | After Regular validation | Mission-critical, stability-first | Standard (14 months) | Full SLA |
+| **Extended** | Same as Regular, but stays longer | Compliance, slow upgrade cycles | Up to 24 months (extra cost, versions 1.27+) | Full SLA |
+
+**Extended channel note:** Minor version upgrades on Extended are NOT automated (except at EoS). Customers must plan and initiate minor upgrades themselves. Only patches are auto-applied. This is a cost and planning consideration — teams need internal processes to schedule and execute minor upgrades proactively.
+
+**Key distinction:** Rapid channel does NOT carry an SLA for upgrade stability — versions may have issues that are caught before reaching Regular/Stable. This is the primary reason to avoid Rapid for production, beyond timing. Regular, Stable, and Extended all carry a full SLA.
 
 Common multi-environment strategy: Dev→Rapid, Staging→Regular, Prod→Stable or Regular. Direct users to the [GKE release schedule](https://cloud.google.com/kubernetes-engine/docs/release-schedule) for current version availability.
 
-### Legacy "No channel" (static version)
+### Legacy "No channel" (static version) — avoid
 
-The "No channel" option is a legacy configuration that lacks critical features available in release channels, including granular maintenance exclusion types (e.g., "no minor or node upgrades"), Extended support, and rollout sequencing. Clusters on "No channel" are upgraded at the pace of the Stable channel for minor releases and the Regular channel for patches.
+The "No channel" option is a legacy configuration. **Never recommend "No channel" as a first option.** Clusters on "No channel" lack critical features:
+
+| Feature | Release channels | No channel |
+|---------|-----------------|------------|
+| "No minor or node upgrades" exclusion | Yes | **No** — only the 30-day "no upgrades" type is available |
+| "No minor upgrades" exclusion | Yes | **No** |
+| Extended support (24 months) | Yes | **No** |
+| Rollout sequencing | Yes (advanced) | **No** |
+| Granular auto-upgrade control | Full (windows + exclusions + intervals) | Limited |
+
+Clusters on "No channel" are upgraded at the pace of the Stable channel for minor releases and the Regular channel for patches.
+
+**Key subtlety:** The most powerful upgrade control tools (channel-specific maintenance exclusion scopes like "no minor or node upgrades") are only available on release channels. Customers who want maximum control should use release channels WITH exclusions, not avoid channels entirely. This is the opposite of what many users assume.
 
 **Migration path:** Move to Regular or Stable channel (closest match to legacy behavior). Use Extended channel if the customer does manual upgrades exclusively or needs flexibility around EoS enforcement. See the [comparison table](https://cloud.google.com/kubernetes-engine/docs/concepts/release-channels#comparison-table-no-channel). Always recommend migrating off "No channel."
 
@@ -64,8 +90,9 @@ When asked to plan an upgrade, produce a structured document covering:
 - Review GKE release notes for breaking changes between current and target versions
 
 ### Upgrade path
-- Recommend sequential minor version upgrades (e.g., 1.28→1.29→1.30) even though skipping is technically possible via CLI — sequential is safer for catching compatibility issues between versions
-- Control plane first, then node pools — this is the required order
+- **Control plane:** Recommend sequential minor version upgrades (e.g., 1.31→1.32→1.33). GKE now supports a 2-step control plane minor upgrade where step 1 is rollbackable (step 2 is not). Control plane must be upgraded before node pools — this is the required order.
+- **Node pools:** Support skip-level (N+2) upgrades. Recommend using skip-level upgrades when possible to reduce total upgrade time and disruption (e.g., upgrading node pools from 1.31 directly to 1.33 in a single step, skipping 1.32). Node pools must stay within 2 minor versions of the control plane.
+- **Rollback:** Control plane patch downgrades can be done by the customer. Control plane minor version downgrades require GKE support involvement. Node pools can be re-created at a different version.
 - For multi-cluster: define rollout sequence with soak time between groups
 
 ### Maintenance windows and exclusions
@@ -88,17 +115,31 @@ The "No minor or node upgrades" exclusion is the recommended approach for maximu
 
 GKE rollout sequencing allows customers to define the order in which clusters are upgraded, with configurable soak time between stages. This ensures upgrades progress through environments (dev → staging → prod) with validation gaps.
 
+**Critical constraint:** Rollout sequencing does NOT work across different release channels. All clusters in a rollout sequence must be on the same channel. If environments use different channels (e.g., dev=Rapid, prod=Stable), rollout sequencing cannot orchestrate them — use manual sequencing with maintenance windows instead.
+
 **Important context:** Rollout sequencing is an advanced feature with limited adoption — by design, it targets sophisticated platform teams managing large fleets. Do not recommend it as a default or first-line tool. Mention it as an option when the user explicitly has multi-cluster coordination needs, but prefer simpler approaches (manual sequencing with maintenance windows, channel staggering across environments) for most customers. Only suggest rollout sequencing when the user has 10+ clusters or explicitly asks about automated fleet-wide upgrade orchestration.
 
 ### Node pool upgrade strategy (Standard only — skip for Autopilot)
 
-Recommend surge upgrade as the default, with per-pool `maxSurge`/`maxUnavailable` settings tailored to workload type:
-- **Stateless pools**: Higher `maxSurge` (2-3) for speed, `maxUnavailable=0` for safety
-- **Stateful/database pools**: `maxSurge=1, maxUnavailable=0` — conservative, let PDBs protect data
-- **GPU pools**: `maxSurge=1, maxUnavailable=0` — GPUs are expensive, minimize temporary overcapacity. If GPU quota/capacity is too scarce for surge, use `maxSurge=0, maxUnavailable=1` (drains before creating — zero extra GPUs needed, but causes downtime).
-- **Large clusters**: `maxSurge=20, maxUnavailable=0` for faster completion. Note: GKE's maximum upgrade parallelism is ~20 nodes simultaneously regardless of `maxSurge` setting.
+GKE supports three upgrade strategies:
 
-Recommend blue-green only when the user needs instant rollback or has particularly fragile stateful workloads. For GPU pools, blue-green avoids the surge capacity problem but requires the full duplicate pool quota upfront.
+**1. Surge upgrade (default):** Rolling replacement with per-pool `maxSurge`/`maxUnavailable`:
+- **Stateless pools**: Increase `maxSurge` for faster parallelism (e.g., `maxSurge=3, maxUnavailable=0`). When recommending higher maxSurge, explain WHY the value is set (e.g., "setting maxSurge=3 to increase parallelism and speed up the upgrade").
+- **Stateful/database pools**: `maxSurge=1, maxUnavailable=0` — conservative, let PDBs protect data
+- **GPU pools**: GPU nodes typically use fixed reservations with no surge capacity available. The primary lever is `maxUnavailable`, not `maxSurge`. Recommend `maxSurge=0, maxUnavailable=1` (drains before creating — zero extra GPUs needed, but causes a capacity dip). Only use `maxSurge=1` if the customer has confirmed available GPU surge quota.
+- **Large clusters**: Increase `maxSurge` for faster completion (e.g., `maxSurge=20, maxUnavailable=0`). Note: GKE's maximum upgrade parallelism is ~20 nodes simultaneously regardless of `maxSurge` setting.
+
+**2. Auto-scale blue-green upgrade:** GKE's native blue-green upgrade strategy that automatically creates a replacement node pool, cordons the old pool, migrates workloads, and cleans up. Recommend for:
+- Batch processing workloads (auto-scales replacement pool based on demand)
+- Workloads that need instant rollback capability
+- Fragile stateful workloads where in-place rolling replacement is risky
+- GPU pools where surge capacity is unavailable (blue-green provisions the full replacement pool upfront)
+
+**3. Manual blue-green (custom workflow):** Customer creates a new pool, cordons the old pool, manually migrates, deletes the old pool. **Use only as a last resort** when neither surge nor auto-scale blue-green meets specific needs. Do not default to recommending custom flows — always prefer GKE's native upgrade strategies first.
+
+**Strategy selection priority:** Always recommend GKE's native upgrade strategies (surge or auto-scale blue-green) before suggesting custom workflows. GKE's built-in strategies handle cordon/drain/migration automatically and are the supported path. Custom workflows (manual blue-green, cordon-drain scripts) should only be suggested when the user has a specific requirement that native strategies can't satisfy.
+
+**Important:** Never recommend "No channel" as a first option for upgrade control. Always recommend release channels with maintenance exclusions as the primary approach.
 
 ### Workload readiness
 - PDBs for critical workloads (GKE respects them for up to 1 hour during surge upgrades)
@@ -117,9 +158,9 @@ Frontier AI customers running large GPU/TPU clusters face unique upgrade challen
 - **GPU VMs do not support live migration.** Every upgrade requires pod restart — there is no graceful in-place update.
 - **Surge capacity scarcity:** Surge upgrades need temporary extra GPU nodes (A100, H100, H200). These machines are in high demand and often unavailable. If surge nodes can't be provisioned, the upgrade stalls.
 - **Strategy selection for GPU pools:**
-  - If GPU quota/capacity is available: surge with `maxSurge=1, maxUnavailable=0` (safest)
-  - If GPU quota is scarce: `maxSurge=0, maxUnavailable=1` (drains first, no extra GPUs needed, but causes capacity dip)
-  - For large GPU pools needing fast upgrades: blue-green (creates full replacement pool, then migrates — but needs 2x quota temporarily)
+  - **Default (most common):** `maxSurge=0, maxUnavailable=1` — most GPU customers have fixed reservations with no surge capacity. The `maxUnavailable` parameter is the primary lever. This drains first, no extra GPUs needed, but causes a capacity dip. Increase `maxUnavailable` for faster completion.
+  - If GPU surge quota IS confirmed available: surge with `maxSurge=1, maxUnavailable=0` (safest, no capacity dip)
+  - For large GPU pools needing fast upgrades: use GKE's auto-scale blue-green upgrade strategy (creates replacement pool automatically, then migrates — but needs capacity for the replacement pool)
 - **GPU driver version coupling:** GKE automatically installs the GPU driver matching the target GKE version. This can change CUDA versions silently. Always test the target GKE version in a staging cluster to verify driver + CUDA + framework compatibility before production.
 - **Reservation interaction:** GPU reservations guarantee capacity but surge upgrades consume reservation slots. Verify reservation has headroom for surge, or use `maxUnavailable` mode instead.
 
@@ -177,7 +218,7 @@ Help customers understand when upgrades will happen:
 - **Progressive rollout:** New releases roll out across all regions over 4-5 business days. The [GKE release schedule](https://cloud.google.com/kubernetes-engine/docs/release-schedule) shows "best case" dates — upgrades won't happen before those dates but may happen later.
 - **Factors affecting timing:** Progressive rollout across regions, maintenance windows/exclusions, disruption intervals between upgrades, internal freezes (e.g., BFCM), and technical pauses. For large fleets using rollout sequencing, soak times between stages also affect timing.
 - **Predicting upgrades:** Check the cluster's auto-upgrade status for the current target version. Configure maintenance windows for predictable timing. For large, sophisticated fleets, rollout sequencing can add multi-cluster ordering.
-- **Scheduled upgrade notifications:** GKE offers opt-in notifications 72 hours before an auto-upgrade, delivered via Cloud Logging.
+- **Scheduled upgrade notifications:** GKE offers opt-in notifications 72 hours before an auto-upgrade, delivered via Cloud Logging. Additionally, customers can check the GKE release schedule to determine that the best-case scenario for a new minor upgrade arriving in their channel is approximately 1 month — this gives longer advance planning time than the 72h notification alone.
 
 Refer customers to [upgrade assist common scenarios](https://cloud.google.com/kubernetes-engine/docs/how-to/upgrade-assist#common-upgrades-scenarios) for additional guidance.
 

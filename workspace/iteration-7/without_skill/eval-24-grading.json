@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that 'No channel' is a legacy configuration that lacks granular maintenance exclusion types",
+      "passed": false,
+      "reason": "The response mentions maintenance exclusions but does not specifically explain that 'No channel' lacks granular maintenance exclusion types or characterize it as legacy in this context"
+    },
+    {
+      "expectation": "Mentions that 'No channel' does not support 'no minor or node upgrades' exclusion scope \u2014 only the 30-day 'no upgrades' type",
+      "passed": false,
+      "reason": "The response does not mention the specific limitation about exclusion scopes or the 30-day 'no upgrades' restriction for 'No channel'"
+    },
+    {
+      "expectation": "Notes that Extended support (24 months) is only available on release channels, not 'No channel'",
+      "passed": false,
+      "reason": "Extended support is not mentioned anywhere in the response"
+    },
+    {
+      "expectation": "Notes that rollout sequencing (an advanced feature) is not available on 'No channel'",
+      "passed": false,
+      "reason": "Rollout sequencing is not mentioned as a missing feature for 'No channel' configurations"
+    },
+    {
+      "expectation": "Recommends Regular or Stable channel as the closest migration target (legacy behavior matches Stable for minors, Regular for patches)",
+      "passed": true,
+      "reason": "The response recommends Regular channel for dev/staging and Stable channel for production, providing clear guidance on channel selection"
+    },
+    {
+      "expectation": "Mentions Extended channel as an option for customers who want maximum flexibility around EoS",
+      "passed": false,
+      "reason": "Extended channel is not mentioned as an option in the response"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "The response provides specific gcloud commands like 'gcloud container clusters update CLUSTER_NAME --release-channel=stable' for changing release channels"
+    },
+    {
+      "expectation": "References the comparison table at cloud.google.com/kubernetes-engine/docs/concepts/release-channels",
+      "passed": false,
+      "reason": "The response does not reference the specific comparison table URL or documentation link"
+    }
+  ]
+}
