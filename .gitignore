@@ -15,6 +15,10 @@ feedback.json
 # Node
 node_modules/
 
+# Portal build artifacts & secrets
+portal/.env
+portal/dist/
+
 # Raw internal data (never commit)
 data/plx_*.csv
 data/*_raw.*

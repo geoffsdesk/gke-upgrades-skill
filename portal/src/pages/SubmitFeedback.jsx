@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
 import Layout from '../components/Layout'
+import EVALS_DATA from '../data/evals.json'
 
 const FEEDBACK_TYPES = [
   { value: 'correction', label: 'Correction', desc: 'Something in the skill is wrong or outdated', color: 'bg-red-100 text-red-800' },
@@ -24,7 +25,7 @@ const TOPIC_AREAS = [
   'Other',
 ]
 
-const EVAL_IDS = Array.from({ length: 40 }, (_, i) => i + 1)
+const EVAL_IDS = EVALS_DATA.map(e => e.id)
 
 export default function SubmitFeedback() {
   const { user } = useAuth()
@@ -171,10 +172,51 @@ export default function SubmitFeedback() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gke-blue outline-none"
                   >
                     <option value="">None</option>
-                    {EVAL_IDS.map(id => <option key={id} value={id}>Eval {id}</option>)}
+                    {EVALS_DATA.map(e => (
+                      <option key={e.id} value={e.id}>
+                        Eval {e.id} — {e.prompt.slice(0, 60)}...
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
+
+              {/* Eval Preview */}
+              {form.evalId && (() => {
+                const evalData = EVALS_DATA.find(e => e.id === parseInt(form.evalId))
+                if (!evalData) return null
+                return (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-semibold text-gke-dark">
+                        Eval {evalData.id} Preview
+                      </h4>
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                        {evalData.num_expectations} assertions
+                      </span>
+                    </div>
+                    <div className="mb-3">
+                      <label className="text-xs font-medium text-gke-gray uppercase tracking-wide">Prompt</label>
+                      <p className="text-sm text-gke-dark mt-1 bg-white p-3 rounded border border-gray-200 max-h-32 overflow-y-auto leading-relaxed">
+                        {evalData.prompt}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gke-gray uppercase tracking-wide">
+                        Expected Outputs ({evalData.expectations.length})
+                      </label>
+                      <ul className="mt-1 space-y-1 max-h-40 overflow-y-auto">
+                        {evalData.expectations.map((exp, i) => (
+                          <li key={i} className="text-xs text-gke-dark bg-white p-2 rounded border border-gray-200 flex gap-2">
+                            <span className="text-gke-blue font-mono font-bold shrink-0">{i + 1}.</span>
+                            <span>{exp}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )
+              })()}
 
               {/* Title */}
               <div>

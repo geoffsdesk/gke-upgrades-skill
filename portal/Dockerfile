@@ -1,6 +1,11 @@
 # Build stage
 FROM node:20-slim AS build
 WORKDIR /app
+
+# Supabase config — passed as build args
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+
 COPY package*.json ./
 RUN npm ci
 COPY . .
