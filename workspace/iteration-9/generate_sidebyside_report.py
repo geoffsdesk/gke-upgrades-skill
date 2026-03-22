@@ -323,8 +323,8 @@ def build_report():
                                 spaceBefore=4, spaceAfter=4, leading=12)
     story.append(Paragraph(
         "python3 tools/run-evals.py --provider both \\<br/>"
-        "  --api-key sk-ant-api03-_YZ7in5... \\<br/>"
-        "  --gemini-key AIzaSyDnDMZEs0_iQ8_kPVmW1r-PpS8jhALFk6s \\<br/>"
+        "  --api-key $ANTHROPIC_API_KEY \\<br/>"
+        "  --gemini-key $GEMINI_API_KEY \\<br/>"
         "  --iteration 10 --force",
         cmd_style
     ))
@@ -342,7 +342,7 @@ def build_report():
     ))
     story.append(Paragraph(
         "python3 tools/run-evals.py --provider gemini \\<br/>"
-        "  --api-key AIzaSyDnDMZEs0_iQ8_kPVmW1r-PpS8jhALFk6s \\<br/>"
+        "  --api-key $GEMINI_API_KEY \\<br/>"
         "  --iteration 10 --model flash --force",
         cmd_style
     ))
