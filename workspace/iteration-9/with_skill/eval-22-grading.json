@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains this is related to the interaction between maxSurge, drain order, and pod scheduling",
+      "passed": true,
+      "reason": "Response explicitly explains the interaction between surge settings, node draining order, and pod scheduling, stating that GKE processes nodes in batches with default maxSurge=1, maxUnavailable=1 settings"
+    },
+    {
+      "expectation": "Notes that GKE cordons nodes before draining them \u2014 pods should prefer scheduling onto uncordoned (upgraded) nodes",
+      "passed": true,
+      "reason": "Response mentions that GKE cordons nodes and explains the process: 'Create 1 new node, Cordon 1 old node, Drain pods to available capacity', indicating understanding of the cordon-then-drain sequence"
+    },
+    {
+      "expectation": "Identifies possible cause: too many nodes being drained simultaneously (high maxSurge) before enough upgraded nodes exist",
+      "passed": false,
+      "reason": "Response incorrectly identifies the issue as nodes being drained faster than new ones are created, when the actual issue is typically the opposite - too high maxSurge creating too many nodes being drained simultaneously before enough upgraded capacity exists"
+    },
+    {
+      "expectation": "Recommends reducing maxSurge to 1 to ensure upgraded nodes are available before draining the next batch",
+      "passed": false,
+      "reason": "Response recommends increasing maxSurge (to 3) rather than reducing it to 1, which is opposite to the expected recommendation"
+    },
+    {
+      "expectation": "Suggests using pod anti-affinity or node affinity to prefer already-upgraded nodes",
+      "passed": true,
+      "reason": "Response provides a node selector example to pin workloads to already-upgraded nodes: 'nodeSelector: cloud.google.com/gke-node-version: TARGET_VERSION'"
+    },
+    {
+      "expectation": "Mentions checking if any taints or tolerations are causing pods to land on the wrong nodes",
+      "passed": false,
+      "reason": "Response does not mention taints or tolerations as a potential cause for pods landing on wrong nodes"
+    },
+    {
+      "expectation": "Provides kubectl commands to check node cordoned status and pod scheduling events",
+      "passed": true,
+      "reason": "Response provides monitoring commands to watch node upgrade progress and pod distribution, including commands to check pod placement and node versions"
+    },
+    {
+      "expectation": "Recommends setting maxUnavailable=0 to ensure old nodes aren't removed until pods are safely rescheduled",
+      "passed": true,
+      "reason": "Response consistently recommends setting maxUnavailable=0 across multiple scenarios to ensure pods are safely rescheduled before nodes are removed"
+    },
+    {
+      "expectation": "May mention GKE's autoscaled blue-green upgrade strategy as an alternative that avoids this issue by cordoning the entire old pool before migrating workloads to new nodes",
+      "passed": true,
+      "reason": "Response mentions autoscaled blue-green upgrade as Option 3 and explains that blue-green 'creates ALL replacement nodes first, then gradually shifts traffic', which addresses the expectation"
+    }
+  ]
+}

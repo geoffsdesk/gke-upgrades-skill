@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that 'No channel' is a legacy configuration that lacks granular maintenance exclusion types",
+      "passed": true,
+      "reason": "Response clearly states 'No channel' is legacy and provides detailed table showing it lacks granular exclusion features, specifically noting limited exclusion types"
+    },
+    {
+      "expectation": "Mentions that 'No channel' does not support 'no minor or node upgrades' exclusion scope \u2014 only the 30-day 'no upgrades' type, AND per-nodepool maintenance exclusion is also limited",
+      "passed": true,
+      "reason": "Response explicitly states in table that 'No minor or node upgrades' exclusion is not available on No channel, only 30-day 'no upgrades' type, and notes per-nodepool exclusion is limited to 'no upgrades' 30 days"
+    },
+    {
+      "expectation": "Notes that Extended support (24 months) is only available on release channels, not 'No channel'",
+      "passed": true,
+      "reason": "Table clearly shows Extended support (24 months) is available on release channels but not on No channel, with explicit \u274c No marking"
+    },
+    {
+      "expectation": "Notes that rollout sequencing (an advanced feature) is not available on 'No channel'",
+      "passed": true,
+      "reason": "Table shows 'Rollout sequencing' is available on release channels but not on No channel, and text mentions it as an advanced feature"
+    },
+    {
+      "expectation": "Recommends Regular or Stable channel as the closest migration target (legacy behavior matches Stable for minors, Regular for patches)",
+      "passed": true,
+      "reason": "Response explicitly recommends Regular channel as 'closest match to current No channel behavior' and suggests Stable for maximum stability, with detailed explanations"
+    },
+    {
+      "expectation": "Mentions Extended channel as a migration path for customers who want maximum flexibility around EoS enforcement",
+      "passed": true,
+      "reason": "Response mentions Extended channel as alternative option for 'maximum EoS flexibility' and includes specific gcloud command for Extended channel"
+    },
+    {
+      "expectation": "Warns about exclusion translation: when moving from 'No channel' to release channels, some exclusions don't translate 1:1 and may be ignored \u2014 only 'no_upgrades' type translates between the two. Recommends adding a temporary 'no upgrades' exclusion during the transition",
+      "passed": true,
+      "reason": "Response specifically warns about exclusion translation issues, states only 'no_upgrades' type exclusions translate 1:1, and provides command to add temporary 'no upgrades' exclusion during migration"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "Response provides multiple gcloud commands for changing release channel, including loop for multiple clusters and specific examples for Regular, Stable, and Extended channels"
+    },
+    {
+      "expectation": "References the comparison table at cloud.google.com/kubernetes-engine/docs/concepts/release-channels",
+      "passed": false,
+      "reason": "Response does not reference or mention the specific Google Cloud documentation URL for release channels comparison table"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "eval_id": 3,
+  "mode": "gemini_with_skill",
+  "iteration": 10,
+  "prompt": "Our node pool upgrade has been stuck for 2 hours. It says 3 out of 12 nodes upgraded. We're on a Standard cluster in us-east1, running 1.31, upgrading nodes to 1.32. The pods on the remaining nodes aren't draining. What should we check and how do we fix this?",
+  "provider": "gemini",
+  "model": "gemini-3.1-pro-preview",
+  "start_time": "2026-03-21T18:33:44.575643+00:00",
+  "input_tokens": 10369,
+  "output_tokens": 1204,
+  "time_seconds": 24.36
+}

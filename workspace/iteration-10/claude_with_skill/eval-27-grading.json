@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends combining release channels with maintenance exclusions as the approach for maximum control",
+      "passed": true,
+      "reason": "Response explicitly states 'Release Channel + Maintenance Exclusions as your primary strategy' and describes this as giving 'the most granular control available in GKE'"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' exclusion to prevent disruptive changes while allowing control plane security patches. May also mention persistent exclusions with --add-maintenance-exclusion-until-end-of-support (no longer a 6-month max, auto-tracks EoS)",
+      "passed": true,
+      "reason": "Response recommends 'No minor or node upgrades' exclusions and provides gcloud command using --add-maintenance-exclusion-until-end-of-support flag, explaining it automatically renews when upgrading to next minor version"
+    },
+    {
+      "expectation": "Recommends maintenance windows to control WHEN patches are applied (e.g., weekend windows only)",
+      "passed": true,
+      "reason": "Response provides detailed maintenance window configuration with gcloud commands for Saturday 2-6 AM windows and explains how to align with change windows"
+    },
+    {
+      "expectation": "Mentions the cluster disruption budget (disruption interval) to control upgrade frequency \u2014 patch interval default 7d (max 90d), minor interval default 30d (max 90d)",
+      "passed": true,
+      "reason": "Response includes disruption intervals section with gcloud command showing --maintenance-patch-version-disruption-interval 30 to control patch frequency from default 7 days"
+    },
+    {
+      "expectation": "Suggests Stable or Extended channel for production clusters in regulated environments. Extended channel provides maximum flexibility around EoS enforcement (additional cost only during extended period)",
+      "passed": false,
+      "reason": "Response recommends Regular channel as primary for production, mentions Stable as alternative, but advises to 'Avoid Extended Channel' for security-sensitive workloads - contrary to expectation about Extended providing maximum flexibility for regulated environments"
+    },
+    {
+      "expectation": "Notes that disabling control plane patches entirely is not recommended due to security risks \u2014 monthly patches at minimum",
+      "passed": true,
+      "reason": "Response warns against using 'No upgrades' exclusions long-term and states 'Don't disable auto-upgrades entirely - Loses GKE's security value proposition', emphasizing security patch importance"
+    },
+    {
+      "expectation": "May mention rollout sequencing as an advanced option for controlling upgrade order across multiple clusters, and/or the cluster disruption budget for controlling CP patch frequency",
+      "passed": true,
+      "reason": "Response addresses cluster disruption budget via disruption intervals and provides multi-environment strategy showing different configurations for dev/staging/production clusters"
+    },
+    {
+      "expectation": "Provides gcloud commands for configuring the recommended exclusion type and maintenance window",
+      "passed": true,
+      "reason": "Response provides multiple gcloud commands including maintenance window setup, maintenance exclusions configuration, and migration path commands with specific flags and parameters"
+    }
+  ]
+}

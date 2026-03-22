@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Starts with pre-flight checks: current versions, cluster health, node status",
+      "passed": true,
+      "reason": "The model includes a pre-flight health check step checking node status (which displays versions) and pod health."
+    },
+    {
+      "expectation": "Includes the gcloud command to check available versions in the release channel",
+      "passed": true,
+      "reason": "The model includes the correct gcloud container get-server-config command to check available versions in the REGULAR channel."
+    },
+    {
+      "expectation": "Includes the API deprecation check command before upgrading",
+      "passed": false,
+      "reason": "The model does not mention or include any commands to check for Kubernetes API deprecations before upgrading."
+    },
+    {
+      "expectation": "Provides the exact gcloud command for control plane upgrade to 1.31 first (--master flag)",
+      "passed": false,
+      "reason": "The model provides a command to upgrade the master, but upgrades directly to a 1.32 patch version rather than upgrading to 1.31 first as specified by the expectation."
+    },
+    {
+      "expectation": "Includes a verification step after control plane upgrade with expected output",
+      "passed": false,
+      "reason": "The model includes a verification command but fails to provide the expected output of that command."
+    },
+    {
+      "expectation": "Provides gcloud commands for node pool upgrades \u2014 may use skip-level (N+2) for node pools to reduce steps",
+      "passed": true,
+      "reason": "The model provides the specific gcloud container clusters upgrade commands for both the workload-pool and default-pool."
+    },
+    {
+      "expectation": "Includes monitoring commands to watch node pool upgrade progress",
+      "passed": false,
+      "reason": "The model instructs the user to wait, but does not provide specific commands (like watch kubectl get nodes) to actively monitor the progress."
+    },
+    {
+      "expectation": "Provides sequential control plane upgrades (1.30\u21921.31\u21921.32) with option for skip-level node pool upgrades",
+      "passed": false,
+      "reason": "The model performs a single patch upgrade for 1.32 and does not provide sequential control plane upgrades from 1.30 to 1.32."
+    },
+    {
+      "expectation": "Includes post-upgrade validation: node versions, pod health, kube-system pods",
+      "passed": true,
+      "reason": "The model includes post-upgrade validation commands using kubectl get nodes -o wide and kubectl get pods -A, which covers nodes, pod health, and the kube-system namespace."
+    },
+    {
+      "expectation": "Provides a rollback section explaining what to do if something goes wrong",
+      "passed": true,
+      "reason": "The model includes a troubleshooting section that clearly explains the limitations of master rollbacks and how to downgrade node pools if needed."
+    }
+  ]
+}

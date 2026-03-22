@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that regional clusters have multiple control plane replicas and the upgrade is rolling",
+      "passed": true,
+      "reason": "The response explicitly states that regional clusters have three HA control plane replicas and perform a rolling update one at a time."
+    },
+    {
+      "expectation": "States that regional control plane upgrades have near-zero API server downtime",
+      "passed": true,
+      "reason": "The response confirms there is 'Continuous API Availability' and that the user 'will not experience API server downtime'."
+    },
+    {
+      "expectation": "Contrasts with zonal clusters where there IS a brief API server outage during upgrade",
+      "passed": true,
+      "reason": "The response notes 'Unlike Zonal clusters (which have only one control plane VM and experience downtime during upgrades)'."
+    },
+    {
+      "expectation": "Provides the gcloud command for control plane upgrade (--master flag)",
+      "passed": true,
+      "reason": "The response provides the correct `gcloud container clusters upgrade` command with the `--master` flag."
+    },
+    {
+      "expectation": "Mentions expected duration for control plane upgrade (roughly 10-30 minutes)",
+      "passed": true,
+      "reason": "The response mentions that the process typically takes 15 to 30 minutes."
+    },
+    {
+      "expectation": "Includes a command to verify the control plane version after upgrade",
+      "passed": true,
+      "reason": "The response includes a `gcloud container clusters describe` command to verify `currentMasterVersion` and mentions `kubectl version`."
+    },
+    {
+      "expectation": "Recommends checking kube-system pods health after upgrade",
+      "passed": false,
+      "reason": "The response does not mention checking the health of kube-system pods after the upgrade."
+    },
+    {
+      "expectation": "Advises checking deprecated API usage before upgrading",
+      "passed": true,
+      "reason": "The response includes a 'Pre-Flight Safety Checks' section advising to check the Deprecation Insights tab for active calls to deprecated APIs."
+    },
+    {
+      "expectation": "Mentions that GKE supports a 2-step control plane minor upgrade where the first step is rollbackable, or notes that CP patch downgrades can be done by the customer while minor downgrades require GKE support",
+      "passed": false,
+      "reason": "The response does not mention rollbacks, patch downgrades, minor downgrades requiring GKE support, or 2-step minor upgrades."
+    }
+  ]
+}

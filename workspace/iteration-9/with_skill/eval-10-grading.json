@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that spot VMs can be preempted at any time, which interacts with the upgrade drain process",
+      "passed": true,
+      "reason": "Response clearly explains that spot VMs can be preempted by Google Cloud at any time during the upgrade process, independent of GKE's drain operations, creating two potential disruption sources"
+    },
+    {
+      "expectation": "Notes that spot node pools may already have workloads designed for interruption (good for upgrades)",
+      "passed": true,
+      "reason": "Response mentions that workloads should be tested for rapid restart capability (spot best practice) and discusses workload resilience requirements for spot VMs"
+    },
+    {
+      "expectation": "Recommends higher maxSurge for spot pools since the workloads should already be fault-tolerant",
+      "passed": false,
+      "reason": "Response actually recommends the opposite - conservative approach with maxSurge 0 for spot pools as the primary recommendation, contradicting this expectation"
+    },
+    {
+      "expectation": "Advises setting maxUnavailable >0 for spot pools since workloads are already preemption-tolerant",
+      "passed": true,
+      "reason": "Response recommends maxUnavailable 1 for spot pools in the conservative approach and explains this works well since workloads can handle disruption"
+    },
+    {
+      "expectation": "Mentions that spot VM availability may affect surge node creation (not guaranteed to get spot instances)",
+      "passed": true,
+      "reason": "Response explicitly states 'No surge capacity guarantee: When using maxSurge > 0, GKE requests new spot instances for the surge nodes. However, spot capacity availability varies by zone and machine type'"
+    },
+    {
+      "expectation": "Recommends having PDBs even for spot workloads to ensure orderly drain during upgrade",
+      "passed": true,
+      "reason": "Response provides specific PDB configuration examples and emphasizes ensuring PDBs account for both upgrade and preemption disruption"
+    },
+    {
+      "expectation": "Provides the gcloud command for configuring surge settings on the spot pool",
+      "passed": true,
+      "reason": "Response provides multiple gcloud commands for configuring surge settings, including both conservative (maxSurge 0, maxUnavailable 1) and aggressive (maxSurge 2, maxUnavailable 0) options"
+    },
+    {
+      "expectation": "Suggests upgrading spot pools before on-demand pools since they're lower risk",
+      "passed": false,
+      "reason": "Response recommends the opposite - upgrading on-demand pools first, then spot pools, stating 'Upgrade on-demand pool first' in the execution plan"
+    }
+  ]
+}

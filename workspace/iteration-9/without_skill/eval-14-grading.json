@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Checks for deprecated API usage that may have changed behavior in 1.30",
+      "passed": false,
+      "reason": "The response does not mention checking for deprecated APIs or API version changes, which is crucial when troubleshooting post-upgrade issues"
+    },
+    {
+      "expectation": "Recommends checking admission webhooks \u2014 they may be rejecting or slowing down requests on the new version",
+      "passed": true,
+      "reason": "The response mentions checking for 'custom admission webhooks that might be timing out' in the Quick Resolution Checklist"
+    },
+    {
+      "expectation": "Advises checking if resource requests/limits need adjusting for any system components that changed",
+      "passed": true,
+      "reason": "The response includes checking resource limits/requests with specific kubectl commands and mentions increasing API server resources if needed"
+    },
+    {
+      "expectation": "Suggests examining kube-system pods for any that are crashlooping or restarting",
+      "passed": true,
+      "reason": "The response includes commands to check API server pods, etcd pods, and look for restart loops in kube-system namespace"
+    },
+    {
+      "expectation": "Includes commands to check API server metrics and latency (kubectl get --raw /metrics)",
+      "passed": true,
+      "reason": "The response includes the specific command 'kubectl get --raw /metrics | grep apiserver_request_duration_seconds' in the monitoring section"
+    },
+    {
+      "expectation": "Recommends checking if NetworkPolicy or service mesh components need updating for the new version",
+      "passed": false,
+      "reason": "The response does not mention NetworkPolicy or service mesh components that may need updating for version compatibility"
+    },
+    {
+      "expectation": "Advises reviewing pod events for scheduling delays or readiness probe failures",
+      "passed": true,
+      "reason": "The response includes commands to check events with 'kubectl get events' and checking for pending pods which would reveal scheduling issues"
+    },
+    {
+      "expectation": "Mentions checking if HPA or VPA are behaving differently on the new version",
+      "passed": false,
+      "reason": "The response does not mention checking HPA (Horizontal Pod Autoscaler) or VPA (Vertical Pod Autoscaler) behavior changes in the new version"
+    }
+  ]
+}

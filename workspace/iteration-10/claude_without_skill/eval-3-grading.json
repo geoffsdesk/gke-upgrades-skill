@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies PDB as the most likely/common cause of stuck upgrades",
+      "passed": true,
+      "reason": "Response explicitly states 'Check for restrictive PDBs - This is the #1 cause' and mentions PDBs multiple times as the primary issue to investigate"
+    },
+    {
+      "expectation": "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
+      "passed": true,
+      "reason": "Response includes 'kubectl get pdb --all-namespaces' and 'kubectl get pdb --all-namespaces -o wide' commands"
+    },
+    {
+      "expectation": "Provides commands to identify which pods are blocking the drain",
+      "passed": true,
+      "reason": "Response includes multiple commands: 'kubectl get pods --all-namespaces --field-selector=status.phase!=Succeeded,status.phase!=Failed', 'kubectl get pods --all-namespaces | grep Terminating', and 'kubectl get pods --all-namespaces -o wide | grep [NODE_NAME]'"
+    },
+    {
+      "expectation": "Includes resource constraint diagnosis (capacity issues, pending pods)",
+      "passed": false,
+      "reason": "Response does not mention checking for resource constraints, capacity issues, or pending pods that might indicate insufficient cluster resources"
+    },
+    {
+      "expectation": "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+      "passed": true,
+      "reason": "Response provides specific kubectl patch commands to adjust PDBs: 'kubectl patch pdb [PDB_NAME] -n [NAMESPACE] --type merge -p '{\"spec\":{\"minAvailable\":0}}'' and similar commands"
+    },
+    {
+      "expectation": "Mentions that GKE has a PDB timeout (up to 1 hour) after which it may force-drain, and that GKE sends notifications when eviction is blocked by PDB",
+      "passed": false,
+      "reason": "Response does not mention GKE's PDB timeout behavior or notification system for blocked evictions"
+    },
+    {
+      "expectation": "Includes guidance on surge upgrade settings as a potential fix",
+      "passed": true,
+      "reason": "Response includes surge upgrade settings with specific gcloud commands: '--max-surge=2 --max-unavailable=1' and '--max-surge=3 --max-unavailable=0'"
+    },
+    {
+      "expectation": "Mentions webhook issues as a possible cause",
+      "passed": false,
+      "reason": "Response does not mention webhooks or admission controllers as a potential cause of stuck upgrades"
+    },
+    {
+      "expectation": "Includes validation steps to confirm the fix is working",
+      "passed": true,
+      "reason": "Response includes monitoring commands in section 7: 'watch -n 30 'kubectl get nodes'' and 'kubectl get events --sort-by='.lastTimestamp' | grep -i drain'"
+    }
+  ]
+}

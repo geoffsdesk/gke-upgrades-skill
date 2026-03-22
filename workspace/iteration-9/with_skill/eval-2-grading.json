@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Distinguishes between dev (Rapid) and prod (Stable) clusters in the checklists",
+      "passed": true,
+      "reason": "The response clearly identifies 2 dev clusters on Rapid channel and 2 prod clusters on Stable channel, with checklists specifically tailored for prod clusters upgrading from 1.31 to 1.32"
+    },
+    {
+      "expectation": "Recognizes Autopilot limitations (no node management, no SSH, mandatory resource requests)",
+      "passed": true,
+      "reason": "The response explicitly mentions that Google manages node upgrades automatically in Autopilot, states that resource requests are mandatory, and notes 'Autopilot automatically manages node lifecycle - no manual cleanup needed'"
+    },
+    {
+      "expectation": "Includes API deprecation checks with kubectl commands",
+      "passed": false,
+      "reason": "While the response mentions checking for deprecated API usage via 'GKE deprecation insights dashboard in Cloud Console', it does not provide specific kubectl commands for API deprecation checks"
+    },
+    {
+      "expectation": "Mentions mandatory resource requests as an Autopilot-specific concern",
+      "passed": true,
+      "reason": "The response explicitly states 'ALL containers have resource requests set (mandatory for Autopilot)' and emphasizes that 'The #1 cause of Autopilot upgrade failures is missing resource requests'"
+    },
+    {
+      "expectation": "Pre-upgrade checklist includes workload readiness items (PDBs, bare pods, graceful shutdown)",
+      "passed": true,
+      "reason": "The pre-upgrade checklist includes PDBs configuration, checking for bare pods ('No bare pods \u2014 all workloads managed by Deployments/StatefulSets/Jobs'), and terminationGracePeriodSeconds for graceful shutdown"
+    },
+    {
+      "expectation": "Post-upgrade checklist includes version verification commands",
+      "passed": true,
+      "reason": "The post-upgrade checklist includes specific gcloud command for version verification: 'gcloud container clusters describe CLUSTER --region REGION --format=\"value(currentMasterVersion)\"'"
+    },
+    {
+      "expectation": "Post-upgrade checklist includes workload health validation",
+      "passed": true,
+      "reason": "The post-upgrade checklist includes comprehensive workload health checks including deployment replica counts, pod status checks, StatefulSets validation, and multiple kubectl commands for health verification"
+    },
+    {
+      "expectation": "Recommends testing on dev clusters before prod auto-upgrade",
+      "passed": true,
+      "reason": "The response explicitly recommends 'Dev clusters already on 1.32+ via Rapid channel - validate workloads there first' and states 'Since your dev clusters are on Rapid channel, they'll get 1.32 first. Use them as your testing ground'"
+    },
+    {
+      "expectation": "Mentions that checking the GKE release schedule gives ~1 month best-case advance notice for new minor upgrades, beyond the 72h notification",
+      "passed": false,
+      "reason": "While the response mentions '72h advance notice via Cloud Logging', it does not specifically mention checking the GKE release schedule for ~1 month advance notice for new minor upgrades"
+    },
+    {
+      "expectation": "Includes monitoring/observability validation items",
+      "passed": true,
+      "reason": "The response includes comprehensive monitoring validation items such as Cloud Monitoring dashboards, baseline metrics, error rates, latency checks, and observability validation in the post-upgrade checklist"
+    }
+  ]
+}

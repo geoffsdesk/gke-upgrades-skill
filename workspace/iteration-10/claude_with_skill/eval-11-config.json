@@ -1,0 +1,12 @@
+{
+  "eval_id": 11,
+  "mode": "claude_with_skill",
+  "iteration": 10,
+  "prompt": "We run a StatefulSet-based Elasticsearch cluster on GKE Standard. It has 3 master nodes, 5 data nodes, and 2 coordinating nodes, each on separate node pools. PVs are regional pd-ssd. We need to upgrade from 1.31 to 1.32. Walk me through how to do this without losing data or availability.",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-21T17:29:11.431072+00:00",
+  "input_tokens": 11361,
+  "output_tokens": 3005,
+  "time_seconds": 44.77
+}

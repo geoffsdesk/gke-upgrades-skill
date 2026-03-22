@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends migrating all 'No channel' clusters to release channels as a first priority",
+      "passed": true,
+      "reason": "The model explicitly states that the ultimate goal is to get all clusters onto release channels and includes this in the Immediate Action Plan."
+    },
+    {
+      "expectation": "Mentions using gcloud container clusters get-upgrade-info to check each cluster's auto-upgrade status, target versions, and EoS timestamps",
+      "passed": false,
+      "reason": "The model suggests using the GKE Clusters Dashboard in the UI but does not mention the 'gcloud container clusters get-upgrade-info' command."
+    },
+    {
+      "expectation": "Mentions the deprecation insights dashboard for identifying clusters using deprecated APIs",
+      "passed": true,
+      "reason": "The model explicitly directs the user to 'GKE Upgrade Insights & Deprecation Warnings' under Kubernetes Engine -> Insights."
+    },
+    {
+      "expectation": "Recommends checking EoS timelines for each cluster and prioritizing those closest to EoS",
+      "passed": false,
+      "reason": "The model mentions that 'No channel' clusters eventually reach EOL, but it does not advise checking their specific EoS timelines to prioritize upgrades."
+    },
+    {
+      "expectation": "Mentions GKE EoS notifications via Cloud Logging as an ongoing monitoring tool",
+      "passed": false,
+      "reason": "The model does not mention using Cloud Logging for EoS notifications."
+    },
+    {
+      "expectation": "Recommends enrolling in scheduled upgrade notifications (72h advance) for all clusters",
+      "passed": false,
+      "reason": "The model does not mention scheduled upgrade notifications or the 72-hour advance warning feature."
+    },
+    {
+      "expectation": "Suggests standardizing on a channel strategy: dev\u2192Rapid, staging\u2192Regular, prod\u2192Stable/Extended",
+      "passed": false,
+      "reason": "The model suggests Rapid for Dev and Regular for Staging, but it recommends Regular for Production instead of Stable/Extended (reserving Stable only for extremely fragile workloads)."
+    },
+    {
+      "expectation": "May mention rollout sequencing as an advanced option for fleet-wide upgrade ordering \u2014 should not be the primary recommendation for fleet remediation",
+      "passed": true,
+      "reason": "The model mentions Rollout Sequencing appropriately as a Phase 3 advanced step for fleet-based upgrades rather than the primary remediation strategy."
+    },
+    {
+      "expectation": "Mentions GKE Insights and Recommendations in the console for identifying issues like version skew",
+      "passed": false,
+      "reason": "The model mentions GKE Insights for deprecated APIs, but fails to mention the 'Recommendations' feature or identifying issues specifically like 'version skew'."
+    }
+  ]
+}

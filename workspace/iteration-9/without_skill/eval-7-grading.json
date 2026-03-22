@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Proposes a phased rollout: dev first, then staging, then prod",
+      "passed": true,
+      "reason": "Response clearly outlines Phase 1 (Development), Phase 2 (Staging), and Phase 3 (Production) in sequential order"
+    },
+    {
+      "expectation": "Includes soak time between environment phases (e.g., 24-48 hours for dev, 1 week for staging before prod)",
+      "passed": true,
+      "reason": "Specifies 48+ hours soak time after dev before staging, and 72+ hours after staging before prod, with 24-48 hour monitoring within dev phase"
+    },
+    {
+      "expectation": "Defines go/no-go criteria between phases (error rates, latency, pod health)",
+      "passed": true,
+      "reason": "Includes validation steps with application functionality testing, performance monitoring, load testing, and performance baseline comparison as go/no-go criteria"
+    },
+    {
+      "expectation": "Recommends sequential control plane upgrades (1.30\u21921.31\u21921.32) with skip-level node pool upgrades where possible",
+      "passed": false,
+      "reason": "Does not address version sequencing strategy or mention control plane vs node pool upgrade approaches - treats upgrades as single operations"
+    },
+    {
+      "expectation": "Suggests not upgrading all prod clusters simultaneously \u2014 do one or two first as canary",
+      "passed": true,
+      "reason": "Production phase shows staggered approach: single cluster first, then 48h monitoring before second cluster, with 2-day gaps between subsequent clusters"
+    },
+    {
+      "expectation": "Includes rollback triggers and criteria for halting the rollout",
+      "passed": true,
+      "reason": "Provides rollback strategy section with specific commands and mentions rollback procedures, though could be more detailed on specific triggers"
+    },
+    {
+      "expectation": "Provides a timeline or schedule estimate for the full rollout",
+      "passed": true,
+      "reason": "Provides detailed timeline: Week 1 (dev, 2-3 days), Week 2 (staging, 3-4 days), Week 3-4 (prod, 5-7 days)"
+    },
+    {
+      "expectation": "Mentions maintenance window coordination across clusters",
+      "passed": true,
+      "reason": "Includes maintenance window considerations in pre-upgrade preparation and risk mitigation sections, specifically mentioning scheduling during low-traffic periods"
+    },
+    {
+      "expectation": "If rollout sequencing is mentioned, notes that all clusters must be on the same channel for it to work",
+      "passed": false,
+      "reason": "While the prompt mentions all clusters are on Regular release channel, the response does not explicitly acknowledge or emphasize this requirement for the rollout strategy to work"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's native node pool upgrade strategies rather than the manual create/cordon/drain/delete workflow described",
+      "passed": true,
+      "reason": "The response explicitly states the manual approach is 'not optimal' and recommends in-place node pool upgrade as the primary option, providing gcloud commands for native upgrade strategies"
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends surge upgrade with maxSurge=0 and maxUnavailable set as the primary lever (since no surge capacity is available)",
+      "passed": false,
+      "reason": "While the response mentions max-surge-upgrade and max-unavailable-upgrade parameters in Option 3, it doesn't specifically recommend maxSurge=0 for fixed reservations or explain that maxUnavailable is the primary lever when surge capacity isn't available"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as a native alternative that handles cordon and migration automatically",
+      "passed": false,
+      "reason": "The response doesn't mention GKE's auto-scale blue-green upgrade strategy as a native GKE feature; it only discusses manual blue-green approaches"
+    },
+    {
+      "expectation": "Explains that native strategies are the supported path and handle edge cases (PDB respect, drain timeouts, progress tracking) that manual workflows miss",
+      "passed": true,
+      "reason": "The response explains benefits of native approaches including 'GKE handles cordoning/draining automatically' and mentions PodDisruptionBudgets in the checklist, indicating native strategies handle these edge cases better"
+    },
+    {
+      "expectation": "Only suggests manual blue-green as a last resort if native strategies don't meet a specific requirement",
+      "passed": true,
+      "reason": "The response clearly positions in-place upgrade as 'Recommended' and manual blue-green (Option 2) as secondary, stating 'Use Option 1 unless you have specific requirements preventing in-place upgrades'"
+    },
+    {
+      "expectation": "Addresses GPU driver compatibility \u2014 need to verify target version's auto-installed driver is compatible",
+      "passed": false,
+      "reason": "The response does not mention GPU driver compatibility concerns or the need to verify driver compatibility with the target Kubernetes version"
+    },
+    {
+      "expectation": "Recommends scheduling the upgrade during a gap in GPU workloads to minimize impact",
+      "passed": true,
+      "reason": "The response recommends 'Consider maintenance windows - 128 A100s likely serve critical workloads' and mentions planning communication about interruptions, indicating awareness of scheduling during low-impact periods"
+    },
+    {
+      "expectation": "Provides gcloud commands for the recommended native approach",
+      "passed": true,
+      "reason": "The response provides specific gcloud commands for both enabling auto-upgrade and triggering manual upgrade for the recommended in-place approach"
+    }
+  ]
+}

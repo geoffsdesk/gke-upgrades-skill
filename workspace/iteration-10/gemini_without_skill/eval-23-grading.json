@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies Service A (minAvailable=100%) as a guaranteed upgrade blocker \u2014 no disruptions allowed at all",
+      "passed": true,
+      "reason": "The model correctly identifies Service A as 'GUARANTEED TO BLOCK UPGRADES' because it requires 100% of pods to be healthy at all times."
+    },
+    {
+      "expectation": "Identifies Service B (maxUnavailable=0) as also blocking upgrades \u2014 same effect as 100% minAvailable",
+      "passed": true,
+      "reason": "The model correctly identifies Service B as 'GUARANTEED TO BLOCK UPGRADES' and states it is mathematically identical to minAvailable: 100%."
+    },
+    {
+      "expectation": "States Service C (minAvailable=2 with 3 replicas) is safe \u2014 allows 1 pod disruption at a time",
+      "passed": true,
+      "reason": "The model explicitly labels Service C as 'Safe' and explains it leaves a budget of 1 disruption."
+    },
+    {
+      "expectation": "States Service D (maxUnavailable=1 with 5 replicas) is safe \u2014 allows 1 pod down at a time",
+      "passed": true,
+      "reason": "The model explicitly labels Service D as 'Safe' and notes it allows taking down exactly 1 pod at a time."
+    },
+    {
+      "expectation": "Recommends fixing Service A: change to minAvailable=N-1 or maxUnavailable=1",
+      "passed": true,
+      "reason": "The model recommends changing it to a percentage less than 100% or using maxUnavailable: 1, and also mentions overprovisioning to set minAvailable to a specific N."
+    },
+    {
+      "expectation": "Recommends fixing Service B: change to maxUnavailable=1",
+      "passed": true,
+      "reason": "The model explicitly recommends changing Service B to maxUnavailable: 1."
+    },
+    {
+      "expectation": "Explains that GKE respects PDBs for up to 1 hour during surge upgrades, then may force-drain",
+      "passed": false,
+      "reason": "The model states the node drain will hang indefinitely until timeout, but makes no mention of GKE, the specific 1-hour window, or the force-drain behavior."
+    },
+    {
+      "expectation": "Provides kubectl patch commands to fix the problematic PDBs",
+      "passed": false,
+      "reason": "The model suggests 'patching' the services in prose but does not provide actual `kubectl patch` command examples."
+    },
+    {
+      "expectation": "Recommends testing PDB changes in a non-production environment first",
+      "passed": false,
+      "reason": "The model does not mention testing the PDB changes in a non-production environment."
+    }
+  ]
+}

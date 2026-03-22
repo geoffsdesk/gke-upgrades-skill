@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "The model correctly states that node pools must be no more than two minor versions behind the control plane."
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (3 minor versions)",
+      "passed": true,
+      "reason": "The model accurately notes that the 1.31 control plane and 1.28 nodes result in a skew of three versions."
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "The model details risks such as API incompatibility, kubelet communication failures, and workload scheduling issues."
+    },
+    {
+      "expectation": "Recommends skip-level (N+2) node pool upgrades where possible to reduce time and disruption (e.g., 1.28\u21921.30 then 1.30\u21921.31), rather than upgrading through every minor",
+      "passed": true,
+      "reason": "The model explicitly recommends a skip-level (N+2) upgrade directly from 1.28 to 1.30 to quickly restore compliance."
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "The model provides the required `gcloud container node-pools upgrade` command to perform the upgrade."
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": false,
+      "reason": "The model recommends surge settings of maxSurge=2 (--max-surge-upgrade 2), which does not match the expectation of maxSurge=1."
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": false,
+      "reason": "While the model includes a command to monitor the upgrade progress, it does not advise checking for issues between each version bump (e.g., pausing to test workloads between the 1.30 and 1.31 upgrades)."
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": true,
+      "reason": "The model recommends using GKE's native release channels and cluster-level maintenance exclusions to prevent the issue in the future."
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "eval_id": 5,
+  "mode": "gemini_without_skill",
+  "iteration": 10,
+  "prompt": "We somehow let our Standard cluster get into a bad state. The control plane is at 1.31 but one of our node pools is still at 1.28. We're getting warnings about version skew. What are we dealing with and how do we fix it?",
+  "provider": "gemini",
+  "model": "gemini-3.1-pro-preview",
+  "start_time": "2026-03-21T19:06:16.619699+00:00",
+  "input_tokens": 58,
+  "output_tokens": 1080,
+  "time_seconds": 23.23
+}

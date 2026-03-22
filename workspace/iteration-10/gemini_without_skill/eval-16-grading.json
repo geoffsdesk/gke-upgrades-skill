@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies this as an admission webhook compatibility issue \u2014 the webhook is rejecting pod creation requests",
+      "passed": true,
+      "reason": "The model correctly identifies that the admission webhook is blocking Pod creation due to compatibility or connectivity issues."
+    },
+    {
+      "expectation": "Provides commands to identify the problematic webhook (kubectl get validatingwebhookconfigurations / mutatingwebhookconfigurations)",
+      "passed": false,
+      "reason": "The model does not provide a command to list or identify the problematic webhook (likely because the user prompt already named cert-manager), though it does provide commands to delete and later get the specific cert-manager webhook."
+    },
+    {
+      "expectation": "Offers an immediate fix: temporarily disable or remove the problematic webhook",
+      "passed": true,
+      "reason": "The model offers an immediate fix in Phase 1 to remove the cert-manager webhook configurations."
+    },
+    {
+      "expectation": "Provides the kubectl delete command for the webhook configuration as emergency mitigation",
+      "passed": true,
+      "reason": "The model provides specific `kubectl delete` commands for both validating and mutating webhook configurations."
+    },
+    {
+      "expectation": "Warns that deleting the webhook removes validation \u2014 it's a temporary fix",
+      "passed": true,
+      "reason": "The model includes a note warning that cert-manager won't validate new Certificate requests while the webhook is deleted."
+    },
+    {
+      "expectation": "Recommends checking cert-manager version compatibility with Kubernetes 1.32",
+      "passed": true,
+      "reason": "The model identifies incompatible cert-manager versions as the most likely cause and recommends checking the version."
+    },
+    {
+      "expectation": "Advises upgrading cert-manager to a version that supports 1.30 as the permanent fix",
+      "passed": true,
+      "reason": "The model advises upgrading cert-manager as a permanent fix (specifically recommending v1.16+ to support the 1.32 version mentioned in the prompt)."
+    },
+    {
+      "expectation": "Mentions setting failurePolicy to Ignore as a less drastic alternative to deletion",
+      "passed": false,
+      "reason": "The model does not mention patching or setting the failurePolicy to Ignore; it only suggests deletion."
+    },
+    {
+      "expectation": "Includes commands to verify pods can be created after the fix",
+      "passed": false,
+      "reason": "The model provides a command to verify the webhook by creating an Issuer, but does not provide a command specifically to verify Pod creation (e.g., `kubectl run`)."
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": false,
+      "reason": "The response explains that a single node going down breaks the entire slice, but it does not mention the specific GKE infrastructure detail that TPU slices are upgraded/recreated atomically in a single step rather than via rolling upgrades."
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": true,
+      "reason": "The response explicitly states that if one slice fails due to maintenance, the other healthy slices will lose communication and hang/crash, requiring an all-or-nothing restart of the entire 4-slice topology."
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "The response notes that the training framework will likely fail to initialize unless all pods across all 4 slices restart simultaneously, clearly indicating an interruption to the training job."
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": false,
+      "reason": "The response does not mention anything about hardware capacity, insufficient TPU resources, or the possibility of the slice blocking and causing extended downtime during recreation."
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "The response advises increasing checkpoint frequency leading up to the maintenance window and catching the SIGTERM signal to trigger one final synchronous 'lifeboat' checkpoint."
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "The response recommends configuring the training script to 'auto-resume from the latest GCS checkpoint on startup' so it picks up exactly where it left off."
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": true,
+      "reason": "The response clearly suggests setting a 'Maintenance Exclusion' in GKE to block the update for up to 30 days if the training run is close to finishing."
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": true,
+      "reason": "The response recommends configuring a 'Maintenance Window' in GKE cluster settings to control the timing of the event to a period when the team is monitoring the system."
+    }
+  ]
+}

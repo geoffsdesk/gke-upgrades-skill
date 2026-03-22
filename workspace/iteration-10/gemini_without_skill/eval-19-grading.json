@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "The response clearly categorizes the four specific notification types in its Triage Matrix."
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "The response assigns Priority 1 (CRITICAL) to security patches and Priority 4 (LOW/Informational) to 'New versions available'."
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "The response specifies that for EOL warnings, action must be planned (creating Jira tickets, checking APIs) and upgrades manually triggered before Google's scheduled forced auto-upgrade."
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "The response outlines pre-upgrade checklist steps (running kubent/pluto to check for deprecated APIs, checking maintenance windows) for scheduled auto-upgrades."
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "The response marks security patches as 'Immediate Action Required' and recommends manual upgrades 'during your next available off-hours window' and 'Dev today, Prod tomorrow' rather than waiting for auto-upgrades."
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "The response labels 'New versions available' as Priority 4 (Informational/Ignore) and explicitly states 'you do not need to do anything'."
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "The response explicitly recommends configuring 'GKE Cluster Notifications via Pub/Sub' to route messages to tools like Slack or Jira."
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": false,
+      "reason": "The response does not mention checking 'GKE release notes' to understand changes, though it does mention using tools to check for deprecated APIs."
+    }
+  ]
+}

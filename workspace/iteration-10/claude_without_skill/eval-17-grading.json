@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that surge upgrades require extra compute capacity (maxSurge creates NEW nodes before draining old ones)",
+      "passed": false,
+      "reason": "The response doesn't clearly explain that maxSurge creates new nodes before draining old ones, which is the root cause of the quota issue"
+    },
+    {
+      "expectation": "Recommends setting maxUnavailable >0 instead of relying on maxSurge (drains first, then creates \u2014 uses less quota)",
+      "passed": true,
+      "reason": "The response recommends setting maxSurge=0 and maxUnavailable=1, which drains nodes first before creating new ones"
+    },
+    {
+      "expectation": "Warns that maxUnavailable >0 means reduced capacity during upgrade \u2014 some pods won't have nodes",
+      "passed": false,
+      "reason": "The response doesn't warn about reduced capacity or the impact on pod scheduling during the upgrade"
+    },
+    {
+      "expectation": "Suggests temporarily scaling down non-critical deployments to free up quota for surge nodes",
+      "passed": true,
+      "reason": "The response mentions scaling down deployments with 'kubectl scale deployment <app-deployments> --replicas=0' to free up resources"
+    },
+    {
+      "expectation": "Mentions that reducing maxSurge to 1 minimizes extra quota needed (slower but fits within constraints)",
+      "passed": false,
+      "reason": "The response sets maxSurge to 0, not 1, and doesn't explain the trade-off between speed and quota usage"
+    },
+    {
+      "expectation": "Provides the gcloud command to update surge settings (maxSurge=0, maxUnavailable=1 for zero-extra-capacity mode)",
+      "passed": false,
+      "reason": "The response shows YAML configuration examples but doesn't provide the actual gcloud command to update surge settings"
+    },
+    {
+      "expectation": "Recommends doing the upgrade in off-peak hours when fewer pods are running",
+      "passed": false,
+      "reason": "The response doesn't mention timing the upgrade for off-peak hours"
+    },
+    {
+      "expectation": "Mentions requesting a temporary quota increase as a faster alternative to a permanent increase",
+      "passed": false,
+      "reason": "The response doesn't mention requesting a temporary quota increase as an alternative option"
+    }
+  ]
+}

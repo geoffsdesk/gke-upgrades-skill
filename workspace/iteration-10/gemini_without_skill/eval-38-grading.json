@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Clearly states that GKE auto-upgrades clusters automatically as the default and recommended model \u2014 this is what differentiates GKE from self-managed Kubernetes",
+      "passed": true,
+      "reason": "The model explicitly states that GKE will handle upgrades automatically and recommends relying on automatic upgrades as the best-practice approach."
+    },
+    {
+      "expectation": "Recommends configuring maintenance windows to control WHEN auto-upgrades happen (e.g., weekends, off-peak hours)",
+      "passed": true,
+      "reason": "The model strongly recommends defining Maintenance Windows for lowest-traffic/off-peak hours (e.g., weekends at 2:00 AM) to control when upgrades happen."
+    },
+    {
+      "expectation": "Recommends maintenance exclusions to control WHAT auto-upgrades happen (e.g., 'no minor or node upgrades' to block disruptive changes while allowing security patches)",
+      "passed": false,
+      "reason": "The model mentions Maintenance Exclusions to block upgrades during critical business periods, but it does not mention configuring them to control WHAT types of upgrades happen (e.g., scoping the exclusion to minor/node upgrades while allowing security patches)."
+    },
+    {
+      "expectation": "Does NOT recommend disabling auto-upgrades or switching to a purely manual upgrade cadence as the first option",
+      "passed": true,
+      "reason": "The model explicitly states 'Do not turn off auto-upgrades' and advises against a purely manual upgrade cadence as the primary approach."
+    },
+    {
+      "expectation": "Explains that manual upgrades are useful for specific scenarios (emergency patches, accelerating the schedule) but are the exception, not the rule",
+      "passed": true,
+      "reason": "The model includes a specific section outlining exceptions where manual upgrades are useful, such as for critical security patches or specific sequencing, while relying primarily on automation."
+    },
+    {
+      "expectation": "Recommends enrolling in scheduled upgrade notifications (72h advance) for visibility into upcoming auto-upgrades",
+      "passed": false,
+      "reason": "The model completely omits any mention of cluster upgrade notifications or Pub/Sub alerts."
+    },
+    {
+      "expectation": "Suggests checking the GKE release schedule for longer-range planning (~1 month best-case for new minors)",
+      "passed": false,
+      "reason": "The model does not mention checking the GKE release notes or release schedule for long-term planning."
+    },
+    {
+      "expectation": "Mentions release channel selection as the primary lever for upgrade cadence (Stable = slower, Regular = balanced)",
+      "passed": true,
+      "reason": "The model mentions using release channels (Rapid vs. Regular) as a lever for upgrade cadence, particularly in the context of staging environments receiving upgrades earlier."
+    }
+  ]
+}

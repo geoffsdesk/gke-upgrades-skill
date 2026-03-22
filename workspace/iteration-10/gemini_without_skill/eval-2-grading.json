@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Distinguishes between dev (Rapid) and prod (Stable) clusters in the checklists",
+      "passed": true,
+      "reason": "The model explicitly sections the checklists to leverage the Dev (Rapid) clusters for testing prior to the Prod (Stable) upgrades, and recommends prod-specific maintenance windows."
+    },
+    {
+      "expectation": "Recognizes Autopilot limitations (no node management, no SSH, mandatory resource requests)",
+      "passed": false,
+      "reason": "The model mentions the lack of node management (no cordoning/draining) but fails to mention the lack of SSH access or the requirement for mandatory resource requests."
+    },
+    {
+      "expectation": "Includes API deprecation checks with kubectl commands",
+      "passed": false,
+      "reason": "The model mentions checking for API deprecations using the GKE Console, kubent, and Pluto, but does not provide a kubectl command to check for deprecations."
+    },
+    {
+      "expectation": "Mentions mandatory resource requests as an Autopilot-specific concern",
+      "passed": false,
+      "reason": "The model does not mention mandatory resource requests anywhere in the response."
+    },
+    {
+      "expectation": "Pre-upgrade checklist includes workload readiness items (PDBs, bare pods, graceful shutdown)",
+      "passed": false,
+      "reason": "The model includes Pod Disruption Budgets (PDBs) but completely omits checking for bare pods and graceful shutdown configurations."
+    },
+    {
+      "expectation": "Post-upgrade checklist includes version verification commands",
+      "passed": true,
+      "reason": "The model includes the command `kubectl get nodes` to verify that nodes are on version 1.32.x."
+    },
+    {
+      "expectation": "Post-upgrade checklist includes workload health validation",
+      "passed": true,
+      "reason": "The model provides a 'Workload Health Checks' section, including a command to check pod status and instructions to check Ingress, Networking, and HPAs."
+    },
+    {
+      "expectation": "Recommends testing on dev clusters before prod auto-upgrade",
+      "passed": true,
+      "reason": "The model explicitly advises running regression and CI/CD tests against the Dev clusters first to ensure the core workloads will survive the Prod upgrade."
+    },
+    {
+      "expectation": "Mentions that checking the GKE release schedule gives ~1 month best-case advance notice for new minor upgrades, beyond the 72h notification",
+      "passed": false,
+      "reason": "The model does not mention the GKE release schedule, the 1-month advance notice, or the 72-hour notification."
+    },
+    {
+      "expectation": "Includes monitoring/observability validation items",
+      "passed": true,
+      "reason": "The model includes an 'Observability & Logs' section advising the user to check Cloud Logging for error spikes and verify agent logs."
+    }
+  ]
+}

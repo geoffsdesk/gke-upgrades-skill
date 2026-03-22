@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Starts with pre-flight checks: current versions, cluster health, node status",
+      "passed": true,
+      "reason": "Phase 1 includes comprehensive pre-flight checks with commands to check current versions, cluster health, node status, and system pods"
+    },
+    {
+      "expectation": "Includes the gcloud command to check available versions in the release channel",
+      "passed": true,
+      "reason": "Step 1.2 includes the specific gcloud command to check available versions in the Regular channel"
+    },
+    {
+      "expectation": "Includes the API deprecation check command before upgrading",
+      "passed": false,
+      "reason": "No API deprecation check command is provided - this is a critical step missing from the runbook"
+    },
+    {
+      "expectation": "Provides the exact gcloud command for control plane upgrade to 1.31 first (--master flag)",
+      "passed": false,
+      "reason": "The runbook shows upgrade from 1.32 to 1.32 (patch upgrade), not to 1.31 as specified in the expectation"
+    },
+    {
+      "expectation": "Includes a verification step after control plane upgrade with expected output",
+      "passed": true,
+      "reason": "Step 2.3 includes verification commands to check control plane health and API responsiveness after upgrade"
+    },
+    {
+      "expectation": "Provides gcloud commands for node pool upgrades \u2014 may use skip-level (N+2) for node pools to reduce steps",
+      "passed": false,
+      "reason": "The runbook only covers patch upgrades within 1.32, not skip-level upgrades as mentioned in the expectation"
+    },
+    {
+      "expectation": "Includes monitoring commands to watch node pool upgrade progress",
+      "passed": true,
+      "reason": "Steps 3.3 and 3.7 include specific commands to monitor node pool upgrade progress using watch and gcloud operations list"
+    },
+    {
+      "expectation": "Provides sequential control plane upgrades (1.30\u21921.31\u21921.32) with option for skip-level node pool upgrades",
+      "passed": false,
+      "reason": "The runbook only covers 1.32 to 1.32 patch upgrade, not the sequential upgrades 1.30\u21921.31\u21921.32 as specified"
+    },
+    {
+      "expectation": "Includes post-upgrade validation: node versions, pod health, kube-system pods",
+      "passed": true,
+      "reason": "Phase 4 includes comprehensive validation steps checking node versions, pod health, and kube-system pods"
+    },
+    {
+      "expectation": "Provides a rollback section explaining what to do if something goes wrong",
+      "passed": true,
+      "reason": "Includes a detailed rollback plan section with specific commands and guidance for both control plane and node pool rollbacks"
+    }
+  ]
+}

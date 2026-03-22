@@ -1,0 +1,12 @@
+{
+  "eval_id": 29,
+  "mode": "gemini_without_skill",
+  "iteration": 10,
+  "prompt": "We need to set up maintenance exclusions for our GKE clusters to handle our company's schedule: a quarterly code freeze in June, our busiest period during Black Friday/Cyber Monday in November, and we never want minor version upgrades to happen without our explicit approval. Give us the exact configuration.",
+  "provider": "gemini",
+  "model": "gemini-3.1-pro-preview",
+  "start_time": "2026-03-21T19:24:12.337375+00:00",
+  "input_tokens": 59,
+  "output_tokens": 164,
+  "time_seconds": 37.82
+}

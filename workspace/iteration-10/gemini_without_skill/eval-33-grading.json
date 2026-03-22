@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends upgrading the L4 inference pool and A100 pool separately with different strategies",
+      "passed": true,
+      "reason": "The model explicitly recommends upgrading the L4 pool using a Surge upgrade strategy (Phase 3) and the A100 pool using a Blue-Green strategy (Phase 4)."
+    },
+    {
+      "expectation": "For L4 inference pool: recommends surge upgrade with maxSurge=1 or 2 to maintain capacity during rolling replacement",
+      "passed": false,
+      "reason": "While the model recommends a surge upgrade to maintain capacity, it suggests setting maxSurge=10 rather than the specific 1 or 2 requested."
+    },
+    {
+      "expectation": "Addresses GPU driver version compatibility \u2014 auto-installed drivers must be compatible with inference framework (TensorRT, vLLM, etc.)",
+      "passed": true,
+      "reason": "The model mentions checking the release notes for NVIDIA driver versions bundled with the new GKE image and testing CUDA versions for compatibility."
+    },
+    {
+      "expectation": "For A100 fine-tuning pool: recommends scheduling the upgrade during a gap between fine-tuning jobs",
+      "passed": false,
+      "reason": "The model does not recommend finding a gap between jobs; instead, it recommends a Blue-Green upgrade with a 10-hour soak duration to allow currently running jobs to finish."
+    },
+    {
+      "expectation": "Notes that GPU VMs do not support live migration \u2014 inference pods will restart during node upgrade, causing brief latency spikes",
+      "passed": false,
+      "reason": "The model mentions that underlying compute instances must be replaced and cold-starts cause latency, but it does not explicitly state that GPU VMs do not support live migration."
+    },
+    {
+      "expectation": "Recommends PDBs on inference deployments to ensure enough replicas stay available during the rolling upgrade",
+      "passed": true,
+      "reason": "The model explicitly recommends applying PodDisruptionBudgets (PDBs) to inference deployments to prevent GKE from draining too many GPU nodes simultaneously."
+    },
+    {
+      "expectation": "Addresses auto-scaler interaction \u2014 new nodes created by auto-scaler during upgrade will be at the old version until their pool upgrade completes",
+      "passed": false,
+      "reason": "The model mentions auto-scaler (HPA) delays during the control plane upgrade but fails to address that cluster autoscaler might provision old-version nodes during the node pool upgrade."
+    },
+    {
+      "expectation": "Recommends testing driver + CUDA compatibility in staging before production upgrade",
+      "passed": true,
+      "reason": "The summary checklist explicitly advises testing CUDA versions on a staging cluster before proceeding."
+    }
+  ]
+}

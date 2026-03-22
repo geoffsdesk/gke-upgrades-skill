@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Configures a recurring maintenance window for weekends only",
+      "passed": true,
+      "reason": "The response includes multiple configurations for weekend-only maintenance: Terraform with daily_maintenance_window start_time '07:00' (2 AM EST), gcloud command with --maintenance-window-recurrence='FREQ=WEEKLY;BYDAY=SA' for Saturday maintenance"
+    },
+    {
+      "expectation": "Provides the gcloud command with --maintenance-window-start/end and --maintenance-window-recurrence for weekly weekend schedule",
+      "passed": true,
+      "reason": "The gcloud command includes --maintenance-window-start='2023-01-07T07:00:00Z', --maintenance-window-end='2023-01-07T11:00:00Z', and --maintenance-window-recurrence='FREQ=WEEKLY;BYDAY=SA'"
+    },
+    {
+      "expectation": "Sets up maintenance exclusions for quarterly code freezes (up to 30 days each)",
+      "passed": true,
+      "reason": "Four quarterly maintenance exclusions are configured (Q1-Q4) with approximately 17-day periods each, well within the 30-day limit"
+    },
+    {
+      "expectation": "Sets up a maintenance exclusion for the November audit period",
+      "passed": true,
+      "reason": "An 'annual-audit-2024' exclusion is configured for the entire month of November (2024-11-01 to 2024-11-30)"
+    },
+    {
+      "expectation": "Notes the 30-day maximum for maintenance exclusions and how to handle longer freezes",
+      "passed": false,
+      "reason": "The response does not mention the 30-day maximum limitation for maintenance exclusions or provide guidance on handling longer freeze periods"
+    },
+    {
+      "expectation": "Explains that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
+      "passed": false,
+      "reason": "The response does not explain the distinction between manual and automatic upgrades regarding maintenance window enforcement"
+    },
+    {
+      "expectation": "Recommends combining maintenance windows with Stable or Extended channel for maximum upgrade control",
+      "passed": true,
+      "reason": "The Terraform configuration includes 'release_channel { channel = \"STABLE\" }' with a comment about using STABLE for SOX compliance"
+    },
+    {
+      "expectation": "Provides gcloud commands for each exclusion (--add-maintenance-exclusion-name/start-time/end-time)",
+      "passed": true,
+      "reason": "The add_maintenance_exclusion function includes --add-maintenance-exclusion-name, --add-maintenance-exclusion-start, --add-maintenance-exclusion-end parameters"
+    },
+    {
+      "expectation": "Warns about the risk of falling too far behind on versions during long exclusion periods",
+      "passed": false,
+      "reason": "The response does not warn about version drift risks or the security implications of staying on older versions during extended exclusion periods"
+    }
+  ]
+}

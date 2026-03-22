@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's native node pool upgrade strategies rather than the manual create/cordon/drain/delete workflow described",
+      "passed": true,
+      "reason": "The model explicitly recommends using GKE's native in-place rolling upgrade strategy instead of the manual workflow."
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends surge upgrade with maxSurge=0 and maxUnavailable set as the primary lever (since no surge capacity is available)",
+      "passed": true,
+      "reason": "The model specifically advises using `maxSurge=0` and adjusting `maxUnavailable` because of the fixed reservations and limited A100 quota."
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as a native alternative that handles cordon and migration automatically",
+      "passed": false,
+      "reason": "The model discusses the manual blue-green strategy but fails to mention GKE's native built-in blue-green upgrade strategy (`--strategy=blue-green`)."
+    },
+    {
+      "expectation": "Explains that native strategies are the supported path and handle edge cases (PDB respect, drain timeouts, progress tracking) that manual workflows miss",
+      "passed": false,
+      "reason": "While the model mentions configuring PDBs and grace periods, it does not explicitly contrast native strategies against manual workflows as being better at handling these edge cases."
+    },
+    {
+      "expectation": "Only suggests manual blue-green as a last resort if native strategies don't meet a specific requirement",
+      "passed": false,
+      "reason": "The model completely rejects the manual blue-green strategy and does not suggest it as a last resort for specific requirements."
+    },
+    {
+      "expectation": "Addresses GPU driver compatibility \u2014 need to verify target version's auto-installed driver is compatible",
+      "passed": true,
+      "reason": "The model includes a note recommending the creation of a 1-node pool on 1.32 to verify CUDA driver compatibility before upgrading the main pool."
+    },
+    {
+      "expectation": "Recommends scheduling the upgrade during a gap in GPU workloads to minimize impact",
+      "passed": false,
+      "reason": "The model recommends using PDBs and checkpointing to handle workload interruptions, but does not suggest scheduling the upgrade during a gap or downtime in GPU workloads."
+    },
+    {
+      "expectation": "Provides gcloud commands for the recommended native approach",
+      "passed": true,
+      "reason": "The model provides the exact `gcloud container node-pools update` and `upgrade` commands needed for the recommended approach."
+    }
+  ]
+}

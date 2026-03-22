@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies PDB as the most likely/common cause of stuck upgrades",
+      "passed": true,
+      "reason": "Response explicitly states 'Pod Disruption Budgets (PDBs)' as first culprit to check and mentions 'overly restrictive disruption budgets cause 80% of these stuck upgrade scenarios'"
+    },
+    {
+      "expectation": "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
+      "passed": true,
+      "reason": "Provides multiple PDB commands including 'kubectl get pdb --all-namespaces' and 'kubectl describe pdb --all-namespaces'"
+    },
+    {
+      "expectation": "Provides commands to identify which pods are blocking the drain",
+      "passed": true,
+      "reason": "Includes commands like 'kubectl get pods --all-namespaces --field-selector spec.nodeName=NODE_NAME' and 'kubectl get events --all-namespaces --sort-by='.lastTimestamp' | grep -i evict'"
+    },
+    {
+      "expectation": "Includes resource constraint diagnosis (capacity issues, pending pods)",
+      "passed": false,
+      "reason": "Does not mention resource constraints, capacity issues, or pending pods as potential causes of stuck upgrades"
+    },
+    {
+      "expectation": "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+      "passed": true,
+      "reason": "Provides kubectl patch command: 'kubectl patch pdb PDB_NAME -n NAMESPACE -p '{\"spec\":{\"maxUnavailable\":2}}'"
+    },
+    {
+      "expectation": "Mentions that GKE has a PDB timeout (up to 1 hour) after which it may force-drain, and that GKE sends notifications when eviction is blocked by PDB",
+      "passed": false,
+      "reason": "Does not mention GKE's PDB timeout behavior or notification system when eviction is blocked"
+    },
+    {
+      "expectation": "Includes guidance on surge upgrade settings as a potential fix",
+      "passed": true,
+      "reason": "Provides surge upgrade configuration with 'gcloud container node-pools update' command setting '--max-surge=2 --max-unavailable=0'"
+    },
+    {
+      "expectation": "Mentions webhook issues as a possible cause",
+      "passed": true,
+      "reason": "Mentions 'custom admission controllers blocking evictions' in the final checklist, which covers webhook issues"
+    },
+    {
+      "expectation": "Includes validation steps to confirm the fix is working",
+      "passed": false,
+      "reason": "Does not provide specific validation steps or commands to confirm that the fix is working or that the upgrade is proceeding"
+    }
+  ]
+}

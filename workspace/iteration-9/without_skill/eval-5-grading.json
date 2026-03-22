@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Response clearly states 'Node versions can be at most 2 minor versions behind the control plane' and explains the strict version skew policies"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (3 minor versions)",
+      "passed": true,
+      "reason": "Response explicitly identifies 'Control plane 1.31, nodes 1.28 = 3 minor versions behind' and states 'This violates the supported skew policy'"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Response lists multiple issues including API compatibility issues, workload scheduling problems, unpredictable cluster behavior, and security vulnerabilities"
+    },
+    {
+      "expectation": "Recommends skip-level (N+2) node pool upgrades where possible to reduce time and disruption (e.g., 1.28\u21921.30 then 1.30\u21921.31), rather than upgrading through every minor",
+      "passed": false,
+      "reason": "Response recommends incremental upgrades through each minor version (1.28 \u2192 1.29 \u2192 1.30 \u2192 1.31) and states 'GKE typically requires upgrading one minor version at a time', which contradicts the expectation for skip-level upgrades"
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Response provides specific gcloud commands including 'gcloud container get-server-config' and 'gcloud container clusters upgrade' with proper parameters"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": false,
+      "reason": "While the response mentions choosing 'surge vs rolling' upgrade strategy and references 'surge upgrades', it does not provide specific conservative surge settings like maxSurge=1, maxUnavailable=0"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": true,
+      "reason": "Response includes monitoring commands and advises to 'Monitor applications closely during each upgrade step' and provides specific kubectl commands for watching the upgrade process"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": true,
+      "reason": "Response includes sections on enabling auto-upgrade, setting maintenance windows with specific commands, and using release channels for automated version management"
+    }
+  ]
+}

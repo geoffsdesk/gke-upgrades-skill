@@ -21,3 +21,4 @@ data/*_raw.*
 data/*_internal.*
 tools/eval-app/__pycache__/
 GKE-Upgrade-Skill-UserGuide.docx
+kb/

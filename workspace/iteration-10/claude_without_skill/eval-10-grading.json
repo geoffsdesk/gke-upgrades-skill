@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that spot VMs can be preempted at any time, which interacts with the upgrade drain process",
+      "passed": true,
+      "reason": "The response explains spot instance preemption and provides monitoring commands for preempted pods during upgrades"
+    },
+    {
+      "expectation": "Notes that spot node pools may already have workloads designed for interruption (good for upgrades)",
+      "passed": false,
+      "reason": "While the response mentions workloads should be fault-tolerant at the end, it doesn't explicitly note that spot workloads are already designed for interruption making them suitable for upgrades"
+    },
+    {
+      "expectation": "Recommends higher maxSurge for spot pools since the workloads should already be fault-tolerant",
+      "passed": true,
+      "reason": "The response recommends maxSurge values (2-3) and shows configuration examples, though it doesn't explicitly connect this to fault-tolerance"
+    },
+    {
+      "expectation": "Advises setting maxUnavailable >0 for spot pools since workloads are already preemption-tolerant",
+      "passed": false,
+      "reason": "The response explicitly recommends maxUnavailable=0 to avoid voluntary disruption, which contradicts this expectation"
+    },
+    {
+      "expectation": "Mentions that spot VM availability may affect surge node creation (not guaranteed to get spot instances)",
+      "passed": true,
+      "reason": "The response mentions monitoring spot instance availability and considering capacity issues during upgrades"
+    },
+    {
+      "expectation": "Recommends having PDBs even for spot workloads to ensure orderly drain during upgrade",
+      "passed": true,
+      "reason": "The response provides PDB configuration examples and recommends ensuring PDBs are configured before upgrades"
+    },
+    {
+      "expectation": "Provides the gcloud command for configuring surge settings on the spot pool",
+      "passed": true,
+      "reason": "Multiple gcloud commands are provided for configuring surge settings including specific parameters"
+    },
+    {
+      "expectation": "Suggests upgrading spot pools before on-demand pools since they're lower risk",
+      "passed": false,
+      "reason": "The response suggests the opposite - upgrading on-demand instances first, then spot pools, which contradicts this expectation"
+    }
+  ]
+}

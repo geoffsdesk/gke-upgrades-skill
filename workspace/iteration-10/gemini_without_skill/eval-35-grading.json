@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends Stable or Extended release channel to minimize upgrade frequency",
+      "passed": true,
+      "reason": "The model explicitly recommends using the 'Stable Channel with Extended Support' to dramatically reduce the frequency of mandatory cluster upgrades."
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
+      "passed": false,
+      "reason": "The model recommends a maintenance exclusion but specifies the `NO_UPGRADES` scope (which blocks all upgrades including control plane patches), rather than specifically mentioning the `NO_MINOR_OR_NODE_UPGRADES` scope to allow security patches on the control plane."
+    },
+    {
+      "expectation": "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
+      "passed": true,
+      "reason": "The model recommends configuring a strict maintenance window for the Control Plane and gives 'Sunday 02:00 - 06:00' and 'weekends only' as examples."
+    },
+    {
+      "expectation": "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
+      "passed": true,
+      "reason": "The model suggests 'Node Pool Segregation', separating infrastructure (kube-system) into an e2-standard 'System Pool' and using a dedicated 'GPU Pool' with taints for training workloads."
+    },
+    {
+      "expectation": "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
+      "passed": true,
+      "reason": "The model explicitly advises to 'completely disable auto-upgrades' for GPU pools and to 'manage node upgrades manually between training runs'."
+    },
+    {
+      "expectation": "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
+      "passed": true,
+      "reason": "The model recommends 'Frequent Checkpointing to GCS' so that an ML orchestrator can automatically resume the job from the last checkpoint after hardware failures or disruptions."
+    },
+    {
+      "expectation": "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
+      "passed": false,
+      "reason": "The model mentions a blue/green node pool validation strategy for testing NVIDIA drivers in the existing cluster, but it does not specifically mention validating in a staging environment before applying to production."
+    },
+    {
+      "expectation": "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading",
+      "passed": false,
+      "reason": "The model mentions enabling Dataplane V2 for GPUDirect-TCPX but fails to mention that GPUDirect/RDMA has strict GKE version requirements or that compatibility must be verified prior to upgrades."
+    }
+  ]
+}

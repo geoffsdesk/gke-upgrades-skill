@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends Stable or Extended release channel to minimize upgrade frequency",
+      "passed": true,
+      "reason": "The model explicitly recommends the Stable release channel to ensure thoroughly vetted versions and minimize churn."
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
+      "passed": true,
+      "reason": "The model recommends using the 'no_minor_or_node_upgrades' exclusion scope, explaining that it freezes node pools while still allowing control plane security patches."
+    },
+    {
+      "expectation": "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
+      "passed": true,
+      "reason": "The model provides a gcloud command setting an 8-hour off-peak window specifically restricted to weekends (FREQ=WEEKLY;BYDAY=SA,SU)."
+    },
+    {
+      "expectation": "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
+      "passed": false,
+      "reason": "While the model names a pool 'h100-training-pool', it does not explicitly suggest the architectural best practice of separating or isolating these from serving or infrastructure node pools."
+    },
+    {
+      "expectation": "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
+      "passed": true,
+      "reason": "The model explains how to use maintenance exclusions to effectively halt auto-upgrades, and outlines a specific process to 'Manually trigger the minor/node upgrade' between multi-week runs."
+    },
+    {
+      "expectation": "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
+      "passed": true,
+      "reason": "The model includes a 'Mandatory Checkpointing' section, advising that the LLM training framework should frequently save checkpoints to Cloud Storage to handle unexpected hardware failures."
+    },
+    {
+      "expectation": "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
+      "passed": true,
+      "reason": "The model explicitly states to 'Always validate the target GKE version on a small staging node pool before lifting your production maintenance exclusion' due to GPU driver changes."
+    },
+    {
+      "expectation": "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading",
+      "passed": true,
+      "reason": "The model notes that high-performance networking like GPUDirect-TCPX is tightly coupled to GKE/CUDA versions and advises verifying RDMA/GPUDirect connectivity upon upgrading."
+    }
+  ]
+}

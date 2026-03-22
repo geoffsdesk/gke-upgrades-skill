@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the difference between Rapid and Stable channels \u2014 including that Rapid has no SLA for upgrade stability while Stable carries a full SLA, and clearly distinguishes minor version vs patch version differences between the channels",
+      "passed": false,
+      "reason": "The response mentions version differences but fails to explain the critical SLA differences between channels or clearly distinguish between minor vs patch version update patterns"
+    },
+    {
+      "expectation": "Notes that channel changes don't trigger an immediate upgrade or downgrade",
+      "passed": false,
+      "reason": "The response incorrectly states that 'The channel change triggers a cluster upgrade/downgrade operation' when channel changes actually don't trigger immediate version changes"
+    },
+    {
+      "expectation": "Warns that if 1.30 isn't yet available on Stable, the cluster may not receive patches until Stable catches up",
+      "passed": false,
+      "reason": "This important warning about potential patch delays is not mentioned in the response"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "The response provides the correct gcloud container clusters update command with --release-channel stable flag"
+    },
+    {
+      "expectation": "Recommends checking version availability on Stable before switching (gcloud container get-server-config)",
+      "passed": false,
+      "reason": "The response does not mention using gcloud container get-server-config to check version availability on Stable"
+    },
+    {
+      "expectation": "Discusses the impact on auto-upgrade timing going forward",
+      "passed": false,
+      "reason": "The response does not discuss how switching to Stable will affect future auto-upgrade timing and frequency"
+    },
+    {
+      "expectation": "Mentions that the Extended channel is an option if they need even slower cadence (with cost implications)",
+      "passed": false,
+      "reason": "The Extended channel option and its cost implications are not mentioned"
+    },
+    {
+      "expectation": "Advises coordinating the change during a maintenance window",
+      "passed": true,
+      "reason": "The response recommends scheduling during low-traffic periods and planning a maintenance window"
+    }
+  ]
+}

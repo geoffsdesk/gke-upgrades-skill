@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Configures a recurring maintenance window for weekends only",
+      "passed": true,
+      "reason": "Response provides specific commands to set maintenance windows for Saturday 2-6 AM UTC with FREQ=WEEKLY;BYDAY=SA recurrence pattern"
+    },
+    {
+      "expectation": "Provides the gcloud command with --maintenance-window-start/end and --maintenance-window-recurrence for weekly weekend schedule",
+      "passed": true,
+      "reason": "Commands explicitly use --maintenance-window-start, --maintenance-window-end, and --maintenance-window-recurrence with proper weekly Saturday schedule"
+    },
+    {
+      "expectation": "Sets up maintenance exclusions for quarterly code freezes (up to 30 days each)",
+      "passed": true,
+      "reason": "Provides specific commands for Q1-Q4 code freeze exclusions using --add-maintenance-exclusion-* flags with appropriate date ranges"
+    },
+    {
+      "expectation": "Sets up a maintenance exclusion for the November audit period",
+      "passed": true,
+      "reason": "Includes specific command for SOX-audit-2024 exclusion covering November 1-30 with no_upgrades scope"
+    },
+    {
+      "expectation": "Notes the 30-day maximum for maintenance exclusions and how to handle longer freezes",
+      "passed": true,
+      "reason": "Explicitly states 'no_upgrades can only be applied for 30 days maximum' when discussing the November audit exclusion"
+    },
+    {
+      "expectation": "Explains that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
+      "passed": false,
+      "reason": "Response does not mention that manual upgrades bypass maintenance windows or clarify the difference between manual and auto-upgrades"
+    },
+    {
+      "expectation": "Recommends combining maintenance windows with Stable or Extended channel for maximum upgrade control",
+      "passed": true,
+      "reason": "Response recommends Stable or Extended channels and provides specific commands to set release channels for different cluster types"
+    },
+    {
+      "expectation": "Provides gcloud commands for each exclusion (--add-maintenance-exclusion-name/start-time/end-time)",
+      "passed": true,
+      "reason": "All exclusion commands include --add-maintenance-exclusion-name, --add-maintenance-exclusion-start-time, and --add-maintenance-exclusion-end-time flags"
+    },
+    {
+      "expectation": "Warns about the risk of falling too far behind on versions during long exclusion periods",
+      "passed": false,
+      "reason": "Response does not warn about risks of falling behind on versions during extended exclusion periods or potential compatibility issues"
+    }
+  ]
+}

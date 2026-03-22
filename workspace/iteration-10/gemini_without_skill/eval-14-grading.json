@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Checks for deprecated API usage that may have changed behavior in 1.30",
+      "passed": false,
+      "reason": "The response does not mention deprecated API usage that changed behavior in 1.30."
+    },
+    {
+      "expectation": "Recommends checking admission webhooks \u2014 they may be rejecting or slowing down requests on the new version",
+      "passed": true,
+      "reason": "The response identifies admission webhooks as the '#1 suspect' and explains they may time out or cause latency."
+    },
+    {
+      "expectation": "Advises checking if resource requests/limits need adjusting for any system components that changed",
+      "passed": false,
+      "reason": "The response suggests checking if components are maxing out CPU/memory, but does not advise adjusting resource requests or limits."
+    },
+    {
+      "expectation": "Suggests examining kube-system pods for any that are crashlooping or restarting",
+      "passed": true,
+      "reason": "The response suggests checking kube-system pods like CoreDNS to see if they are crashlooping."
+    },
+    {
+      "expectation": "Includes commands to check API server metrics and latency (kubectl get --raw /metrics)",
+      "passed": false,
+      "reason": "The response suggests checking API server metrics but does not provide the `kubectl get --raw /metrics` command."
+    },
+    {
+      "expectation": "Recommends checking if NetworkPolicy or service mesh components need updating for the new version",
+      "passed": false,
+      "reason": "The response mentions CNIs and Ingress controllers, but does not mention NetworkPolicies or service mesh components."
+    },
+    {
+      "expectation": "Advises reviewing pod events for scheduling delays or readiness probe failures",
+      "passed": true,
+      "reason": "The response explicitly advises running `kubectl get events` to look for 'Readiness probe failed'."
+    },
+    {
+      "expectation": "Mentions checking if HPA or VPA are behaving differently on the new version",
+      "passed": false,
+      "reason": "The response does not mention HPA (Horizontal Pod Autoscaler) or VPA (Vertical Pod Autoscaler)."
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends Stable or Extended release channel to minimize upgrade frequency",
+      "passed": false,
+      "reason": "The response recommends Regular release channel, not Stable or Extended, stating Regular provides 'good balance of stability and security patches' while mentioning Extended only as an alternative for maximum control"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
+      "passed": true,
+      "reason": "Explicitly recommends using 'no_minor_or_node_upgrades' exclusion scope and explains it 'Blocks disruptive changes, allows CP security patches'"
+    },
+    {
+      "expectation": "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
+      "passed": true,
+      "reason": "Provides specific example of Sunday 2-6 AM PST maintenance window with weekly recurrence pattern for predictable timing"
+    },
+    {
+      "expectation": "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
+      "passed": true,
+      "reason": "Explicitly recommends 'separate node pools for training vs. infrastructure' with detailed configuration examples for both training-h100 and system node pools"
+    },
+    {
+      "expectation": "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
+      "passed": true,
+      "reason": "Clearly states 'enable-autoupgrade=false' for training pool and provides procedures for manually upgrading during training gaps"
+    },
+    {
+      "expectation": "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
+      "passed": true,
+      "reason": "Mentions checkpoint mechanism in pre-training checklist ('Checkpoint mechanism verified and tested') and references checkpointing in upgrade procedures"
+    },
+    {
+      "expectation": "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
+      "passed": true,
+      "reason": "Includes H100 driver version confirmation in pre-training checklist and provides GPU validation job example after upgrades"
+    },
+    {
+      "expectation": "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading",
+      "passed": true,
+      "reason": "Mentions RDMA topology preservation, includes RDMA validation commands, and specifically states 'RDMA/GPUDirect-TCPX validated' in the checklist"
+    }
+  ]
+}

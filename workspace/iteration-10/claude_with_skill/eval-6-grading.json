@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the difference between Rapid and Stable channels \u2014 including that Rapid has no SLA for upgrade stability while Stable carries a full SLA, and clearly distinguishes minor version vs patch version differences between the channels",
+      "passed": true,
+      "reason": "Response clearly explains that Rapid has no SLA for upgrade stability while Stable carries full SLA, and provides detailed comparison table showing timing differences (Rapid: ~2 weeks, Stable: ~6-8 weeks after upstream)"
+    },
+    {
+      "expectation": "Notes that channel changes don't trigger an immediate upgrade or downgrade",
+      "passed": true,
+      "reason": "Explicitly states 'Channel migration is a configuration change only \u2014 no immediate upgrades are triggered' and 'Your cluster stays at 1.32 until the next maintenance window'"
+    },
+    {
+      "expectation": "Warns that if 1.30 isn't yet available on Stable, the cluster may not receive patches until Stable catches up",
+      "passed": false,
+      "reason": "The response mentions that security patches arrive later but doesn't specifically address the scenario where the current version (1.32) might not be available on Stable channel, which could delay patches"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "Provides the exact command: 'gcloud container clusters update CLUSTER_NAME --region REGION --release-channel stable'"
+    },
+    {
+      "expectation": "Recommends checking version availability on Stable before switching (gcloud container get-server-config)",
+      "passed": true,
+      "reason": "Includes pre-migration check with command 'gcloud container get-server-config --region REGION --format=\"yaml(channels.STABLE)\"'"
+    },
+    {
+      "expectation": "Discusses the impact on auto-upgrade timing going forward",
+      "passed": true,
+      "reason": "Extensively covers auto-upgrade timing changes, mentions that auto-upgrade target changes immediately and explains the new upgrade schedule following Stable's timeline"
+    },
+    {
+      "expectation": "Mentions that the Extended channel is an option if they need even slower cadence (with cost implications)",
+      "passed": false,
+      "reason": "The response does not mention the Extended channel as an alternative option for even slower update cadence"
+    },
+    {
+      "expectation": "Advises coordinating the change during a maintenance window",
+      "passed": true,
+      "reason": "Recommends scheduling 'a low-impact maintenance window for the migration' and mentions that maintenance windows/exclusions remain active"
+    }
+  ]
+}

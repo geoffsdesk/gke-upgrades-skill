@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the key difference: surge upgrades nodes in-place with rolling replacement, blue-green creates an entirely new pool",
+      "passed": true,
+      "reason": "The model explains that blue-green creates 9 new 'green' nodes and drains the 'blue' ones, while surge upgrade replaces nodes one at a time via a rolling upgrade."
+    },
+    {
+      "expectation": "Recommends blue-green for this scenario due to local SSDs (data can't migrate between nodes)",
+      "passed": false,
+      "reason": "The model strongly recommends a 'Conservative Surge Upgrade' instead of a blue-green upgrade."
+    },
+    {
+      "expectation": "Explains that local SSD data is lost when a node is drained during surge upgrade",
+      "passed": true,
+      "reason": "The model explicitly states that because Local SSDs are tied to the node, when a pod is evicted it starts with an empty drive and data must be rebuilt."
+    },
+    {
+      "expectation": "Recommends GKE's auto-scale blue-green upgrade strategy as the native approach, or describes the blue-green process if manual workflow is needed",
+      "passed": false,
+      "reason": "The model does not recommend or detail a blue-green process or strategy, opting for surge upgrades instead."
+    },
+    {
+      "expectation": "Addresses Cassandra-specific concerns: need to decommission from the ring before draining, rebuild on new nodes",
+      "passed": false,
+      "reason": "While it mentions rebuilding on new nodes and rejoining the ring, it fails to mention the need to decommission nodes from the ring before draining them."
+    },
+    {
+      "expectation": "Provides gcloud commands for creating the new node pool with matching configuration",
+      "passed": false,
+      "reason": "The model provides gcloud commands to update an existing node pool for surge upgrades, not for creating a new node pool."
+    },
+    {
+      "expectation": "Includes kubectl commands for cordoning and draining",
+      "passed": false,
+      "reason": "The model relies on GKE's automated surge upgrade and does not provide manual kubectl cordon or drain commands."
+    },
+    {
+      "expectation": "Mentions PDB configuration to protect the Cassandra quorum during migration",
+      "passed": true,
+      "reason": "The model highlights the need for a PodDisruptionBudget (PDB) with `maxUnavailable: 1` to prevent multiple Cassandra nodes from going down simultaneously."
+    }
+  ]
+}

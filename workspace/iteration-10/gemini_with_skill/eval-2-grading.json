@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Distinguishes between dev (Rapid) and prod (Stable) clusters in the checklists",
+      "passed": true,
+      "reason": "The model explicitly differentiates between the Rapid (Dev) and Stable (Prod) channels throughout the checklists and in the 'Pro-Tip' section."
+    },
+    {
+      "expectation": "Recognizes Autopilot limitations (no node management, no SSH, mandatory resource requests)",
+      "passed": true,
+      "reason": "The model explicitly notes that Autopilot fully manages node provisioning/mechanics (no node management) and explicitly states that resource requests are mandatory for Autopilot."
+    },
+    {
+      "expectation": "Includes API deprecation checks with kubectl commands",
+      "passed": true,
+      "reason": "The model includes the specific command `kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated` to check for deprecated APIs."
+    },
+    {
+      "expectation": "Mentions mandatory resource requests as an Autopilot-specific concern",
+      "passed": true,
+      "reason": "The model includes a 'Resource Requests' checklist item stating 'Autopilot requires this' and warns about pods being rejected during redeployment."
+    },
+    {
+      "expectation": "Pre-upgrade checklist includes workload readiness items (PDBs, bare pods, graceful shutdown)",
+      "passed": true,
+      "reason": "The pre-upgrade checklist has a 'Workload Readiness' section that specifically includes checklist items for PDBs, No Bare Pods, and Graceful Shutdown."
+    },
+    {
+      "expectation": "Post-upgrade checklist includes version verification commands",
+      "passed": true,
+      "reason": "The post-upgrade checklist provides the `gcloud container clusters describe` and `kubectl get nodes` commands to verify cluster and node versions."
+    },
+    {
+      "expectation": "Post-upgrade checklist includes workload health validation",
+      "passed": true,
+      "reason": "The post-upgrade checklist includes a 'Workload Health' section with commands to check deployments, pod phases (CrashLoopBackOff/Pending), and StatefulSets."
+    },
+    {
+      "expectation": "Recommends testing on dev clusters before prod auto-upgrade",
+      "passed": true,
+      "reason": "The model explicitly recommends running the checklists on Dev clusters first and testing thoroughly before the Prod upgrades occur."
+    },
+    {
+      "expectation": "Mentions that checking the GKE release schedule gives ~1 month best-case advance notice for new minor upgrades, beyond the 72h notification",
+      "passed": false,
+      "reason": "While the model mentions the ~1 month gap between Rapid and Stable and the 72-hour logging notification, it does not suggest checking the GKE release schedule to get advance notice."
+    },
+    {
+      "expectation": "Includes monitoring/observability validation items",
+      "passed": true,
+      "reason": "The post-upgrade checklist contains an 'Observability' section verifying metrics pipelines, logs flowing, error rates, and latency."
+    }
+  ]
+}

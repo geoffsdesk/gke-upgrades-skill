@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's autoscaled blue-green node pool upgrade strategy as the primary approach for batch workloads \u2014 it supports wait-for-drain time, longer graceful termination, and PDB upgrade timeout to let jobs complete",
+      "passed": false,
+      "reason": "The response mentions autoscaled blue-green upgrade as an 'Advanced' option but recommends maintenance exclusions as the primary approach, not blue-green as the main strategy"
+    },
+    {
+      "expectation": "Explains that GKE respects terminationGracePeriodSeconds during pod eviction, but surge upgrades have a max eviction timeout",
+      "passed": false,
+      "reason": "The response does not explain how GKE respects terminationGracePeriodSeconds or mention surge upgrades having a max eviction timeout"
+    },
+    {
+      "expectation": "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour \u2014 far less than 8-16 hour jobs",
+      "passed": false,
+      "reason": "The response does not mention GKE's default 1-hour pod eviction timeout during surge upgrades"
+    },
+    {
+      "expectation": "Recommends pausing new batch job submissions before starting the upgrade",
+      "passed": true,
+      "reason": "The response includes cordoning nodes to prevent new scheduling and recommends confirming no active batch jobs before upgrade execution"
+    },
+    {
+      "expectation": "Advises waiting for in-flight jobs to complete naturally before upgrading their node pool",
+      "passed": true,
+      "reason": "The response explicitly states to wait for batch job completion before upgrading the node pool and includes monitoring job completion status in the checklist"
+    },
+    {
+      "expectation": "Suggests using node affinity or taints to isolate batch workloads on a dedicated node pool",
+      "passed": true,
+      "reason": "The response recommends creating a dedicated node pool for batch workloads with node labels and using node selectors to ensure batch jobs only run on protected nodes"
+    },
+    {
+      "expectation": "Recommends upgrading non-batch node pools first while batch jobs complete on the old pool",
+      "passed": true,
+      "reason": "The response recommends separating batch and other workloads into different pools and keeping other workloads on auto-upgrade while protecting batch pools"
+    },
+    {
+      "expectation": "Does NOT recommend 'No channel' as the approach \u2014 uses release channels with maintenance exclusions instead",
+      "passed": true,
+      "reason": "The response explicitly recommends staying on the Regular release channel and using maintenance exclusions rather than switching to No channel"
+    }
+  ]
+}

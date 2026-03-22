@@ -1,0 +1,12 @@
+{
+  "eval_id": 11,
+  "mode": "gemini_with_skill",
+  "iteration": 10,
+  "prompt": "We run a StatefulSet-based Elasticsearch cluster on GKE Standard. It has 3 master nodes, 5 data nodes, and 2 coordinating nodes, each on separate node pools. PVs are regional pd-ssd. We need to upgrade from 1.31 to 1.32. Walk me through how to do this without losing data or availability.",
+  "provider": "gemini",
+  "model": "gemini-3.1-pro-preview",
+  "start_time": "2026-03-21T18:40:16.872136+00:00",
+  "input_tokens": 10370,
+  "output_tokens": 1962,
+  "time_seconds": 38.49
+}

@@ -1,0 +1,12 @@
+{
+  "eval_id": 10,
+  "mode": "claude_without_skill",
+  "iteration": 10,
+  "prompt": "Our Standard cluster has a node pool running workloads that include a mix of spot instances and on-demand instances. We're planning to upgrade from 1.31 to 1.32. Are there any special considerations for upgrading node pools that use spot VMs?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-21T17:55:13.605578+00:00",
+  "input_tokens": 64,
+  "output_tokens": 1024,
+  "time_seconds": 18.23
+}

@@ -1,0 +1,12 @@
+{
+  "eval_id": 22,
+  "mode": "gemini_with_skill",
+  "iteration": 10,
+  "prompt": "During our node pool upgrade, we see that pods are getting evicted from nodes being drained, but they're landing on nodes that are ALSO about to be drained. It's like a game of musical chairs. The pods keep getting shuffled around instead of landing on already-upgraded nodes. What's happening and how do we fix it?",
+  "provider": "gemini",
+  "model": "gemini-3.1-pro-preview",
+  "start_time": "2026-03-21T18:49:15.498015+00:00",
+  "input_tokens": 10364,
+  "output_tokens": 761,
+  "time_seconds": 19.96
+}

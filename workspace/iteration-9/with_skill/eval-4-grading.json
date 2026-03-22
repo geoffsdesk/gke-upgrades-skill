@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that regional clusters have multiple control plane replicas and the upgrade is rolling",
+      "passed": true,
+      "reason": "Response clearly explains that regional clusters run multiple control plane replicas across zones and upgrade happens with rolling replacement of control plane replicas"
+    },
+    {
+      "expectation": "States that regional control plane upgrades have near-zero API server downtime",
+      "passed": true,
+      "reason": "Response explicitly states 'Zero downtime' for regional clusters and that API server will remain available throughout the upgrade process"
+    },
+    {
+      "expectation": "Contrasts with zonal clusters where there IS a brief API server outage during upgrade",
+      "passed": true,
+      "reason": "Response directly contrasts regional vs zonal clusters, stating zonal clusters have 'Brief unavailability (few minutes) during single control plane upgrade'"
+    },
+    {
+      "expectation": "Provides the gcloud command for control plane upgrade (--master flag)",
+      "passed": true,
+      "reason": "Response provides the exact gcloud command with --master flag: 'gcloud container clusters upgrade CLUSTER_NAME --region us-central1 --master --cluster-version 1.32.x-gke.xxxx'"
+    },
+    {
+      "expectation": "Mentions expected duration for control plane upgrade (roughly 10-30 minutes)",
+      "passed": true,
+      "reason": "Response mentions '10-15 minutes total' for the upgrade duration, which falls within the 10-30 minute range"
+    },
+    {
+      "expectation": "Includes a command to verify the control plane version after upgrade",
+      "passed": true,
+      "reason": "Response provides gcloud command to verify control plane upgrade: 'gcloud container clusters describe CLUSTER_NAME --region us-central1 --format=\"value(currentMasterVersion)\"'"
+    },
+    {
+      "expectation": "Recommends checking kube-system pods health after upgrade",
+      "passed": true,
+      "reason": "Response includes validation step to 'Check system pods are healthy' with command 'kubectl get pods -n kube-system'"
+    },
+    {
+      "expectation": "Advises checking deprecated API usage before upgrading",
+      "passed": true,
+      "reason": "Response includes pre-flight check for deprecated API usage with specific kubectl command and notes it as 'most common upgrade failure cause'"
+    },
+    {
+      "expectation": "Mentions that GKE supports a 2-step control plane minor upgrade where the first step is rollbackable, or notes that CP patch downgrades can be done by the customer while minor downgrades require GKE support",
+      "passed": true,
+      "reason": "Response mentions 'Control plane patch downgrades are supported if issues arise' which addresses the rollback/downgrade capability"
+    }
+  ]
+}

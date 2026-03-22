@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's autoscaled blue-green node pool upgrade strategy as the primary approach for batch workloads \u2014 it supports wait-for-drain time, longer graceful termination, and PDB upgrade timeout to let jobs complete",
+      "passed": true,
+      "reason": "Response explicitly recommends autoscaled blue-green upgrade strategy and explains it creates new nodes without disrupting existing jobs, allows jobs to complete naturally, and supports longer eviction periods"
+    },
+    {
+      "expectation": "Explains that GKE respects terminationGracePeriodSeconds during pod eviction, but surge upgrades have a max eviction timeout",
+      "passed": false,
+      "reason": "Response mentions terminationGracePeriodSeconds but does not explain the relationship between GKE respecting it during eviction or mention surge upgrade eviction timeout limitations"
+    },
+    {
+      "expectation": "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour \u2014 far less than 8-16 hour jobs",
+      "passed": false,
+      "reason": "Response does not mention GKE's default 1 hour pod eviction timeout during surge upgrades or compare it to the 8-16 hour job duration"
+    },
+    {
+      "expectation": "Recommends pausing new batch job submissions before starting the upgrade",
+      "passed": true,
+      "reason": "Response includes cordoning nodes to prevent new job scheduling and suggests waiting for job completion gaps before upgrading"
+    },
+    {
+      "expectation": "Advises waiting for in-flight jobs to complete naturally before upgrading their node pool",
+      "passed": true,
+      "reason": "Response explicitly states to wait for current jobs to complete naturally and mentions monitoring job progress before node pool upgrades"
+    },
+    {
+      "expectation": "Suggests using node affinity or taints to isolate batch workloads on a dedicated node pool",
+      "passed": true,
+      "reason": "Response provides detailed commands for creating dedicated batch node pools with taints and configuring jobs with tolerations and nodeSelector"
+    },
+    {
+      "expectation": "Recommends upgrading non-batch node pools first while batch jobs complete on the old pool",
+      "passed": false,
+      "reason": "Response focuses on upgrading the batch node pool itself but does not explicitly recommend upgrading non-batch node pools first while batch jobs run on the old pool"
+    },
+    {
+      "expectation": "Does NOT recommend 'No channel' as the approach \u2014 uses release channels with maintenance exclusions instead",
+      "passed": true,
+      "reason": "Response stays on Regular release channel and uses maintenance exclusions to control upgrade timing, does not suggest switching to 'No channel'"
+    }
+  ]
+}

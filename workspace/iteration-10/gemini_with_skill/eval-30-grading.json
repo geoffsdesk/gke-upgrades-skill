@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends migrating all 'No channel' clusters to release channels as a first priority",
+      "passed": true,
+      "reason": "The model explicitly states in Phase 2 that the most critical technical debt is 'No channel' and advises to 'Migrate all \"No channel\" clusters to a Release Channel.'"
+    },
+    {
+      "expectation": "Mentions using gcloud container clusters get-upgrade-info to check each cluster's auto-upgrade status, target versions, and EoS timestamps",
+      "passed": true,
+      "reason": "The model provides the exact 'gcloud container clusters get-upgrade-info' command and explicitly mentions looking for 'autoUpgradeStatus', 'endOfStandardSupportTimestamp', 'minorTargetVersion', and 'patchTargetVersion'."
+    },
+    {
+      "expectation": "Mentions the deprecation insights dashboard for identifying clusters using deprecated APIs",
+      "passed": true,
+      "reason": "The model includes a specific section called 'GKE Deprecation Insights Dashboard' to help identify the use of deprecated Kubernetes APIs."
+    },
+    {
+      "expectation": "Recommends checking EoS timelines for each cluster and prioritizing those closest to EoS",
+      "passed": true,
+      "reason": "In Phase 4, the model advises to 'Triage EoS: Identify any clusters currently past or within 30 days of their endOfStandardSupportTimestamp. Prioritize manually upgrading these...'"
+    },
+    {
+      "expectation": "Mentions GKE EoS notifications via Cloud Logging as an ongoing monitoring tool",
+      "passed": false,
+      "reason": "The model does not mention using Cloud Logging for GKE EoS notifications."
+    },
+    {
+      "expectation": "Recommends enrolling in scheduled upgrade notifications (72h advance) for all clusters",
+      "passed": false,
+      "reason": "The model does not mention scheduled upgrade notifications or the 72h advance notice feature."
+    },
+    {
+      "expectation": "Suggests standardizing on a channel strategy: dev\u2192Rapid, staging\u2192Regular, prod\u2192Stable/Extended",
+      "passed": true,
+      "reason": "Under Phase 3, the model clearly maps environments to channels: Dev/Sandbox to Rapid, Staging/UAT to Regular, and Production to Stable/Regular (with Extended detailed in Phase 2)."
+    },
+    {
+      "expectation": "May mention rollout sequencing as an advanced option for fleet-wide upgrade ordering \u2014 should not be the primary recommendation for fleet remediation",
+      "passed": true,
+      "reason": "Rollout sequencing is briefly mentioned as a lifecycle feature that 'No channel' clusters miss out on, but it is not presented as the primary remediation strategy."
+    },
+    {
+      "expectation": "Mentions GKE Insights and Recommendations in the console for identifying issues like version skew",
+      "passed": false,
+      "reason": "The model mentions Deprecation Insights but does not mention the general GKE Insights and Recommendations or version skew."
+    }
+  ]
+}

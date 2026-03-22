@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Proposes a phased rollout: dev first, then staging, then prod",
+      "passed": true,
+      "reason": "Response clearly outlines Phase 1 (dev), Phase 2 (staging), Phase 3 (prod) approach"
+    },
+    {
+      "expectation": "Includes soak time between environment phases (e.g., 24-48 hours for dev, 1 week for staging before prod)",
+      "passed": true,
+      "reason": "Response shows week-long phases with Week 1 for dev, Week 2 for staging, Week 3-4 for prod, providing adequate soak time"
+    },
+    {
+      "expectation": "Defines go/no-go criteria between phases (error rates, latency, pod health)",
+      "passed": true,
+      "reason": "Response includes validation steps and success criteria like 'Zero unplanned downtime', 'Performance metrics within acceptable range', and detailed monitoring checklists"
+    },
+    {
+      "expectation": "Recommends sequential control plane upgrades (1.30\u21921.31\u21921.32) with skip-level node pool upgrades where possible",
+      "passed": false,
+      "reason": "Response does not address sequential version upgrades or skip-level considerations; it treats the upgrade as a single jump to target version"
+    },
+    {
+      "expectation": "Suggests not upgrading all prod clusters simultaneously \u2014 do one or two first as canary",
+      "passed": true,
+      "reason": "Response explicitly schedules prod upgrades sequentially with 48-hour observation periods between clusters"
+    },
+    {
+      "expectation": "Includes rollback triggers and criteria for halting the rollout",
+      "passed": true,
+      "reason": "Response includes detailed rollback plan with commands and emergency response procedures, plus mentions stopping rollout if critical issues are detected"
+    },
+    {
+      "expectation": "Provides a timeline or schedule estimate for the full rollout",
+      "passed": true,
+      "reason": "Response provides detailed timeline summary spanning 5 weeks with specific week allocations for each phase"
+    },
+    {
+      "expectation": "Mentions maintenance window coordination across clusters",
+      "passed": false,
+      "reason": "Response does not specifically mention coordinating maintenance windows or scheduling upgrades during specific maintenance periods"
+    },
+    {
+      "expectation": "If rollout sequencing is mentioned, notes that all clusters must be on the same channel for it to work",
+      "passed": false,
+      "reason": "While the response mentions all clusters are on Regular channel, it doesn't explicitly state this requirement for rollout sequencing to work"
+    }
+  ]
+}

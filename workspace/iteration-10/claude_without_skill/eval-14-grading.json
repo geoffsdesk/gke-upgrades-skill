@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Checks for deprecated API usage that may have changed behavior in 1.30",
+      "passed": true,
+      "reason": "Response includes commands to check for deprecated API versions: 'kubectl get all --all-namespaces -o yaml | grep \"apiVersion:\" | sort | uniq' and 'kubectl get events --all-namespaces | grep -i \"deprecated\\|removed\"'"
+    },
+    {
+      "expectation": "Recommends checking admission webhooks \u2014 they may be rejecting or slowing down requests on the new version",
+      "passed": true,
+      "reason": "Response specifically mentions checking webhook configurations with commands 'kubectl get validatingwebhookconfigurations' and 'kubectl get mutatingwebhookconfigurations', and monitoring for admission controller issues with 'kubectl get events | grep -i \"admission\\|webhook\"'"
+    },
+    {
+      "expectation": "Advises checking if resource requests/limits need adjusting for any system components that changed",
+      "passed": true,
+      "reason": "Response includes resource monitoring commands: 'kubectl top pods -n kube-system' and 'kubectl describe nodes | grep -A 5 \"Allocated resources\"', and mentions increasing API server resources if needed"
+    },
+    {
+      "expectation": "Suggests examining kube-system pods for any that are crashlooping or restarting",
+      "passed": true,
+      "reason": "Response includes multiple commands to check kube-system pods: 'kubectl get pods -n kube-system | grep apiserver', 'kubectl get pods -n kube-system -o wide', and 'Look for crashlooping or failing components'"
+    },
+    {
+      "expectation": "Includes commands to check API server metrics and latency (kubectl get --raw /metrics)",
+      "passed": true,
+      "reason": "Response includes the exact command 'kubectl get --raw /metrics | grep apiserver_request_duration' to monitor API server response times"
+    },
+    {
+      "expectation": "Recommends checking if NetworkPolicy or service mesh components need updating for the new version",
+      "passed": true,
+      "reason": "Response includes commands to check network policies: 'kubectl describe networkpolicies --all-namespaces' and checks CNI plugin compatibility which relates to network components"
+    },
+    {
+      "expectation": "Advises reviewing pod events for scheduling delays or readiness probe failures",
+      "passed": true,
+      "reason": "Response includes multiple event checking commands: 'kubectl get events --all-namespaces --sort-by='.lastTimestamp' | tail -20' and 'kubectl get events -n kube-system --sort-by='.lastTimestamp''"
+    },
+    {
+      "expectation": "Mentions checking if HPA or VPA are behaving differently on the new version",
+      "passed": true,
+      "reason": "Response specifically mentions 'Update any HPA/VPA configurations' and includes command 'kubectl get hpa --all-namespaces'"
+    }
+  ]
+}

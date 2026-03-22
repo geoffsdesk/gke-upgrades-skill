@@ -1,0 +1,12 @@
+{
+  "eval_id": 16,
+  "mode": "gemini_with_skill",
+  "iteration": 10,
+  "prompt": "We upgraded our control plane from 1.31 to 1.32 and now some of our workloads are failing with admission webhook errors. The webhook is from a third-party operator (cert-manager). Pods can't be created. How do we fix this urgently?",
+  "provider": "gemini",
+  "model": "gemini-3.1-pro-preview",
+  "start_time": "2026-03-21T18:44:36.570637+00:00",
+  "input_tokens": 10353,
+  "output_tokens": 892,
+  "time_seconds": 22.26
+}

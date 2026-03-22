@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies Service A (minAvailable=100%) as a guaranteed upgrade blocker \u2014 no disruptions allowed at all",
+      "passed": true,
+      "reason": "The model correctly identifies Service A as risky because it will 'block the node drain immediately' and mathematically forbid evicting even a single pod."
+    },
+    {
+      "expectation": "Identifies Service B (maxUnavailable=0) as also blocking upgrades \u2014 same effect as 100% minAvailable",
+      "passed": true,
+      "reason": "The model correctly identifies Service B as risky for the same reasons as Service A, noting it will block the node drain immediately."
+    },
+    {
+      "expectation": "States Service C (minAvailable=2 with 3 replicas) is safe \u2014 allows 1 pod disruption at a time",
+      "passed": true,
+      "reason": "The model states Service C is safe because it 'Allows 1 pod to be evicted at a time'."
+    },
+    {
+      "expectation": "States Service D (maxUnavailable=1 with 5 replicas) is safe \u2014 allows 1 pod down at a time",
+      "passed": true,
+      "reason": "The model states Service D is safe because it 'Allows 1 pod to be evicted at a time'."
+    },
+    {
+      "expectation": "Recommends fixing Service A: change to minAvailable=N-1 or maxUnavailable=1",
+      "passed": true,
+      "reason": "The model recommends changing Service A to allow at least 1 pod to be disrupted and suggests patching it to `maxUnavailable: 1`."
+    },
+    {
+      "expectation": "Recommends fixing Service B: change to maxUnavailable=1",
+      "passed": true,
+      "reason": "The model recommends changing Service B to `maxUnavailable: 1`."
+    },
+    {
+      "expectation": "Explains that GKE respects PDBs for up to 1 hour during surge upgrades, then may force-drain",
+      "passed": true,
+      "reason": "The model explicitly states that GKE only respects a PDB for up to 1 hour per node, after which it will ignore the PDB and force-delete the pod."
+    },
+    {
+      "expectation": "Provides kubectl patch commands to fix the problematic PDBs",
+      "passed": true,
+      "reason": "The model provides exact `kubectl patch pdb` commands for both Service A and Service B."
+    },
+    {
+      "expectation": "Recommends testing PDB changes in a non-production environment first",
+      "passed": false,
+      "reason": "The model does not mention testing the PDB changes in a non-production or staging environment before applying them."
+    }
+  ]
+}

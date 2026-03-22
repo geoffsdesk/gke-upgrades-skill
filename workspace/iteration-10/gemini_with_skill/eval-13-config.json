@@ -1,0 +1,12 @@
+{
+  "eval_id": 13,
+  "mode": "gemini_with_skill",
+  "iteration": 10,
+  "prompt": "We have batch processing jobs that run for 8-16 hours on our Standard GKE cluster on the Regular release channel. We need to upgrade from 1.30 to 1.31 but can't afford to kill these jobs mid-execution. How should we handle this?",
+  "provider": "gemini",
+  "model": "gemini-3.1-pro-preview",
+  "start_time": "2026-03-21T18:42:07.233852+00:00",
+  "input_tokens": 10355,
+  "output_tokens": 1443,
+  "time_seconds": 36.24
+}

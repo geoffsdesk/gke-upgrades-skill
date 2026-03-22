@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Response clearly states 'nodes can't be more than 2 minor versions behind the control plane' and explains the counting (1.28\u21921.29\u21921.30\u21921.31 = 3 steps)"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (3 minor versions)",
+      "passed": true,
+      "reason": "Response explicitly states 'you're exactly at the boundary' and shows the version progression demonstrating 3 steps between 1.28 and 1.31"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Response lists specific risks including API compatibility issues, missing features, and support limitations with kubelets not understanding newer APIs"
+    },
+    {
+      "expectation": "Recommends skip-level (N+2) node pool upgrades where possible to reduce time and disruption (e.g., 1.28\u21921.30 then 1.30\u21921.31), rather than upgrading through every minor",
+      "passed": false,
+      "reason": "Response recommends going directly from 1.28\u21921.31 in one step, not the staged approach (1.28\u21921.30 then 1.30\u21921.31) specified in the expectation"
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Response includes complete gcloud commands for checking state, verifying versions, configuring upgrade strategy, and executing the upgrade"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": true,
+      "reason": "Response explicitly recommends maxSurge=1, maxUnavailable=0 in the commands and explains this as safer for stateful workloads"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": true,
+      "reason": "Response provides monitoring commands and a watch command to track node versions during upgrade, plus checks for stuck pods"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": true,
+      "reason": "Response includes prevention section with commands to migrate to Regular channel and discusses maintenance windows vs exclusions"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Configures a recurring maintenance window for weekends only",
+      "passed": true,
+      "reason": "The response configures a recurring maintenance window restricted to a 48-hour block on Saturdays and Sundays."
+    },
+    {
+      "expectation": "Provides the gcloud command with --maintenance-window-start/end and --maintenance-window-recurrence for weekly weekend schedule",
+      "passed": true,
+      "reason": "The response provides the correct gcloud commands using --maintenance-window-start, --maintenance-window-duration (as GKE uses duration rather than end for windows), and --maintenance-window-recurrence."
+    },
+    {
+      "expectation": "Sets up maintenance exclusions for quarterly code freezes (up to 30 days each)",
+      "passed": true,
+      "reason": "The response includes a specific section and gcloud command to set up a Q1 code freeze exclusion lasting less than 30 days."
+    },
+    {
+      "expectation": "Sets up a maintenance exclusion for the November audit period",
+      "passed": true,
+      "reason": "The response includes a step and gcloud command to set up an exclusion for the entire month of November."
+    },
+    {
+      "expectation": "Notes the 30-day maximum for maintenance exclusions and how to handle longer freezes",
+      "passed": true,
+      "reason": "The response explicitly notes the 30-day limit for 'no_upgrades' and explains how to use 'no_minor_or_node_upgrades' for longer freezes."
+    },
+    {
+      "expectation": "Explains that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
+      "passed": false,
+      "reason": "The response does not mention that manual upgrades bypass maintenance windows."
+    },
+    {
+      "expectation": "Recommends combining maintenance windows with Stable or Extended channel for maximum upgrade control",
+      "passed": true,
+      "reason": "The response recommends selecting the Stable or Extended release channels for SOX-compliant environments."
+    },
+    {
+      "expectation": "Provides gcloud commands for each exclusion (--add-maintenance-exclusion-name/start-time/end-time)",
+      "passed": true,
+      "reason": "The response provides complete gcloud commands with the requested flags for both the quarterly code freeze and the November audit exclusions."
+    },
+    {
+      "expectation": "Warns about the risk of falling too far behind on versions during long exclusion periods",
+      "passed": false,
+      "reason": "While it mentions End of Support (EoS) and standard lifecycles, it does not explicitly warn about the risks (such as forced upgrades or security vulnerabilities) of falling too far behind on versions."
+    }
+  ]
+}

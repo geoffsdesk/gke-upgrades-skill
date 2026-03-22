@@ -1,0 +1,12 @@
+{
+  "eval_id": 2,
+  "mode": "gemini_with_skill",
+  "iteration": 10,
+  "prompt": "I manage 4 Autopilot clusters -- 2 in dev on Rapid channel and 2 in prod on Stable. We've been getting notifications that our prod clusters will auto-upgrade from 1.31 to 1.32 next month. Can you give me pre and post upgrade checklists tailored to our setup?",
+  "provider": "gemini",
+  "model": "gemini-3.1-pro-preview",
+  "start_time": "2026-03-21T18:32:55.250147+00:00",
+  "input_tokens": 10360,
+  "output_tokens": 1264,
+  "time_seconds": 22.74
+}

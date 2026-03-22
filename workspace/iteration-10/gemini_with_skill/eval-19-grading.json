@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "The response categorizes all four specified notification types in the 'GKE Notification Triage Matrix'."
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "The response divides them into categories with explicit urgency levels (e.g., Category 1: Informational for 'new version available' and Category 3: Urgent / Action Required for security bulletins)."
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "The response categorizes End of Support (EoS) as Urgent and instructs the user to act immediately, test workloads, and manually schedule the upgrade."
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "The response provides a verification checklist (checking release notes, checking for deprecated APIs) when a minor version auto-upgrade is scheduled."
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "The response advises to 'Act immediately' and manually upgrade the cluster to the target version for critical CVEs/Security Bulletins."
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "The response categorizes 'Version X is now available' as 'Informational (No Action Required)' and instructs the user to ignore or archive the email rather than taking immediate action."
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": false,
+      "reason": "The response does not mention setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events; it focuses on maintenance windows and exclusions instead."
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": true,
+      "reason": "The response explicitly advises to 'Check the GKE release notes for breaking changes' in the triage matrix."
+    }
+  ]
+}

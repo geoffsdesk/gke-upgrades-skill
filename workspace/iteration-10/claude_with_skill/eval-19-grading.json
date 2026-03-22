@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response explicitly categorizes all four notification types in the classification matrix table and throughout the document"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response assigns urgency levels with security patches marked as High (\ud83d\udd34), new version available as Info (\ud83d\udd35), and includes a complete urgency hierarchy"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response specifically states EoS warnings require 'Plan upgrade' action with timeline of 30-90 days and provides detailed action timelines and response options"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response includes evaluation criteria and specific checklist items like verifying timing, applying exclusions if needed, and post-upgrade validation steps"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response states security patches have 7-14 day timeline and mentions they may require action outside normal windows, though it recommends monitoring rather than blocking unless critical"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response clearly marks new version available as 'Info' priority with 'Optional' action required and 'No deadline', emphasizing evaluation for planning purposes"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "Response includes a section on notification configuration with Cloud Monitoring channels and provides specific gcloud commands for setting up notifications"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": false,
+      "reason": "Response does not mention GKE release notes as a source for understanding version changes - it focuses on operational response procedures but lacks this reference"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's autoscaled blue-green node pool upgrade strategy as the primary approach for batch workloads \u2014 it supports wait-for-drain time, longer graceful termination, and PDB upgrade timeout to let jobs complete",
+      "passed": true,
+      "reason": "Response explicitly recommends blue/green node pool strategy as Option 1 (Recommended) and provides detailed implementation steps for creating new node pools, cordoning old nodes, and waiting for jobs to complete"
+    },
+    {
+      "expectation": "Explains that GKE respects terminationGracePeriodSeconds during pod eviction, but surge upgrades have a max eviction timeout",
+      "passed": false,
+      "reason": "Response does not mention terminationGracePeriodSeconds or explain GKE's respect for it during pod eviction, nor does it discuss surge upgrade eviction timeout limitations"
+    },
+    {
+      "expectation": "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour \u2014 far less than 8-16 hour jobs",
+      "passed": false,
+      "reason": "Response does not mention the 1-hour default pod eviction timeout or contrast it with the 8-16 hour job duration"
+    },
+    {
+      "expectation": "Recommends pausing new batch job submissions before starting the upgrade",
+      "passed": true,
+      "reason": "Response recommends cordoning old nodes to 'prevent new scheduling' and shows implementation steps to cordon nodes before waiting for jobs to complete"
+    },
+    {
+      "expectation": "Advises waiting for in-flight jobs to complete naturally before upgrading their node pool",
+      "passed": true,
+      "reason": "Response explicitly states 'Wait for existing jobs to complete naturally' in the blue-green strategy and includes this as step 3 in the implementation"
+    },
+    {
+      "expectation": "Suggests using node affinity or taints to isolate batch workloads on a dedicated node pool",
+      "passed": true,
+      "reason": "Response includes nodeSelector example to 'pin critical jobs to specific nodes' and shows how to target specific node pools for batch workloads"
+    },
+    {
+      "expectation": "Recommends upgrading non-batch node pools first while batch jobs complete on the old pool",
+      "passed": true,
+      "reason": "Response demonstrates this approach in the blue-green strategy by creating new node pools for new workloads while allowing existing batch jobs to complete on old pools before removal"
+    },
+    {
+      "expectation": "Does NOT recommend 'No channel' as the approach \u2014 uses release channels with maintenance exclusions instead",
+      "passed": true,
+      "reason": "Response maintains use of release channels and shows maintenance window configuration and exclusions rather than recommending switching to 'No channel'"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the difference between Rapid and Stable channels \u2014 including that Rapid has no SLA for upgrade stability while Stable carries a full SLA, and clearly distinguishes minor version vs patch version differences between the channels",
+      "passed": false,
+      "reason": "The model fails to mention the SLA differences between the Rapid and Stable channels, nor does it detail the specific minor vs. patch version rules between channels."
+    },
+    {
+      "expectation": "Notes that channel changes don't trigger an immediate upgrade or downgrade",
+      "passed": true,
+      "reason": "The model explicitly states that changing the release channel to Stable today will not downgrade the cluster, and it enters a holding pattern instead."
+    },
+    {
+      "expectation": "Warns that if 1.30 isn't yet available on Stable, the cluster may not receive patches until Stable catches up",
+      "passed": true,
+      "reason": "The model accurately adapts this warning to the user's version (1.32), noting that automated patch updates may be paused or delayed until the Stable channel catches up."
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "The model provides the correct 'gcloud container clusters update ... --release-channel=stable' command."
+    },
+    {
+      "expectation": "Recommends checking version availability on Stable before switching (gcloud container get-server-config)",
+      "passed": false,
+      "reason": "The model does not mention checking version availability using the get-server-config command."
+    },
+    {
+      "expectation": "Discusses the impact on auto-upgrade timing going forward",
+      "passed": true,
+      "reason": "The model explains the 'Version Freeze' holding pattern, noting it will take 3 to 6 months before minor version upgrades resume."
+    },
+    {
+      "expectation": "Mentions that the Extended channel is an option if they need even slower cadence (with cost implications)",
+      "passed": false,
+      "reason": "The model does not mention the Extended channel at all."
+    },
+    {
+      "expectation": "Advises coordinating the change during a maintenance window",
+      "passed": false,
+      "reason": "The model notes it requires zero downtime but does not advise scheduling the change during a maintenance window."
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends upgrading the L4 inference pool and A100 pool separately with different strategies",
+      "passed": true,
+      "reason": "Response clearly separates Phase 1 (L4 inference pool) and Phase 2 (A100 pool) with distinct upgrade strategies and timing considerations"
+    },
+    {
+      "expectation": "For L4 inference pool: recommends surge upgrade with maxSurge=1 or 2 to maintain capacity during rolling replacement",
+      "passed": true,
+      "reason": "Explicitly configures max-surge-upgrade=2 and max-unavailable-upgrade=1 for the L4 inference pool upgrade"
+    },
+    {
+      "expectation": "Addresses GPU driver version compatibility \u2014 auto-installed drivers must be compatible with inference framework (TensorRT, vLLM, etc.)",
+      "passed": true,
+      "reason": "Mentions 'GPU Driver Compatibility: Verify NVIDIA driver compatibility between versions' in key considerations and includes GPU driver validation in post-upgrade steps"
+    },
+    {
+      "expectation": "For A100 fine-tuning pool: recommends scheduling the upgrade during a gap between fine-tuning jobs",
+      "passed": true,
+      "reason": "Provides coordination script to check for active fine-tuning jobs and wait for completion, plus timing recommendations for A100 pool during planned maintenance windows"
+    },
+    {
+      "expectation": "Notes that GPU VMs do not support live migration \u2014 inference pods will restart during node upgrade, causing brief latency spikes",
+      "passed": false,
+      "reason": "While the response mentions 'Model Warmup: Account for model loading time on new nodes', it does not explicitly state that GPU VMs don't support live migration or that pods will restart causing latency spikes"
+    },
+    {
+      "expectation": "Recommends PDBs on inference deployments to ensure enough replicas stay available during the rolling upgrade",
+      "passed": true,
+      "reason": "Provides specific PDB configurations for inference workloads with minAvailable: 80% to maintain capacity during upgrades"
+    },
+    {
+      "expectation": "Addresses auto-scaler interaction \u2014 new nodes created by auto-scaler during upgrade will be at the old version until their pool upgrade completes",
+      "passed": true,
+      "reason": "Explicitly mentions 'The cluster autoscaler will automatically provision new 1.32 nodes as old nodes are cordoned' in key considerations"
+    },
+    {
+      "expectation": "Recommends testing driver + CUDA compatibility in staging before production upgrade",
+      "passed": false,
+      "reason": "While it mentions verifying NVIDIA driver compatibility, it does not specifically recommend testing in staging environment before production upgrade"
+    }
+  ]
+}

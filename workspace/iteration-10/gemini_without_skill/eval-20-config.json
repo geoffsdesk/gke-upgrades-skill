@@ -1,0 +1,12 @@
+{
+  "eval_id": 20,
+  "mode": "gemini_without_skill",
+  "iteration": 10,
+  "prompt": "We've never done a GKE upgrade before. Our team just inherited a Standard cluster on the Regular channel at 1.32 in us-west1-b and we need to get it to 1.32. There are 2 node pools \u2014 default-pool and workload-pool. We need a complete step-by-step runbook that someone with basic kubectl knowledge can follow. Include every command.",
+  "provider": "gemini",
+  "model": "gemini-3.1-pro-preview",
+  "start_time": "2026-03-21T19:17:15.888198+00:00",
+  "input_tokens": 87,
+  "output_tokens": 1328,
+  "time_seconds": 26.92
+}

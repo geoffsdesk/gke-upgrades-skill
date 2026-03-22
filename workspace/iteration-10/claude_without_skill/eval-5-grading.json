@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Response clearly states 'Maximum allowed skew: 2 minor versions' and explains the violation"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (3 minor versions)",
+      "passed": true,
+      "reason": "Response explicitly states 'Gap: 3 minor versions (1.28 \u2192 1.29 \u2192 1.30 \u2192 1.31)' and identifies this as a policy violation"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Response lists 'kubelet/API server communication failures', 'API compatibility problems', 'Pod scheduling issues' and other disruption warnings"
+    },
+    {
+      "expectation": "Recommends skip-level (N+2) node pool upgrades where possible to reduce time and disruption (e.g., 1.28\u21921.30 then 1.30\u21921.31), rather than upgrading through every minor",
+      "passed": false,
+      "reason": "Response recommends incremental upgrades through every minor version (1.28\u21921.29\u21921.30\u21921.31) rather than skip-level upgrades"
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Response provides specific gcloud container clusters upgrade commands for each version step"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": false,
+      "reason": "Response does not mention surge settings or provide flags for maxSurge/maxUnavailable in the upgrade commands"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": true,
+      "reason": "Response includes monitoring commands and states 'Monitor workloads closely' with specific kubectl commands for watching events and pods"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": true,
+      "reason": "Response includes maintenance windows setup and auto-upgrade enablement as prevention measures, though doesn't specifically mention release channels"
+    }
+  ]
+}

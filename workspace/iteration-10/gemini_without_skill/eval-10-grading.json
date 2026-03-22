@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that spot VMs can be preempted at any time, which interacts with the upgrade drain process",
+      "passed": true,
+      "reason": "The model explicitly states that Google Cloud can preempt Spot VMs at any time and explains how this interacts with the 25-second warning during the upgrade drain process."
+    },
+    {
+      "expectation": "Notes that spot node pools may already have workloads designed for interruption (good for upgrades)",
+      "passed": false,
+      "reason": "The model warns to 'ensure' workloads are fault-tolerant as a mitigation, but does not point out that they likely already are or frame this as an existing benefit for upgrades."
+    },
+    {
+      "expectation": "Recommends higher maxSurge for spot pools since the workloads should already be fault-tolerant",
+      "passed": false,
+      "reason": "The model actually recommends keeping maxSurge low (e.g., 1 or 2) to request VMs in small batches to avoid capacity limits."
+    },
+    {
+      "expectation": "Advises setting maxUnavailable >0 for spot pools since workloads are already preemption-tolerant",
+      "passed": false,
+      "reason": "The model does not mention the maxUnavailable setting at all."
+    },
+    {
+      "expectation": "Mentions that spot VM availability may affect surge node creation (not guaranteed to get spot instances)",
+      "passed": true,
+      "reason": "The model clearly explains that lack of Spot capacity in chosen regions/zones will prevent GCP from provisioning surge nodes, stalling the upgrade."
+    },
+    {
+      "expectation": "Recommends having PDBs even for spot workloads to ensure orderly drain during upgrade",
+      "passed": false,
+      "reason": "The model discusses PDBs but focuses on the risk of them stalling the upgrade and causing forceful termination after 1 hour; it does not explicitly recommend adding them for orderly drains."
+    },
+    {
+      "expectation": "Provides the gcloud command for configuring surge settings on the spot pool",
+      "passed": false,
+      "reason": "The model does not provide any gcloud commands in its response."
+    },
+    {
+      "expectation": "Suggests upgrading spot pools before on-demand pools since they're lower risk",
+      "passed": false,
+      "reason": "The model explicitly suggests the opposite, stating 'Upgrade your On-Demand pools first'."
+    }
+  ]
+}

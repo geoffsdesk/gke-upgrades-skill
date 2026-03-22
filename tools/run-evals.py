@@ -54,9 +54,9 @@ CLAUDE_MODELS = {
     "haiku": "claude-haiku-4-5-20251001",
 }
 GEMINI_MODELS = {
-    "flash": "gemini-2.0-flash",
-    "pro": "gemini-2.5-pro-preview-05-06",
-    "flash-lite": "gemini-2.5-flash-preview-04-17",
+    "flash": "gemini-2.5-flash-lite",
+    "pro": "gemini-3.1-pro-preview",
+    "flash-lite": "gemini-2.5-flash-lite",
 }
 
 # ---------------------------------------------------------------------------
@@ -598,7 +598,7 @@ def main():
                         help="Model name or alias (single provider). Claude: sonnet/opus/haiku. Gemini: flash/pro/flash-lite.")
     parser.add_argument("--claude-model", default="sonnet",
                         help="Claude model for --provider both (default: sonnet)")
-    parser.add_argument("--gemini-model", default="flash",
+    parser.add_argument("--gemini-model", default="pro",
                         help="Gemini model for --provider both (default: flash)")
     parser.add_argument("--iteration", type=int, required=True,
                         help="Iteration number (creates workspace/iteration-N/)")

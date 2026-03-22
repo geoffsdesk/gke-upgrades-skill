@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends combining release channels with maintenance exclusions as the approach for maximum control",
+      "passed": true,
+      "reason": "Clearly recommends 'Release Channel + No Minor or Node Upgrades Exclusion' as the primary strategy with specific gcloud commands"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' exclusion to prevent disruptive changes while allowing control plane security patches. May also mention persistent exclusions with --add-maintenance-exclusion-until-end-of-support (no longer a 6-month max, auto-tracks EoS)",
+      "passed": true,
+      "reason": "Explicitly recommends 'no_minor_or_node_upgrades' exclusion scope and includes --add-maintenance-exclusion-until-end-of-support flag in the gcloud command"
+    },
+    {
+      "expectation": "Recommends maintenance windows to control WHEN patches are applied (e.g., weekend windows only)",
+      "passed": true,
+      "reason": "Provides specific gcloud command example for Saturday 2-6 AM EST maintenance window with weekly recurrence"
+    },
+    {
+      "expectation": "Mentions the cluster disruption budget (disruption interval) to control upgrade frequency \u2014 patch interval default 7d (max 90d), minor interval default 30d (max 90d)",
+      "passed": false,
+      "reason": "Does not mention cluster disruption budget or disruption intervals at all"
+    },
+    {
+      "expectation": "Suggests Stable or Extended channel for production clusters in regulated environments. Extended channel provides maximum flexibility around EoS enforcement (additional cost only during extended period)",
+      "passed": true,
+      "reason": "Recommends Regular channel initially but provides Extended channel as alternative with detailed explanation of 24-month support and costs only during extended period"
+    },
+    {
+      "expectation": "Notes that disabling control plane patches entirely is not recommended due to security risks \u2014 monthly patches at minimum",
+      "passed": true,
+      "reason": "Explicitly states in 'Avoid these approaches' section that blanket 'no upgrades' exclusions block security patches and recommends against disabling auto-upgrade entirely"
+    },
+    {
+      "expectation": "May mention rollout sequencing as an advanced option for controlling upgrade order across multiple clusters, and/or the cluster disruption budget for controlling CP patch frequency",
+      "passed": false,
+      "reason": "Mentions multi-environment strategy with dev/staging/prod progression but does not mention rollout sequencing or cluster disruption budget"
+    },
+    {
+      "expectation": "Provides gcloud commands for configuring the recommended exclusion type and maintenance window",
+      "passed": true,
+      "reason": "Provides comprehensive gcloud commands for setting exclusions, maintenance windows, and the complete operational workflow"
+    }
+  ]
+}

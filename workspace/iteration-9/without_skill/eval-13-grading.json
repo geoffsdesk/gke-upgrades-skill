@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's autoscaled blue-green node pool upgrade strategy as the primary approach for batch workloads \u2014 it supports wait-for-drain time, longer graceful termination, and PDB upgrade timeout to let jobs complete",
+      "passed": false,
+      "reason": "The response recommends manual node pool creation and rolling strategy, but does not specifically mention GKE's autoscaled blue-green node pool upgrade strategy or its features like wait-for-drain time and PDB upgrade timeout"
+    },
+    {
+      "expectation": "Explains that GKE respects terminationGracePeriodSeconds during pod eviction, but surge upgrades have a max eviction timeout",
+      "passed": false,
+      "reason": "The response does not mention terminationGracePeriodSeconds or explain how GKE respects it during pod eviction, nor does it mention surge upgrades having a max eviction timeout"
+    },
+    {
+      "expectation": "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour \u2014 far less than 8-16 hour jobs",
+      "passed": false,
+      "reason": "The response does not mention GKE's default pod eviction timeout of 1 hour during surge upgrade or compare it to the 8-16 hour job duration"
+    },
+    {
+      "expectation": "Recommends pausing new batch job submissions before starting the upgrade",
+      "passed": true,
+      "reason": "The response recommends cordoning old nodes to prevent new job scheduling and includes a monitoring script that checks for job completion before proceeding"
+    },
+    {
+      "expectation": "Advises waiting for in-flight jobs to complete naturally before upgrading their node pool",
+      "passed": true,
+      "reason": "The response explicitly states 'Wait for current jobs to complete naturally' and provides monitoring commands and scripts to check job completion"
+    },
+    {
+      "expectation": "Suggests using node affinity or taints to isolate batch workloads on a dedicated node pool",
+      "passed": true,
+      "reason": "The response includes a YAML example showing node affinity configuration to schedule jobs only on designated pools ('stable-pool')"
+    },
+    {
+      "expectation": "Recommends upgrading non-batch node pools first while batch jobs complete on the old pool",
+      "passed": true,
+      "reason": "The response describes creating a new node pool with version 1.31, cordoning old nodes, waiting for jobs to complete, then cleaning up the old pool - effectively upgrading other pools first"
+    },
+    {
+      "expectation": "Does NOT recommend 'No channel' as the approach \u2014 uses release channels with maintenance exclusions instead",
+      "passed": true,
+      "reason": "The response does not recommend switching to 'No channel' and instead shows using maintenance exclusions with gcloud commands to control upgrade timing"
+    }
+  ]
+}

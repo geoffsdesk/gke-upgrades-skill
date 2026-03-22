@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains this is related to the interaction between maxSurge, drain order, and pod scheduling",
+      "passed": true,
+      "reason": "The model explains how the scheduler handles evicted pods, describes the sequential drain order of nodes, and explicitly discusses surge settings."
+    },
+    {
+      "expectation": "Notes that GKE cordons nodes before draining them \u2014 pods should prefer scheduling onto uncordoned (upgraded) nodes",
+      "passed": false,
+      "reason": "The model notes that nodes are cordoned before draining, but argues that pods often prefer the other OLD uncordoned nodes (due to cached images), rather than stating they should prefer upgraded nodes."
+    },
+    {
+      "expectation": "Identifies possible cause: too many nodes being drained simultaneously (high maxSurge) before enough upgraded nodes exist",
+      "passed": false,
+      "reason": "The model identifies the opposite cause: it blames a standard 1-by-1 rolling upgrade leaving other old nodes uncordoned, and suggests a HIGHER maxSurge as the fix."
+    },
+    {
+      "expectation": "Recommends reducing maxSurge to 1 to ensure upgraded nodes are available before draining the next batch",
+      "passed": false,
+      "reason": "The model actually recommends the opposite, suggesting to set maxSurge to a high number (e.g., 3 or 5)."
+    },
+    {
+      "expectation": "Suggests using pod anti-affinity or node affinity to prefer already-upgraded nodes",
+      "passed": false,
+      "reason": "The model does not mention pod anti-affinity or node affinity."
+    },
+    {
+      "expectation": "Mentions checking if any taints or tolerations are causing pods to land on the wrong nodes",
+      "passed": false,
+      "reason": "The model does not mention taints or tolerations."
+    },
+    {
+      "expectation": "Provides kubectl commands to check node cordoned status and pod scheduling events",
+      "passed": false,
+      "reason": "The model provides a command to *apply* a cordon (`kubectl cordon`), but no commands to *check* the status or view events."
+    },
+    {
+      "expectation": "Recommends setting maxUnavailable=0 to ensure old nodes aren't removed until pods are safely rescheduled",
+      "passed": true,
+      "reason": "The model explicitly recommends setting `maxUnavailable` to 0 in the cloud surge settings."
+    },
+    {
+      "expectation": "May mention GKE's autoscaled blue-green upgrade strategy as an alternative that avoids this issue by cordoning the entire old pool before migrating workloads to new nodes",
+      "passed": true,
+      "reason": "The model dedicates a section to 'The Blue/Green Node Pool Strategy', explicitly outlining the steps to cordon the entire old pool before migrating to the new pool."
+    }
+  ]
+}

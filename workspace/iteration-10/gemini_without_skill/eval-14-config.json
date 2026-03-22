@@ -1,0 +1,12 @@
+{
+  "eval_id": 14,
+  "mode": "gemini_without_skill",
+  "iteration": 10,
+  "prompt": "After upgrading our Standard cluster from 1.31 to 1.32, we're seeing increased API latency and some 503 errors from our services. The upgrade completed successfully \u2014 all nodes are at 1.32 and showing Ready. What could be wrong?",
+  "provider": "gemini",
+  "model": "gemini-3.1-pro-preview",
+  "start_time": "2026-03-21T19:13:02.234117+00:00",
+  "input_tokens": 59,
+  "output_tokens": 1371,
+  "time_seconds": 25.81
+}

@@ -1,0 +1,12 @@
+{
+  "eval_id": 28,
+  "mode": "gemini_without_skill",
+  "iteration": 10,
+  "prompt": "Our VP wants to know exactly when our GKE clusters will be upgraded next. She needs predictable timelines for stakeholder communication. How can we predict or control upgrade timing, and what tools does GKE provide for upgrade visibility?",
+  "provider": "gemini",
+  "model": "gemini-3.1-pro-preview",
+  "start_time": "2026-03-21T19:23:14.194029+00:00",
+  "input_tokens": 44,
+  "output_tokens": 1144,
+  "time_seconds": 21.1
+}

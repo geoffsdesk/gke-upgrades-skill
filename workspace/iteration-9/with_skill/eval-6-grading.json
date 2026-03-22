@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the difference between Rapid and Stable channels \u2014 including that Rapid has no SLA for upgrade stability while Stable carries a full SLA, and clearly distinguishes minor version vs patch version differences between the channels",
+      "passed": true,
+      "reason": "Response clearly states 'Full SLA coverage for upgrade stability (Rapid channel has no SLA for upgrade stability)' and explains that Stable channel versions are 'more battle-tested' with different timing for patch delivery"
+    },
+    {
+      "expectation": "Notes that channel changes don't trigger an immediate upgrade or downgrade",
+      "passed": false,
+      "reason": "Response suggests cluster 'may be auto-downgraded' in Scenario B, contradicting the expectation that channel changes don't trigger immediate version changes"
+    },
+    {
+      "expectation": "Warns that if 1.30 isn't yet available on Stable, the cluster may not receive patches until Stable catches up",
+      "passed": false,
+      "reason": "Response discusses 1.32 availability but doesn't mention 1.30, and doesn't clearly warn about patch delivery delays if current version isn't available on Stable"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "Response provides the exact command: 'gcloud container clusters update CLUSTER_NAME --region REGION --release-channel stable'"
+    },
+    {
+      "expectation": "Recommends checking version availability on Stable before switching (gcloud container get-server-config)",
+      "passed": true,
+      "reason": "Response includes the command 'gcloud container get-server-config --region REGION --format=\"yaml(channels.STABLE)\"' in Step 1 of the migration runbook"
+    },
+    {
+      "expectation": "Discusses the impact on auto-upgrade timing going forward",
+      "passed": true,
+      "reason": "Response clearly discusses that 'Auto-upgrade timing shifts: Future upgrades will arrive later' and explains the new cadence and timing implications"
+    },
+    {
+      "expectation": "Mentions that the Extended channel is an option if they need even slower cadence (with cost implications)",
+      "passed": false,
+      "reason": "Response does not mention the Extended channel at all as an option for even slower cadence"
+    },
+    {
+      "expectation": "Advises coordinating the change during a maintenance window",
+      "passed": true,
+      "reason": "Response includes maintenance window considerations, mentions 'Plan controlled downgrade during maintenance window if needed' and discusses maintenance exclusions"
+    }
+  ]
+}

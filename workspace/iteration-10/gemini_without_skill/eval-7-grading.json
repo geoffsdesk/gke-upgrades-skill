@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Proposes a phased rollout: dev first, then staging, then prod",
+      "passed": true,
+      "reason": "The model clearly outlines a 3-phase rollout starting with Dev, then Staging, and finally Production."
+    },
+    {
+      "expectation": "Includes soak time between environment phases (e.g., 24-48 hours for dev, 1 week for staging before prod)",
+      "passed": true,
+      "reason": "The model includes 'Bake Time' for each phase, recommending 24-48 hours for Dev, and 48-72 hours for Staging before moving to Prod."
+    },
+    {
+      "expectation": "Defines go/no-go criteria between phases (error rates, latency, pod health)",
+      "passed": true,
+      "reason": "The model specifies validation steps like checking for Pods in Pending/CrashLoopBackOff, monitoring 5xx errors, and checking golden signals (latency, traffic, errors) before proceeding."
+    },
+    {
+      "expectation": "Recommends sequential control plane upgrades (1.30\u21921.31\u21921.32) with skip-level node pool upgrades where possible",
+      "passed": false,
+      "reason": "The model correctly identifies the request as a patch upgrade (1.32 to 1.32) and therefore does not recommend sequential minor version upgrades or skip-level node pool upgrades."
+    },
+    {
+      "expectation": "Suggests not upgrading all prod clusters simultaneously \u2014 do one or two first as canary",
+      "passed": true,
+      "reason": "The model divides the Production rollout into 3 waves, starting with one cluster as a canary, then a second, and finally the remaining two."
+    },
+    {
+      "expectation": "Includes rollback triggers and criteria for halting the rollout",
+      "passed": true,
+      "reason": "The model includes a 'Rollback & Contingency Plan' section that discusses control plane failures, workload-breaking node pool issues, and stuck upgrades as criteria for halting or downgrading."
+    },
+    {
+      "expectation": "Provides a timeline or schedule estimate for the full rollout",
+      "passed": true,
+      "reason": "The model provides specific durations for each phase (e.g., 1-2 days for Dev, 3-4 days for Staging, 4 days for Prod) and schedules steps by day (Day 1, Day 3, Day 7, etc.)."
+    },
+    {
+      "expectation": "Mentions maintenance window coordination across clusters",
+      "passed": true,
+      "reason": "The model explicitly recommends executing the Production upgrades during 'an off-peak maintenance window'."
+    },
+    {
+      "expectation": "If rollout sequencing is mentioned, notes that all clusters must be on the same channel for it to work",
+      "passed": false,
+      "reason": "The model provides a manual rollout strategy using maintenance exclusions but does not mention the built-in GKE Rollout Sequencing feature or the requirement for clusters to be on the same channel."
+    }
+  ]
+}

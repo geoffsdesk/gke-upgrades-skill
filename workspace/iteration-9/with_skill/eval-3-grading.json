@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies PDB as the most likely/common cause of stuck upgrades",
+      "passed": true,
+      "reason": "Response explicitly states 'PDB blocking drain (most common cause)' and 'PDB Too Restrictive (80% of stuck upgrades)'"
+    },
+    {
+      "expectation": "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
+      "passed": true,
+      "reason": "Provides 'kubectl get pdb -A -o wide' command to check PDBs across all namespaces"
+    },
+    {
+      "expectation": "Provides commands to identify which pods are blocking the drain",
+      "passed": true,
+      "reason": "Includes commands to check stuck/pending pods and bare pods that could block draining"
+    },
+    {
+      "expectation": "Includes resource constraint diagnosis (capacity issues, pending pods)",
+      "passed": true,
+      "reason": "Provides commands to check pending pods and includes 'Fix 3: Increase Surge Capacity' to address resource constraints"
+    },
+    {
+      "expectation": "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+      "passed": true,
+      "reason": "Shows kubectl patch command to temporarily allow disruptions by setting maxUnavailable to 50%"
+    },
+    {
+      "expectation": "Mentions that GKE has a PDB timeout (up to 1 hour) after which it may force-drain, and that GKE sends notifications when eviction is blocked by PDB",
+      "passed": false,
+      "reason": "Does not mention GKE's PDB timeout behavior or notification system when evictions are blocked"
+    },
+    {
+      "expectation": "Includes guidance on surge upgrade settings as a potential fix",
+      "passed": true,
+      "reason": "Provides specific gcloud commands to modify max-surge-upgrade and max-unavailable-upgrade settings"
+    },
+    {
+      "expectation": "Mentions webhook issues as a possible cause",
+      "passed": true,
+      "reason": "Includes section checking for admission webhooks and their potential impact on pod creation"
+    },
+    {
+      "expectation": "Includes validation steps to confirm the fix is working",
+      "passed": true,
+      "reason": "Provides 'Monitor Progress' section with watch commands and gcloud operations describe to track upgrade progress"
+    }
+  ]
+}

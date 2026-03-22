@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": true,
+      "reason": "The model explicitly states that TPU slices are recreated entirely in a single step (not rolling) and all pods are evicted simultaneously."
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": true,
+      "reason": "The model warns that a maintenance event on any single slice in the 4-slice environment will trigger a cascading restart of all 4 slices."
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "The model notes that all pods across all slices will be evicted and restarted at exactly the same time, killing the training job mid-flight."
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": true,
+      "reason": "The model explains that if insufficient contiguous hardware is available, the slices will remain pending, causing hours or days of downtime."
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "The model recommends manually triggering a model checkpoint and ensuring it is safely written to GCS before the maintenance."
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": false,
+      "reason": "The model recommends manually scaling down the job to 0 and then manually scaling it back up to resume from the checkpoint, rather than configuring the framework for automatic checkpoint resume."
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": true,
+      "reason": "The model suggests using a Maintenance Exclusion to block the upgrade and defer maintenance to finish the training run."
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": true,
+      "reason": "The model mentions getting maintenance over with during a planned window and scheduling manual upgrades in the gaps between major training runs."
+    }
+  ]
+}

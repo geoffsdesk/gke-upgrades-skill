@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Configures a recurring maintenance window for weekends only",
+      "passed": true,
+      "reason": "The model provides configurations for a 48-hour window starting Saturday at 00:00 UTC and recurring weekly."
+    },
+    {
+      "expectation": "Provides the gcloud command with --maintenance-window-start/end and --maintenance-window-recurrence for weekly weekend schedule",
+      "passed": true,
+      "reason": "The gcloud command includes the exact flags --maintenance-window-start, --maintenance-window-end, and --maintenance-window-recurrence with correct values."
+    },
+    {
+      "expectation": "Sets up maintenance exclusions for quarterly code freezes (up to 30 days each)",
+      "passed": true,
+      "reason": "The model configures 4 quarterly maintenance exclusions (q1 through q4) for 7 days each, safely under the 30-day limit."
+    },
+    {
+      "expectation": "Sets up a maintenance exclusion for the November audit period",
+      "passed": true,
+      "reason": "The model includes an 'annual-sox-audit-nov' exclusion block spanning November 1st to November 15th."
+    },
+    {
+      "expectation": "Notes the 30-day maximum for maintenance exclusions and how to handle longer freezes",
+      "passed": false,
+      "reason": "The model notes the 30-day limit for a single exclusion, but it fails to explain how to handle freezes that might need to be longer than 30 days."
+    },
+    {
+      "expectation": "Explains that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
+      "passed": false,
+      "reason": "The response does not mention that customer-initiated manual upgrades bypass the maintenance windows."
+    },
+    {
+      "expectation": "Recommends combining maintenance windows with Stable or Extended channel for maximum upgrade control",
+      "passed": true,
+      "reason": "The model explicitly recommends and configures the 'Stable' release channel as part of its Phase 1 strategy."
+    },
+    {
+      "expectation": "Provides gcloud commands for each exclusion (--add-maintenance-exclusion-name/start-time/end-time)",
+      "passed": true,
+      "reason": "The model provides the exact gcloud syntax with --add-maintenance-exclusion-name, --add-maintenance-exclusion-start, and --add-maintenance-exclusion-end, and instructs the user to repeat it for the other exclusion periods."
+    },
+    {
+      "expectation": "Warns about the risk of falling too far behind on versions during long exclusion periods",
+      "passed": true,
+      "reason": "The model explicitly warns that exclusions can cause clusters to fall 'dangerously behind on security patches' and mentions Google's right to emergency bypass for critical vulnerabilities."
+    }
+  ]
+}

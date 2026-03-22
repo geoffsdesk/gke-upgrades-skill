@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that 'No channel' is a legacy configuration that lacks granular maintenance exclusion types",
+      "passed": false,
+      "reason": "The response mentions that maintenance exclusions are bypassed on EOL in 'No channel', but it does not explain that 'No channel' lacks granular maintenance exclusion types compared to release channels."
+    },
+    {
+      "expectation": "Mentions that 'No channel' does not support 'no minor or node upgrades' exclusion scope \u2014 only the 30-day 'no upgrades' type, AND per-nodepool maintenance exclusion is also limited",
+      "passed": false,
+      "reason": "The response does not mention the 'no minor or node upgrades' scope, the 30-day 'no upgrades' limit, or the per-nodepool exclusion limitations."
+    },
+    {
+      "expectation": "Notes that Extended support (24 months) is only available on release channels, not 'No channel'",
+      "passed": true,
+      "reason": "The response explicitly states that Extended Support (up to 24 months) is exclusively for the Stable release channel, and static ('No channel') clusters only get standard support."
+    },
+    {
+      "expectation": "Notes that rollout sequencing (an advanced feature) is not available on 'No channel'",
+      "passed": false,
+      "reason": "The response completely omits any mention of rollout sequencing."
+    },
+    {
+      "expectation": "Recommends Regular or Stable channel as the closest migration target (legacy behavior matches Stable for minors, Regular for patches)",
+      "passed": false,
+      "reason": "While it recommends Stable for Prod and Regular for Staging, it does not explain that they are the closest migration targets because their behavior matches legacy 'No channel' behavior for minors and patches."
+    },
+    {
+      "expectation": "Mentions Extended channel as a migration path for customers who want maximum flexibility around EoS enforcement",
+      "passed": false,
+      "reason": "The response mentions Extended Support but completely misses mentioning the Extended release channel as a migration path."
+    },
+    {
+      "expectation": "Warns about exclusion translation: when moving from 'No channel' to release channels, some exclusions don't translate 1:1 and may be ignored \u2014 only 'no_upgrades' type translates between the two. Recommends adding a temporary 'no upgrades' exclusion during the transition",
+      "passed": false,
+      "reason": "The response does not warn about exclusion translation issues or recommend a temporary 'no upgrades' exclusion during transition."
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "The response provides the correct gcloud command (`gcloud container clusters update ... --release-channel=regular`)."
+    },
+    {
+      "expectation": "References the comparison table at cloud.google.com/kubernetes-engine/docs/concepts/release-channels",
+      "passed": false,
+      "reason": "The response does not provide or reference the specified documentation URL."
+    }
+  ]
+}

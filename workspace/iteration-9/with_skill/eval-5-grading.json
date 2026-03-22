@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Response explicitly states 'exceeds GKE's maximum supported skew of 2 minor versions' and explains the policy clearly"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (3 minor versions)",
+      "passed": true,
+      "reason": "Response clearly states 'your node pool is 3 minor versions behind the control plane (1.28 vs 1.31)' and identifies this as a violation"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Response lists specific risks including 'API compatibility issues between kubelet (1.28) and kube-apiserver (1.31)', 'pod scheduling failures', and 'degraded cluster functionality'"
+    },
+    {
+      "expectation": "Recommends skip-level (N+2) node pool upgrades where possible to reduce time and disruption (e.g., 1.28\u21921.30 then 1.30\u21921.31), rather than upgrading through every minor",
+      "passed": true,
+      "reason": "Response provides both options with 'Skip-level upgrade (fastest)' as Option A showing direct jump to 1.30 or 1.31, and notes this approach for speed"
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Response includes multiple specific gcloud commands including 'gcloud container node-pools upgrade' with proper parameters and examples"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": false,
+      "reason": "Response recommends aggressive surge settings with 'max-surge-upgrade 3' and 'max-unavailable-upgrade 0', which is opposite of conservative settings"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": true,
+      "reason": "Response includes a dedicated monitoring section with commands like 'watch kubectl get nodes' and 'gcloud container operations list' to track progress"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": true,
+      "reason": "Response includes prevention section with commands to enable auto-upgrades, set maintenance windows, and discusses release channel strategy"
+    }
+  ]
+}

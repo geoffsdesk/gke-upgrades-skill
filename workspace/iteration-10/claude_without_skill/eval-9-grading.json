@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends increasing maxSurge for CPU pools (e.g., 10-20) to parallelize node replacements, with justification for the value",
+      "passed": true,
+      "reason": "Response recommends maxSurge: 50 for CPU pools and explains it allows 50 nodes to upgrade simultaneously instead of default 1-3"
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends increasing maxUnavailable (not maxSurge) as the primary lever since surge capacity is typically unavailable",
+      "passed": false,
+      "reason": "Response recommends maxSurge=10 for GPU pools, not maxUnavailable as the primary lever for fixed reservations"
+    },
+    {
+      "expectation": "Advises checking and requesting increased compute quota before the upgrade for CPU pools",
+      "passed": false,
+      "reason": "Response mentions 'if your quota allows' but doesn't explicitly advise checking or requesting increased quota beforehand"
+    },
+    {
+      "expectation": "Suggests staggering node pool upgrades or running non-conflicting pools in parallel",
+      "passed": true,
+      "reason": "Response shows parallel upgrades with --async commands and suggests segmented maintenance approach by pool type"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as an option for GPU pools",
+      "passed": false,
+      "reason": "Response mentions blue-green strategy but doesn't specifically mention GKE's auto-scale blue-green upgrade feature"
+    },
+    {
+      "expectation": "Recommends expanding the maintenance window or splitting across multiple weekends",
+      "passed": true,
+      "reason": "Response suggests segmenting maintenance across weeks and splitting pools across multiple maintenance windows"
+    },
+    {
+      "expectation": "Provides the gcloud command for updating surge settings on each pool",
+      "passed": true,
+      "reason": "Response provides specific gcloud container node-pools update commands with surge settings"
+    },
+    {
+      "expectation": "Includes monitoring commands to track upgrade progress in real-time",
+      "passed": true,
+      "reason": "Response includes a monitoring script with gcloud container operations list command to track running operations"
+    }
+  ]
+}

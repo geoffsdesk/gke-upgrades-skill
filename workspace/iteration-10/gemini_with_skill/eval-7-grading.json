@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Proposes a phased rollout: dev first, then staging, then prod",
+      "passed": true,
+      "reason": "The model explicitly defines stages for the rollout progressing from Dev to Staging and finally to Prod."
+    },
+    {
+      "expectation": "Includes soak time between environment phases (e.g., 24-48 hours for dev, 1 week for staging before prod)",
+      "passed": true,
+      "reason": "The model specifies soak times between stages, such as 3 days after Dev and 4 days after Staging."
+    },
+    {
+      "expectation": "Defines go/no-go criteria between phases (error rates, latency, pod health)",
+      "passed": false,
+      "reason": "While the model mentions pod health and smoke tests in a post-upgrade checklist, it does not explicitly define go/no-go criteria involving error rates or latency."
+    },
+    {
+      "expectation": "Recommends sequential control plane upgrades (1.30\u21921.31\u21921.32) with skip-level node pool upgrades where possible",
+      "passed": false,
+      "reason": "The model correctly identifies the upgrade as a patch upgrade (1.32 to 1.32) and does not mention sequential minor version upgrades or skip-level node pool upgrades."
+    },
+    {
+      "expectation": "Suggests not upgrading all prod clusters simultaneously \u2014 do one or two first as canary",
+      "passed": false,
+      "reason": "The model suggests upgrading all 4 prod clusters in Stage 3 and does not recommend holding back or canarying one or two of them first."
+    },
+    {
+      "expectation": "Includes rollback triggers and criteria for halting the rollout",
+      "passed": false,
+      "reason": "The model mentions Blue-Green upgrades for rollbacks but fails to define specific triggers or criteria for halting the rollout."
+    },
+    {
+      "expectation": "Provides a timeline or schedule estimate for the full rollout",
+      "passed": true,
+      "reason": "The model provides a timeline by outlining soak durations (3 days, 4 days) and suggesting a weekly schedule (Monday, Wednesday, Saturday)."
+    },
+    {
+      "expectation": "Mentions maintenance window coordination across clusters",
+      "passed": true,
+      "reason": "The model provides a specific option and gcloud commands for coordinating staggered maintenance windows across the different cluster environments."
+    },
+    {
+      "expectation": "If rollout sequencing is mentioned, notes that all clusters must be on the same channel for it to work",
+      "passed": true,
+      "reason": "The model recommends Fleet Rollout Sequencing and explicitly notes that it is suitable because all clusters are on the same (Regular) release channel."
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's native node pool upgrade strategies rather than the manual create/cordon/drain/delete workflow described",
+      "passed": true,
+      "reason": "The model explicitly states to avoid the manual workflow and use GKE's native upgrade strategies."
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends surge upgrade with maxSurge=0 and maxUnavailable set as the primary lever (since no surge capacity is available)",
+      "passed": true,
+      "reason": "The model specifically recommends 'Surge Upgrade configured specifically for constrained GPU reservations: maxSurge=0 and maxUnavailable=X' and provides the exact gcloud commands to configure this."
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as a native alternative that handles cordon and migration automatically",
+      "passed": true,
+      "reason": "The model mentions 'GKE's native Blue-Green strategy' as an alternative but correctly points out it is highly problematic for this specific 128-node fixed reservation due to quota constraints."
+    },
+    {
+      "expectation": "Explains that native strategies are the supported path and handle edge cases (PDB respect, drain timeouts, progress tracking) that manual workflows miss",
+      "passed": true,
+      "reason": "The model explains that native strategies handle the cordon and drain lifecycle automatically, including specific mentions of respecting PodDisruptionBudgets (PDBs) and the 1-hour eviction timeouts."
+    },
+    {
+      "expectation": "Only suggests manual blue-green as a last resort if native strategies don't meet a specific requirement",
+      "passed": true,
+      "reason": "The model explicitly states: 'In GKE, manual node pool workflows are considered a last resort.'"
+    },
+    {
+      "expectation": "Addresses GPU driver compatibility \u2014 need to verify target version's auto-installed driver is compatible",
+      "passed": true,
+      "reason": "The model contains a specific section on 'GPU Driver & CUDA Coupling' warning that GKE automatically installs new drivers and recommending compatibility testing first."
+    },
+    {
+      "expectation": "Recommends scheduling the upgrade during a gap in GPU workloads to minimize impact",
+      "passed": true,
+      "reason": "The model advises to 'Ideally, schedule this node pool upgrade during a natural gap between training campaigns.'"
+    },
+    {
+      "expectation": "Provides gcloud commands for the recommended native approach",
+      "passed": true,
+      "reason": "The model provides a complete runbook with the relevant 'gcloud container node-pools update' and 'upgrade' commands to execute the strategy natively."
+    }
+  ]
+}

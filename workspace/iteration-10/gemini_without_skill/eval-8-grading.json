@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the key difference: surge upgrades nodes in-place with rolling replacement, blue-green creates an entirely new pool",
+      "passed": true,
+      "reason": "The model accurately contrasts surge upgrades (replacing nodes one at a time) with blue-green upgrades (creating a parallel 'green' pool)."
+    },
+    {
+      "expectation": "Recommends blue-green for this scenario due to local SSDs (data can't migrate between nodes)",
+      "passed": false,
+      "reason": "The model explicitly recommends against blue-green upgrades and strongly suggests surge upgrades instead."
+    },
+    {
+      "expectation": "Explains that local SSD data is lost when a node is drained during surge upgrade",
+      "passed": true,
+      "reason": "The model clearly explains that Local SSD data is permanently wiped when a node is upgraded and the VM is recreated."
+    },
+    {
+      "expectation": "Recommends GKE's auto-scale blue-green upgrade strategy as the native approach, or describes the blue-green process if manual workflow is needed",
+      "passed": false,
+      "reason": "The model recommends surge upgrades and explicitly advises against using a blue-green upgrade strategy."
+    },
+    {
+      "expectation": "Addresses Cassandra-specific concerns: need to decommission from the ring before draining, rebuild on new nodes",
+      "passed": false,
+      "reason": "While the model mentions the rebuild process on new nodes, it fails to mention the need to decommission nodes from the Cassandra ring before draining."
+    },
+    {
+      "expectation": "Provides gcloud commands for creating the new node pool with matching configuration",
+      "passed": false,
+      "reason": "The model provides gcloud commands to update an existing node pool for surge upgrades, rather than commands to create a new node pool."
+    },
+    {
+      "expectation": "Includes kubectl commands for cordoning and draining",
+      "passed": false,
+      "reason": "The model does not provide any kubectl commands for manually cordoning and draining nodes."
+    },
+    {
+      "expectation": "Mentions PDB configuration to protect the Cassandra quorum during migration",
+      "passed": true,
+      "reason": "The model explicitly mentions and provides a YAML example for configuring a PodDisruptionBudget (PDB) to protect the Cassandra quorum."
+    }
+  ]
+}

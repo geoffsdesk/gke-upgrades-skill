@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends sequential control plane upgrades (1.30\u21921.31\u21921.32) while using skip-level (N+2) for node pool upgrades where possible to reduce disruption",
+      "passed": false,
+      "reason": "The response assumes an upgrade from 1.31 to 1.32 and does not mention sequential control plane upgrades from 1.30 or skip-level (N+2) node pool upgrades."
+    },
+    {
+      "expectation": "Specifies control plane upgrades before node pool upgrades",
+      "passed": true,
+      "reason": "The response clearly outlines Phase 2 as the Control Plane Upgrade and Phase 3 as the Node Pool Upgrades."
+    },
+    {
+      "expectation": "Provides different node pool upgrade ordering with rationale for the sequence",
+      "passed": true,
+      "reason": "The response orders the node pool upgrades (General-Purpose first, then High-Memory, then GPU) and provides the rationale of isolating potential issues and addressing risks progressively."
+    },
+    {
+      "expectation": "Includes specific surge upgrade settings (maxSurge/maxUnavailable) for each pool with justification for the chosen values (e.g., explaining why maxSurge is set higher for parallelism)",
+      "passed": false,
+      "reason": "The response only provides specific surge settings (maxSurge=0, maxUnavailable=1) for the GPU pool. It fails to provide specific surge values and justifications for the general-purpose and high-memory pools."
+    },
+    {
+      "expectation": "Addresses Postgres-specific concerns (PDB, backup, operator compatibility, PV reclaim)",
+      "passed": false,
+      "reason": "The response addresses PDBs, backups, and operator compatibility for Postgres, but fails to mention PV reclaim policies."
+    },
+    {
+      "expectation": "Addresses GPU-specific concerns (driver compatibility, maxUnavailable as primary lever since surge capacity is typically unavailable)",
+      "passed": true,
+      "reason": "The response addresses GPU driver compatibility with the new kernel and explicitly explains using max-unavailable=1 / max-surge=0 due to GPU quota constraints."
+    },
+    {
+      "expectation": "Includes actual gcloud commands for the upgrade steps",
+      "passed": true,
+      "reason": "The response provides specific gcloud container clusters upgrade and node-pools update commands."
+    },
+    {
+      "expectation": "Provides a pre-upgrade checklist",
+      "passed": true,
+      "reason": "The response includes a detailed 'Phase 1: Pre-Upgrade Preparation' checklist."
+    },
+    {
+      "expectation": "Provides a post-upgrade checklist with validation commands",
+      "passed": true,
+      "reason": "The response includes a 'Phase 4: Post-Upgrade Validation' checklist, including specific commands like kubectl get nodes and nvidia-smi."
+    },
+    {
+      "expectation": "Includes rollback procedure or guidance (noting CP patch downgrades are customer-doable, minor downgrades require GKE support)",
+      "passed": false,
+      "reason": "The response does not include any rollback procedures, downgrade guidance, or what to do if the upgrade fails."
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies Service A (minAvailable=100%) as a guaranteed upgrade blocker \u2014 no disruptions allowed at all",
+      "passed": true,
+      "reason": "Correctly identifies Service A with minAvailable=100% as blocking all rolling updates and node drains"
+    },
+    {
+      "expectation": "Identifies Service B (maxUnavailable=0) as also blocking upgrades \u2014 same effect as 100% minAvailable",
+      "passed": true,
+      "reason": "Correctly identifies Service B with maxUnavailable=0 as preventing any pod disruption and having identical issue to Service A"
+    },
+    {
+      "expectation": "States Service C (minAvailable=2 with 3 replicas) is safe \u2014 allows 1 pod disruption at a time",
+      "passed": false,
+      "reason": "Incorrectly identifies Service C as 'risky edge case' rather than safe - it does allow 1 pod disruption (3-2=1)"
+    },
+    {
+      "expectation": "States Service D (maxUnavailable=1 with 5 replicas) is safe \u2014 allows 1 pod down at a time",
+      "passed": true,
+      "reason": "Correctly identifies Service D as safe configuration that allows upgrades while maintaining availability"
+    },
+    {
+      "expectation": "Recommends fixing Service A: change to minAvailable=N-1 or maxUnavailable=1",
+      "passed": true,
+      "reason": "Provides fix for Service A suggesting maxUnavailable=1 in both analysis and YAML example"
+    },
+    {
+      "expectation": "Recommends fixing Service B: change to maxUnavailable=1",
+      "passed": true,
+      "reason": "Provides fix for Service B suggesting maxUnavailable=1 or 25% in both analysis and YAML example"
+    },
+    {
+      "expectation": "Explains that GKE respects PDBs for up to 1 hour during surge upgrades, then may force-drain",
+      "passed": false,
+      "reason": "No mention of GKE-specific behavior, 1-hour timeout, or force-drain mechanics"
+    },
+    {
+      "expectation": "Provides kubectl patch commands to fix the problematic PDBs",
+      "passed": false,
+      "reason": "Provides complete YAML manifests and kubectl get/drain commands, but no kubectl patch commands specifically"
+    },
+    {
+      "expectation": "Recommends testing PDB changes in a non-production environment first",
+      "passed": true,
+      "reason": "Ends with suggestion to test changes in staging environment first"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies PDB as the most likely/common cause of stuck upgrades",
+      "passed": true,
+      "reason": "Response explicitly states 'Your upgrade is likely blocked by pod eviction issues' and lists PDBs as '(Most Common Cause)' in the first diagnostic step"
+    },
+    {
+      "expectation": "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
+      "passed": true,
+      "reason": "Provides 'kubectl get pdb -A -o wide' command which is equivalent to --all-namespaces"
+    },
+    {
+      "expectation": "Provides commands to identify which pods are blocking the drain",
+      "passed": true,
+      "reason": "Includes multiple commands: checking pods on draining nodes with 'kubectl get pods -A --field-selector spec.nodeName=NODE_NAME' and finding stuck terminating pods"
+    },
+    {
+      "expectation": "Includes resource constraint diagnosis (capacity issues, pending pods)",
+      "passed": true,
+      "reason": "Section 3 specifically covers resource constraints with commands to check pending pods, scheduling events, and node resource usage"
+    },
+    {
+      "expectation": "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+      "passed": true,
+      "reason": "Provides kubectl patch command to temporarily relax PDB settings and includes backup/restore procedure"
+    },
+    {
+      "expectation": "Mentions that GKE has a PDB timeout (up to 1 hour) after which it may force-drain, and that GKE sends notifications when eviction is blocked by PDB",
+      "passed": false,
+      "reason": "Does not mention GKE's PDB timeout behavior or force-drain capabilities, nor notifications about PDB blocking"
+    },
+    {
+      "expectation": "Includes guidance on surge upgrade settings as a potential fix",
+      "passed": true,
+      "reason": "Provides gcloud command to increase max-surge-upgrade and set max-unavailable-upgrade as a fix for resource constraints"
+    },
+    {
+      "expectation": "Mentions webhook issues as a possible cause",
+      "passed": false,
+      "reason": "Does not mention admission webhooks or webhook issues as a potential cause of stuck upgrades"
+    },
+    {
+      "expectation": "Includes validation steps to confirm the fix is working",
+      "passed": true,
+      "reason": "Includes 'Monitor Progress' section with watch commands to track node upgrade progress and monitor stuck pods"
+    }
+  ]
+}

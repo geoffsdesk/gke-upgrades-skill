@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "The response clearly states that worker nodes can be up to two minor versions older than the control plane."
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (3 minor versions)",
+      "passed": true,
+      "reason": "The response identifies the situation as an 'n-3' skew and explicitly lists the nodes as violating the n-2 support policy."
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "The response lists specific risks including API incompatibilities, pods failing to schedule, and unpredictable behavior."
+    },
+    {
+      "expectation": "Recommends skip-level (N+2) node pool upgrades where possible to reduce time and disruption (e.g., 1.28\u21921.30 then 1.30\u21921.31), rather than upgrading through every minor",
+      "passed": false,
+      "reason": "The response recommends a 'Blue/Green' node pool swap directly to 1.31 instead of skip-level in-place upgrades."
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": false,
+      "reason": "The response provides kubectl commands for cordoning/draining and a gcloud command for deleting a node pool, but does not provide the gcloud commands to actually upgrade or create the new node pool."
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": false,
+      "reason": "The response does not mention surge settings for the upgrade process."
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": false,
+      "reason": "The response does not recommend version bumps (it recommends a direct swap) and does not mention monitoring between bumps."
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": false,
+      "reason": "The response mentions maintenance windows and auto-upgrades but fails to mention release channel enrollment."
+    }
+  ]
+}
