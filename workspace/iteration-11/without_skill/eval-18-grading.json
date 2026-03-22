@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Configures a recurring maintenance window for weekends only",
+      "passed": true,
+      "reason": "The Terraform configuration includes a recurring_window with start_time on Saturday 2-6 AM UTC and recurrence 'FREQ=WEEKLY;BYDAY=SA' for weekend-only maintenance"
+    },
+    {
+      "expectation": "Provides the gcloud command with --maintenance-window-start/end and --maintenance-window-recurrence for weekly weekend schedule",
+      "passed": false,
+      "reason": "The response uses Terraform configuration but does not provide the actual gcloud commands with --maintenance-window-start/end and --maintenance-window-recurrence flags"
+    },
+    {
+      "expectation": "Sets up maintenance exclusions for quarterly code freezes (up to 30 days each)",
+      "passed": true,
+      "reason": "The configuration includes quarterly_freezes with Q1, Q2, Q3, and Q4 code freeze periods, each roughly 16 days long, well within the 30-day limit"
+    },
+    {
+      "expectation": "Sets up a maintenance exclusion for the November audit period",
+      "passed": true,
+      "reason": "The configuration includes annual_audit exclusion covering the entire November period (11-01 to 11-30) for the annual audit"
+    },
+    {
+      "expectation": "Notes the 30-day maximum for maintenance exclusions and how to handle longer freezes",
+      "passed": false,
+      "reason": "The response does not mention the 30-day maximum limitation for maintenance exclusions or provide guidance on handling longer freeze periods"
+    },
+    {
+      "expectation": "Explains that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
+      "passed": false,
+      "reason": "The response does not explain the distinction between manual and automatic upgrades or that maintenance windows only apply to auto-upgrades"
+    },
+    {
+      "expectation": "Recommends combining maintenance windows with Stable or Extended channel for maximum upgrade control",
+      "passed": false,
+      "reason": "While the configuration shows 'REGULAR' channel with a comment about using 'STABLE' for production, it doesn't explain the benefits of combining maintenance windows with Stable/Extended channels for upgrade control"
+    },
+    {
+      "expectation": "Provides gcloud commands for each exclusion (--add-maintenance-exclusion-name/start-time/end-time)",
+      "passed": false,
+      "reason": "The response uses Terraform and Python code but does not provide the specific gcloud commands with --add-maintenance-exclusion-name/start-time/end-time flags"
+    },
+    {
+      "expectation": "Warns about the risk of falling too far behind on versions during long exclusion periods",
+      "passed": false,
+      "reason": "The response does not warn about the risks of falling behind on versions during extended maintenance exclusion periods"
+    }
+  ]
+}

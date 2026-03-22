@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Checks for deprecated API usage that may have changed behavior in 1.30",
+      "passed": false,
+      "reason": "The response does not mention checking for deprecated API usage or API version changes, which is important for version upgrades"
+    },
+    {
+      "expectation": "Recommends checking admission webhooks \u2014 they may be rejecting or slowing down requests on the new version",
+      "passed": true,
+      "reason": "The response includes specific commands to check admission webhooks and mentions webhook timeouts and connectivity issues"
+    },
+    {
+      "expectation": "Advises checking if resource requests/limits need adjusting for any system components that changed",
+      "passed": true,
+      "reason": "The response includes commands to check resource utilization and provides examples of patching deployments with updated resource requests"
+    },
+    {
+      "expectation": "Suggests examining kube-system pods for any that are crashlooping or restarting",
+      "passed": true,
+      "reason": "The response includes commands to check control plane pods, look for recent restarts, and monitor non-running pods in kube-system"
+    },
+    {
+      "expectation": "Includes commands to check API server metrics and latency (kubectl get --raw /metrics)",
+      "passed": true,
+      "reason": "The response includes the specific command 'kubectl get --raw /metrics | grep apiserver_current_inflight_requests' for checking API server metrics"
+    },
+    {
+      "expectation": "Recommends checking if NetworkPolicy or service mesh components need updating for the new version",
+      "passed": true,
+      "reason": "The response includes specific sections for checking CNI plugins and service mesh components like Istio/Linkerd with relevant commands"
+    },
+    {
+      "expectation": "Advises reviewing pod events for scheduling delays or readiness probe failures",
+      "passed": true,
+      "reason": "The response includes multiple commands to check events, including sorting by timestamp and checking for specific event types like evictions"
+    },
+    {
+      "expectation": "Mentions checking if HPA or VPA are behaving differently on the new version",
+      "passed": false,
+      "reason": "The response does not mention checking HPA (Horizontal Pod Autoscaler) or VPA (Vertical Pod Autoscaler) behavior changes"
+    }
+  ]
+}

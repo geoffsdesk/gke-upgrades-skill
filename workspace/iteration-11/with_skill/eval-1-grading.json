@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends sequential control plane upgrades (1.30\u21921.31\u21921.32) while using skip-level (N+2) for node pool upgrades where possible to reduce disruption",
+      "passed": false,
+      "reason": "The response addresses upgrading from 1.32 to 1.33 (single minor version jump) but does not recommend sequential control plane upgrades through multiple versions or discuss skip-level upgrades for node pools"
+    },
+    {
+      "expectation": "Specifies control plane upgrades before node pool upgrades",
+      "passed": true,
+      "reason": "Clearly shows Phase 1 as control plane upgrade followed by Phase 2 node pool upgrades, with specific gcloud command for master upgrade first"
+    },
+    {
+      "expectation": "Provides different node pool upgrade ordering with rationale for the sequence",
+      "passed": true,
+      "reason": "Specifies upgrade order: general-purpose \u2192 high-memory \u2192 GPU, with rationale that general-purpose has stateless workloads, high-memory needs careful handling for databases, and GPU pool is most complex"
+    },
+    {
+      "expectation": "Includes specific surge upgrade settings (maxSurge/maxUnavailable) for each pool with justification for the chosen values (e.g., explaining why maxSurge is set higher for parallelism)",
+      "passed": true,
+      "reason": "Provides specific settings for each pool: general-purpose (maxSurge=3, maxUnavailable=0), high-memory (maxSurge=1, maxUnavailable=0), GPU (maxSurge=0, maxUnavailable=1) with clear justifications for each choice"
+    },
+    {
+      "expectation": "Addresses Postgres-specific concerns (PDB, backup, operator compatibility, PV reclaim)",
+      "passed": true,
+      "reason": "Explicitly addresses PDBs, backup verification, operator compatibility with GKE 1.33, and mentions PV reclaim policies in the workload readiness section"
+    },
+    {
+      "expectation": "Addresses GPU-specific concerns (driver compatibility, maxUnavailable as primary lever since surge capacity is typically unavailable)",
+      "passed": true,
+      "reason": "Covers GPU driver compatibility, CUDA version dependencies, explains maxUnavailable=1 due to fixed GPU reservations with no surge capacity, and discusses the lack of live migration for GPU VMs"
+    },
+    {
+      "expectation": "Includes actual gcloud commands for the upgrade steps",
+      "passed": true,
+      "reason": "Provides specific gcloud commands for checking versions, upgrading control plane, configuring surge settings, and upgrading each node pool"
+    },
+    {
+      "expectation": "Provides a pre-upgrade checklist",
+      "passed": true,
+      "reason": "Includes comprehensive pre-upgrade requirements including version compatibility check, deprecated APIs, workload readiness requirements, PDB configuration, and backup verification"
+    },
+    {
+      "expectation": "Provides a post-upgrade checklist with validation commands",
+      "passed": false,
+      "reason": "While it mentions 'Post-upgrade validation' in the timeline, it does not provide specific validation commands or a detailed post-upgrade checklist"
+    },
+    {
+      "expectation": "Includes rollback procedure or guidance (noting CP patch downgrades are customer-doable, minor downgrades require GKE support)",
+      "passed": true,
+      "reason": "Provides rollback guidance noting that control plane minor version downgrades require GKE support, and suggests creating new node pools at 1.32 for node pool rollback"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies PDB as the most likely/common cause of stuck upgrades",
+      "passed": true,
+      "reason": "Response explicitly states 'Pod Disruption Budgets (Most Common)' and identifies PDBs as the most likely culprit in the immediate action plan"
+    },
+    {
+      "expectation": "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
+      "passed": true,
+      "reason": "Includes 'kubectl get pdb --all-namespaces' and 'kubectl describe pdb --all-namespaces' commands"
+    },
+    {
+      "expectation": "Provides commands to identify which pods are blocking the drain",
+      "passed": true,
+      "reason": "Multiple commands provided: 'kubectl get pods --all-namespaces -o wide', 'kubectl get pods --all-namespaces --field-selector=spec.nodeName=<stuck-node-name>', and commands to find pending pods"
+    },
+    {
+      "expectation": "Includes resource constraint diagnosis (capacity issues, pending pods)",
+      "passed": true,
+      "reason": "Includes commands to check for pending pods with 'kubectl get pods --all-namespaces --field-selector=status.phase=Pending'"
+    },
+    {
+      "expectation": "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+      "passed": true,
+      "reason": "Multiple PDB fixes provided: 'kubectl patch pdb' commands to adjust minAvailable and maxUnavailable settings"
+    },
+    {
+      "expectation": "Mentions that GKE has a PDB timeout (up to 1 hour) after which it may force-drain, and that GKE sends notifications when eviction is blocked by PDB",
+      "passed": false,
+      "reason": "Response does not mention GKE's PDB timeout behavior or notification system for blocked evictions"
+    },
+    {
+      "expectation": "Includes guidance on surge upgrade settings as a potential fix",
+      "passed": true,
+      "reason": "Provides commands to configure max-surge and max-unavailable settings in multiple places, including prevention section"
+    },
+    {
+      "expectation": "Mentions webhook issues as a possible cause",
+      "passed": false,
+      "reason": "Response does not mention admission controller webhooks or webhook issues as a potential cause of stuck drains"
+    },
+    {
+      "expectation": "Includes validation steps to confirm the fix is working",
+      "passed": true,
+      "reason": "Section 6 'Monitor Progress' includes 'watch kubectl get nodes' and 'kubectl get events' commands to monitor upgrade progress"
+    }
+  ]
+}

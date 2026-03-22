@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Starts with pre-flight checks: current versions, cluster health, node status",
+      "passed": true,
+      "reason": "Includes comprehensive pre-flight checks section with commands to verify current cluster state, check node health with 'kubectl get nodes', and verify pod status across all namespaces"
+    },
+    {
+      "expectation": "Includes the gcloud command to check available versions in the release channel",
+      "passed": true,
+      "reason": "Provides the exact gcloud command: 'gcloud container get-server-config --zone us-west1-b --format=\"yaml(channels.REGULAR.validVersions)\" | grep \"1.32\"' to check available versions"
+    },
+    {
+      "expectation": "Includes the API deprecation check command before upgrading",
+      "passed": true,
+      "reason": "Includes the command 'kubectl get --raw /metrics 2>/dev/null | grep apiserver_request_total | grep deprecated' to check for deprecated API usage"
+    },
+    {
+      "expectation": "Provides the exact gcloud command for control plane upgrade to 1.31 first (--master flag)",
+      "passed": false,
+      "reason": "The response correctly identifies this as a patch upgrade within 1.32 (1.32\u21921.32) and provides the control plane upgrade command with --master flag, but the expectation asks for upgrading to 1.31 first, which doesn't match the user's request to upgrade from 1.32 to 1.32"
+    },
+    {
+      "expectation": "Includes a verification step after control plane upgrade with expected output",
+      "passed": true,
+      "reason": "Provides verification commands after control plane upgrade including checking the currentMasterVersion and verifying kube-system pods are running"
+    },
+    {
+      "expectation": "Provides gcloud commands for node pool upgrades \u2014 may use skip-level (N+2) for node pools to reduce steps",
+      "passed": true,
+      "reason": "Provides detailed gcloud commands for upgrading both node pools: 'gcloud container node-pools upgrade default-pool' and 'gcloud container node-pools upgrade workload-pool' with proper parameters"
+    },
+    {
+      "expectation": "Includes monitoring commands to watch node pool upgrade progress",
+      "passed": true,
+      "reason": "Includes 'watch kubectl get nodes -o wide' command and additional monitoring commands to check for stuck pods during node pool upgrades"
+    },
+    {
+      "expectation": "Provides sequential control plane upgrades (1.30\u21921.31\u21921.32) with option for skip-level node pool upgrades",
+      "passed": false,
+      "reason": "The response correctly identifies this as a patch upgrade within 1.32, not a multi-version upgrade. The user requested upgrading from 1.32 to 1.32 (patch update), so sequential upgrades through 1.30\u21921.31\u21921.32 are not applicable or needed"
+    },
+    {
+      "expectation": "Includes post-upgrade validation: node versions, pod health, kube-system pods",
+      "passed": true,
+      "reason": "Comprehensive post-upgrade validation section includes checking node versions, verifying pod health across all namespaces, checking kube-system pods, and DNS resolution testing"
+    },
+    {
+      "expectation": "Provides a rollback section explaining what to do if something goes wrong",
+      "passed": true,
+      "reason": "Includes troubleshooting section with specific commands for common issues and mentions rollback options, noting that for patch versions, downgrade requires contacting Google Cloud Support"
+    }
+  ]
+}

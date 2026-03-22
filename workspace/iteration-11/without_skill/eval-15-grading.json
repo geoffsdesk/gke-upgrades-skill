@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "First step: check the operation status to understand why it failed (gcloud container operations list)",
+      "passed": true,
+      "reason": "Response provides specific command `gcloud container operations list` and `gcloud container operations describe [OPERATION-ID]` to check operation status"
+    },
+    {
+      "expectation": "Recommends checking events and logs for the specific failure reason",
+      "passed": true,
+      "reason": "Response includes commands to check operation details and asks for specific error message at the end"
+    },
+    {
+      "expectation": "Explains that the cluster is in a mixed-version state (8 nodes at 1.32, 12 at 1.31) which is within skew policy",
+      "passed": true,
+      "reason": "Response explicitly mentions mixed-version state and notes version skew policy, though it mentions 2 minor versions rather than the specific 1.31/1.32 scenario"
+    },
+    {
+      "expectation": "Notes that the mixed state is functional but not ideal \u2014 workloads can run on both versions",
+      "passed": true,
+      "reason": "Response indicates the situation is recoverable and provides commands to check workload distribution, implying functionality while noting it's not ideal"
+    },
+    {
+      "expectation": "Provides options: retry the upgrade after fixing the root cause, or rollback the 8 upgraded nodes",
+      "passed": false,
+      "reason": "Response provides retry option but does not mention rollback option - it only discusses resuming/retrying the upgrade or manual completion"
+    },
+    {
+      "expectation": "Explains that retrying is usually better than rollback (rolling back means creating a new pool at old version)",
+      "passed": false,
+      "reason": "Response does not discuss rollback option at all, so cannot explain why retrying is better than rollback"
+    },
+    {
+      "expectation": "Addresses the remaining 2 node pools: they can still be upgraded once the failed pool issue is resolved",
+      "passed": true,
+      "reason": "Response mentions in 'Next Steps After Recovery' to complete the remaining node pools immediately"
+    },
+    {
+      "expectation": "Includes commands to diagnose the failure (operation details, node status, pod events)",
+      "passed": true,
+      "reason": "Response includes multiple diagnostic commands: operation details, kubectl get nodes, kubectl get pods, and others for comprehensive diagnosis"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that exact upgrade dates are difficult to predict but several tools help narrow the window",
+      "passed": false,
+      "reason": "The response focuses on control and predictability without explicitly stating that exact upgrade dates are difficult to predict. It presents solutions as if precise timing is achievable."
+    },
+    {
+      "expectation": "Mentions the GKE release schedule as a 'best case' timeline \u2014 upgrades won't happen before listed dates",
+      "passed": false,
+      "reason": "The response doesn't mention the GKE release schedule or explain it as a 'best case' timeline. It discusses release channels but not the underlying release schedule timing."
+    },
+    {
+      "expectation": "Recommends checking the cluster's auto-upgrade status for the current target version and any pauses",
+      "passed": true,
+      "reason": "The response includes commands to check cluster upgrade status and mentions disabling auto-upgrades, effectively covering checking auto-upgrade status."
+    },
+    {
+      "expectation": "Mentions that new releases roll out progressively across regions over 4-5 business days, and the version promotion path includes channel promotion (Rapid \u2192 Regular \u2192 Stable)",
+      "passed": true,
+      "reason": "The response explains the channel progression (Rapid \u2192 Regular \u2192 Stable) and their timing characteristics, though it doesn't specifically mention the 4-5 business day regional rollout."
+    },
+    {
+      "expectation": "Recommends configuring maintenance windows so upgrades only happen during known time slots. May note that for ultimate predictability, customers can initiate upgrades themselves instead of waiting for auto-upgrade",
+      "passed": true,
+      "reason": "The response prominently features maintenance window configuration with specific commands and mentions disabling auto-upgrades for maximum control, which implies manual upgrade initiation."
+    },
+    {
+      "expectation": "Mentions scheduled upgrade notifications (72h advance, opt-in via Cloud Logging) or the get-upgrade-info API for checking target versions programmatically",
+      "passed": false,
+      "reason": "The response doesn't mention the specific 72-hour advance notifications via Cloud Logging or the get-upgrade-info API. It shows custom notification solutions but not the built-in GKE notification features."
+    },
+    {
+      "expectation": "Notes that GKE upgrade visibility shows the cluster's target version and EoL timeline",
+      "passed": false,
+      "reason": "While the response shows commands to check current versions and available versions, it doesn't specifically mention target versions or End-of-Life (EoL) timelines as part of GKE's upgrade visibility features."
+    },
+    {
+      "expectation": "May mention rollout sequencing (advanced feature, limited adoption) as an option for multi-cluster predictability \u2014 not a primary recommendation",
+      "passed": false,
+      "reason": "The response doesn't mention rollout sequencing as a feature for multi-cluster upgrade predictability."
+    }
+  ]
+}

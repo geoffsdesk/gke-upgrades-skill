@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Clearly states 'Supported skew: Nodes can be up to 2 minor versions behind the control plane'"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (3 minor versions)",
+      "passed": true,
+      "reason": "Explicitly identifies 'Your skew: 3 minor versions (1.28 \u2192 1.31)' and states it exceeds the supported skew"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Mentions 'API compatibility issues, potential pod scheduling problems' and 'stability risks' though doesn't specifically mention kubelet incompatibility"
+    },
+    {
+      "expectation": "Recommends skip-level (N+2) node pool upgrades where possible to reduce time and disruption (e.g., 1.28\u21921.30 then 1.30\u21921.31), rather than upgrading through every minor",
+      "passed": false,
+      "reason": "The response recommends sequential upgrades (1.28\u21921.29\u21921.30\u21921.31) as the primary approach, and mentions skip-level as Option B but doesn't recommend it for reducing time/disruption"
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Provides detailed gcloud container node-pools upgrade commands for both sequential and direct upgrade approaches"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": true,
+      "reason": "Explicitly shows 'max-surge-upgrade 1' and 'max-unavailable-upgrade 0' with comment '# Safe default'"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": true,
+      "reason": "States 'Start with the 1.28 \u2192 1.29 upgrade and monitor closely' and mentions monitoring throughout the process"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": true,
+      "reason": "Provides prevention section with release channel migration commands and mentions cluster-level maintenance exclusions"
+    }
+  ]
+}

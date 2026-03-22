@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies this as an admission webhook compatibility issue \u2014 the webhook is rejecting pod creation requests",
+      "passed": true,
+      "reason": "Response correctly identifies this as an admission webhook issue, stating 'admission webhooks can break when the Kubernetes API version changes' and explains the webhook is rejecting requests"
+    },
+    {
+      "expectation": "Provides commands to identify the problematic webhook (kubectl get validatingwebhookconfigurations / mutatingwebhookconfigurations)",
+      "passed": true,
+      "reason": "Response provides 'kubectl get validatingwebhookconfigurations | grep cert-manager' command to identify the problematic webhook"
+    },
+    {
+      "expectation": "Offers an immediate fix: temporarily disable or remove the problematic webhook",
+      "passed": true,
+      "reason": "Response provides two immediate fix options: deleting the webhook configuration and setting failurePolicy to Ignore"
+    },
+    {
+      "expectation": "Provides the kubectl delete command for the webhook configuration as emergency mitigation",
+      "passed": true,
+      "reason": "Response includes 'kubectl delete validatingwebhookconfigurations cert-manager-webhook' as an immediate fix"
+    },
+    {
+      "expectation": "Warns that deleting the webhook removes validation \u2014 it's a temporary fix",
+      "passed": true,
+      "reason": "Response labels the deletion as 'Temporarily disable the webhook' and refers to it as a temporary fix that should be followed by a proper root cause fix"
+    },
+    {
+      "expectation": "Recommends checking cert-manager version compatibility with Kubernetes 1.32",
+      "passed": true,
+      "reason": "Response includes commands to check current cert-manager version and discusses upgrading to a '1.32-compatible version'"
+    },
+    {
+      "expectation": "Advises upgrading cert-manager to a version that supports 1.30 as the permanent fix",
+      "passed": false,
+      "reason": "Response mentions upgrading to a '1.32-compatible version' but the expectation specifically asks for 1.30 support, which is not mentioned"
+    },
+    {
+      "expectation": "Mentions setting failurePolicy to Ignore as a less drastic alternative to deletion",
+      "passed": true,
+      "reason": "Response provides Option 2 showing how to edit the webhook configuration to add 'failurePolicy: Ignore' as an alternative to deletion"
+    },
+    {
+      "expectation": "Includes commands to verify pods can be created after the fix",
+      "passed": true,
+      "reason": "Response includes 'kubectl run test-pod --image=nginx --rm -it -- echo \"test\"' to verify pod creation works after the fix"
+    }
+  ]
+}

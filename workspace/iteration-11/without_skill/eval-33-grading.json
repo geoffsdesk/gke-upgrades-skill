@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends upgrading the L4 inference pool and A100 pool separately with different strategies",
+      "passed": true,
+      "reason": "Response clearly separates Phase 2 for L4 inference pool upgrade and Phase 3 for A100 fine-tuning pool upgrade with distinct strategies for each"
+    },
+    {
+      "expectation": "For L4 inference pool: recommends surge upgrade with maxSurge=1 or 2 to maintain capacity during rolling replacement",
+      "passed": true,
+      "reason": "Response recommends creating a temporary surge node pool (l4-pool-132-temp) with 50 nodes to maintain capacity during the upgrade, which is a surge strategy"
+    },
+    {
+      "expectation": "Addresses GPU driver version compatibility \u2014 auto-installed drivers must be compatible with inference framework (TensorRT, vLLM, etc.)",
+      "passed": true,
+      "reason": "Response mentions validating GPU drivers, CUDA compatibility, and ML frameworks in the pre-upgrade preparation section"
+    },
+    {
+      "expectation": "For A100 fine-tuning pool: recommends scheduling the upgrade during a gap between fine-tuning jobs",
+      "passed": true,
+      "reason": "Response includes detailed job monitoring script and explicitly waits for optimal upgrade window when less than 5 active fine-tuning jobs are running"
+    },
+    {
+      "expectation": "Notes that GPU VMs do not support live migration \u2014 inference pods will restart during node upgrade, causing brief latency spikes",
+      "passed": false,
+      "reason": "Response does not explicitly mention that GPU VMs do not support live migration or that inference pods will restart causing latency spikes"
+    },
+    {
+      "expectation": "Recommends PDBs on inference deployments to ensure enough replicas stay available during the rolling upgrade",
+      "passed": true,
+      "reason": "Response includes a PodDisruptionBudget configuration with minAvailable: 80% to maintain high availability during upgrade"
+    },
+    {
+      "expectation": "Addresses auto-scaler interaction \u2014 new nodes created by auto-scaler during upgrade will be at the old version until their pool upgrade completes",
+      "passed": false,
+      "reason": "Response does not specifically address the issue that auto-scaler created nodes will be at the old version during the upgrade process"
+    },
+    {
+      "expectation": "Recommends testing driver + CUDA compatibility in staging before production upgrade",
+      "passed": true,
+      "reason": "Response explicitly mentions testing 1.32 compatibility in staging environment and validating GPU drivers, CUDA compatibility, and ML frameworks"
+    }
+  ]
+}

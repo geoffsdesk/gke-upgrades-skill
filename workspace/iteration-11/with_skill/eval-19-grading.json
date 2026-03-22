@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all four notification types: scheduled auto-upgrade notifications, version available notifications, end-of-life/EoS enforcement warnings, and critical security patches"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response uses color-coded urgency system: URGENT (red) for EoS and security patches, MEDIUM (yellow) for scheduled upgrades and version available, LOW (green) for informational notifications"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response explicitly states EoS warnings are URGENT with action required to 'plan upgrade within the warning period' and provides specific commands for applying maintenance exclusions"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": false,
+      "reason": "Response mentions evaluating scheduled upgrades against release calendar and coordination needs but does not specifically mention executing a pre-upgrade checklist"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response categorizes security patches as URGENT requiring review within SLA requirements and mentions 'Fast-track through staging first' for production clusters"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response categorizes 'version available' notifications as MEDIUM priority with action to 'Review release notes, plan testing if considering early adoption' and notes they are for planning purposes"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "Response provides specific Cloud Monitoring alert policy YAML configuration for GKE EoS notifications and mentions 'log-based alerting for urgent notifications'"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": true,
+      "reason": "Response explicitly mentions 'Review release notes' multiple times as action items for version available notifications and upgrade planning"
+    }
+  ]
+}

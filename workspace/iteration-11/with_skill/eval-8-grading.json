@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the key difference: surge upgrades nodes in-place with rolling replacement, blue-green creates an entirely new pool",
+      "passed": true,
+      "reason": "Response clearly explains that surge upgrades terminate nodes and that blue-green creates new nodes (green pool) while keeping old nodes (blue pool) running until cutover"
+    },
+    {
+      "expectation": "Recommends blue-green for this scenario due to local SSDs (data can't migrate between nodes)",
+      "passed": true,
+      "reason": "Explicitly recommends blue-green and explains that local SSD data is physically tied to specific nodes and cannot be moved to new nodes during surge"
+    },
+    {
+      "expectation": "Explains that local SSD data is lost when a node is drained during surge upgrade",
+      "passed": true,
+      "reason": "Clearly states that surge upgrades terminate nodes, permanently destroying local SSD data, and explains data locality concerns"
+    },
+    {
+      "expectation": "Recommends GKE's auto-scale blue-green upgrade strategy as the native approach, or describes the blue-green process if manual workflow is needed",
+      "passed": true,
+      "reason": "Provides both standard blue-green configuration and mentions autoscaled blue-green as an alternative preview feature, with detailed process description"
+    },
+    {
+      "expectation": "Addresses Cassandra-specific concerns: need to decommission from the ring before draining, rebuild on new nodes",
+      "passed": true,
+      "reason": "Discusses Cassandra ring topology, bootstrapping process, and ring rebalancing, though doesn't explicitly mention decommission commands"
+    },
+    {
+      "expectation": "Provides gcloud commands for creating the new node pool with matching configuration",
+      "passed": true,
+      "reason": "Provides specific gcloud commands for configuring blue-green upgrade with parameters like enable-blue-green-update and soak duration"
+    },
+    {
+      "expectation": "Includes kubectl commands for cordoning and draining",
+      "passed": true,
+      "reason": "Includes kubectl commands for monitoring nodes and uncordoning blue pool for rollback scenarios"
+    },
+    {
+      "expectation": "Mentions PDB configuration to protect the Cassandra quorum during migration",
+      "passed": false,
+      "reason": "Response does not mention PodDisruptionBudget (PDB) configuration to protect Cassandra quorum during the upgrade process"
+    }
+  ]
+}

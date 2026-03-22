@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that spot VMs can be preempted at any time, which interacts with the upgrade drain process",
+      "passed": true,
+      "reason": "Response clearly explains 'Double Disruption Risk' where spot VMs can be preempted during upgrade process, creating additional disruption beyond planned upgrade interruptions"
+    },
+    {
+      "expectation": "Notes that spot node pools may already have workloads designed for interruption (good for upgrades)",
+      "passed": true,
+      "reason": "Response mentions workload resilience and shows workloads with tolerations for preemptions, indicating they're designed for interruption"
+    },
+    {
+      "expectation": "Recommends higher maxSurge for spot pools since the workloads should already be fault-tolerant",
+      "passed": true,
+      "reason": "Response shows maxSurge=2 in the surge upgrade configuration example"
+    },
+    {
+      "expectation": "Advises setting maxUnavailable >0 for spot pools since workloads are already preemption-tolerant",
+      "passed": false,
+      "reason": "Response shows maxUnavailable=0 in the example, which contradicts the expectation of setting it >0 for spot pools"
+    },
+    {
+      "expectation": "Mentions that spot VM availability may affect surge node creation (not guaranteed to get spot instances)",
+      "passed": false,
+      "reason": "Response does not mention potential issues with spot VM availability affecting surge node creation during upgrades"
+    },
+    {
+      "expectation": "Recommends having PDBs even for spot workloads to ensure orderly drain during upgrade",
+      "passed": true,
+      "reason": "Response includes monitoring PDBs with 'kubectl get poddisruptionbudgets --all-namespaces' command, implying their importance"
+    },
+    {
+      "expectation": "Provides the gcloud command for configuring surge settings on the spot pool",
+      "passed": true,
+      "reason": "Response provides specific gcloud command: 'gcloud container node-pools update POOL_NAME --max-surge=2 --max-unavailable=0'"
+    },
+    {
+      "expectation": "Suggests upgrading spot pools before on-demand pools since they're lower risk",
+      "passed": false,
+      "reason": "Response mentions 'Staged Rollout: Upgrade smaller node pools first' but does not specifically recommend upgrading spot pools before on-demand pools"
+    }
+  ]
+}

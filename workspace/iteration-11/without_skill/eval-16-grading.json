@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies this as an admission webhook compatibility issue \u2014 the webhook is rejecting pod creation requests",
+      "passed": true,
+      "reason": "Response clearly states this is 'likely caused by API version compatibility changes' and identifies webhook rejection as the root cause"
+    },
+    {
+      "expectation": "Provides commands to identify the problematic webhook (kubectl get validatingwebhookconfigurations / mutatingwebhookconfigurations)",
+      "passed": true,
+      "reason": "Provides 'kubectl get validatingadmissionwebhooks' and 'kubectl get mutatingadmissionwebhooks' commands to identify problematic webhooks"
+    },
+    {
+      "expectation": "Offers an immediate fix: temporarily disable or remove the problematic webhook",
+      "passed": true,
+      "reason": "Provides two immediate emergency fixes: Option 1 to delete webhook and Option 2 to disable webhook with failurePolicy"
+    },
+    {
+      "expectation": "Provides the kubectl delete command for the webhook configuration as emergency mitigation",
+      "passed": true,
+      "reason": "Shows 'kubectl delete validatingadmissionwebhook <webhook-name>' and 'kubectl delete mutatingadmissionwebhook <webhook-name>' commands"
+    },
+    {
+      "expectation": "Warns that deleting the webhook removes validation \u2014 it's a temporary fix",
+      "passed": true,
+      "reason": "Labels the delete option as 'EMERGENCY ONLY' and emphasizes these are temporary fixes, with proper fix section provided separately"
+    },
+    {
+      "expectation": "Recommends checking cert-manager version compatibility with Kubernetes 1.32",
+      "passed": true,
+      "reason": "Includes section to check current cert-manager version and provides version compatibility matrix mentioning 1.32 support"
+    },
+    {
+      "expectation": "Advises upgrading cert-manager to a version that supports 1.30 as the permanent fix",
+      "passed": true,
+      "reason": "Provides upgrade commands to cert-manager v1.15.3 and states 'cert-manager 1.13+ supports Kubernetes 1.28-1.32'"
+    },
+    {
+      "expectation": "Mentions setting failurePolicy to Ignore as a less drastic alternative to deletion",
+      "passed": true,
+      "reason": "Option 2 shows kubectl patch command to set failurePolicy to Ignore as alternative to deletion"
+    },
+    {
+      "expectation": "Includes commands to verify pods can be created after the fix",
+      "passed": true,
+      "reason": "Includes verification section with 'kubectl run test-pod --image=nginx --dry-run=server -o yaml' to test pod creation"
+    }
+  ]
+}

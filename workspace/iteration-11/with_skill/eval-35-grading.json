@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends Stable or Extended release channel to minimize upgrade frequency",
+      "passed": true,
+      "reason": "Explicitly recommends Extended release channel with detailed explanation of its benefits including 24-month support and manual minor version upgrades"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
+      "passed": true,
+      "reason": "Provides specific gcloud command to add 'no_minor_or_node_upgrades' exclusion with detailed explanation that it blocks node pool and minor upgrades while still allowing critical security patches on control plane"
+    },
+    {
+      "expectation": "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
+      "passed": true,
+      "reason": "Provides specific gcloud command setting maintenance window for Sunday 2-6 AM with weekly recurrence, creating a narrow 4-hour weekend window"
+    },
+    {
+      "expectation": "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
+      "passed": true,
+      "reason": "Creates separate node pools - 'h100-training' pool for training workloads and 'inference-pool' for inference workloads, with clear explanation of separation benefits"
+    },
+    {
+      "expectation": "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
+      "passed": true,
+      "reason": "Explicitly sets '--enable-autoupgrade=false' on the H100 training pool and provides detailed workflow for manual upgrades during training gaps"
+    },
+    {
+      "expectation": "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
+      "passed": true,
+      "reason": "Provides detailed checkpointing strategy with YAML configuration showing hourly checkpoints and specific pre-upgrade workflow including checkpoint verification"
+    },
+    {
+      "expectation": "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
+      "passed": true,
+      "reason": "Includes specific section on 'Driver version coupling' with commands to create staging cluster and test CUDA compatibility, plus multi-cluster strategy for version testing pipeline"
+    },
+    {
+      "expectation": "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading",
+      "passed": false,
+      "reason": "Does not mention GPUDirect or RDMA networking compatibility requirements or version constraints specific to these technologies"
+    }
+  ]
+}

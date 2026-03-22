@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": true,
+      "reason": "Response explicitly states 'Atomic recreation: Each TPU slice (256 chips) is recreated entirely in a single step \u2014 not rolling' and compares this to CPU/GPU rolling upgrades in the comparison table."
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": true,
+      "reason": "Response clearly states 'Cascading restart: A maintenance event on ANY slice triggers restart of ALL slices in your multislice environment' and 'All 4 slices restart simultaneously'."
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "Response states 'Your training job will experience a complete restart' and 'Your entire 1,024-chip training environment goes down at once' and 'All slices down simultaneously' in the comparison table."
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": true,
+      "reason": "Response explicitly mentions 'Capacity dependency: If insufficient TPU v5e resources exist during recreation, slices will block until hardware becomes available' and 'Extended downtime risk: This can cause hours or days of downtime if TPU capacity is constrained'."
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "Response includes 'Force Checkpoint Now' as an immediate action with specific command example, and lists 'Training checkpoint saved at current step' in the preparation checklist."
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "Response includes multiple references to checkpoint restoration: 'Verify checkpoint restoration works from current state', 'Ensure training script handles checkpoint resumption correctly', and provides restart procedure examples."
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": true,
+      "reason": "Response provides specific gcloud commands for applying maintenance exclusions: 'Apply 30-day \"no upgrades\" exclusion to delay maintenance' with detailed command syntax."
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": true,
+      "reason": "Response includes a section on 'Maintenance Window Control' with commands to check and modify maintenance windows, and mentions controlling timing of the event."
+    }
+  ]
+}

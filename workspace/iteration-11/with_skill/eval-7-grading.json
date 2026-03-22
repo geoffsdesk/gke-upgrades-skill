@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Proposes a phased rollout: dev first, then staging, then prod",
+      "passed": true,
+      "reason": "The response clearly outlines Phase 1: Development Environment (Week 1), Phase 2: Staging Environment (Week 2), Phase 3: Production Environment (Week 3)"
+    },
+    {
+      "expectation": "Includes soak time between environment phases (e.g., 24-48 hours for dev, 1 week for staging before prod)",
+      "passed": true,
+      "reason": "Response specifies 48-hour soak period after dev, 72-hour soak period after staging, and 24-hour soak between production waves"
+    },
+    {
+      "expectation": "Defines go/no-go criteria between phases (error rates, latency, pod health)",
+      "passed": true,
+      "reason": "Response includes detailed validation gates for each phase with specific criteria like 'No application errors', 'Performance benchmarks within baseline', 'SLOs maintained', and 'Production traffic handling normally'"
+    },
+    {
+      "expectation": "Recommends sequential control plane upgrades (1.30\u21921.31\u21921.32) with skip-level node pool upgrades where possible",
+      "passed": false,
+      "reason": "The response doesn't address sequential version upgrades - it assumes upgrading from 1.32 to a newer version but doesn't discuss skip-level considerations or sequential upgrade patterns"
+    },
+    {
+      "expectation": "Suggests not upgrading all prod clusters simultaneously \u2014 do one or two first as canary",
+      "passed": true,
+      "reason": "Response recommends Wave 1: prod-cluster-1, prod-cluster-2 first, then Wave 2: prod-cluster-3, prod-cluster-4 after 24h soak, clearly showing a canary approach"
+    },
+    {
+      "expectation": "Includes rollback triggers and criteria for halting the rollout",
+      "passed": true,
+      "reason": "Response includes risk mitigation section with maintenance exclusions as 'emergency brake' and detailed rollback plan with timeline estimates"
+    },
+    {
+      "expectation": "Provides a timeline or schedule estimate for the full rollout",
+      "passed": true,
+      "reason": "Response provides a clear 3-week timeline: Week 1 for dev, Week 2 for staging, Week 3 for prod, with specific day scheduling within each week"
+    },
+    {
+      "expectation": "Mentions maintenance window coordination across clusters",
+      "passed": true,
+      "reason": "Response includes detailed maintenance window configuration commands and discusses staggered maintenance windows with specific times (Saturday 2-6 AM, etc.)"
+    },
+    {
+      "expectation": "If rollout sequencing is mentioned, notes that all clusters must be on the same channel for it to work",
+      "passed": true,
+      "reason": "Response explicitly states 'Since all clusters are on the same channel (Regular), you can use GKE's native rollout sequencing' when introducing the rollout sequencing feature"
+    }
+  ]
+}

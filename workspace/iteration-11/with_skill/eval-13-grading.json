@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's autoscaled blue-green node pool upgrade strategy as the primary approach for batch workloads \u2014 it supports wait-for-drain time, longer graceful termination, and PDB upgrade timeout to let jobs complete",
+      "passed": true,
+      "reason": "Response explicitly recommends autoscaled blue-green upgrade with extended drain time (18h) and max-pods-per-node-disruption-budget-timeout (20h) as 'Recommended for your use case' and 'perfect for long-running workloads'"
+    },
+    {
+      "expectation": "Explains that GKE respects terminationGracePeriodSeconds during pod eviction, but surge upgrades have a max eviction timeout",
+      "passed": false,
+      "reason": "While the response shows terminationGracePeriodSeconds configuration (3600s), it does not explain that GKE respects this during eviction nor mention that surge upgrades have a max eviction timeout"
+    },
+    {
+      "expectation": "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour \u2014 far less than 8-16 hour jobs",
+      "passed": false,
+      "reason": "The response does not mention GKE's default pod eviction timeout of 1 hour or compare it to the 8-16 hour job duration"
+    },
+    {
+      "expectation": "Recommends pausing new batch job submissions before starting the upgrade",
+      "passed": true,
+      "reason": "Response recommends cordoning nodes to prevent new jobs: '# 1. Cordon nodes to prevent new jobs kubectl cordon -l cloud.google.com/gke-nodepool=batch-processing'"
+    },
+    {
+      "expectation": "Advises waiting for in-flight jobs to complete naturally before upgrading their node pool",
+      "passed": true,
+      "reason": "Response explicitly states '# 3. Wait for natural completion (8-16 hours)' and includes monitoring commands to track running jobs before upgrading"
+    },
+    {
+      "expectation": "Suggests using node affinity or taints to isolate batch workloads on a dedicated node pool",
+      "passed": true,
+      "reason": "Response includes both dedicated batch node pool creation and shows node affinity configuration with nodeSelector and tolerations for batch workloads"
+    },
+    {
+      "expectation": "Recommends upgrading non-batch node pools first while batch jobs complete on the old pool",
+      "passed": true,
+      "reason": "Response shows upgrading control plane first, then mentions keeping 'general workloads on auto-upgrading pools' while batch pools are managed separately with disabled auto-upgrade"
+    },
+    {
+      "expectation": "Does NOT recommend 'No channel' as the approach \u2014 uses release channels with maintenance exclusions instead",
+      "passed": true,
+      "reason": "Response stays on Regular release channel and uses maintenance exclusions ('no minor or node upgrades' exclusion) rather than switching to 'No channel'"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies PDB as the most likely/common cause of stuck upgrades",
+      "passed": true,
+      "reason": "Explicitly states PDB checking is first priority with '(most common cause)' notation and emphasizes it's '#1 cause of stuck drains'"
+    },
+    {
+      "expectation": "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
+      "passed": true,
+      "reason": "Provides 'kubectl get pdb -A -o wide' command which uses -A flag equivalent to --all-namespaces"
+    },
+    {
+      "expectation": "Provides commands to identify which pods are blocking the drain",
+      "passed": true,
+      "reason": "Includes multiple commands: 'kubectl describe pdb' to check blocking pods, commands for pending pods, bare pods identification, and pod eviction events"
+    },
+    {
+      "expectation": "Includes resource constraint diagnosis (capacity issues, pending pods)",
+      "passed": true,
+      "reason": "Provides commands to check pending pods, resource allocation, and node capacity with 'kubectl get pods -A | grep Pending' and resource checking commands"
+    },
+    {
+      "expectation": "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+      "passed": true,
+      "reason": "Includes kubectl patch command to temporarily adjust PDB with maxUnavailable setting: 'kubectl patch pdb PDB_NAME -n NAMESPACE -p '{\"spec\":{\"maxUnavailable\":\"50%\"}}'"
+    },
+    {
+      "expectation": "Mentions that GKE has a PDB timeout (up to 1 hour) after which it may force-drain, and that GKE sends notifications when eviction is blocked by PDB",
+      "passed": false,
+      "reason": "Does not mention GKE's PDB timeout behavior or notification system for PDB-blocked evictions"
+    },
+    {
+      "expectation": "Includes guidance on surge upgrade settings as a potential fix",
+      "passed": true,
+      "reason": "Provides specific gcloud command to adjust surge settings: 'gcloud container node-pools update' with max-surge-upgrade and max-unavailable-upgrade parameters"
+    },
+    {
+      "expectation": "Mentions webhook issues as a possible cause",
+      "passed": true,
+      "reason": "Includes commands to check admission webhooks: 'kubectl get validatingwebhookconfigurations' and 'kubectl get mutatingwebhookconfigurations'"
+    },
+    {
+      "expectation": "Includes validation steps to confirm the fix is working",
+      "passed": true,
+      "reason": "Provides monitoring commands under 'Monitor Progress' section including watch command for nodes and gcloud operations list to track upgrade status"
+    }
+  ]
+}

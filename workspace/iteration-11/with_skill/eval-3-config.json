@@ -1,0 +1,19 @@
+{
+  "eval_id": 3,
+  "mode": "with_skill",
+  "iteration": 11,
+  "prompt": "Our node pool upgrade has been stuck for 2 hours. It says 3 out of 12 nodes upgraded. We're on a Standard cluster in us-east1, running 1.31, upgrading nodes to 1.32. The pods on the remaining nodes aren't draining. What should we check and how do we fix this?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-22T14:20:44.279337+00:00",
+  "input_tokens": 11352,
+  "output_tokens": 1009,
+  "time_seconds": 17.56,
+  "skill_files": [
+    "skill/SKILL.md",
+    "skill/evals/evals.json",
+    "skill/references/checklists.md",
+    "skill/references/runbook-template.md",
+    "skill/references/troubleshooting.md"
+  ]
+}

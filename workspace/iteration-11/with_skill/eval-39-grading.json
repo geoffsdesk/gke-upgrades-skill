@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's native node pool upgrade strategies rather than the manual create/cordon/drain/delete workflow described",
+      "passed": true,
+      "reason": "Clearly states 'No, that's not the right approach' and recommends GKE's surge upgrade strategy instead of the manual workflow"
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends surge upgrade with maxSurge=0 and maxUnavailable set as the primary lever (since no surge capacity is available)",
+      "passed": true,
+      "reason": "Explicitly recommends maxSurge=0 with maxUnavailable=4 for GPU pools with fixed reservations, explaining that no extra GPU quota is needed"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as a native alternative that handles cordon and migration automatically",
+      "passed": true,
+      "reason": "Provides GKE's native blue-green upgrade as an alternative with gcloud commands using --enable-blue-green-upgrade"
+    },
+    {
+      "expectation": "Explains that native strategies are the supported path and handle edge cases (PDB respect, drain timeouts, progress tracking) that manual workflows miss",
+      "passed": true,
+      "reason": "Mentions that GKE handles edge cases automatically, respects PDBs, and provides better rollback safety compared to manual approaches"
+    },
+    {
+      "expectation": "Only suggests manual blue-green as a last resort if native strategies don't meet a specific requirement",
+      "passed": true,
+      "reason": "States 'Manual blue-green should only be a last resort when native strategies don't meet specific requirements'"
+    },
+    {
+      "expectation": "Addresses GPU driver compatibility \u2014 need to verify target version's auto-installed driver is compatible",
+      "passed": true,
+      "reason": "Includes in pre-upgrade checklist: 'Verify GKE 1.32's GPU driver is compatible with your CUDA workloads'"
+    },
+    {
+      "expectation": "Recommends scheduling the upgrade during a gap in GPU workloads to minimize impact",
+      "passed": true,
+      "reason": "Pre-upgrade checklist includes 'Plan the upgrade during a maintenance window when training jobs can be interrupted'"
+    },
+    {
+      "expectation": "Provides gcloud commands for the recommended native approach",
+      "passed": true,
+      "reason": "Provides specific gcloud commands for both surge upgrade configuration and blue-green upgrade approaches"
+    }
+  ]
+}
