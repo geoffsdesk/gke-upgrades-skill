@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends Stable or Extended release channel to minimize upgrade frequency",
+      "passed": false,
+      "reason": "The response recommends Regular channel instead of Stable or Extended, stating that Regular provides better security patch velocity than Stable"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
+      "passed": true,
+      "reason": "The response explicitly shows using --add-maintenance-exclusion-scope no_minor_or_node_upgrades and explains this allows control plane security patches while blocking disruptive upgrades"
+    },
+    {
+      "expectation": "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
+      "passed": true,
+      "reason": "The response configures a Sunday 4-hour maintenance window (06:00-10:00 UTC weekly) and explains it should align with training schedule gaps"
+    },
+    {
+      "expectation": "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
+      "passed": true,
+      "reason": "The response explicitly creates separate node pools: training-h100 for GPU workloads and system-cpu for system/monitoring workloads, explaining the separation of concerns approach"
+    },
+    {
+      "expectation": "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
+      "passed": true,
+      "reason": "The response shows manual upgrade commands for the H100 node pool and explains using the cordon-and-wait pattern during planned upgrades between training campaigns"
+    },
+    {
+      "expectation": "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
+      "passed": true,
+      "reason": "The response includes a checkpointing strategy section with automatic checkpointing, SIGTERM handling, and resume from checkpoint capability requirements"
+    },
+    {
+      "expectation": "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
+      "passed": false,
+      "reason": "While the response mentions GPU driver compatibility is handled by GKE and includes driver version confirmation in a checklist, it does not specifically recommend testing in staging before production"
+    },
+    {
+      "expectation": "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading",
+      "passed": false,
+      "reason": "The response mentions compact placement preserves RDMA topology for H100 interconnect but does not discuss GKE version compatibility requirements for GPUDirect/RDMA networking"
+    }
+  ]
+}

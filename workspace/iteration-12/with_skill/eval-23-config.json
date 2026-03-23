@@ -1,0 +1,19 @@
+{
+  "eval_id": 23,
+  "mode": "with_skill",
+  "iteration": 12,
+  "prompt": "We have PDBs configured for all our critical services but we're worried they might actually block our upgrade if they're too restrictive. Can you audit our PDB configuration and tell us what's safe vs risky for upgrades? Here's what we have: Service A has minAvailable=100%, Service B has maxUnavailable=0, Service C has minAvailable=2 with 3 replicas, Service D has maxUnavailable=1 with 5 replicas.",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-23T00:19:19.836954+00:00",
+  "input_tokens": 11383,
+  "output_tokens": 816,
+  "time_seconds": 16.1,
+  "skill_files": [
+    "skill/SKILL.md",
+    "skill/evals/evals.json",
+    "skill/references/checklists.md",
+    "skill/references/runbook-template.md",
+    "skill/references/troubleshooting.md"
+  ]
+}

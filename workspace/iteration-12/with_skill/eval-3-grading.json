@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies PDB as the most likely/common cause of stuck upgrades",
+      "passed": true,
+      "reason": "Response explicitly states 'Check for PDB blocking drain (most common cause)' and later emphasizes 'Based on the symptoms (nodes not draining), PDBs are the most common culprit'"
+    },
+    {
+      "expectation": "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
+      "passed": true,
+      "reason": "Provides 'kubectl get pdb -A -o wide' command to check PDB status across all namespaces"
+    },
+    {
+      "expectation": "Provides commands to identify which pods are blocking the drain",
+      "passed": true,
+      "reason": "Includes multiple commands: kubectl get events with EvictionBlocked filter, kubectl get pods for Pending/Terminating pods, and a comprehensive diagnosis script"
+    },
+    {
+      "expectation": "Includes resource constraint diagnosis (capacity issues, pending pods)",
+      "passed": true,
+      "reason": "Section 2 covers resource constraints with commands to check pending pods, scheduling failures, and node resource usage with kubectl top nodes"
+    },
+    {
+      "expectation": "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+      "passed": true,
+      "reason": "Provides kubectl patch commands to adjust maxUnavailable to 50% or 100% and includes backup/restore procedures"
+    },
+    {
+      "expectation": "Mentions that GKE has a PDB timeout (up to 1 hour) after which it may force-drain, and that GKE sends notifications when eviction is blocked by PDB",
+      "passed": false,
+      "reason": "While it mentions 'GKE waits up to 1 hour for pod eviction during upgrades', it doesn't specifically mention force-drain behavior or GKE notifications about PDB blocking"
+    },
+    {
+      "expectation": "Includes guidance on surge upgrade settings as a potential fix",
+      "passed": true,
+      "reason": "Provides gcloud command to increase max-surge-upgrade to 2 and set max-unavailable-upgrade to 0 for faster parallel upgrades"
+    },
+    {
+      "expectation": "Mentions webhook issues as a possible cause",
+      "passed": false,
+      "reason": "Response does not mention admission webhooks or webhook-related issues as a potential cause of stuck upgrades"
+    },
+    {
+      "expectation": "Includes validation steps to confirm the fix is working",
+      "passed": true,
+      "reason": "Provides monitoring command with 'watch kubectl get nodes' and suggests monitoring upgrade progress after applying fixes"
+    }
+  ]
+}

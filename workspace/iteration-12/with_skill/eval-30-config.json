@@ -1,0 +1,19 @@
+{
+  "eval_id": 30,
+  "mode": "with_skill",
+  "iteration": 12,
+  "prompt": "We just joined the company and inherited a bunch of GKE clusters in bad shape. Some are on 'No channel', some on release channels, versions are all over the place. How do we get our fleet into a healthy, well-managed state? What self-service tools does GKE provide to help us assess and plan?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-23T00:25:01.005416+00:00",
+  "input_tokens": 11347,
+  "output_tokens": 2190,
+  "time_seconds": 40.81,
+  "skill_files": [
+    "skill/SKILL.md",
+    "skill/evals/evals.json",
+    "skill/references/checklists.md",
+    "skill/references/runbook-template.md",
+    "skill/references/troubleshooting.md"
+  ]
+}

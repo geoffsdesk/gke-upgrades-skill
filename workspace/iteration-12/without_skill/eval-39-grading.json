@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's native node pool upgrade strategies rather than the manual create/cordon/drain/delete workflow described",
+      "passed": true,
+      "reason": "Response clearly recommends in-place node pool upgrade as the primary alternative and explains it's better than the manual workflow"
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends surge upgrade with maxSurge=0 and maxUnavailable set as the primary lever (since no surge capacity is available)",
+      "passed": false,
+      "reason": "Response suggests maxSurge=4 and maxUnavailable=2, but doesn't address that fixed reservations likely can't accommodate surge capacity, requiring maxSurge=0"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as a native alternative that handles cordon and migration automatically",
+      "passed": false,
+      "reason": "Response doesn't mention GKE's auto-scale blue-green upgrade strategy as a native feature, only discusses manual blue-green approach"
+    },
+    {
+      "expectation": "Explains that native strategies are the supported path and handle edge cases (PDB respect, drain timeouts, progress tracking) that manual workflows miss",
+      "passed": false,
+      "reason": "While response mentions built-in rollback capabilities, it doesn't explain the edge cases like PDB respect, drain timeouts, or progress tracking that native strategies handle"
+    },
+    {
+      "expectation": "Only suggests manual blue-green as a last resort if native strategies don't meet a specific requirement",
+      "passed": false,
+      "reason": "Response presents manual blue-green as a viable alternative rather than positioning it as a last resort after native strategies"
+    },
+    {
+      "expectation": "Addresses GPU driver compatibility \u2014 need to verify target version's auto-installed driver is compatible",
+      "passed": true,
+      "reason": "Response mentions 'Verify NVIDIA driver versions between k8s versions' in the key considerations section"
+    },
+    {
+      "expectation": "Recommends scheduling the upgrade during a gap in GPU workloads to minimize impact",
+      "passed": false,
+      "reason": "Response doesn't mention timing the upgrade during gaps in GPU workloads to minimize impact"
+    },
+    {
+      "expectation": "Provides gcloud commands for the recommended native approach",
+      "passed": true,
+      "reason": "Response provides gcloud commands for both configuring surge settings and performing the upgrade"
+    }
+  ]
+}

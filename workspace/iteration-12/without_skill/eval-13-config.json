@@ -1,0 +1,12 @@
+{
+  "eval_id": 13,
+  "mode": "without_skill",
+  "iteration": 12,
+  "prompt": "We have batch processing jobs that run for 8-16 hours on our Standard GKE cluster on the Regular release channel. We need to upgrade from 1.30 to 1.31 but can't afford to kill these jobs mid-execution. How should we handle this?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-23T00:39:10.432529+00:00",
+  "input_tokens": 68,
+  "output_tokens": 630,
+  "time_seconds": 12.22
+}

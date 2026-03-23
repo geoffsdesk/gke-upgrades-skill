@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Response clearly states that nodes can only be up to 2 minor versions behind the control plane and explains this is the supported version skew policy"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (3 minor versions)",
+      "passed": true,
+      "reason": "Response explicitly states the skew is 3 versions (1.31 vs 1.28) and that this violates the policy and is unsupported"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Response lists API compatibility problems, unpredictable pod scheduling behavior, network policy enforcement issues, and potential cluster instability"
+    },
+    {
+      "expectation": "Recommends skip-level (N+2) node pool upgrades where possible to reduce time and disruption (e.g., 1.28\u21921.30 then 1.30\u21921.31), rather than upgrading through every minor",
+      "passed": false,
+      "reason": "Response shows incremental upgrades (1.29 \u2192 1.30 \u2192 1.31) rather than recommending skip-level upgrades like 1.28\u21921.30 then 1.30\u21921.31"
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Response provides specific gcloud container clusters upgrade command with proper parameters for node pool upgrades"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": false,
+      "reason": "Response does not mention surge settings or conservative upgrade parameters despite acknowledging the risky state"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": true,
+      "reason": "Response includes monitoring section with specific kubectl commands to check pod placement and advises watching for API calls, networking, and pod startup failures"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": false,
+      "reason": "Response mentions automated cluster upgrades and upgrade policies but does not specifically mention release channel enrollment or maintenance windows"
+    }
+  ]
+}

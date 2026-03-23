@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies this as an admission webhook compatibility issue \u2014 the webhook is rejecting pod creation requests",
+      "passed": true,
+      "reason": "Response clearly identifies this as an API version deprecation issue in Kubernetes 1.32 causing cert-manager webhook failures and blocking pod creation"
+    },
+    {
+      "expectation": "Provides commands to identify the problematic webhook (kubectl get validatingwebhookconfigurations / mutatingwebhookconfigurations)",
+      "passed": true,
+      "reason": "Provides both 'kubectl get validatingwebhookconfiguration' and 'kubectl get mutatingwebhookconfiguration' commands to identify the webhooks"
+    },
+    {
+      "expectation": "Offers an immediate fix: temporarily disable or remove the problematic webhook",
+      "passed": true,
+      "reason": "Offers two immediate emergency fixes: Option 1 to disable via patching failurePolicy and Option 2 to delete webhook configurations"
+    },
+    {
+      "expectation": "Provides the kubectl delete command for the webhook configuration as emergency mitigation",
+      "passed": true,
+      "reason": "Includes specific kubectl delete commands for both validating and mutating webhook configurations as 'Nuclear Option'"
+    },
+    {
+      "expectation": "Warns that deleting the webhook removes validation \u2014 it's a temporary fix",
+      "passed": true,
+      "reason": "Labels deletion as 'Nuclear Option' and emphasizes throughout that these are temporary fixes, with reminder to re-enable after upgrading cert-manager"
+    },
+    {
+      "expectation": "Recommends checking cert-manager version compatibility with Kubernetes 1.32",
+      "passed": true,
+      "reason": "Includes section 'Check Cert-Manager Version Compatibility' with commands to check current version and references the support matrix"
+    },
+    {
+      "expectation": "Advises upgrading cert-manager to a version that supports 1.30 as the permanent fix",
+      "passed": false,
+      "reason": "Recommends upgrading to cert-manager v1.15+ for k8s 1.32 support, but the expectation specifically mentions 1.30 support which is not addressed"
+    },
+    {
+      "expectation": "Mentions setting failurePolicy to Ignore as a less drastic alternative to deletion",
+      "passed": true,
+      "reason": "Option 1 specifically shows patching the failurePolicy to 'Ignore' as the first and less drastic alternative to deletion"
+    },
+    {
+      "expectation": "Includes commands to verify pods can be created after the fix",
+      "passed": true,
+      "reason": "Provides verification commands including checking webhook pods, testing connectivity, and creating a test certificate to verify functionality"
+    }
+  ]
+}

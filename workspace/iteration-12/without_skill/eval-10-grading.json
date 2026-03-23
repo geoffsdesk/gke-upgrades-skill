@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that spot VMs can be preempted at any time, which interacts with the upgrade drain process",
+      "passed": true,
+      "reason": "Response clearly explains dual disruption risk from spot preemption and upgrade process, and mentions treating it as a 'double disruption' scenario"
+    },
+    {
+      "expectation": "Notes that spot node pools may already have workloads designed for interruption (good for upgrades)",
+      "passed": false,
+      "reason": "While the response mentions workload fault-tolerance in the context of risk mitigation, it doesn't explicitly note that spot workloads are already designed for interruption making them well-suited for upgrades"
+    },
+    {
+      "expectation": "Recommends higher maxSurge for spot pools since the workloads should already be fault-tolerant",
+      "passed": true,
+      "reason": "Response shows maxSurge: 2 with comment 'Higher surge for spot pools' and explains this is recommended for spot instances"
+    },
+    {
+      "expectation": "Advises setting maxUnavailable >0 for spot pools since workloads are already preemption-tolerant",
+      "passed": false,
+      "reason": "Response actually recommends maxUnavailable: 0 with comment 'Avoid unavailable nodes with spot risk', which is opposite to the expectation"
+    },
+    {
+      "expectation": "Mentions that spot VM availability may affect surge node creation (not guaranteed to get spot instances)",
+      "passed": true,
+      "reason": "Response mentions planning upgrades during periods when 'spot availability is higher' and discusses spot availability considerations"
+    },
+    {
+      "expectation": "Recommends having PDBs even for spot workloads to ensure orderly drain during upgrade",
+      "passed": true,
+      "reason": "Response provides a specific PodDisruptionBudget YAML example under workload protection section"
+    },
+    {
+      "expectation": "Provides the gcloud command for configuring surge settings on the spot pool",
+      "passed": false,
+      "reason": "Response shows YAML configuration for surge settings but does not provide the actual gcloud command to configure these settings on a node pool"
+    },
+    {
+      "expectation": "Suggests upgrading spot pools before on-demand pools since they're lower risk",
+      "passed": false,
+      "reason": "Response does not suggest upgrading spot pools before on-demand pools or mention that spot pools are lower risk for upgrades"
+    }
+  ]
+}

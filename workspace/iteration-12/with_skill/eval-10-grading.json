@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that spot VMs can be preempted at any time, which interacts with the upgrade drain process",
+      "passed": true,
+      "reason": "Response explicitly explains the 'double disruption' scenario where spot VMs can be preempted during upgrade process, creating both planned upgrade eviction and unplanned spot preemption"
+    },
+    {
+      "expectation": "Notes that spot node pools may already have workloads designed for interruption (good for upgrades)",
+      "passed": true,
+      "reason": "Response identifies spot-tolerant workloads (batch processing, stateless services, dev/testing) and mentions these are suitable for the additional disruption during upgrades"
+    },
+    {
+      "expectation": "Recommends higher maxSurge for spot pools since the workloads should already be fault-tolerant",
+      "passed": true,
+      "reason": "Response explicitly recommends maxSurge=3 for spot pools and states 'Higher surge protects against spot preemptions during upgrade' with rationale about fault tolerance"
+    },
+    {
+      "expectation": "Advises setting maxUnavailable >0 for spot pools since workloads are already preemption-tolerant",
+      "passed": true,
+      "reason": "Response recommends maxUnavailable=1-2 for spot pools in multiple places, explicitly stating workloads are preemption-tolerant"
+    },
+    {
+      "expectation": "Mentions that spot VM availability may affect surge node creation (not guaranteed to get spot instances)",
+      "passed": true,
+      "reason": "Response states 'Spot capacity is not guaranteed. During upgrade, replacement spot nodes may not be available, causing the upgrade to stall until capacity becomes available' and provides troubleshooting for this scenario"
+    },
+    {
+      "expectation": "Recommends having PDBs even for spot workloads to ensure orderly drain during upgrade",
+      "passed": true,
+      "reason": "Response mentions 'PDBs configured but not overly restrictive' in the checklist and validates PDBs in post-upgrade section, though it could be more explicit about the orderly drain benefit"
+    },
+    {
+      "expectation": "Provides the gcloud command for configuring surge settings on the spot pool",
+      "passed": true,
+      "reason": "Response provides specific gcloud commands: 'gcloud container node-pools update SPOT_NODE_POOL_NAME --max-surge-upgrade 3 --max-unavailable-upgrade 1'"
+    },
+    {
+      "expectation": "Suggests upgrading spot pools before on-demand pools since they're lower risk",
+      "passed": false,
+      "reason": "Response actually recommends the opposite - upgrading on-demand pools first, then spot pools last, stating 'Upgrade on-demand pools first (more predictable)' and 'Upgrade spot pools last'"
+    }
+  ]
+}

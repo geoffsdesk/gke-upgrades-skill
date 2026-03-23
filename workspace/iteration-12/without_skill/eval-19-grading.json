@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all four types: security patches in CRITICAL section, auto-upgrades in HIGH section, new version available in MEDIUM section, and EOL/deprecation warnings in both CRITICAL and HIGH sections"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response assigns CRITICAL priority to security patches (highest), LOW priority to new version available notifications (lowest), with clear priority hierarchy established"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response explicitly states EOL warnings require action with specific timelines: 'Plan upgrade within 2 weeks' for final notices and 'Plan upgrade within 30-60 days' for early warnings"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response includes specific actions for auto-upgrades: 'Test compatibility, schedule manual upgrade if preferred timing needed' and detailed HIGH priority response playbook with review and planning steps"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response explicitly states security patches require 'Act within 24-48 hours' and CRITICAL response playbook includes 'Schedule emergency maintenance if needed'"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response categorizes new version available as MEDIUM priority with 'Evaluate within 30 days, implement in next maintenance cycle' and MEDIUM response includes 'Add to backlog' and 'Include in next planned maintenance'"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": false,
+      "reason": "Response does not mention Pub/Sub or Cloud Monitoring alerts - only discusses email filtering rules and a Python script for triaging notifications"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": true,
+      "reason": "Response mentions 'Review release notes' in multiple sections including the MEDIUM priority action for new versions and the MEDIUM response playbook"
+    }
+  ]
+}

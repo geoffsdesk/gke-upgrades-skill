@@ -1,0 +1,12 @@
+{
+  "eval_id": 28,
+  "mode": "without_skill",
+  "iteration": 12,
+  "prompt": "Our VP wants to know exactly when our GKE clusters will be upgraded next. She needs predictable timelines for stakeholder communication. How can we predict or control upgrade timing, and what tools does GKE provide for upgrade visibility?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-23T00:47:29.904525+00:00",
+  "input_tokens": 56,
+  "output_tokens": 2141,
+  "time_seconds": 34.26
+}

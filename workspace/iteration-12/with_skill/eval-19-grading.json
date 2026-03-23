@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all notification types including 'Auto-upgrade Scheduled', 'New Version Available', 'End of Support (EoS) Warnings', and 'Security Patch Notifications'"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response assigns security patches to CRITICAL priority level (highest), while new version available notifications are assigned to MEDIUM priority (though not explicitly lowest, the hierarchy is clear)"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response explicitly states EoS warnings as CRITICAL requiring 'Plan upgrade immediately' with specific action items including scheduling upgrade planning meeting within 48h and timeline guidance"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response includes detailed pre-flight checklist for scheduled upgrades including checking PDBs, bare pods, resource quota, and workload health"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response specifically mentions security patches 'may auto-upgrade within days' and includes action for 'emergency patch within 24-48h' for critical security issues"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response categorizes 'New Version Available' as MEDIUM priority with action 'Add to backlog, review release notes' and states it's for planning purposes"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": false,
+      "reason": "Response focuses on email filtering rules and notification management but does not mention Pub/Sub or Cloud Monitoring alerts setup"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": true,
+      "reason": "Response explicitly mentions 'Review GKE release notes for breaking changes' in the action items for new version available notifications"
+    }
+  ]
+}
