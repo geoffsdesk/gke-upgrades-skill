@@ -47,7 +47,11 @@ Establish these five things early. If the user provides them upfront, skip strai
 
 **Extended channel note:** Minor version upgrades on Extended are NOT automated (except at end of extended support). Customers must plan and initiate minor upgrades themselves. Only patches are auto-applied. This is a cost and planning consideration — teams need internal processes to schedule and execute minor upgrades proactively. The additional cost for Extended channel applies ONLY during the extended support period — there is no extra charge during the standard support period. Extended channel is also a recommended migration path for customers on "No channel" who want maximum flexibility around EoS enforcement.
 
-**Key distinction:** Rapid channel does NOT carry an SLA for upgrade stability — versions may have issues that are caught before reaching Regular/Stable. This is the primary reason to avoid Rapid for production, beyond timing. Regular, Stable, and Extended all carry a full SLA.
+**Key distinction:** Rapid channel does NOT carry an SLA for upgrade stability — versions may have issues that are caught before reaching Regular/Stable. This is the PRIMARY reason to avoid Rapid for production clusters, beyond timing alone. Regular, Stable, and Extended all carry full SLAs.
+
+**Version availability warnings when migrating channels:**
+- If your current version is not yet available in the target channel, your cluster will be "ahead of channel" and will NOT receive auto-upgrades to newer versions until the current version becomes available in the target channel.
+- Example: Moving from Rapid (at 1.32) to Stable when 1.32 is not yet in Stable will freeze your cluster at 1.32 until Stable's version reaches 1.32, then you resume normal auto-upgrades from that point. You'll still receive patches, but not minor upgrades.
 
 **Version promotion path:** New releases follow a promotion path: Rapid (Available → Default → Auto-upgrade target) → Regular → Stable → Extended. Release cadence includes an element of channel promotion — versions must prove stable in Rapid before reaching Regular, and Regular before Stable. GKE targets approximately one new release per week.
 
@@ -190,7 +194,35 @@ Key flags:
 
 ### Node pool upgrade strategy (Standard only — skip for Autopilot)
 
-GKE supports three upgrade strategies:
+GKE supports three upgrade strategies. Use the strategy selection criteria below to choose:
+
+#### Strategy Selection Criteria
+
+**Use SURGE when:**
+- Stateless workloads (web servers, APIs, batch with checkpointing)
+- Workloads tolerant of brief pod restarts
+- Short-lived jobs that can be rescheduled
+- Adequate capacity for maxSurge nodes
+- Cost is a primary concern (no 2x resource requirement)
+
+**Use BLUE-GREEN when:**
+- Local SSD data cannot be migrated between nodes (data loss risk with surge)
+- Stateful workloads sensitive to node changes (databases, caches like Cassandra, Elasticsearch)
+- You have quota/capacity for 2x node pool size during upgrade
+- Quick rollback path is essential
+
+**Use AUTOSCALED BLUE-GREEN when:**
+- Long-running batch jobs (8+ hours) where GKE's default 1-hour surge eviction timeout is insufficient
+- Inference workloads where surge GPU capacity is unavailable
+- Workloads requiring extended graceful termination periods (terminationGracePeriodSeconds > 1 hour)
+- Cost-sensitive scenarios where standard blue-green's 2x resource cost is prohibitive
+
+**Avoid SURGE when:**
+- Local storage (local SSDs) needs to survive node drain — surge drains the old node, destroying local SSD data
+- Job eviction timeout (1 hour) is shorter than workload duration
+- Surge GPU capacity is unavailable (GPU reservations are fixed)
+
+**Key insight:** Autoscaled blue-green's advantage over standard blue-green is cost efficiency — it scales down the old (blue) pool as pods drain to the new (green) pool, avoiding 2x cost. Its advantage over surge is that it respects longer graceful termination periods without force-evicting pods after 1 hour.
 
 **1. Surge upgrade (default):** Rolling replacement with per-pool `maxSurge`/`maxUnavailable`:
 - **Sizing maxSurge:** Recommend maxSurge as a percentage of pool size (e.g., 5%, minimum 1, rounded to nearest integer) rather than a fixed number. This scales with pool size. GKE API accepts integers only — calculate the value. Maximum effective parallelism per batch is ~20 nodes today (increasing to 100). Examples: 40-node pool → maxSurge=2, 200-node pool → maxSurge=10, 600-node pool → maxSurge=20 (capped at batch limit). Always explain WHY the value is set.
@@ -204,10 +236,15 @@ GKE supports three upgrade strategies:
 **3. Autoscaled blue-green upgrade (preview):** An enhancement of standard blue-green designed to be more cost-effective and suited for long-running workloads. The green pool scales up as needed based on workload demand, while the blue pool scales down as pods are safely evicted. Supports longer eviction periods (wait-for-drain, longer graceful termination periods, PDB upgrade timeout), allowing pods to complete their work before being evicted.
 
 **When to use autoscaled blue-green:**
-- Long-running batch processing jobs (8+ hours)
-- Game servers and other disruption-intolerant workloads
-- Inference workloads sensitive to eviction that benefit from controlled, autoscaled transition
-- GPU pools where surge capacity is unavailable (cordons one nodepool at a time)
+- Long-running batch processing jobs (8+ hours) where GKE's default 1-hour surge eviction timeout is insufficient
+- Game servers and other disruption-intolerant workloads that need extended graceful termination
+- Inference workloads sensitive to eviction that benefit from controlled, autoscaled transition, where surge GPU capacity is unavailable
+- GPU pools where surge capacity is unavailable (cordons one nodepool at a time, autoscales replacement)
+- Any workload requiring wait-for-drain semantics and extended terminationGracePeriodSeconds respect
+
+**Key advantage over standard blue-green:** Autoscaled blue-green is cost-efficient — it scales DOWN the old (blue) pool as workloads drain to the new (green) pool, avoiding the 2x resource requirement of standard blue-green. Blue pool scales to zero as green pool scales up, minimizing cost spike.
+
+**Key advantage over surge:** Respects longer graceful termination periods and doesn't force-evict pods after 1 hour. Ideal for 8+ hour batch jobs.
 
 **When NOT to use autoscaled blue-green:** ML training workloads requiring parallel host maintenance + nodepool upgrade with high concurrency. Autoscaled blue-green has the same max batch concurrency limit (~20 nodes, increasing to 100). For training, use a custom upgrade strategy instead — see "AI Host Maintenance" section.
 
@@ -229,6 +266,11 @@ Key parameters:
 
 **Important:** Surge parameters (`maxSurge`, `maxUnavailable`) do NOT apply to blue-green or autoscaled blue-green strategies. These parameters are only relevant for surge upgrades. Do not include them when recommending blue-green.
 
+**Autoscaled blue-green eviction behavior (different from surge):**
+- Surge upgrades: GKE force-evicts pods after 1 hour, regardless of graceful termination period
+- Autoscaled blue-green: Respects longer `terminationGracePeriodSeconds` during drain phase. No hard 1-hour limit. Pods are given time to complete work before eviction.
+- This makes autoscaled blue-green the ONLY native GKE strategy suitable for batch jobs exceeding 1 hour runtime.
+
 **4. Manual blue-green (custom workflow):** Customer creates a new pool, cordons the old pool, manually migrates, deletes the old pool. **Use only as a last resort** when neither surge, blue-green, nor autoscaled blue-green meets specific needs. Do not default to recommending custom flows — always prefer GKE's native upgrade strategies first.
 
 **Strategy selection priority:** Always recommend GKE's native upgrade strategies (surge or auto-scale blue-green) before suggesting custom workflows. GKE's built-in strategies handle cordon/drain/migration automatically and are the supported path. Custom workflows (manual blue-green, cordon-drain scripts) should only be suggested when the user has a specific requirement that native strategies can't satisfy.
@@ -238,6 +280,32 @@ Key parameters:
 **When to recommend exclusions:** Only recommend maintenance exclusions when the customer has disruption-intolerant workloads OR explicitly asks for upgrade control. Do not proactively suggest exclusions for all customers — they add operational overhead and can cause clusters to fall behind on patches. For most customers, release channels + maintenance windows provide sufficient control without exclusions.
 
 **Autopilot exclusion guidance:** Do not recommend node-level exclusions on Autopilot unless the customer explicitly requests node upgrade control.
+
+### Spot VM node pool upgrades
+
+Spot instances have unique characteristics that change upgrade strategy:
+- **Workloads are preemption-tolerant** by design — upgrade risk is inherently lower
+- **Recommended maxSurge:** 2-5% of pool size (higher than on-demand) because workloads already handle interruption
+- **Recommended maxUnavailable:** 1-2 (workloads tolerate interruption, so drain is safe)
+- **Upgrade sequencing:** Upgrade spot pools FIRST before on-demand pools — they carry lower risk and validate surge/drain settings
+- **PDBs:** Still use PDBs even for spot workloads to ensure orderly drain during upgrade
+
+### Long-running batch job protection
+
+For clusters running 8+ hour batch jobs, standard surge upgrade will force-evict in-flight jobs after 1 hour:
+- **Before upgrade:** Pause new job submissions 30 minutes before planned upgrade. Wait for in-flight jobs to complete. Verify batch jobs have checkpoint/resume capability.
+- **Primary strategy:** Autoscaled blue-green with extended `terminationGracePeriodSeconds` (set to exceed max job duration, e.g., 57600s for 16 hours)
+- **Alternative:** Dedicated batch node pool + maintenance exclusion ("no minor or node upgrades") to block upgrades during batch campaigns
+- **Never use:** Surge with default settings for jobs exceeding 1 hour — jobs will be force-evicted at the 1-hour PDB timeout
+
+### Upgrading with resource quota constraints
+
+When compute quota is exhausted and surge node creation fails:
+- **Option 1 — Drain-first:** `maxSurge=0, maxUnavailable=1`. No extra quota needed (drains before creating). Temporary capacity loss but no surge quota required.
+- **Option 2 — Reduce maxSurge:** `maxSurge=1, maxUnavailable=0`. Slower but fits within constrained quotas.
+- **Option 3 — Scale down non-critical workloads:** Temporarily scale down canary/test/dev deployments (`kubectl scale deployment NAME --replicas=0`) to free quota for surge nodes. Schedule for off-peak hours.
+- **Option 4 — Request temporary quota increase:** Cloud Customer Care can approve same-day emergency quota increases for one-off upgrades.
+- **Best practice:** Combine options — use off-peak timing, scale down 2-3 non-critical deployments, and reduce maxSurge to 1.
 
 ### Workload readiness
 - PDBs for critical workloads (GKE respects them for up to 1 hour during surge upgrades — this is the GKE PDB timeout). GKE sends `UpgradeInfoEvent` disruption notifications when eviction is blocked by PDB (`POD_PDB_VIOLATION`, `POD_NOT_ENOUGH_PDB`), so teams can monitor via Cloud Logging or Pub/Sub and intervene. A PDB timeout notification is also sent if pods are force-deleted after the grace period.
@@ -262,9 +330,11 @@ Frontier AI customers running large GPU/TPU clusters face unique upgrade challen
 - **GPU VMs do not support live migration.** Every upgrade requires pod restart — there is no graceful in-place update.
 - **Surge capacity scarcity:** Surge upgrades need temporary extra GPU nodes (A100, H100, H200). These machines are in high demand and often unavailable. If surge nodes can't be provisioned, the upgrade stalls. If the customer has limited capacity with a reservation, assume there is NO capacity for blue-green (which requires 2x resources). Follow GPU-specific surge guidance instead.
 - **Strategy selection for GPU pools:**
-  - **Default (most common):** `maxSurge=0, maxUnavailable=1` — most GPU customers have fixed reservations with no surge capacity. The `maxUnavailable` parameter is the primary lever. This drains first, no extra GPUs needed, but causes a capacity dip. Increase `maxUnavailable` for faster completion.
+  - **Default (most common):** `maxSurge=0, maxUnavailable=1` — most GPU customers have fixed reservations with no surge capacity. The `maxUnavailable` parameter is the PRIMARY and ONLY effective lever for GPU pools with fixed reservations. This drains first, no extra GPUs needed, but causes a capacity dip. To speed up upgrades on large pools, increase `maxUnavailable` (e.g., 2, 3, 4) only if workloads can tolerate temporary capacity loss. Example: 64-node pool at maxUnavailable=1 with ~20-node parallelism ceiling takes ~3.2 batches per cycle — plan upgrade duration accordingly (hours to days for large pools).
+  - **Important:** Do NOT use maxSurge for GPU pools with fixed reservations — surge nodes will fail to provision if surge capacity doesn't exist. maxSurge=0 is required when surge capacity is unavailable.
   - If GPU surge quota IS confirmed available: surge with `maxSurge=1, maxUnavailable=0` (safest, no capacity dip)
-  - For large GPU **inference** pools needing fast upgrades: use GKE's autoscaled blue-green upgrade strategy (cordons the old pool, auto-scales replacement — but needs capacity for replacement nodes). For **training** workloads: use custom upgrade strategy with parallel host maintenance instead — see 'AI Host Maintenance' section below. Custom strategy handles host maintenance + nodepool upgrade simultaneously and is more efficient for training where all nodes can be upgraded at once during a training gap.
+  - **Reservation headroom check:** Before attempting a GPU upgrade, verify if your GPU reservation has any available headroom beyond current utilization. Query: `gcloud compute reservations describe RESERVATION_NAME --zone ZONE`.
+  - For large GPU **inference** pools needing fast upgrades: use GKE's autoscaled blue-green upgrade strategy (cordons the old pool, auto-scales replacement — but needs capacity for replacement nodes). For **training** workloads: use custom upgrade strategy with parallel host maintenance instead — see 'AI Host Maintenance' section below.
 - **GPU driver version coupling:** GKE automatically installs the GPU driver matching the target GKE version. This can change CUDA versions silently. Always test the target GKE version in a staging cluster to verify driver + CUDA + framework compatibility before production.
 - **Reservation interaction:** GPU reservations guarantee capacity but surge upgrades consume reservation slots. Verify reservation has headroom for surge, or use `maxUnavailable` mode instead.
 
@@ -363,10 +433,49 @@ See [references/runbook-template.md](references/runbook-template.md) for the sta
 When a user reports a stuck or failing upgrade, walk through diagnosis systematically. See [references/troubleshooting.md](references/troubleshooting.md) for the full diagnostic flowchart and fix procedures. The most common causes, in order:
 
 1. PDB blocking drain → check `kubectl get pdb -A`, relax temporarily
-2. Resource constraints → pods pending, no room to reschedule → increase `maxSurge`
+2. Resource constraints → pods pending, no room to reschedule → increase `maxSurge` or switch to `maxSurge=0, maxUnavailable=1` (drain-first). Scale down non-critical workloads to free quota. Schedule upgrades off-peak.
 3. Bare pods → can't be rescheduled, must delete
 4. Admission webhooks → rejecting pod creation → check webhook configs
 5. PVC attachment issues → volumes can't migrate → check PV status
+
+### Partial node pool upgrade failure — recovery
+
+When a node pool upgrade fails partway through (e.g., 8 out of 20 nodes upgraded):
+
+**Cluster state:** Some nodes are at target version, others at old version. This mixed-version state is VALID and functional — GKE allows nodes within 2 minor versions of control plane. Workloads run on whichever node they're scheduled to. No forced action needed to keep services running.
+
+**Option A — Retry (recommended in most cases):**
+- Fix the root cause (PDB blocking drain, resource constraints, webhook issues)
+- Resume: `gcloud container node-pools upgrade POOL --cluster CLUSTER --cluster-version TARGET_VERSION`
+- Simpler than rollback; nodes converge to single version
+
+**Option B — Rollback (only if root cause is unfixable or target version has critical defects):**
+- Cannot downgrade already-upgraded nodes in-place
+- Must create a new node pool at the old version, cordon the partially-upgraded pool, drain workloads, delete old pool
+- Manual process; slower recovery
+
+**Workload impact during mixed state:** No action required. Cluster remains operational. Stateful workloads may see nodes at different versions, but Kubernetes tolerates this within the 2-minor-version skew policy.
+
+### Post-upgrade admission webhook failures (cert-manager, etc.)
+
+**Symptoms:** After control plane upgrade, pods fail to create with "admission webhook rejected the request" errors.
+
+**Root cause:** Webhook configurations (especially cert-manager) fail to update certificates for the new API server version, causing validation failures.
+
+**Immediate mitigation (temporary):**
+```
+kubectl patch validatingwebhookconfigurations WEBHOOK_NAME \
+  -p '{"webhooks":[{"name":"WEBHOOK","failurePolicy":"Ignore"}]}'
+```
+
+**Permanent fix:**
+1. Check webhook version compatibility with target Kubernetes version
+2. Upgrade the webhook operator/controller to a version supporting the new Kubernetes version (e.g., `helm upgrade cert-manager jetstack/cert-manager --version VERSION_SUPPORTING_TARGET`)
+3. Verify pod creation works: `kubectl run test-pod --image=nginx --rm -it --restart=Never -- echo "test"`
+4. Persist the fix in source of truth (Helm values, GitOps manifests, CI/CD pipeline)
+5. Revert temporary failurePolicy to "Fail"
+
+**Prevention:** Before upgrading control plane, verify all admission webhook operators (cert-manager, policy controllers, service mesh operators) support the target Kubernetes version.
 
 ## Autopilot-specific guidance
 
