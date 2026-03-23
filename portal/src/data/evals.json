@@ -1,9 +1,9 @@
 [
   {
     "id": 1,
-    "prompt": "We have a Standard GKE cluster on the Regular release channel running 1.32 in us-central1-a. We need to upgrade to 1.32 before end of quarter. We have 3 node pools -- a general-purpose pool, a high-memory pool for our Postgres operator, and a GPU pool for ML inference. Can you put together an upgrade plan?",
+    "prompt": "We have a Standard GKE cluster on the Regular release channel running 1.32 in us-central1-a. We need to upgrade to 1.33 before end of quarter. We have 3 node pools -- a general-purpose pool, a high-memory pool for our Postgres operator, and a GPU pool for ML inference. Can you put together an upgrade plan?",
     "expectations": [
-      "Recommends sequential control plane upgrades (1.30\u21921.31\u21921.32) while using skip-level (N+2) for node pool upgrades where possible to reduce disruption",
+      "Recommends sequential control plane upgrades (1.32\u21921.33) while using skip-level (N+2) for node pool upgrades where possible to reduce disruption",
       "Specifies control plane upgrades before node pool upgrades",
       "Provides different node pool upgrade ordering with rationale for the sequence",
       "Includes specific surge upgrade settings (maxSurge/maxUnavailable) for each pool with justification for the chosen values (e.g., explaining why maxSurge is set higher for parallelism)",
@@ -12,9 +12,10 @@
       "Includes actual gcloud commands for the upgrade steps",
       "Provides a pre-upgrade checklist",
       "Provides a post-upgrade checklist with validation commands",
-      "Includes rollback procedure or guidance (noting CP patch downgrades are customer-doable, minor downgrades require GKE support)"
+      "Includes rollback procedure or guidance (noting CP patch downgrades are customer-doable, minor downgrades require GKE support)",
+      "Mentions GKE's 2-step control plane minor upgrade where step 1 is rollbackable (step 2 commits and is not rollbackable), or mentions that node pools support downgrade"
     ],
-    "num_expectations": 10
+    "num_expectations": 11
   },
   {
     "id": 2,
@@ -29,9 +30,10 @@
       "Post-upgrade checklist includes workload health validation",
       "Recommends testing on dev clusters before prod auto-upgrade",
       "Mentions that checking the GKE release schedule gives ~1 month best-case advance notice for new minor upgrades, beyond the 72h notification",
-      "Includes monitoring/observability validation items"
+      "Includes monitoring/observability validation items",
+      "Does NOT proactively recommend node-level maintenance exclusions for Autopilot unless the customer explicitly asks for node upgrade control"
     ],
-    "num_expectations": 10
+    "num_expectations": 11
   },
   {
     "id": 3,
@@ -45,9 +47,10 @@
       "Mentions that GKE has a PDB timeout (up to 1 hour) after which it may force-drain, and that GKE sends notifications when eviction is blocked by PDB",
       "Includes guidance on surge upgrade settings as a potential fix",
       "Mentions webhook issues as a possible cause",
-      "Includes validation steps to confirm the fix is working"
+      "Includes validation steps to confirm the fix is working",
+      "Mentions GKE disruption-event notifications (POD_PDB_VIOLATION) that alert when eviction is blocked by PDB, available via Cloud Logging or Pub/Sub"
     ],
-    "num_expectations": 9
+    "num_expectations": 10
   },
   {
     "id": 4,
@@ -61,18 +64,19 @@
       "Includes a command to verify the control plane version after upgrade",
       "Recommends checking kube-system pods health after upgrade",
       "Advises checking deprecated API usage before upgrading",
-      "Mentions that GKE supports a 2-step control plane minor upgrade where the first step is rollbackable, or notes that CP patch downgrades can be done by the customer while minor downgrades require GKE support"
+      "Mentions that GKE supports a 2-step control plane minor upgrade where the first step is rollbackable, or notes that CP patch downgrades can be done by the customer while minor downgrades require GKE support",
+      "Mentions GKE's 2-step control plane minor upgrade: step 1 is rollbackable by the customer, step 2 commits the upgrade. This reduces risk for cautious teams."
     ],
-    "num_expectations": 9
+    "num_expectations": 10
   },
   {
     "id": 5,
     "prompt": "We somehow let our Standard cluster get into a bad state. The control plane is at 1.31 but one of our node pools is still at 1.28. We're getting warnings about version skew. What are we dealing with and how do we fix it?",
     "expectations": [
       "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
-      "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (3 minor versions)",
+      "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (nodes must be within 2 minor versions of control plane)",
       "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
-      "Recommends skip-level (N+2) node pool upgrades where possible to reduce time and disruption (e.g., 1.28\u21921.30 then 1.30\u21921.31), rather than upgrading through every minor",
+      "Recommends skip-level (N+2) node pool upgrades within supported version skew to reduce time and disruption. For the N+3 gap (1.28 with 1.31 CP), recommends multiple sequential skip-level upgrades within supported skew (e.g., 1.28\u21921.30 then 1.30\u21921.31) or creating a new node pool at the target version and migrating workloads. Never recommends an unsupported skip-level upgrade.",
       "Provides gcloud commands for the node pool upgrade steps",
       "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
       "Advises monitoring closely between each version bump for issues",
@@ -97,19 +101,21 @@
   },
   {
     "id": 7,
-    "prompt": "We need to upgrade 12 GKE clusters across 3 environments (dev, staging, prod) with 4 clusters each. All environments are on the Regular release channel. All are Standard clusters running 1.32 and we need to get to 1.32. Can you create a rollout strategy?",
+    "prompt": "We need to upgrade 12 GKE clusters across 3 environments (dev, staging, prod) with 4 clusters each. All environments are on the Regular release channel. All are Standard clusters running 1.32 and we need to get to 1.33. Can you create a rollout strategy?",
     "expectations": [
       "Proposes a phased rollout: dev first, then staging, then prod",
       "Includes soak time between environment phases (e.g., 24-48 hours for dev, 1 week for staging before prod)",
       "Defines go/no-go criteria between phases (error rates, latency, pod health)",
-      "Recommends sequential control plane upgrades (1.30\u21921.31\u21921.32) with skip-level node pool upgrades where possible",
+      "Recommends sequential control plane upgrades (1.32\u21921.33) with skip-level node pool upgrades where possible",
       "Suggests not upgrading all prod clusters simultaneously \u2014 do one or two first as canary",
       "Includes rollback triggers and criteria for halting the rollout",
       "Provides a timeline or schedule estimate for the full rollout",
       "Mentions maintenance window coordination across clusters",
-      "If rollout sequencing is mentioned, notes that all clusters must be on the same channel for it to work"
+      "If rollout sequencing is mentioned, notes that all clusters must be on the same channel for it to work",
+      "When presenting maintenance windows as an alternative, explicitly notes that windows do NOT guarantee ordering \u2014 upgrades fire based on version availability per region, not environment order. A prod window may fire before dev.",
+      "Mentions using two different channels with minor version controls (e.g., dev=Regular, prod=Stable with 'no minor' exclusion) as a simpler alternative to rollout sequencing"
     ],
-    "num_expectations": 9
+    "num_expectations": 11
   },
   {
     "id": 8,
@@ -118,7 +124,7 @@
       "Explains the key difference: surge upgrades nodes in-place with rolling replacement, blue-green creates an entirely new pool",
       "Recommends blue-green for this scenario due to local SSDs (data can't migrate between nodes)",
       "Explains that local SSD data is lost when a node is drained during surge upgrade",
-      "Recommends GKE's auto-scale blue-green upgrade strategy as the native approach, or describes the blue-green process if manual workflow is needed",
+      "Recommends GKE's autoscaled blue-green upgrade strategy configured with --enable-autoscaling and --autoscaled-rollout-policy (NOT surge parameters like maxSurge/maxUnavailable which don't apply to blue-green), or describes the blue-green process if manual workflow is needed",
       "Addresses Cassandra-specific concerns: need to decommission from the ring before draining, rebuild on new nodes",
       "Provides gcloud commands for creating the new node pool with matching configuration",
       "Includes kubectl commands for cordoning and draining",
@@ -191,14 +197,14 @@
     "id": 13,
     "prompt": "We have batch processing jobs that run for 8-16 hours on our Standard GKE cluster on the Regular release channel. We need to upgrade from 1.30 to 1.31 but can't afford to kill these jobs mid-execution. How should we handle this?",
     "expectations": [
-      "Recommends GKE's autoscaled blue-green node pool upgrade strategy as the primary approach for batch workloads \u2014 it supports wait-for-drain time, longer graceful termination, and PDB upgrade timeout to let jobs complete",
+      "Recommends GKE's autoscaled blue-green node pool upgrade strategy as the primary approach for batch workloads \u2014 configured with --enable-autoscaling and --autoscaled-rollout-policy flags (NOT surge parameters). Supports wait-for-drain time, longer graceful termination, and PDB upgrade timeout to let jobs complete",
       "Explains that GKE respects terminationGracePeriodSeconds during pod eviction, but surge upgrades have a max eviction timeout",
       "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour \u2014 far less than 8-16 hour jobs",
       "Recommends pausing new batch job submissions before starting the upgrade",
       "Advises waiting for in-flight jobs to complete naturally before upgrading their node pool",
       "Suggests using node affinity or taints to isolate batch workloads on a dedicated node pool",
       "Recommends upgrading non-batch node pools first while batch jobs complete on the old pool",
-      "Does NOT recommend 'No channel' as the approach \u2014 uses release channels with maintenance exclusions instead"
+      "Does NOT recommend 'No channel' or '--enable-autoupgrade=false' (deprecated) \u2014 uses release channels with maintenance exclusions instead"
     ],
     "num_expectations": 8
   },
@@ -244,9 +250,11 @@
       "Recommends checking cert-manager version compatibility with Kubernetes 1.32",
       "Advises upgrading cert-manager to a version that supports 1.30 as the permanent fix",
       "Mentions setting failurePolicy to Ignore as a less drastic alternative to deletion",
-      "Includes commands to verify pods can be created after the fix"
+      "Includes commands to verify pods can be created after the fix",
+      "Notes that any webhook configuration changes (failurePolicy, cert-manager version) must be persisted in the source of truth (Helm chart, GitOps manifests, CI/CD pipeline) to survive redeployment",
+      "Qualifies failurePolicy: Ignore as a temporary debugging measure with explicit risks, recommending revert to Fail after the root cause is resolved"
     ],
-    "num_expectations": 9
+    "num_expectations": 11
   },
   {
     "id": 17,
@@ -296,16 +304,16 @@
   },
   {
     "id": 20,
-    "prompt": "We've never done a GKE upgrade before. Our team just inherited a Standard cluster on the Regular channel at 1.32 in us-west1-b and we need to get it to 1.32. There are 2 node pools \u2014 default-pool and workload-pool. We need a complete step-by-step runbook that someone with basic kubectl knowledge can follow. Include every command.",
+    "prompt": "We've never done a GKE upgrade before. Our team just inherited a Standard cluster on the Regular channel at 1.32 in us-west1-b and we need to get it to 1.33. There are 2 node pools \u2014 default-pool and workload-pool. We need a complete step-by-step runbook that someone with basic kubectl knowledge can follow. Include every command.",
     "expectations": [
       "Starts with pre-flight checks: current versions, cluster health, node status",
       "Includes the gcloud command to check available versions in the release channel",
       "Includes the API deprecation check command before upgrading",
-      "Provides the exact gcloud command for control plane upgrade to 1.31 first (--master flag)",
+      "Provides the exact gcloud command for control plane upgrade (--master flag or --cluster-version)",
       "Includes a verification step after control plane upgrade with expected output",
       "Provides gcloud commands for node pool upgrades \u2014 may use skip-level (N+2) for node pools to reduce steps",
       "Includes monitoring commands to watch node pool upgrade progress",
-      "Provides sequential control plane upgrades (1.30\u21921.31\u21921.32) with option for skip-level node pool upgrades",
+      "Provides sequential control plane upgrades (1.32\u21921.33) with option for skip-level node pool upgrades",
       "Includes post-upgrade validation: node versions, pod health, kube-system pods",
       "Provides a rollback section explaining what to do if something goes wrong"
     ],

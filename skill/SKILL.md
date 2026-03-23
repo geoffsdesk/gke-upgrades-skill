@@ -51,7 +51,11 @@ Establish these five things early. If the user provides them upfront, skip strai
 
 **Version promotion path:** New releases follow a promotion path: Rapid (Available → Default → Auto-upgrade target) → Regular → Stable → Extended. Release cadence includes an element of channel promotion — versions must prove stable in Rapid before reaching Regular, and Regular before Stable. GKE targets approximately one new release per week.
 
-Common multi-environment strategy: Dev→Rapid, Staging→Regular, Prod→Stable or Regular. For rollout sequencing to work, all environments in a sequence must be on the same channel (e.g., all Regular). To achieve environment progression with same-channel, keep the minor version the same across environments in steady state and use a canary cluster in the same channel upgraded first. Direct users to the [GKE release schedule](https://cloud.google.com/kubernetes-engine/docs/release-schedule) for current version availability.
+**Version progression timeline:** The typical timeline differs between patch and minor versions:
+- **Patch versions** progress ~2 weeks per stage: Rapid (available) → (+7d) Rapid (target) → (+7d) Regular (available) → (+7d) Regular (target) → (+7d) Stable (available) → (+7d) Stable (target)
+- **Minor versions** progress more slowly and variably. Check the [GKE release schedule](https://cloud.google.com/kubernetes-engine/docs/release-schedule) for historical data and expectations on minor version progression.
+
+Common multi-environment strategy: Dev→Rapid, Staging→Regular, Prod→Stable or Regular. Best practice: dev and prod should be on the same channel or one channel apart, maintaining the same minor version. Use 'no minor' exclusion with user-triggered minor upgrades to keep environments in sync. Different channels make rollout sequencing impossible and version drift likely. Direct users to the [GKE release schedule](https://cloud.google.com/kubernetes-engine/docs/release-schedule) for current version availability.
 
 ### Legacy "No channel" (static version) — avoid
 
@@ -96,12 +100,23 @@ When asked to plan an upgrade, produce a structured document covering:
 ### Version compatibility
 - Confirm target version availability in the cluster's release channel
 - Check version skew (nodes within 2 minor versions of control plane)
-- Identify deprecated APIs — the most common upgrade failure cause. Use `kubectl get --raw /metrics | grep apiserver_request_total` or the GKE deprecation insights dashboard
+- Identify deprecated APIs — the most common upgrade failure cause. When GKE detects deprecated API usage, auto-upgrades are automatically paused and an insight/recommendation is generated. Check with both methods:
+  ```
+  # Quick check via kubectl
+  kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated
+
+  # GKE recommender (comprehensive — also powers auto-upgrade pause)
+  gcloud recommender insights list \
+      --insight-type=google.container.DiagnosisInsight \
+      --location=LOCATION \
+      --project=PROJECT_ID \
+      --filter="insightSubtype:SUBTYPE"
+  ```
 - Review GKE release notes for breaking changes between current and target versions
 
 ### Upgrade path
 - **Control plane:** Recommend sequential minor version upgrades (e.g., 1.31→1.32→1.33). GKE now supports a 2-step control plane minor upgrade where step 1 is rollbackable (step 2 is not). Control plane must be upgraded before node pools — this is the required order.
-- **Node pools:** Support skip-level (N+2) upgrades. Recommend using skip-level upgrades when possible to reduce total upgrade time and disruption (e.g., upgrading node pools from 1.31 directly to 1.33 in a single step, skipping 1.32). Node pools must stay within 2 minor versions of the control plane.
+- **Node pools:** Support skip-level (N+2) upgrades within supported version skew. Always recommend skip-level upgrades within the 2-version skew limit to reduce total upgrade time. For pools that are 3+ versions behind (N+3), do multiple sequential skip-level upgrades within supported skew (e.g., 1.28→1.30, then 1.30→1.32) — never attempt an unsupported skip-level upgrade. Alternative for severely skewed pools: create a new node pool at the target version and migrate workloads. Best practice: keep nodes on the same minor version as the control plane in steady state; version skew should only occur during upgrade operations.
 - **Rollback:** Control plane patch downgrades can be done by the customer. Control plane minor version downgrades require GKE support involvement. Node pools can be re-created at a different version.
 - For multi-cluster: define rollout sequence with soak time between groups
 
@@ -133,8 +148,16 @@ The "No minor or node upgrades" exclusion is the recommended approach for maximu
 **Persistent maintenance exclusions:** Use `--add-maintenance-exclusion-until-end-of-support` to create an exclusion that automatically tracks the version's End of Support date and auto-renews when a new minor version is adopted. There is no longer a 6-month maximum for these — no need to chain exclusions. This flag is available for scope "no minor" and "no minor or node" exclusions.
 
 **Cluster disruption budget (disruption interval):** GKE enforces a disruption interval between upgrades on a given cluster, preventing back-to-back upgrades:
-- **Patch disruption interval:** Default 7 days, configurable up to 90 days. Controls frequency of control plane patch upgrades. Use `--maintenance-patch-version-disruption-interval` to configure.
-- **Minor disruption interval:** Default 30 days, configurable up to 90 days. Controls frequency of minor version upgrades. Use `--maintenance-minor-version-disruption-interval` to configure.
+- **Patch disruption interval:** Default 24h, configurable up to 90 days. Controls frequency of control plane patch upgrades. Use `--maintenance-patch-version-disruption-interval` to configure.
+- **Minor disruption interval:** Default 30d, configurable up to 90 days. Controls frequency of minor version upgrades. Use `--maintenance-minor-version-disruption-interval` to configure.
+- **Format:** Accepts duration strings (e.g., `45d`, `24h`, `3600s`). Range: 0s–7776000s (0–90 days). Internally stored in seconds.
+
+Example:
+```
+gcloud container clusters update CLUSTER_NAME \
+    --maintenance-minor-version-disruption-interval=45d \
+    --maintenance-patch-version-disruption-interval=7d
+```
 
 **Control plane patch controls (new):** Customers who need tight control over control plane patches can now benefit from:
 - GKE keeps control plane patches for 90 days after the patch is removed from a release channel (Stable & Regular), enabling upgrade/downgrade flexibility
@@ -146,27 +169,65 @@ The "No minor or node upgrades" exclusion is the recommended approach for maximu
 
 GKE rollout sequencing allows customers to define the order in which clusters are upgraded, with configurable soak time between stages. This ensures upgrades progress through environments (dev → staging → prod) with validation gaps.
 
-**Critical constraint:** Rollout sequencing does NOT work across different release channels. All clusters in a rollout sequence must be on the same channel. If environments use different channels (e.g., dev=Rapid, prod=Stable), rollout sequencing cannot orchestrate them — use manual sequencing with maintenance windows instead.
+**Configuration:**
+```
+gcloud container fleet clusterupgrade update \
+    --project=PROJECT_ID
+```
 
-**Important context:** Rollout sequencing is an advanced feature with limited adoption — by design, it targets sophisticated platform teams managing large fleets. Do not recommend it as a default or first-line tool. Mention it as an option when the user explicitly has multi-cluster coordination needs, but prefer simpler approaches (manual sequencing with maintenance windows, channel staggering across environments) for most customers. Only suggest rollout sequencing when the user has 10+ clusters or explicitly asks about automated fleet-wide upgrade orchestration.
+Key flags:
+- `--upstream-fleet`: Specifies the project ID of the fleet that must finish its upgrade before this fleet begins
+- `--default-upgrade-soaking`: Bake time after a stage completes (e.g., `7d` for 7 days, `2h` for 2 hours). Max 30 days.
+- Custom stages (Preview): Use `RolloutSequence` and `Rollout` API objects with label selectors to target subsets of clusters within a fleet
+
+**Critical constraint:** Rollout sequencing does NOT work across different release channels. All clusters in a rollout sequence must be on the same channel. If environments use different channels (e.g., dev=Rapid, prod=Stable), rollout sequencing cannot orchestrate them.
+
+**Maintenance windows are NOT a substitute for rollout sequencing.** Staggering maintenance windows across environments does NOT guarantee upgrade ordering. A new version may become available in region X on Tuesday and region Y on Friday — meaning prod could be upgraded before dev depending on window timing. Maintenance windows control timing and spread, not sequence order.
+
+**Alternative to rollout sequencing (simpler):** Use two different release channels (e.g., dev=Regular, prod=Stable) with "no minor" exclusions and user-triggered minor upgrades. This keeps environments on the same minor version while giving manual control over when each environment upgrades. This is simpler than rollout sequencing and sufficient for most teams.
+
+**Important context:** Rollout sequencing is an advanced feature with limited adoption — by design, it targets sophisticated platform teams managing large fleets. Do not recommend it as a default or first-line tool. Mention it as an option when the user explicitly has multi-cluster coordination needs, but prefer simpler approaches for most customers. Only suggest rollout sequencing when the user has 10+ clusters or explicitly asks about automated fleet-wide upgrade orchestration.
 
 ### Node pool upgrade strategy (Standard only — skip for Autopilot)
 
 GKE supports three upgrade strategies:
 
 **1. Surge upgrade (default):** Rolling replacement with per-pool `maxSurge`/`maxUnavailable`:
-- **Stateless pools**: Increase `maxSurge` for faster parallelism (e.g., `maxSurge=3, maxUnavailable=0`). When recommending higher maxSurge, explain WHY the value is set (e.g., "setting maxSurge=3 to increase parallelism and speed up the upgrade").
+- **Sizing maxSurge:** Recommend maxSurge as a percentage of pool size (e.g., 5%, minimum 1, rounded to nearest integer) rather than a fixed number. This scales with pool size. GKE API accepts integers only — calculate the value. Maximum effective parallelism per batch is ~20 nodes today (increasing to 100). Examples: 40-node pool → maxSurge=2, 200-node pool → maxSurge=10, 600-node pool → maxSurge=20 (capped at batch limit). Always explain WHY the value is set.
+- **Stateless pools**: Use percentage-based `maxSurge` (e.g., 5% of pool size), `maxUnavailable=0` for zero-downtime rolling replacement.
 - **Stateful/database pools**: `maxSurge=1, maxUnavailable=0` — conservative, let PDBs protect data
 - **GPU pools**: GPU nodes typically use fixed reservations with no surge capacity available. The primary lever is `maxUnavailable`, not `maxSurge`. Recommend `maxSurge=0, maxUnavailable=1` (drains before creating — zero extra GPUs needed, but causes a capacity dip). Only use `maxSurge=1` if the customer has confirmed available GPU surge quota.
-- **Large clusters**: Increase `maxSurge` for faster completion (e.g., `maxSurge=20, maxUnavailable=0`). Note: GKE's maximum upgrade parallelism is ~20 nodes simultaneously regardless of `maxSurge` setting.
+- **Large clusters**: Use percentage-based `maxSurge` (e.g., 5% of pool size, capped at batch concurrency limit of 20, increasing to 100). Note: GKE's maximum upgrade parallelism is ~20 nodes simultaneously regardless of `maxSurge` setting.
 
 **2. Blue-green upgrade:** GKE's native blue-green strategy minimizes risk by keeping the old nodes (blue pool) available while new nodes with the updated version are provisioned (green pool). The blue pool is cordoned and workloads are gradually drained to the green pool, with a soaking period to validate before cutover. Rollback is fast — uncordon the blue pool. Requires enough quota to temporarily double the node pool size. Recommend for mission-critical applications, stateful applications sensitive to node changes, environments with strict testing/validation requirements, and applications where a quick rollback path is essential.
 
-**3. Autoscaled blue-green upgrade (preview):** An enhancement of blue-green designed to be more cost-effective and suited for long-running workloads. The green pool scales up as needed based on workload demand, while the blue pool scales down as pods are safely evicted. Supports longer eviction periods (wait-for-drain, longer graceful termination periods, PDB upgrade timeout), allowing pods to complete their work before being evicted. Recommend for:
+**3. Autoscaled blue-green upgrade (preview):** An enhancement of standard blue-green designed to be more cost-effective and suited for long-running workloads. The green pool scales up as needed based on workload demand, while the blue pool scales down as pods are safely evicted. Supports longer eviction periods (wait-for-drain, longer graceful termination periods, PDB upgrade timeout), allowing pods to complete their work before being evicted.
+
+**When to use autoscaled blue-green:**
 - Long-running batch processing jobs (8+ hours)
 - Game servers and other disruption-intolerant workloads
-- Workloads sensitive to eviction that benefit from controlled, autoscaled transition
+- Inference workloads sensitive to eviction that benefit from controlled, autoscaled transition
 - GPU pools where surge capacity is unavailable (cordons one nodepool at a time)
+
+**When NOT to use autoscaled blue-green:** ML training workloads requiring parallel host maintenance + nodepool upgrade with high concurrency. Autoscaled blue-green has the same max batch concurrency limit (~20 nodes, increasing to 100). For training, use a custom upgrade strategy instead — see "AI Host Maintenance" section.
+
+**Configuration:**
+```
+gcloud container node-pools update POOL_NAME \
+    --cluster CLUSTER_NAME \
+    --enable-autoscaling \
+    --total-min-nodes MIN --total-max-nodes MAX \
+    --autoscaled-rollout-policy=blue-green-initial-node-percentage=0.25,blue-green-full-batch-timeout=3600s
+```
+
+Key parameters:
+- `--enable-autoscaling`: Required — enables the autoscaler for the node pool
+- `--total-min-nodes` / `--total-max-nodes`: Scaling limits for the entire pool
+- `--autoscaled-rollout-policy`: Configures the blue-green parameters
+  - `blue-green-initial-node-percentage`: Percentage of nodes to create in the green pool initially (e.g., 0.25 = 25%)
+  - `blue-green-full-batch-timeout`: Maximum time GKE waits for green pool readiness before rollback (in seconds, e.g., 3600s = 1 hour)
+
+**Important:** Surge parameters (`maxSurge`, `maxUnavailable`) do NOT apply to blue-green or autoscaled blue-green strategies. These parameters are only relevant for surge upgrades. Do not include them when recommending blue-green.
 
 **4. Manual blue-green (custom workflow):** Customer creates a new pool, cordons the old pool, manually migrates, deletes the old pool. **Use only as a last resort** when neither surge, blue-green, nor autoscaled blue-green meets specific needs. Do not default to recommending custom flows — always prefer GKE's native upgrade strategies first.
 
@@ -174,8 +235,12 @@ GKE supports three upgrade strategies:
 
 **Important:** Never recommend "No channel" as a first option for upgrade control. Always recommend release channels with maintenance exclusions as the primary approach.
 
+**When to recommend exclusions:** Only recommend maintenance exclusions when the customer has disruption-intolerant workloads OR explicitly asks for upgrade control. Do not proactively suggest exclusions for all customers — they add operational overhead and can cause clusters to fall behind on patches. For most customers, release channels + maintenance windows provide sufficient control without exclusions.
+
+**Autopilot exclusion guidance:** Do not recommend node-level exclusions on Autopilot unless the customer explicitly requests node upgrade control.
+
 ### Workload readiness
-- PDBs for critical workloads (GKE respects them for up to 1 hour during surge upgrades — this is the GKE PDB timeout). GKE sends notifications when eviction is blocked by PDB, so teams can monitor and intervene.
+- PDBs for critical workloads (GKE respects them for up to 1 hour during surge upgrades — this is the GKE PDB timeout). GKE sends `UpgradeInfoEvent` disruption notifications when eviction is blocked by PDB (`POD_PDB_VIOLATION`, `POD_NOT_ENOUGH_PDB`), so teams can monitor via Cloud Logging or Pub/Sub and intervene. A PDB timeout notification is also sent if pods are force-deleted after the grace period.
 - No bare pods (won't be rescheduled)
 - Adequate `terminationGracePeriodSeconds` for graceful shutdown
 - Stateful: verify PV reclaim policies and backup status
@@ -199,7 +264,7 @@ Frontier AI customers running large GPU/TPU clusters face unique upgrade challen
 - **Strategy selection for GPU pools:**
   - **Default (most common):** `maxSurge=0, maxUnavailable=1` — most GPU customers have fixed reservations with no surge capacity. The `maxUnavailable` parameter is the primary lever. This drains first, no extra GPUs needed, but causes a capacity dip. Increase `maxUnavailable` for faster completion.
   - If GPU surge quota IS confirmed available: surge with `maxSurge=1, maxUnavailable=0` (safest, no capacity dip)
-  - For large GPU pools needing fast upgrades: use GKE's autoscaled blue-green upgrade strategy (cordons the old pool, auto-scales replacement — but needs capacity for replacement nodes)
+  - For large GPU **inference** pools needing fast upgrades: use GKE's autoscaled blue-green upgrade strategy (cordons the old pool, auto-scales replacement — but needs capacity for replacement nodes). For **training** workloads: use custom upgrade strategy with parallel host maintenance instead — see 'AI Host Maintenance' section below. Custom strategy handles host maintenance + nodepool upgrade simultaneously and is more efficient for training where all nodes can be upgraded at once during a training gap.
 - **GPU driver version coupling:** GKE automatically installs the GPU driver matching the target GKE version. This can change CUDA versions silently. Always test the target GKE version in a staging cluster to verify driver + CUDA + framework compatibility before production.
 - **Reservation interaction:** GPU reservations guarantee capacity but surge upgrades consume reservation slots. Verify reservation has headroom for surge, or use `maxUnavailable` mode instead.
 
@@ -223,7 +288,7 @@ For clusters with accelerator (GPU/TPU) nodes, GKE provides a host maintenance m
 Multi-day or multi-week training runs (LLM pre-training, large-scale RL, etc.) cannot tolerate mid-job eviction. GKE's default pod eviction timeout during surge upgrades is 1 hour — far shorter than a training run.
 
 - **Maintenance exclusions are critical:** Use "no minor or node upgrades" exclusion during active training campaigns. This blocks node pool upgrades while still allowing control plane security patches.
-- **Dedicated training node pools:** Isolate training workloads on their own node pool with auto-upgrade disabled. Upgrade this pool only during scheduled gaps between training runs.
+- **Dedicated training node pools:** Isolate training workloads on their own node pool with per-nodepool maintenance exclusions to prevent auto-upgrades during training campaigns. The `--enable-autoupgrade=false` flag is deprecated — use maintenance exclusions instead. Upgrade this pool only during scheduled gaps between training runs.
 - **PDB protection:** Configure PDBs on training workloads to prevent eviction. GKE respects PDBs for up to 1 hour, then may force-drain — this buys time but does not fully protect multi-day jobs.
 - **Checkpoint before upgrading:** Ensure training jobs have checkpointing enabled so they can resume after the upgrade rather than restarting from scratch.
 - **Cordon and wait pattern:** Cordon training nodes, wait for current jobs to complete naturally, then upgrade the empty pool.
