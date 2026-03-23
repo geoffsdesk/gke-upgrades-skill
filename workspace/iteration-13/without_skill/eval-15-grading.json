@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "First step: check the operation status to understand why it failed (gcloud container operations list)",
+      "passed": true,
+      "reason": "Response includes 'gcloud container operations list --filter=\"operationType=UPGRADE_NODES\"' and 'gcloud container operations describe [OPERATION_ID]' to check operation status"
+    },
+    {
+      "expectation": "Recommends checking events and logs for the specific failure reason",
+      "passed": false,
+      "reason": "While the response mentions checking operation details, it doesn't specifically recommend checking Kubernetes events or detailed logs for the failure reason"
+    },
+    {
+      "expectation": "Explains that the cluster is in a mixed-version state (8 nodes at 1.32, 12 at 1.31) which is within skew policy",
+      "passed": false,
+      "reason": "Response doesn't explicitly explain the mixed-version state or mention that this is within Kubernetes version skew policy"
+    },
+    {
+      "expectation": "Notes that the mixed state is functional but not ideal \u2014 workloads can run on both versions",
+      "passed": false,
+      "reason": "Response doesn't explain that the mixed state is functional or that workloads can run on both versions"
+    },
+    {
+      "expectation": "Provides options: retry the upgrade after fixing the root cause, or rollback the 8 upgraded nodes",
+      "passed": false,
+      "reason": "Response provides retry option but doesn't offer rollback as an alternative - it only mentions manual node replacement"
+    },
+    {
+      "expectation": "Explains that retrying is usually better than rollback (rolling back means creating a new pool at old version)",
+      "passed": false,
+      "reason": "Response doesn't explain why retrying is better than rollback or mention creating a new pool at old version"
+    },
+    {
+      "expectation": "Addresses the remaining 2 node pools: they can still be upgraded once the failed pool issue is resolved",
+      "passed": true,
+      "reason": "Response addresses the remaining pools with 'Prevention for Remaining Pools' section and provides upgrade commands"
+    },
+    {
+      "expectation": "Includes commands to diagnose the failure (operation details, node status, pod events)",
+      "passed": true,
+      "reason": "Response includes 'kubectl get nodes -o wide', 'gcloud container operations list', 'gcloud container operations describe', and monitoring commands"
+    }
+  ]
+}

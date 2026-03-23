@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Configures a recurring maintenance window for weekends only",
+      "passed": true,
+      "reason": "The response configures a recurring maintenance window from Saturday 2 AM UTC to Sunday 6 AM UTC with FREQ=WEEKLY recurrence in both Terraform and gcloud examples"
+    },
+    {
+      "expectation": "Provides the gcloud command with --maintenance-window-start/end and --maintenance-window-recurrence for weekly weekend schedule",
+      "passed": true,
+      "reason": "The bash script includes the exact gcloud commands with --maintenance-window-start '2024-01-06T02:00:00Z' --maintenance-window-end '2024-01-07T06:00:00Z' --maintenance-window-recurrence 'FREQ=WEEKLY'"
+    },
+    {
+      "expectation": "Sets up maintenance exclusions for quarterly code freezes (up to 30 days each)",
+      "passed": true,
+      "reason": "The response sets up exclusions for Q1 (March), Q2 (June), and Q3 (September) code freezes, each covering the full month (30-31 days)"
+    },
+    {
+      "expectation": "Sets up a maintenance exclusion for the November audit period",
+      "passed": true,
+      "reason": "The response includes a Q4 exclusion that covers November-December for both code freeze and annual audit period"
+    },
+    {
+      "expectation": "Notes the 30-day maximum for maintenance exclusions and how to handle longer freezes",
+      "passed": false,
+      "reason": "The response does not mention the 30-day maximum limit for maintenance exclusions or provide guidance on handling longer freeze periods"
+    },
+    {
+      "expectation": "Explains that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
+      "passed": false,
+      "reason": "The response does not explain the distinction between manual and auto-upgrades or that manual upgrades bypass maintenance windows"
+    },
+    {
+      "expectation": "Recommends combining maintenance windows with Stable or Extended channel for maximum upgrade control",
+      "passed": true,
+      "reason": "The response sets release_channel to 'REGULAR' and includes a comment suggesting 'STABLE for even more conservative updates', indicating awareness of using release channels for upgrade control"
+    },
+    {
+      "expectation": "Provides gcloud commands for each exclusion (--add-maintenance-exclusion-name/start-time/end-time)",
+      "passed": true,
+      "reason": "The bash script provides complete gcloud commands with --add-maintenance-exclusion-name, --add-maintenance-exclusion-start, --add-maintenance-exclusion-end, and --add-maintenance-exclusion-scope for each quarterly exclusion"
+    },
+    {
+      "expectation": "Warns about the risk of falling too far behind on versions during long exclusion periods",
+      "passed": false,
+      "reason": "The response does not warn about the risks of falling behind on versions during extended exclusion periods or the potential security implications"
+    }
+  ]
+}

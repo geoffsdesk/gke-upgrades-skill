@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Response clearly states 'your node pool is 3 minor versions behind the control plane (1.28 vs 1.31), which exceeds GKE's supported 2-version skew limit'"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (nodes must be within 2 minor versions of control plane)",
+      "passed": true,
+      "reason": "Response explicitly identifies this as a 'version skew violation' and states it 'exceeds GKE's supported 2-version skew limit'"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Response lists specific risks including 'API compatibility issues', 'nodes may not understand newer API objects', 'cluster instability', and 'newer control plane features may break older nodes'"
+    },
+    {
+      "expectation": "Recommends skip-level (N+2) node pool upgrades within supported version skew to reduce time and disruption. For the N+3 gap (1.28 with 1.31 CP), recommends multiple sequential skip-level upgrades within supported skew (e.g., 1.28\u21921.30 then 1.30\u21921.31) or creating a new node pool at the target version and migrating workloads. Never recommends an unsupported skip-level upgrade.",
+      "passed": true,
+      "reason": "Response clearly states 'You cannot do a single skip-level upgrade from 1.28 \u2192 1.31 (that's N+3, unsupported)' and recommends two sequential skip-level upgrades: '1.28 \u2192 1.30 (N+2, supported)' then '1.30 \u2192 1.31 (N+1, supported)', plus offers node pool replacement as alternative"
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Response provides detailed gcloud commands including 'gcloud container node-pools upgrade' commands for both upgrade steps and alternative node pool replacement commands"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": true,
+      "reason": "Response explicitly recommends 'Set conservative surge settings due to large version gap' with specific commands setting '--max-surge-upgrade 1 --max-unavailable-upgrade 0'"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": true,
+      "reason": "Response includes monitoring commands like 'watch kubectl get nodes' and validation steps with 'Only proceed once step 1 is 100% complete' and multiple validation checkpoints"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": true,
+      "reason": "Response includes a 'Root Cause Prevention' section with commands to 'migrate to a release channel' and set up 'maintenance exclusions' to prevent future occurrences"
+    }
+  ]
+}

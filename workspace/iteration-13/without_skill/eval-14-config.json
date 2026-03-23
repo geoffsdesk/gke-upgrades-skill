@@ -1,0 +1,12 @@
+{
+  "eval_id": 14,
+  "mode": "without_skill",
+  "iteration": 13,
+  "prompt": "After upgrading our Standard cluster from 1.31 to 1.32, we're seeing increased API latency and some 503 errors from our services. The upgrade completed successfully \u2014 all nodes are at 1.32 and showing Ready. What could be wrong?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-23T18:43:57.903930+00:00",
+  "input_tokens": 65,
+  "output_tokens": 979,
+  "time_seconds": 21.45
+}

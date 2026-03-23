@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's native node pool upgrade strategies rather than the manual create/cordon/drain/delete workflow described",
+      "passed": false,
+      "reason": "The response validates and optimizes the manual approach rather than recommending native GKE upgrade strategies as the primary solution"
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends surge upgrade with maxSurge=0 and maxUnavailable set as the primary lever (since no surge capacity is available)",
+      "passed": false,
+      "reason": "The response mentions surge upgrade but suggests maxSurge=10, not maxSurge=0, and doesn't emphasize this as the primary approach for fixed reservations"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as a native alternative that handles cordon and migration automatically",
+      "passed": false,
+      "reason": "The response mentions blue-green at node pool level but doesn't reference GKE's native auto-scale blue-green upgrade strategy"
+    },
+    {
+      "expectation": "Explains that native strategies are the supported path and handle edge cases (PDB respect, drain timeouts, progress tracking) that manual workflows miss",
+      "passed": false,
+      "reason": "The response doesn't explain that native strategies are the supported path or mention the edge cases they handle"
+    },
+    {
+      "expectation": "Only suggests manual blue-green as a last resort if native strategies don't meet a specific requirement",
+      "passed": false,
+      "reason": "The response treats manual approaches as recommended rather than last resort options"
+    },
+    {
+      "expectation": "Addresses GPU driver compatibility \u2014 need to verify target version's auto-installed driver is compatible",
+      "passed": true,
+      "reason": "The response mentions 'GPU driver compatibility: Ensure NVIDIA drivers work with 1.32' in the key considerations"
+    },
+    {
+      "expectation": "Recommends scheduling the upgrade during a gap in GPU workloads to minimize impact",
+      "passed": true,
+      "reason": "The response mentions 'Workload awareness: Coordinate with ML teams on training job schedules' in key considerations"
+    },
+    {
+      "expectation": "Provides gcloud commands for the recommended native approach",
+      "passed": false,
+      "reason": "While gcloud commands are provided, they are for the surge upgrade alternative rather than the primary recommended native approach"
+    }
+  ]
+}

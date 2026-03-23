@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the difference between Rapid and Stable channels \u2014 including that Rapid has no SLA for upgrade stability while Stable carries a full SLA, and clearly distinguishes minor version vs patch version differences between the channels",
+      "passed": false,
+      "reason": "Response states both channels carry full SLA and incorrectly claims Rapid has no SLA for upgrade stability, when both channels have the same SLA coverage. Does not clearly distinguish minor vs patch version differences between channels."
+    },
+    {
+      "expectation": "Notes that channel changes don't trigger an immediate upgrade or downgrade",
+      "passed": true,
+      "reason": "Explicitly states 'This is a metadata change only - no immediate cluster disruption' and 'No forced downgrade - GKE won't downgrade you'"
+    },
+    {
+      "expectation": "Warns that if 1.30 isn't yet available on Stable, the cluster may not receive patches until Stable catches up",
+      "passed": false,
+      "reason": "Response discusses 1.32 not being available on Stable but does not warn about patch availability issues. Actually states security patches have 'Same patch velocity across all channels for critical security fixes'"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "Provides the exact command: 'gcloud container clusters update CLUSTER_NAME --zone ZONE --release-channel stable'"
+    },
+    {
+      "expectation": "Recommends checking version availability on Stable before switching (gcloud container get-server-config)",
+      "passed": true,
+      "reason": "Includes the command 'gcloud container get-server-config --zone ZONE --format=\"yaml(channels.STABLE)\"' in the pre-migration check section"
+    },
+    {
+      "expectation": "Discusses the impact on auto-upgrade timing going forward",
+      "passed": true,
+      "reason": "Discusses 'Much slower upgrade cadence - Stable gets versions weeks after Rapid' and explains auto-upgrade behavior changes"
+    },
+    {
+      "expectation": "Mentions that the Extended channel is an option if they need even slower cadence (with cost implications)",
+      "passed": false,
+      "reason": "Extended channel is not mentioned anywhere in the response"
+    },
+    {
+      "expectation": "Advises coordinating the change during a maintenance window",
+      "passed": false,
+      "reason": "Does not advise coordinating during a maintenance window, though it does mention maintenance exclusions as a separate consideration"
+    }
+  ]
+}

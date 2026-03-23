@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends Stable or Extended release channel to minimize upgrade frequency",
+      "passed": false,
+      "reason": "The response recommends REGULAR release channel, not STABLE or Extended channel as expected for minimizing upgrade frequency"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
+      "passed": true,
+      "reason": "The response shows maintenance exclusions with 'scope: NO_UPGRADES' to block all upgrades during critical training periods"
+    },
+    {
+      "expectation": "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
+      "passed": true,
+      "reason": "The response configures a 4-hour maintenance window on Sundays (weekend) from 2-6 AM UTC for predictable timing"
+    },
+    {
+      "expectation": "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
+      "passed": true,
+      "reason": "The response explicitly creates separate node pools: 'h100-training-pool' for training workloads and 'system-pool' for system workloads with different configurations"
+    },
+    {
+      "expectation": "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
+      "passed": true,
+      "reason": "The response sets 'autoUpgrade: false' for the training node pool and recommends manual control over training nodes with scheduled maintenance windows"
+    },
+    {
+      "expectation": "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
+      "passed": true,
+      "reason": "The response includes checkpoint configuration with persistent storage volumes and mentions 'Checkpoint Strategy: Use both local SSD for speed and persistent storage for durability'"
+    },
+    {
+      "expectation": "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
+      "passed": false,
+      "reason": "While the response mentions GPU driver configuration with 'gpuDriverVersion: LATEST', it does not specifically advise testing driver versions in staging before production deployment"
+    },
+    {
+      "expectation": "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading",
+      "passed": false,
+      "reason": "The response does not mention GPUDirect/RDMA networking requirements or version compatibility considerations for upgrades"
+    }
+  ]
+}

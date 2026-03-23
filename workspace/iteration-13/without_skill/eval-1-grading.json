@@ -1,0 +1,59 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends sequential control plane upgrades (1.32\u21921.33) while using skip-level (N+2) for node pool upgrades where possible to reduce disruption",
+      "passed": false,
+      "reason": "The response shows a direct 1.32 to 1.33 upgrade without mentioning sequential staging or skip-level node pool upgrade strategies to reduce disruption"
+    },
+    {
+      "expectation": "Specifies control plane upgrades before node pool upgrades",
+      "passed": true,
+      "reason": "The response clearly structures Phase 1 as Control Plane Upgrade followed by Phase 2 as Node Pool Upgrades"
+    },
+    {
+      "expectation": "Provides different node pool upgrade ordering with rationale for the sequence",
+      "passed": true,
+      "reason": "The response orders upgrades as: general-purpose (lowest risk), GPU pool (ML inference), high-memory pool (most critical), with clear rationale for each"
+    },
+    {
+      "expectation": "Includes specific surge upgrade settings (maxSurge/maxUnavailable) for each pool with justification for the chosen values (e.g., explaining why maxSurge is set higher for parallelism)",
+      "passed": false,
+      "reason": "While surge settings are mentioned (maxSurge=2, maxUnavailable=1), there's no justification for why these specific values were chosen or how they differ per pool type"
+    },
+    {
+      "expectation": "Addresses Postgres-specific concerns (PDB, backup, operator compatibility, PV reclaim)",
+      "passed": false,
+      "reason": "Mentions backup procedures and operator compatibility but does not address PodDisruptionBudgets specifically for Postgres or PV reclaim policies"
+    },
+    {
+      "expectation": "Addresses GPU-specific concerns (driver compatibility, maxUnavailable as primary lever since surge capacity is typically unavailable)",
+      "passed": false,
+      "reason": "Mentions GPU driver updates but doesn't explain maxUnavailable as the primary lever for GPU pools due to surge capacity limitations"
+    },
+    {
+      "expectation": "Includes actual gcloud commands for the upgrade steps",
+      "passed": true,
+      "reason": "The response includes specific gcloud commands for checking versions, upgrading control plane, and upgrading node pools"
+    },
+    {
+      "expectation": "Provides a pre-upgrade checklist",
+      "passed": true,
+      "reason": "Includes a comprehensive pre-upgrade preparation section with version checks, backup procedures, and pre-flight checks"
+    },
+    {
+      "expectation": "Provides a post-upgrade checklist with validation commands",
+      "passed": true,
+      "reason": "Includes a detailed post-upgrade validation section with specific kubectl commands to verify cluster health and workloads"
+    },
+    {
+      "expectation": "Includes rollback procedure or guidance (noting CP patch downgrades are customer-doable, minor downgrades require GKE support)",
+      "passed": false,
+      "reason": "States that rollback is not supported for K8s upgrades but doesn't mention the distinction between patch downgrades (customer-doable) vs minor downgrades (requiring GKE support)"
+    },
+    {
+      "expectation": "Mentions GKE's 2-step control plane minor upgrade where step 1 is rollbackable (step 2 commits and is not rollbackable), or mentions that node pools support downgrade",
+      "passed": false,
+      "reason": "Does not mention GKE's 2-step control plane upgrade process or that node pools support downgrade capabilities"
+    }
+  ]
+}

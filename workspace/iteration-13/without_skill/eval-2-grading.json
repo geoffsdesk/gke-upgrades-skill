@@ -1,0 +1,59 @@
+{
+  "assertions": [
+    {
+      "expectation": "Distinguishes between dev (Rapid) and prod (Stable) clusters in the checklists",
+      "passed": true,
+      "reason": "Response explicitly mentions verifying dev clusters are already on 1.32, running compatibility tests on dev clusters, and focuses the checklists on production cluster upgrades"
+    },
+    {
+      "expectation": "Recognizes Autopilot limitations (no node management, no SSH, mandatory resource requests)",
+      "passed": false,
+      "reason": "While the response is tailored for Autopilot, it doesn't explicitly mention key Autopilot limitations like no SSH access, no node management, or mandatory resource requests"
+    },
+    {
+      "expectation": "Includes API deprecation checks with kubectl commands",
+      "passed": true,
+      "reason": "Includes specific kubectl command for checking deprecated APIs: 'kubectl get --raw /metrics | grep apiserver_requested_deprecated_apis' and mentions specific API deprecations"
+    },
+    {
+      "expectation": "Mentions mandatory resource requests as an Autopilot-specific concern",
+      "passed": false,
+      "reason": "Does not mention mandatory resource requests requirement which is a key Autopilot constraint"
+    },
+    {
+      "expectation": "Pre-upgrade checklist includes workload readiness items (PDBs, bare pods, graceful shutdown)",
+      "passed": true,
+      "reason": "Includes PodDisruptionBudgets audit, workload preparation section, and various workload validation items"
+    },
+    {
+      "expectation": "Post-upgrade checklist includes version verification commands",
+      "passed": true,
+      "reason": "Includes specific gcloud commands to check cluster status and kubectl commands to verify nodes and system components"
+    },
+    {
+      "expectation": "Post-upgrade checklist includes workload health validation",
+      "passed": true,
+      "reason": "Comprehensive workload health validation including deployment status checks, pod status verification, and application endpoint testing"
+    },
+    {
+      "expectation": "Recommends testing on dev clusters before prod auto-upgrade",
+      "passed": true,
+      "reason": "Explicitly states to verify dev clusters are already on 1.32 and run compatibility tests on dev clusters with production workload samples"
+    },
+    {
+      "expectation": "Mentions that checking the GKE release schedule gives ~1 month best-case advance notice for new minor upgrades, beyond the 72h notification",
+      "passed": false,
+      "reason": "Does not mention the GKE release schedule or advance notice timing beyond basic scheduling recommendations"
+    },
+    {
+      "expectation": "Includes monitoring/observability validation items",
+      "passed": true,
+      "reason": "Includes comprehensive monitoring section with metrics collection, logging pipeline, alerting rules, and extended validation over 24-48 hours"
+    },
+    {
+      "expectation": "Does NOT proactively recommend node-level maintenance exclusions for Autopilot unless the customer explicitly asks for node upgrade control",
+      "passed": true,
+      "reason": "Correctly does not mention node-level maintenance exclusions, which is appropriate for Autopilot where Google manages the nodes"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": true,
+      "reason": "Response explicitly states 'Each TPU slice (your 256-chip pods) gets recreated entirely in a single step \u2014 not rolling upgrades like CPU nodes'"
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": true,
+      "reason": "Response clearly states 'When ANY slice in your multislice environment undergoes maintenance, ALL slices restart simultaneously'"
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "Response explicitly mentions 'Full job termination: Your LLM training job will be killed' and 'all 4 slices restart together'"
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": true,
+      "reason": "Response warns 'If insufficient TPU capacity exists during recreation, the entire job blocks until hardware becomes available (could extend downtime significantly)' and mentions 'can extend downtime from hours to potentially days'"
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "Response provides specific section '1. Force checkpoint NOW' with actual kubectl commands to trigger immediate checkpoint"
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "Response includes 'Post-maintenance recovery plan' section with specific steps for resuming training from checkpoint and provides example commands"
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": true,
+      "reason": "Response provides detailed section on applying maintenance exclusion with actual gcloud command to 'Block the maintenance for up to 30 days if you need to finish a critical training run'"
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": true,
+      "reason": "Response suggests 'Proactive shutdown strategy' where you can 'Checkpoint and gracefully stop training before the maintenance window' and 'Let maintenance complete on empty slices', giving control over timing"
+    }
+  ]
+}

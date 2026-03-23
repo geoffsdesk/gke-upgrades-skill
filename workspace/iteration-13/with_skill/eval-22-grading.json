@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains this is related to the interaction between maxSurge, drain order, and pod scheduling",
+      "passed": true,
+      "reason": "Response explains how surge upgrade process, scheduler behavior, and pod eviction/rescheduling interact to create the musical chairs problem"
+    },
+    {
+      "expectation": "Notes that GKE cordons nodes before draining them \u2014 pods should prefer scheduling onto uncordoned (upgraded) nodes",
+      "passed": false,
+      "reason": "Response doesn't mention the cordoning process or explain that pods should prefer uncordoned nodes - it focuses on scheduler ignorance but misses this key GKE behavior"
+    },
+    {
+      "expectation": "Identifies possible cause: too many nodes being drained simultaneously (high maxSurge) before enough upgraded nodes exist",
+      "passed": true,
+      "reason": "Response identifies insufficient surge capacity and multiple batches being drained simultaneously as causes, though frames it as needing to increase rather than decrease maxSurge"
+    },
+    {
+      "expectation": "Recommends reducing maxSurge to 1 to ensure upgraded nodes are available before draining the next batch",
+      "passed": false,
+      "reason": "Response recommends increasing maxSurge (3-15 nodes) rather than reducing it to 1, which is opposite to this expectation"
+    },
+    {
+      "expectation": "Suggests using pod anti-affinity or node affinity to prefer already-upgraded nodes",
+      "passed": true,
+      "reason": "Response provides node affinity example to prefer upgraded nodes, though focuses on instance type rather than upgrade status"
+    },
+    {
+      "expectation": "Mentions checking if any taints or tolerations are causing pods to land on the wrong nodes",
+      "passed": false,
+      "reason": "Response doesn't mention taints or tolerations as a potential cause of pods landing on wrong nodes"
+    },
+    {
+      "expectation": "Provides kubectl commands to check node cordoned status and pod scheduling events",
+      "passed": true,
+      "reason": "Response provides kubectl commands to watch nodes and monitor pod scheduling events, though doesn't specifically show checking cordoned status"
+    },
+    {
+      "expectation": "Recommends setting maxUnavailable=0 to ensure old nodes aren't removed until pods are safely rescheduled",
+      "passed": true,
+      "reason": "Response explicitly recommends maxUnavailable=0 in the immediate fixes section"
+    },
+    {
+      "expectation": "May mention GKE's autoscaled blue-green upgrade strategy as an alternative that avoids this issue by cordoning the entire old pool before migrating workloads to new nodes",
+      "passed": true,
+      "reason": "Response mentions autoscaled blue-green rollout policy and explains how it creates a separate green pool to avoid the musical chairs problem"
+    }
+  ]
+}

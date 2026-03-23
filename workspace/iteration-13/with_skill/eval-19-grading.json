@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all mentioned notification types in a table format, including security patches, auto-upgrade scheduled, end-of-life warnings, new version available notifications, plus additional relevant types"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": false,
+      "reason": "Security patches are assigned Medium urgency (\ud83d\udfe1), not highest priority. End-of-life warnings and deprecated APIs get High priority (\ud83d\udd34), while new version available correctly gets Low priority (\ud83d\udfe2)"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response assigns High priority to EoS warnings with specific actions including checking clusters approaching EoS, planning upgrades, and acting within 2-4 weeks of notification"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response provides specific pre-upgrade checklist items including verifying cluster health with kubectl commands, checking monitoring/alerting, and ensuring team awareness"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": false,
+      "reason": "Security patches are labeled as 'Monitor auto-upgrade' with auto-application timeline, but no mention of expedited upgrades or actions outside normal maintenance windows"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response correctly categorizes new version available as Low priority with explicit statement 'No immediate action required' and suggests planning for future upgrade cycles"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "Response provides specific gcloud commands for creating log-based alerts using Pub/Sub topics for high-priority GKE notifications"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": true,
+      "reason": "Response mentions 'Review release notes for new features or breaking changes' as an action item for new version available notifications"
+    }
+  ]
+}

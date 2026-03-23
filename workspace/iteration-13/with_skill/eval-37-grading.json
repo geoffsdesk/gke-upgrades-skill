@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Proposes a phased approach: control plane first, then CPU pools, then T4 dev, then inference (A100), then training (H100) last",
+      "passed": true,
+      "reason": "The response clearly outlines a 4-phase approach: Phase 1 control planes first, Phase 2 T4 dev and CPU services, Phase 3 A100 inference, Phase 4 H100 training last"
+    },
+    {
+      "expectation": "Control plane can be upgraded independently without affecting running workloads",
+      "passed": true,
+      "reason": "Phase 1 explicitly states control plane upgrades are low-risk (~15 minutes each) and mentions the supported 2-version skew (CP=1.32, nodes=1.31) allowing independent control plane upgrades"
+    },
+    {
+      "expectation": "CPU service pools upgraded first as lowest risk \u2014 use standard surge settings (maxSurge=2-3)",
+      "passed": false,
+      "reason": "While CPU pools are upgraded early in Phase 2, the response uses maxSurge=50 rather than the expected conservative 2-3 setting for standard surge configuration"
+    },
+    {
+      "expectation": "T4 dev pool upgraded next \u2014 dev workloads are tolerant of interruption",
+      "passed": true,
+      "reason": "T4 development pool is upgraded in Phase 2 with the reasoning that these are non-critical pools, and the response acknowledges development workloads have flexible timing"
+    },
+    {
+      "expectation": "A100 inference pool upgraded with careful surge settings (maxSurge=1) and PDBs to maintain serving capacity",
+      "passed": false,
+      "reason": "While the A100 pool uses careful blue-green strategy to maintain serving capacity, it doesn't specify maxSurge=1 settings or mention PodDisruptionBudgets (PDBs)"
+    },
+    {
+      "expectation": "H100 training pool upgraded last, during a scheduled gap between training runs \u2014 with cordon-and-wait or maxSurge=0/maxUnavailable=1",
+      "passed": true,
+      "reason": "H100 training pool is upgraded last in Phase 4 during a coordinated maintenance window with training jobs scaled to zero, and uses maxSurge=0/maxUnavailable=20 approach with cordon strategy"
+    },
+    {
+      "expectation": "Notes the 20-node parallelism limit \u2014 at 5,000 nodes, the full upgrade will take weeks and must span multiple maintenance windows",
+      "passed": true,
+      "reason": "The response acknowledges the timeline will be 3-4 weeks total and 21-28 days in the summary table, clearly indicating this spans multiple maintenance windows due to the scale"
+    },
+    {
+      "expectation": "Mentions GPU driver compatibility testing in staging before each GPU pool upgrade",
+      "passed": true,
+      "reason": "Phase 2 includes explicit GPU driver compatibility validation with CUDA testing commands, and there's a driver compatibility matrix showing version progression from CUDA 12.1 to 12.4"
+    },
+    {
+      "expectation": "Addresses GPUDirect/RDMA networking validation after upgrading the H100 pool",
+      "passed": false,
+      "reason": "The response mentions placement group preservation but does not specifically address GPUDirect/RDMA networking validation after the H100 upgrade"
+    }
+  ]
+}

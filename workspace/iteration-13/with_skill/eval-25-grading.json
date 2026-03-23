@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Defines 'available' as versions officially available in the channel that customers can manually upgrade to",
+      "passed": true,
+      "reason": "Response clearly defines available as 'officially released and you CAN manually upgrade to it if you choose'"
+    },
+    {
+      "expectation": "Defines 'default' as the version used for new cluster creation \u2014 typically the same as auto-upgrade target but can differ especially during new minor version introduction (separate promotion stage)",
+      "passed": true,
+      "reason": "Response defines default as 'the version assigned to NEW clusters when they're created' and explains they can differ during rollout phases"
+    },
+    {
+      "expectation": "Defines 'auto-upgrade target' as the version GKE will actually upgrade existing clusters to automatically \u2014 this is cluster-specific based on policies",
+      "passed": true,
+      "reason": "Response defines auto-upgrade target as 'what GKE will actually upgrade your EXISTING cluster to during the next auto-upgrade cycle' and mentions cluster-specific nature"
+    },
+    {
+      "expectation": "Explains that default and auto-upgrade target are often the same but CAN differ, especially during new minor version rollouts",
+      "passed": true,
+      "reason": "Response explains the difference and mentions 'Progressive rollout' where newer versions may be default but not auto-upgrade target"
+    },
+    {
+      "expectation": "Notes that the auto-upgrade target depends on cluster constraints (maintenance windows, maintenance exclusions) and is cluster-specific \u2014 different clusters on the same channel can have different targets",
+      "passed": true,
+      "reason": "Response mentions 'Your cluster's constraints: Your specific auto-upgrade target depends on your maintenance windows, exclusions, and disruption intervals'"
+    },
+    {
+      "expectation": "Explains that a cluster with a 'no minor' exclusion will have a patch-only auto-upgrade target for its current minor",
+      "passed": false,
+      "reason": "Response mentions maintenance exclusions generally but does not specifically explain the 'no minor' exclusion behavior or patch-only upgrades"
+    },
+    {
+      "expectation": "Recommends using gcloud container clusters get-upgrade-info to check the actual auto-upgrade status, target versions, and EoS timestamps",
+      "passed": true,
+      "reason": "Response provides the exact command 'gcloud container clusters get-upgrade-info CLUSTER_NAME --region REGION' and explains it shows auto-upgrade target, timing, and constraints"
+    },
+    {
+      "expectation": "Points to the GKE release schedule or release notes for tracking version availability",
+      "passed": false,
+      "reason": "Response does not mention or reference the GKE release schedule or release notes as resources for tracking version availability"
+    }
+  ]
+}

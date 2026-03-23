@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains this is related to the interaction between maxSurge, drain order, and pod scheduling",
+      "passed": true,
+      "reason": "Response explains the race condition between scheduler placement decisions and node drainage timing, and provides specific maxSurge/maxUnavailable configurations"
+    },
+    {
+      "expectation": "Notes that GKE cordons nodes before draining them \u2014 pods should prefer scheduling onto uncordoned (upgraded) nodes",
+      "passed": false,
+      "reason": "Response doesn't specifically mention GKE's cordoning behavior or explain that pods should naturally prefer uncordoned nodes"
+    },
+    {
+      "expectation": "Identifies possible cause: too many nodes being drained simultaneously (high maxSurge) before enough upgraded nodes exist",
+      "passed": true,
+      "reason": "Response identifies parallel/rapid succession upgrades as the root cause and explains nodes being upgraded before stable landing spots exist"
+    },
+    {
+      "expectation": "Recommends reducing maxSurge to 1 to ensure upgraded nodes are available before draining the next batch",
+      "passed": true,
+      "reason": "Response specifically shows kubectl patch command setting maxSurge: 1, maxUnavailable: 0 configuration"
+    },
+    {
+      "expectation": "Suggests using pod anti-affinity or node affinity to prefer already-upgraded nodes",
+      "passed": true,
+      "reason": "Response provides detailed node affinity YAML configuration with preferredDuringSchedulingIgnoredDuringExecution to target upgraded nodes"
+    },
+    {
+      "expectation": "Mentions checking if any taints or tolerations are causing pods to land on the wrong nodes",
+      "passed": true,
+      "reason": "Response mentions using node taints/tolerations for more control over scheduling in the best practices section"
+    },
+    {
+      "expectation": "Provides kubectl commands to check node cordoned status and pod scheduling events",
+      "passed": true,
+      "reason": "Response includes monitoring script with kubectl commands to check node status and cordoned nodes, plus commands to check pod distribution"
+    },
+    {
+      "expectation": "Recommends setting maxUnavailable=0 to ensure old nodes aren't removed until pods are safely rescheduled",
+      "passed": true,
+      "reason": "Response explicitly sets maxUnavailable: 0 in the kubectl patch configuration and emphasizes this in best practices"
+    },
+    {
+      "expectation": "May mention GKE's autoscaled blue-green upgrade strategy as an alternative that avoids this issue by cordoning the entire old pool before migrating workloads to new nodes",
+      "passed": false,
+      "reason": "Response shows GKE node pool upgrade commands but doesn't mention the blue-green upgrade strategy or cordoning entire old pools before migration"
+    }
+  ]
+}

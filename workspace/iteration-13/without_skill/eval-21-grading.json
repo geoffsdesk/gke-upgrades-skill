@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that Extended channel provides up to 24 months of support vs 14 months for standard channels",
+      "passed": true,
+      "reason": "Response clearly states '24-month support lifecycle vs 14 months for Regular'"
+    },
+    {
+      "expectation": "Mentions that Extended channel has additional cost (it's not free)",
+      "passed": false,
+      "reason": "The response does not mention any cost implications or that Extended channel has additional fees"
+    },
+    {
+      "expectation": "Notes that Extended channel gets the same versions as Regular but keeps them available longer",
+      "passed": false,
+      "reason": "Response mentions Extended runs 2-3 versions behind Regular and has 'Limited version selection' but doesn't explain that it's the same versions kept available longer"
+    },
+    {
+      "expectation": "Warns that staying on older versions longer means missing new features and accumulating technical debt",
+      "passed": true,
+      "reason": "Response mentions 'Delayed access to new features' and 'Potential compatibility issues with newer tools/services' as drawbacks"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel to Extended",
+      "passed": true,
+      "reason": "Provides the exact command: 'gcloud container clusters update CLUSTER_NAME --release-channel extended --region=YOUR_REGION'"
+    },
+    {
+      "expectation": "Advises checking that the current version (1.31) is available on Extended before switching",
+      "passed": true,
+      "reason": "Explicitly states 'Extended channel doesn't support 1.31 yet' and provides command to check available Extended versions"
+    },
+    {
+      "expectation": "Recommends Extended for environments with compliance requirements or slow internal change processes",
+      "passed": true,
+      "reason": "Mentions 'Better for compliance requirements' and 'Reduced operational overhead' as benefits"
+    },
+    {
+      "expectation": "Mentions that Extended doesn't mean you can skip upgrades forever \u2014 you still must upgrade within 24 months",
+      "passed": false,
+      "reason": "While it mentions 24-month support, it doesn't explicitly warn that upgrades are still required within that timeframe"
+    },
+    {
+      "expectation": "Notes that minor version upgrades on Extended are NOT automated (except at EoS) \u2014 customers must plan and initiate them manually",
+      "passed": false,
+      "reason": "The response suggests automatic upgrades will happen when switching channels but doesn't mention that ongoing minor upgrades are manual in Extended channel"
+    }
+  ]
+}

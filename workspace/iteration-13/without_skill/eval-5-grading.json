@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Response explicitly states 'way beyond the supported 2 minor version difference' and mentions 'violates Kubernetes' version skew policy'"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (nodes must be within 2 minor versions of control plane)",
+      "passed": true,
+      "reason": "Response clearly identifies 'Skew: 3 minor versions (way beyond the supported 2 minor version difference)' and states this violates the policy"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Response warns about API compatibility issues, workload scheduling problems, security vulnerabilities, and unpredictable cluster behavior"
+    },
+    {
+      "expectation": "Recommends skip-level (N+2) node pool upgrades within supported version skew to reduce time and disruption. For the N+3 gap (1.28 with 1.31 CP), recommends multiple sequential skip-level upgrades within supported skew (e.g., 1.28\u21921.30 then 1.30\u21921.31) or creating a new node pool at the target version and migrating workloads. Never recommends an unsupported skip-level upgrade.",
+      "passed": false,
+      "reason": "Response recommends direct upgrade from 1.28 to 1.31 ('--cluster-version=1.31.x-gke.y') which is an unsupported N+3 skip-level upgrade. Does not recommend the safer sequential upgrades or new node pool approach"
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Response provides multiple gcloud commands for upgrading node pools, including rolling and surge upgrade options"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": false,
+      "reason": "Response recommends 'max-surge-upgrade=3' which is aggressive, not conservative. Does not recommend the safer maxSurge=1 setting given the risky cluster state"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": false,
+      "reason": "Response provides monitoring commands but doesn't advise monitoring between version bumps since it recommends a single direct upgrade rather than sequential upgrades"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": true,
+      "reason": "Response includes prevention strategies with maintenance windows configuration and mentions auto-upgrade enablement"
+    }
+  ]
+}

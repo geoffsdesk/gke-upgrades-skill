@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies Service A (minAvailable=100%) as a guaranteed upgrade blocker \u2014 no disruptions allowed at all",
+      "passed": true,
+      "reason": "Response clearly identifies Service A as 'BLOCKS UPGRADES' with 'Zero disruption allowed - will prevent node drain'"
+    },
+    {
+      "expectation": "Identifies Service B (maxUnavailable=0) as also blocking upgrades \u2014 same effect as 100% minAvailable",
+      "passed": true,
+      "reason": "Response identifies Service B as 'BLOCKS UPGRADES' and explicitly states it's 'Same as 100% available - zero disruption allowed'"
+    },
+    {
+      "expectation": "States Service C (minAvailable=2 with 3 replicas) is safe \u2014 allows 1 pod disruption at a time",
+      "passed": false,
+      "reason": "Response incorrectly marks Service C as 'RISKY' and says 'may cause issues', not 'safe' as expected"
+    },
+    {
+      "expectation": "States Service D (maxUnavailable=1 with 5 replicas) is safe \u2014 allows 1 pod down at a time",
+      "passed": true,
+      "reason": "Response correctly identifies Service D as 'SAFE' and confirms it 'Allows 1 disruption, keeps 4/5 running'"
+    },
+    {
+      "expectation": "Recommends fixing Service A: change to minAvailable=N-1 or maxUnavailable=1",
+      "passed": true,
+      "reason": "Response provides specific fix for Service A with 'minAvailable: 80%' and shows alternative configurations"
+    },
+    {
+      "expectation": "Recommends fixing Service B: change to maxUnavailable=1",
+      "passed": true,
+      "reason": "Response explicitly recommends 'maxUnavailable: 1' for Service B in the configuration section"
+    },
+    {
+      "expectation": "Explains that GKE respects PDBs for up to 1 hour during surge upgrades, then may force-drain",
+      "passed": true,
+      "reason": "Response states 'GKE respects PDBs for up to 1 hour, then may force-delete pods' in the Critical Issues section"
+    },
+    {
+      "expectation": "Provides kubectl patch commands to fix the problematic PDBs",
+      "passed": true,
+      "reason": "Response includes kubectl patch command example: 'kubectl patch pdb SERVICE-A-PDB -n NAMESPACE -p '{\"spec\":{\"minAvailable\":\"80%\"}}'"
+    },
+    {
+      "expectation": "Recommends testing PDB changes in a non-production environment first",
+      "passed": true,
+      "reason": "Response includes 'Test: Validate PDB behavior in staging with a test upgrade' in the Action Items section"
+    }
+  ]
+}

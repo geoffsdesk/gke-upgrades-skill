@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Checks for deprecated API usage that may have changed behavior in 1.30",
+      "passed": false,
+      "reason": "The response does not check for deprecated API usage or mention API version changes that could affect behavior"
+    },
+    {
+      "expectation": "Recommends checking admission webhooks \u2014 they may be rejecting or slowing down requests on the new version",
+      "passed": true,
+      "reason": "Response extensively covers checking admission webhooks, including specific commands to list webhooks, check for denials, examine timeouts, and provides fixes for webhook issues"
+    },
+    {
+      "expectation": "Advises checking if resource requests/limits need adjusting for any system components that changed",
+      "passed": true,
+      "reason": "Response includes checking for workloads without resource requests/limits and provides commands to adjust resource limits for containers"
+    },
+    {
+      "expectation": "Suggests examining kube-system pods for any that are crashlooping or restarting",
+      "passed": false,
+      "reason": "While the response checks for pods not in Running state generally, it doesn't specifically focus on kube-system pods or mention crashlooping/restarting system components"
+    },
+    {
+      "expectation": "Includes commands to check API server metrics and latency (kubectl get --raw /metrics)",
+      "passed": true,
+      "reason": "Response includes the exact command 'kubectl get --raw /metrics' with grep filters for API server metrics and latency measurements"
+    },
+    {
+      "expectation": "Recommends checking if NetworkPolicy or service mesh components need updating for the new version",
+      "passed": true,
+      "reason": "Response includes checking and restarting service mesh components like Istio and ingress controllers, though it doesn't specifically mention NetworkPolicy"
+    },
+    {
+      "expectation": "Advises reviewing pod events for scheduling delays or readiness probe failures",
+      "passed": true,
+      "reason": "Response includes commands to check recent warning events and examine pods in distress, which would capture scheduling and readiness issues"
+    },
+    {
+      "expectation": "Mentions checking if HPA or VPA are behaving differently on the new version",
+      "passed": true,
+      "reason": "Response specifically mentions checking HPA/VPA behavior changes and includes commands to get and describe HPA resources"
+    }
+  ]
+}

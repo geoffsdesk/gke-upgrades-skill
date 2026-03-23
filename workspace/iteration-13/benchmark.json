@@ -1,0 +1,503 @@
+{
+  "iteration": 13,
+  "timestamp": "2026-03-23T19:14:29.122147+00:00",
+  "with_skill": {
+    "evals": [
+      {
+        "eval_id": 1,
+        "pass_rate": 0.818,
+        "pass_count": 9,
+        "total": 11
+      },
+      {
+        "eval_id": 10,
+        "pass_rate": 0.625,
+        "pass_count": 5,
+        "total": 8
+      },
+      {
+        "eval_id": 11,
+        "pass_rate": 0.778,
+        "pass_count": 7,
+        "total": 9
+      },
+      {
+        "eval_id": 12,
+        "pass_rate": 1.0,
+        "pass_count": 8,
+        "total": 8
+      },
+      {
+        "eval_id": 13,
+        "pass_rate": 0.5,
+        "pass_count": 4,
+        "total": 8
+      },
+      {
+        "eval_id": 14,
+        "pass_rate": 0.75,
+        "pass_count": 6,
+        "total": 8
+      },
+      {
+        "eval_id": 15,
+        "pass_rate": 0.5,
+        "pass_count": 4,
+        "total": 8
+      },
+      {
+        "eval_id": 16,
+        "pass_rate": 0.545,
+        "pass_count": 6,
+        "total": 11
+      },
+      {
+        "eval_id": 17,
+        "pass_rate": 0.5,
+        "pass_count": 4,
+        "total": 8
+      },
+      {
+        "eval_id": 18,
+        "pass_rate": 0.778,
+        "pass_count": 7,
+        "total": 9
+      },
+      {
+        "eval_id": 19,
+        "pass_rate": 0.75,
+        "pass_count": 6,
+        "total": 8
+      },
+      {
+        "eval_id": 2,
+        "pass_rate": 0.909,
+        "pass_count": 10,
+        "total": 11
+      },
+      {
+        "eval_id": 20,
+        "pass_rate": 0.9,
+        "pass_count": 9,
+        "total": 10
+      },
+      {
+        "eval_id": 21,
+        "pass_rate": 0.778,
+        "pass_count": 7,
+        "total": 9
+      },
+      {
+        "eval_id": 22,
+        "pass_rate": 0.667,
+        "pass_count": 6,
+        "total": 9
+      },
+      {
+        "eval_id": 23,
+        "pass_rate": 0.889,
+        "pass_count": 8,
+        "total": 9
+      },
+      {
+        "eval_id": 24,
+        "pass_rate": 0.889,
+        "pass_count": 8,
+        "total": 9
+      },
+      {
+        "eval_id": 25,
+        "pass_rate": 0.75,
+        "pass_count": 6,
+        "total": 8
+      },
+      {
+        "eval_id": 26,
+        "pass_rate": 0.75,
+        "pass_count": 6,
+        "total": 8
+      },
+      {
+        "eval_id": 27,
+        "pass_rate": 0.75,
+        "pass_count": 6,
+        "total": 8
+      },
+      {
+        "eval_id": 28,
+        "pass_rate": 1.0,
+        "pass_count": 8,
+        "total": 8
+      },
+      {
+        "eval_id": 29,
+        "pass_rate": 0.75,
+        "pass_count": 6,
+        "total": 8
+      },
+      {
+        "eval_id": 3,
+        "pass_rate": 0.8,
+        "pass_count": 8,
+        "total": 10
+      },
+      {
+        "eval_id": 30,
+        "pass_rate": 0.889,
+        "pass_count": 8,
+        "total": 9
+      },
+      {
+        "eval_id": 31,
+        "pass_rate": 0.7,
+        "pass_count": 7,
+        "total": 10
+      },
+      {
+        "eval_id": 32,
+        "pass_rate": 0.75,
+        "pass_count": 6,
+        "total": 8
+      },
+      {
+        "eval_id": 33,
+        "pass_rate": 0.625,
+        "pass_count": 5,
+        "total": 8
+      },
+      {
+        "eval_id": 34,
+        "pass_rate": 1.0,
+        "pass_count": 8,
+        "total": 8
+      },
+      {
+        "eval_id": 35,
+        "pass_rate": 0.875,
+        "pass_count": 7,
+        "total": 8
+      },
+      {
+        "eval_id": 36,
+        "pass_rate": 0.5,
+        "pass_count": 4,
+        "total": 8
+      },
+      {
+        "eval_id": 37,
+        "pass_rate": 0.667,
+        "pass_count": 6,
+        "total": 9
+      },
+      {
+        "eval_id": 38,
+        "pass_rate": 0.75,
+        "pass_count": 6,
+        "total": 8
+      },
+      {
+        "eval_id": 39,
+        "pass_rate": 0.875,
+        "pass_count": 7,
+        "total": 8
+      },
+      {
+        "eval_id": 4,
+        "pass_rate": 0.8,
+        "pass_count": 8,
+        "total": 10
+      },
+      {
+        "eval_id": 40,
+        "pass_rate": 0.75,
+        "pass_count": 6,
+        "total": 8
+      },
+      {
+        "eval_id": 5,
+        "pass_rate": 1.0,
+        "pass_count": 8,
+        "total": 8
+      },
+      {
+        "eval_id": 6,
+        "pass_rate": 0.5,
+        "pass_count": 4,
+        "total": 8
+      },
+      {
+        "eval_id": 7,
+        "pass_rate": 0.909,
+        "pass_count": 10,
+        "total": 11
+      },
+      {
+        "eval_id": 8,
+        "pass_rate": 0.25,
+        "pass_count": 2,
+        "total": 8
+      },
+      {
+        "eval_id": 9,
+        "pass_rate": 0.75,
+        "pass_count": 6,
+        "total": 8
+      }
+    ],
+    "overall_pass_rate": 0.753,
+    "total_passed": 262,
+    "total_assertions": 348
+  },
+  "without_skill": {
+    "evals": [
+      {
+        "eval_id": 1,
+        "pass_rate": 0.455,
+        "pass_count": 5,
+        "total": 11
+      },
+      {
+        "eval_id": 10,
+        "pass_rate": 0.625,
+        "pass_count": 5,
+        "total": 8
+      },
+      {
+        "eval_id": 11,
+        "pass_rate": 0.667,
+        "pass_count": 6,
+        "total": 9
+      },
+      {
+        "eval_id": 12,
+        "pass_rate": 0.625,
+        "pass_count": 5,
+        "total": 8
+      },
+      {
+        "eval_id": 13,
+        "pass_rate": 0.375,
+        "pass_count": 3,
+        "total": 8
+      },
+      {
+        "eval_id": 14,
+        "pass_rate": 0.75,
+        "pass_count": 6,
+        "total": 8
+      },
+      {
+        "eval_id": 15,
+        "pass_rate": 0.375,
+        "pass_count": 3,
+        "total": 8
+      },
+      {
+        "eval_id": 16,
+        "pass_rate": 0.636,
+        "pass_count": 7,
+        "total": 11
+      },
+      {
+        "eval_id": 17,
+        "pass_rate": 0.625,
+        "pass_count": 5,
+        "total": 8
+      },
+      {
+        "eval_id": 18,
+        "pass_rate": 0.667,
+        "pass_count": 6,
+        "total": 9
+      },
+      {
+        "eval_id": 19,
+        "pass_rate": 0.875,
+        "pass_count": 7,
+        "total": 8
+      },
+      {
+        "eval_id": 2,
+        "pass_rate": 0.727,
+        "pass_count": 8,
+        "total": 11
+      },
+      {
+        "eval_id": 20,
+        "pass_rate": 0.7,
+        "pass_count": 7,
+        "total": 10
+      },
+      {
+        "eval_id": 21,
+        "pass_rate": 0.556,
+        "pass_count": 5,
+        "total": 9
+      },
+      {
+        "eval_id": 22,
+        "pass_rate": 0.778,
+        "pass_count": 7,
+        "total": 9
+      },
+      {
+        "eval_id": 23,
+        "pass_rate": 0.667,
+        "pass_count": 6,
+        "total": 9
+      },
+      {
+        "eval_id": 24,
+        "pass_rate": 0.222,
+        "pass_count": 2,
+        "total": 9
+      },
+      {
+        "eval_id": 25,
+        "pass_rate": 0.375,
+        "pass_count": 3,
+        "total": 8
+      },
+      {
+        "eval_id": 26,
+        "pass_rate": 0.25,
+        "pass_count": 2,
+        "total": 8
+      },
+      {
+        "eval_id": 27,
+        "pass_rate": 0.375,
+        "pass_count": 3,
+        "total": 8
+      },
+      {
+        "eval_id": 28,
+        "pass_rate": 0.375,
+        "pass_count": 3,
+        "total": 8
+      },
+      {
+        "eval_id": 29,
+        "pass_rate": 0.125,
+        "pass_count": 1,
+        "total": 8
+      },
+      {
+        "eval_id": 3,
+        "pass_rate": 0.5,
+        "pass_count": 5,
+        "total": 10
+      },
+      {
+        "eval_id": 30,
+        "pass_rate": 0.333,
+        "pass_count": 3,
+        "total": 9
+      },
+      {
+        "eval_id": 31,
+        "pass_rate": 0.4,
+        "pass_count": 4,
+        "total": 10
+      },
+      {
+        "eval_id": 32,
+        "pass_rate": 0.375,
+        "pass_count": 3,
+        "total": 8
+      },
+      {
+        "eval_id": 33,
+        "pass_rate": 0.375,
+        "pass_count": 3,
+        "total": 8
+      },
+      {
+        "eval_id": 34,
+        "pass_rate": 0.5,
+        "pass_count": 4,
+        "total": 8
+      },
+      {
+        "eval_id": 35,
+        "pass_rate": 0.625,
+        "pass_count": 5,
+        "total": 8
+      },
+      {
+        "eval_id": 36,
+        "pass_rate": 0.75,
+        "pass_count": 6,
+        "total": 8
+      },
+      {
+        "eval_id": 37,
+        "pass_rate": 0.333,
+        "pass_count": 3,
+        "total": 9
+      },
+      {
+        "eval_id": 38,
+        "pass_rate": 0.625,
+        "pass_count": 5,
+        "total": 8
+      },
+      {
+        "eval_id": 39,
+        "pass_rate": 0.25,
+        "pass_count": 2,
+        "total": 8
+      },
+      {
+        "eval_id": 4,
+        "pass_rate": 0.4,
+        "pass_count": 4,
+        "total": 10
+      },
+      {
+        "eval_id": 40,
+        "pass_rate": 0.0,
+        "pass_count": 0,
+        "total": 8
+      },
+      {
+        "eval_id": 5,
+        "pass_rate": 0.625,
+        "pass_count": 5,
+        "total": 8
+      },
+      {
+        "eval_id": 6,
+        "pass_rate": 0.5,
+        "pass_count": 4,
+        "total": 8
+      },
+      {
+        "eval_id": 7,
+        "pass_rate": 0.636,
+        "pass_count": 7,
+        "total": 11
+      },
+      {
+        "eval_id": 8,
+        "pass_rate": 0.125,
+        "pass_count": 1,
+        "total": 8
+      },
+      {
+        "eval_id": 9,
+        "pass_rate": 0.375,
+        "pass_count": 3,
+        "total": 8
+      }
+    ],
+    "overall_pass_rate": 0.494,
+    "total_passed": 172,
+    "total_assertions": 348
+  },
+  "delta": {
+    "pass_rate_improvement": 0.259,
+    "with_skill_rate": 0.753,
+    "without_skill_rate": 0.494
+  }
+}

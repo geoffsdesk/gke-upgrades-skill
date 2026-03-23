@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that spot VMs can be preempted at any time, which interacts with the upgrade drain process",
+      "passed": true,
+      "reason": "Response mentions spot interruptions and their interaction with upgrade disruptions, noting the risk of 'simultaneous spot interruptions and upgrade-related disruptions'"
+    },
+    {
+      "expectation": "Notes that spot node pools may already have workloads designed for interruption (good for upgrades)",
+      "passed": true,
+      "reason": "Response implies this by recommending verification that 'pods can handle node disruptions' and states that workloads on spot instances should already be fault-tolerant"
+    },
+    {
+      "expectation": "Recommends higher maxSurge for spot pools since the workloads should already be fault-tolerant",
+      "passed": false,
+      "reason": "The response shows maxSurge: 2 in the example but doesn't specifically recommend higher maxSurge values for spot pools or explain the reasoning"
+    },
+    {
+      "expectation": "Advises setting maxUnavailable >0 for spot pools since workloads are already preemption-tolerant",
+      "passed": false,
+      "reason": "The response actually shows maxUnavailable: 0 in the example and suggests 'maxUnavailable-upgrade=0' in the gcloud command, which contradicts this expectation"
+    },
+    {
+      "expectation": "Mentions that spot VM availability may affect surge node creation (not guaranteed to get spot instances)",
+      "passed": true,
+      "reason": "Response mentions checking 'spot availability' and ensuring regions have 'good spot instance availability' before upgrading"
+    },
+    {
+      "expectation": "Recommends having PDBs even for spot workloads to ensure orderly drain during upgrade",
+      "passed": true,
+      "reason": "Response includes a specific PodDisruptionBudget example with minAvailable: 50% for workload protection"
+    },
+    {
+      "expectation": "Provides the gcloud command for configuring surge settings on the spot pool",
+      "passed": true,
+      "reason": "Response provides gcloud commands including '--max-surge-upgrade=1 --max-unavailable-upgrade=0' for upgrade configuration"
+    },
+    {
+      "expectation": "Suggests upgrading spot pools before on-demand pools since they're lower risk",
+      "passed": false,
+      "reason": "The response does not suggest upgrading spot pools before on-demand pools or mention that spot pools are lower risk for upgrades"
+    }
+  ]
+}
