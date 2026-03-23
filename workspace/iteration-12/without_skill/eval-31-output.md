@@ -1,304 +1,295 @@
-This is a critical operation that requires careful planning. Here's how to safely upgrade your GKE cluster while preserving your training run:
+For a mission-critical LLM training cluster of this scale, you'll need a carefully orchestrated upgrade strategy. Here's how to approach this without disrupting your training runs:
 
-## Strategy: Blue-Green Node Pool Upgrade
+## Pre-Upgrade Assessment
 
-### Phase 1: Prepare the New Node Pool
+First, verify your current setup compatibility:
+
+```bash
+# Check current cluster version and node pool versions
+kubectl get nodes -o custom-columns=NAME:.metadata.name,VERSION:.status.nodeInfo.kubeletVersion,GPU:.status.allocatable.nvidia\.com/gpu
+
+# Verify GPUDirect-TCPXO status
+kubectl get pods -n kube-system | grep nvidia
+kubectl logs -n kube-system -l name=nvidia-device-plugin
+```
+
+## Strategy 1: Blue-Green Node Pool Migration (Recommended)
+
+This approach creates a new node pool alongside your existing one:
 
 ```yaml
-# new-nodepool.yaml
+# Create new node pool with GKE 1.32
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: upgrade-plan
+  name: training-migration-config
 data:
-  strategy: "blue-green-nodepool"
----
-apiVersion: container.cnrm.cloud.google.com/v1beta1
-kind: ContainerNodePool
-metadata:
-  name: h100-nodepool-v132
-spec:
-  cluster: your-cluster-name
-  location: your-zone
-  nodeCount: 64  # Same as current pool
-  nodeConfig:
-    machineType: a3-megagpu-8g
-    guestAccelerator:
-    - type: nvidia-h100-mega-80gb
-      count: 8
-      gpuDriverInstallationConfig:
-        gpuDriverVersion: "LATEST"
-    nodeLocations: 
-    - your-zone-a
-    - your-zone-b
-    # Ensure same network topology
-    networkConfig:
-      enablePrivateNodes: true
-    metadata:
-      disable-legacy-endpoints: "true"
-    oauthScopes:
-    - "https://www.googleapis.com/auth/cloud-platform"
-    taints:
-    - key: "nvidia.com/gpu"
-      value: "present"
-      effect: "NO_SCHEDULE"
-    - key: "training-v132"
-      value: "true" 
-      effect: "NO_SCHEDULE"
+  new-node-pool.yaml: |
+    gcloud container node-pools create training-pool-v132 \
+      --cluster=your-training-cluster \
+      --zone=your-zone \
+      --machine-type=a3-megagpu-8g \
+      --accelerator=type=nvidia-h100-mega-80gb,count=8,gpu-driver-version=LATEST \
+      --num-nodes=64 \
+      --node-version=1.32.x-gke.xxx \
+      --enable-gvnic \
+      --enable-ip-alias \
+      --network-performance-configs=total-egress-bandwidth-tier=TIER_1 \
+      --placement-type=COMPACT \
+      --reservation-affinity=any \
+      --enable-autoupgrade=false \
+      --enable-autorepair=false
 ```
 
-### Phase 2: Pre-upgrade Validation
+## Strategy 2: Controlled Rolling Update with Checkpointing
 
-```bash
-#!/bin/bash
-# pre-upgrade-check.sh
-
-echo "=== Pre-upgrade validation ==="
-
-# 1. Check training job status
-kubectl get pods -l job=llm-training -o wide
-kubectl logs -l job=llm-training --tail=50
-
-# 2. Verify GPUDirect-TCPXO status
-kubectl exec -it training-pod-0 -- nvidia-smi nvlink --status
-kubectl exec -it training-pod-0 -- cat /proc/driver/nvidia/gpus/*/information
-
-# 3. Check NCCL topology
-kubectl exec -it training-pod-0 -- python3 -c "
-import torch
-print(f'NCCL version: {torch.cuda.nccl.version()}')
-print(f'GPU count: {torch.cuda.device_count()}')
-"
-
-# 4. Backup training state
-kubectl exec training-pod-0 -- python3 /training/checkpoint.py --force-checkpoint
-```
-
-### Phase 3: Control Plane Upgrade (Non-disruptive)
-
-```bash
-# Upgrade control plane first (doesn't affect running pods)
-gcloud container clusters upgrade your-cluster-name \
-    --master \
-    --cluster-version=1.32.latest \
-    --zone=your-zone \
-    --quiet
-
-# Verify control plane upgrade
-kubectl version
-```
-
-### Phase 4: Create Checkpoint and Pause Strategy
-
-```python
-# checkpoint_manager.py
-import torch
-import torch.distributed as dist
-import os
-import time
-
-class UpgradeCheckpointManager:
-    def __init__(self, checkpoint_dir="/persistent-storage/checkpoints"):
-        self.checkpoint_dir = checkpoint_dir
-        
-    def create_upgrade_checkpoint(self, model, optimizer, scheduler, step):
-        """Create a comprehensive checkpoint before upgrade"""
-        checkpoint_path = f"{self.checkpoint_dir}/pre_upgrade_step_{step}.pt"
-        
-        checkpoint = {
-            'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
-            'scheduler_state_dict': scheduler.state_dict(),
-            'step': step,
-            'timestamp': time.time(),
-            'nccl_version': torch.cuda.nccl.version(),
-            'cuda_version': torch.version.cuda,
-            'upgrade_marker': True
-        }
-        
-        if dist.get_rank() == 0:
-            torch.save(checkpoint, checkpoint_path)
-            print(f"Upgrade checkpoint saved: {checkpoint_path}")
-            
-        dist.barrier()
-        return checkpoint_path
-
-# In your training script, add:
-if os.environ.get('PREPARE_FOR_UPGRADE') == 'true':
-    checkpoint_manager = UpgradeCheckpointManager()
-    checkpoint_path = checkpoint_manager.create_upgrade_checkpoint(
-        model, optimizer, scheduler, current_step
-    )
-    print("Checkpoint complete. Ready for upgrade.")
-    # Keep pods alive but pause training
-    while True:
-        time.sleep(30)
-```
-
-### Phase 5: Safe Node Pool Transition
+For minimal disruption, implement checkpoint-based migration:
 
 ```yaml
-# updated-training-job.yaml
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: llm-training-v132
+  name: training-checkpoint-controller
 spec:
   template:
     spec:
-      restartPolicy: Never
-      nodeSelector:
-        cloud.google.com/gke-nodepool: h100-nodepool-v132
-      tolerations:
-      - key: "nvidia.com/gpu"
-        operator: "Equal"
-        value: "present"
-        effect: "NoSchedule"
-      - key: "training-v132"
-        operator: "Equal" 
-        value: "true"
-        effect: "NoSchedule"
       containers:
-      - name: training
-        image: your-training-image:v132
-        env:
-        - name: RESUME_FROM_CHECKPOINT
-          value: "true"
-        - name: CHECKPOINT_PATH
-          value: "/persistent-storage/checkpoints/pre_upgrade_step_*.pt"
+      - name: checkpoint-manager
+        image: your-training-image
+        command: ["/bin/bash"]
+        args:
+        - -c
+        - |
+          # Enhanced checkpoint script
+          while true; do
+            # Monitor for upgrade signals
+            if [[ -f /tmp/upgrade-signal ]]; then
+              echo "Upgrade signal detected, creating checkpoint..."
+              
+              # Trigger model checkpoint
+              python -c "
+              import torch
+              import torch.distributed as dist
+              
+              # Save comprehensive checkpoint
+              checkpoint = {
+                'epoch': current_epoch,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'lr_scheduler_state_dict': scheduler.state_dict(),
+                'loss': current_loss,
+                'step': global_step,
+                'rng_states': torch.get_rng_state(),
+                'cuda_rng_states': torch.cuda.get_rng_state_all(),
+                'distributed_state': dist.get_rank()
+              }
+              
+              torch.save(checkpoint, f'/nfs/checkpoints/upgrade_checkpoint_{dist.get_rank()}.pt')
+              "
+              
+              # Signal completion
+              touch /tmp/checkpoint-ready
+              exit 0
+            fi
+            sleep 30
+          done
+        volumeMounts:
+        - name: nfs-storage
+          mountPath: /nfs
         resources:
           limits:
             nvidia.com/gpu: 8
-        volumeMounts:
-        - name: training-data
-          mountPath: /persistent-storage
 ```
 
-### Phase 6: Controlled Migration Script
+## Migration Orchestration Script
 
 ```bash
 #!/bin/bash
-# controlled-migration.sh
+set -euo pipefail
 
-set -e
+CLUSTER_NAME="your-training-cluster"
+ZONE="your-zone"
+OLD_POOL="training-pool-v131"
+NEW_POOL="training-pool-v132"
 
-echo "=== Starting controlled migration ==="
+# Phase 1: Create new node pool
+echo "Creating new node pool with GKE 1.32..."
+gcloud container node-pools create $NEW_POOL \
+  --cluster=$CLUSTER_NAME \
+  --zone=$ZONE \
+  --machine-type=a3-megagpu-8g \
+  --accelerator=type=nvidia-h100-mega-80gb,count=8 \
+  --num-nodes=64 \
+  --node-version=1.32.x-gke.xxx \
+  --enable-gvnic \
+  --network-performance-configs=total-egress-bandwidth-tier=TIER_1 \
+  --placement-type=COMPACT \
+  --enable-autoupgrade=false
 
-# 1. Signal training to checkpoint and pause
-kubectl patch configmap training-config --patch '{"data":{"PREPARE_FOR_UPGRADE":"true"}}'
+# Phase 2: Wait for nodes to be ready
+echo "Waiting for new nodes to be ready..."
+kubectl wait --for=condition=Ready nodes -l cloud.google.com/gke-nodepool=$NEW_POOL --timeout=1200s
 
-# 2. Wait for checkpoint completion
-echo "Waiting for training checkpoint..."
-while ! kubectl logs -l job=llm-training | grep -q "Checkpoint complete. Ready for upgrade"; do
-    sleep 30
-    echo "Still waiting for checkpoint..."
-done
-
-# 3. Verify checkpoint integrity
-kubectl exec training-pod-0 -- python3 -c "
-import torch
-import glob
-checkpoints = glob.glob('/persistent-storage/checkpoints/pre_upgrade_*.pt')
-latest = max(checkpoints)
-data = torch.load(latest, map_location='cpu')
-print(f'Checkpoint verified: step {data[\"step\"]}, upgrade_marker: {data[\"upgrade_marker\"]}')
-"
-
-# 4. Create new node pool
-kubectl apply -f new-nodepool.yaml
-
-# 5. Wait for new nodes to be ready
-echo "Waiting for new nodes..."
-kubectl wait --for=condition=Ready nodes -l cloud.google.com/gke-nodepool=h100-nodepool-v132 --timeout=900s
-
-# 6. Verify GPU connectivity on new nodes
+# Phase 3: Verify GPU and networking setup
+echo "Verifying GPU setup on new nodes..."
 kubectl apply -f - <<EOF
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: gpu-test-v132
+  name: gpu-test-new-pool
 spec:
   selector:
     matchLabels:
-      name: gpu-test-v132
+      name: gpu-test
   template:
     metadata:
       labels:
-        name: gpu-test-v132
+        name: gpu-test
     spec:
       nodeSelector:
-        cloud.google.com/gke-nodepool: h100-nodepool-v132
-      tolerations:
-      - operator: Exists
+        cloud.google.com/gke-nodepool: $NEW_POOL
       containers:
       - name: gpu-test
-        image: nvidia/cuda:12.3-runtime-ubuntu22.04
-        command: ["/bin/sh", "-c", "nvidia-smi && sleep 3600"]
+        image: nvidia/cuda:12.2-devel-ubuntu20.04
+        command: ["/bin/bash", "-c", "nvidia-smi && sleep 3600"]
         resources:
           limits:
             nvidia.com/gpu: 1
 EOF
 
-# 7. Start new training job on v1.32 nodes
-kubectl apply -f updated-training-job.yaml
+# Phase 4: Signal for checkpoint creation
+echo "Signaling training pods to create checkpoint..."
+kubectl exec -it deployment/training-job -- touch /tmp/upgrade-signal
 
-# 8. Monitor new job startup
-kubectl logs -f -l job=llm-training-v132
+# Wait for checkpoint completion
+while ! kubectl exec deployment/training-job -- test -f /tmp/checkpoint-ready; do
+  echo "Waiting for checkpoint completion..."
+  sleep 30
+done
 
-echo "=== Migration complete ==="
+# Phase 5: Drain old nodes gracefully
+echo "Draining old node pool..."
+for node in $(kubectl get nodes -l cloud.google.com/gke-nodepool=$OLD_POOL -o name); do
+  kubectl drain $node --ignore-daemonsets --delete-emptydir-data --force --grace-period=300
+done
+
+# Phase 6: Update training job to use new nodes
+kubectl patch deployment training-job -p '{
+  "spec": {
+    "template": {
+      "spec": {
+        "nodeSelector": {
+          "cloud.google.com/gke-nodepool": "'$NEW_POOL'"
+        }
+      }
+    }
+  }
+}'
+
+# Phase 7: Scale down and remove old pool
+gcloud container node-pools delete $OLD_POOL --cluster=$CLUSTER_NAME --zone=$ZONE --quiet
 ```
 
-### Phase 7: Validation and Cleanup
+## GPUDirect-TCPXO Verification
 
-```bash
-#!/bin/bash
-# post-upgrade-validation.sh
+After migration, verify your high-performance interconnect:
 
-echo "=== Post-upgrade validation ==="
-
-# 1. Verify training resumed correctly
-kubectl logs -l job=llm-training-v132 --tail=100 | grep -E "(Resumed from|Training step)"
-
-# 2. Check GPU interconnect
-kubectl exec -it $(kubectl get pods -l job=llm-training-v132 -o name | head -1) -- \
-    python3 -c "
-import torch
-import torch.distributed as dist
-print(f'NCCL All-reduce test...')
-dist.init_process_group(backend='nccl')
-tensor = torch.randn(1000, 1000).cuda()
-dist.all_reduce(tensor)
-print('NCCL communication: OK')
-"
-
-# 3. Performance validation
-kubectl exec -it training-pod-0 -- nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits
-
-# 4. Clean up old resources after validation
-if [ "$1" == "--cleanup" ]; then
-    echo "Cleaning up old node pool..."
-    gcloud container node-pools delete h100-nodepool-v131 \
-        --cluster=your-cluster-name \
-        --zone=your-zone \
-        --quiet
-    
-    kubectl delete job llm-training
-    kubectl delete daemonset gpu-test-v132
-fi
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tcpxo-verify
+spec:
+  containers:
+  - name: verify
+    image: nvidia/cuda:12.2-devel-ubuntu20.04
+    command: ["/bin/bash"]
+    args:
+    - -c
+    - |
+      # Verify TCPXO is working
+      nvidia-smi topo -m
+      
+      # Test inter-node bandwidth
+      iperf3 -c $PEER_NODE_IP -t 30 -P 8
+      
+      # Verify NCCL can use TCPXO
+      python3 -c "
+      import torch
+      import torch.distributed as dist
+      
+      # Test NCCL with TCPXO
+      dist.init_process_group('nccl')
+      
+      # Create test tensor
+      tensor = torch.randn(1000000).cuda()
+      
+      # Test allreduce performance
+      import time
+      start = time.time()
+      dist.all_reduce(tensor)
+      end = time.time()
+      
+      print(f'AllReduce time: {end - start:.4f}s')
+      print(f'Bandwidth: {tensor.numel() * 4 / (end - start) / 1e9:.2f} GB/s')
+      "
+    resources:
+      limits:
+        nvidia.com/gpu: 8
 ```
 
-## Key Safety Measures:
+## Training Job Recovery Configuration
 
-1. **Persistent Storage**: Ensure checkpoints are on persistent volumes that survive pod deletion
-2. **Network Preservation**: New node pool maintains same network topology for GPUDirect-TCPXO
-3. **Gradual Migration**: Blue-green approach eliminates downtime risk
-4. **Rollback Plan**: Keep old node pool until new training is validated
-5. **Monitoring**: Continuous validation of GPU interconnect performance
+```yaml
+apiVersion: kubeflow.org/v1
+kind: PyTorchJob
+metadata:
+  name: llm-training-resumed
+spec:
+  pytorchReplicaSpecs:
+    Master:
+      replicas: 1
+      template:
+        spec:
+          nodeSelector:
+            cloud.google.com/gke-nodepool: training-pool-v132
+          containers:
+          - name: pytorch
+            image: your-training-image
+            command: ["python", "train.py"]
+            args:
+            - --resume-from-checkpoint=/nfs/checkpoints/
+            - --verify-tcpxo=true
+            - --nodes=64
+            - --gpus-per-node=8
+            env:
+            - name: NCCL_NET_GDR_LEVEL
+              value: "LOC"
+            - name: NCCL_CROSS_NIC
+              value: "1"
+            - name: NCCL_ALGO
+              value: "Ring,Tree"
+            resources:
+              limits:
+                nvidia.com/gpu: 8
+    Worker:
+      replicas: 63
+      template:
+        spec:
+          nodeSelector:
+            cloud.google.com/gke-nodepool: training-pool-v132
+          containers:
+          - name: pytorch
+            image: your-training-image
+            # ... same configuration as Master
+```
 
-## Timeline Estimate:
-- Control plane upgrade: 10-15 minutes
-- Node pool creation: 15-20 minutes  
-- Training migration: 5-10 minutes
-- Total downtime: ~5-10 minutes (only during job transition)
+## Key Recommendations:
 
-This approach preserves your training progress while safely upgrading the infrastructure.
+1. **Test First**: Run this process on a smaller replica cluster
+2. **Checkpoint Frequently**: Ensure robust checkpointing before migration
+3. **Monitor Bandwidth**: Verify TCPXO performance post-migration
+4. **Gradual Migration**: Consider migrating in smaller batches if possible
+5. **Rollback Plan**: Keep the old node pool until training stability is confirmed
+
+This approach minimizes training disruption while ensuring your GPU interconnect performance is maintained throughout the upgrade process.

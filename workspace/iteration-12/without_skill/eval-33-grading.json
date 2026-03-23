@@ -3,27 +3,27 @@
     {
       "expectation": "Recommends upgrading the L4 inference pool and A100 pool separately with different strategies",
       "passed": true,
-      "reason": "Response clearly outlines separate upgrade strategies for L4 and A100 pools, with L4 pool upgraded first in Week 2 and A100 pool in Week 3, acknowledging different requirements"
+      "reason": "Response clearly separates L4 and A100 pool upgrade strategies, with L4 pool migrated first in batches and A100 pool handled more carefully due to long-running training jobs"
     },
     {
       "expectation": "For L4 inference pool: recommends surge upgrade with maxSurge=1 or 2 to maintain capacity during rolling replacement",
-      "passed": true,
-      "reason": "Response shows surge configuration with max-surge-upgrade=3 and max-unavailable-upgrade=1 for the rolling update option"
+      "passed": false,
+      "reason": "Response uses blue-green approach with new node pools rather than surge upgrade strategy with maxSurge parameter for rolling replacement"
     },
     {
       "expectation": "Addresses GPU driver version compatibility \u2014 auto-installed drivers must be compatible with inference framework (TensorRT, vLLM, etc.)",
       "passed": false,
-      "reason": "Response does not mention GPU driver compatibility with inference frameworks like TensorRT or vLLM"
+      "reason": "Response does not mention GPU driver compatibility or testing with inference frameworks like TensorRT or vLLM"
     },
     {
       "expectation": "For A100 fine-tuning pool: recommends scheduling the upgrade during a gap between fine-tuning jobs",
       "passed": true,
-      "reason": "Response explicitly states 'Schedule around fine-tuning job patterns' and 'Coordinate with ML teams for job scheduling' in the A100 pool upgrade section"
+      "reason": "Response includes waiting for training jobs to complete or reach checkpoints before migration, and mentions timing the upgrade appropriately"
     },
     {
       "expectation": "Notes that GPU VMs do not support live migration \u2014 inference pods will restart during node upgrade, causing brief latency spikes",
       "passed": false,
-      "reason": "Response does not mention that GPU VMs don't support live migration or that inference pods will restart causing latency spikes"
+      "reason": "Response does not explicitly mention that GPU VMs cannot live migrate and that pods will restart, though it does address minimizing disruption"
     },
     {
       "expectation": "Recommends PDBs on inference deployments to ensure enough replicas stay available during the rolling upgrade",
@@ -33,12 +33,12 @@
     {
       "expectation": "Addresses auto-scaler interaction \u2014 new nodes created by auto-scaler during upgrade will be at the old version until their pool upgrade completes",
       "passed": false,
-      "reason": "Response does not address the issue of auto-scaler creating new nodes at the old version during the upgrade process"
+      "reason": "Response does not address the interaction between auto-scaler and upgrade process or mention that auto-scaled nodes will use old version"
     },
     {
       "expectation": "Recommends testing driver + CUDA compatibility in staging before production upgrade",
       "passed": false,
-      "reason": "Response does not recommend testing driver and CUDA compatibility in staging environment before production upgrade"
+      "reason": "Response mentions testing with canary workloads but does not specifically recommend testing GPU driver and CUDA compatibility in staging environment"
     }
   ]
 }

@@ -3,47 +3,47 @@
     {
       "expectation": "Explains this is related to the interaction between maxSurge, drain order, and pod scheduling",
       "passed": true,
-      "reason": "Response clearly explains the interaction between surge upgrade behavior, scheduler decisions, and batch overlap from maxSurge/maxUnavailable settings"
+      "reason": "Response clearly explains the interaction between maxSurge settings, upgrade batch size, and pod scheduling, identifying this as a 'surge upgrade scheduling issue'"
     },
     {
       "expectation": "Notes that GKE cordons nodes before draining them \u2014 pods should prefer scheduling onto uncordoned (upgraded) nodes",
-      "passed": false,
-      "reason": "Response mentions cordoning in blue-green context but doesn't explain that GKE cordons nodes before draining or that pods should prefer uncordoned nodes"
+      "passed": true,
+      "reason": "Response mentions that GKE cordons nodes in batches and includes commands to check cordoned status with 'kubectl get nodes | grep SchedulingDisabled'"
     },
     {
       "expectation": "Identifies possible cause: too many nodes being drained simultaneously (high maxSurge) before enough upgraded nodes exist",
       "passed": true,
-      "reason": "Response identifies batch overlap and overlapping drain windows as causes, though focuses more on maxUnavailable than high maxSurge specifically"
+      "reason": "Response identifies 'Large upgrade batches' as a cause where 'batch size approaches your available capacity, pods have nowhere stable to land'"
     },
     {
       "expectation": "Recommends reducing maxSurge to 1 to ensure upgraded nodes are available before draining the next batch",
       "passed": false,
-      "reason": "Response recommends increasing maxSurge to 3, not reducing it to 1 as specified in the expectation"
+      "reason": "Response recommends increasing maxSurge (not reducing to 1) and provides sizing guidance for different pool sizes, but doesn't specifically mention reducing to 1"
     },
     {
       "expectation": "Suggests using pod anti-affinity or node affinity to prefer already-upgraded nodes",
-      "passed": true,
-      "reason": "Response suggests node selectors to pin workloads to upgraded nodes and mentions labeling upgraded nodes"
+      "passed": false,
+      "reason": "Response mentions anti-affinity rules as a potential cause of the problem but doesn't suggest using affinity rules to prefer upgraded nodes as a solution"
     },
     {
       "expectation": "Mentions checking if any taints or tolerations are causing pods to land on the wrong nodes",
       "passed": false,
-      "reason": "Response mentions using taints as a solution but doesn't suggest checking existing taints/tolerations as a troubleshooting step"
+      "reason": "Response does not mention checking taints or tolerations as potential causes of the scheduling issue"
     },
     {
       "expectation": "Provides kubectl commands to check node cordoned status and pod scheduling events",
       "passed": true,
-      "reason": "Response provides kubectl commands to monitor pod movements, events, and node status during upgrades"
+      "reason": "Response provides kubectl commands to check cordoned status ('kubectl get nodes | grep SchedulingDisabled') and monitoring events ('kubectl get events')"
     },
     {
       "expectation": "Recommends setting maxUnavailable=0 to ensure old nodes aren't removed until pods are safely rescheduled",
       "passed": true,
-      "reason": "Response explicitly recommends setting maxUnavailable=0 and explains why this ensures pods have safe landing spots"
+      "reason": "Response consistently recommends 'maxUnavailable=0' in the surge capacity examples and explains this approach"
     },
     {
       "expectation": "May mention GKE's autoscaled blue-green upgrade strategy as an alternative that avoids this issue by cordoning the entire old pool before migrating workloads to new nodes",
       "passed": true,
-      "reason": "Response mentions blue-green upgrade strategy and explains how it keeps old nodes cordoned while new nodes are provisioned"
+      "reason": "Response mentions 'autoscaled blue-green upgrade' as Option 2 and explains how it 'eliminates the musical chairs problem entirely by keeping the old pool available while the new pool scales up'"
     }
   ]
 }

@@ -3,42 +3,42 @@
     {
       "expectation": "Defines 'available' as versions officially available in the channel that customers can manually upgrade to",
       "passed": true,
-      "reason": "Response clearly defines available versions as 'Versions you can manually upgrade to' and explains they are 'Manual upgrade options'"
+      "reason": "Response clearly defines available version as 'officially released in your release channel and you *can* manually upgrade to it' and describes it as 'in the catalog'"
     },
     {
       "expectation": "Defines 'default' as the version used for new cluster creation \u2014 typically the same as auto-upgrade target but can differ especially during new minor version introduction (separate promotion stage)",
       "passed": true,
-      "reason": "Response defines default as 'Version used for new cluster creation' and explains it can differ from auto-upgrade target, though it doesn't specifically mention minor version introduction scenarios"
+      "reason": "Response correctly defines default as 'the version used for *new cluster creation*' and explains it can differ from auto-upgrade target, noting that 'default version often advances faster than the auto-upgrade target'"
     },
     {
       "expectation": "Defines 'auto-upgrade target' as the version GKE will actually upgrade existing clusters to automatically \u2014 this is cluster-specific based on policies",
       "passed": true,
-      "reason": "Response defines auto-upgrade target as 'Version your existing cluster will upgrade to' and explains it's determined by cluster-specific factors like maintenance windows and constraints"
+      "reason": "Response clearly defines auto-upgrade target as 'what GKE will actually upgrade your existing cluster to automatically' and explains it's 'calculated based on YOUR cluster's constraints'"
     },
     {
       "expectation": "Explains that default and auto-upgrade target are often the same but CAN differ, especially during new minor version rollouts",
       "passed": true,
-      "reason": "Response explains the difference between default (1.31.8) and auto-upgrade target (1.31.7) and mentions they can differ due to rollout sequencing, though doesn't specifically mention minor version rollouts"
+      "reason": "Response explains they can differ and specifically mentions 'new clusters can use the latest stable version, while existing clusters follow a more conservative auto-upgrade schedule'"
     },
     {
       "expectation": "Notes that the auto-upgrade target depends on cluster constraints (maintenance windows, maintenance exclusions) and is cluster-specific \u2014 different clusters on the same channel can have different targets",
       "passed": true,
-      "reason": "Response explicitly mentions maintenance windows and exclusions as factors determining auto-upgrade target and explains it's cluster-specific based on configuration"
+      "reason": "Response lists specific cluster constraints affecting auto-upgrade target including 'Maintenance windows, Maintenance exclusions, Disruption intervals' and emphasizes it's cluster-specific"
     },
     {
       "expectation": "Explains that a cluster with a 'no minor' exclusion will have a patch-only auto-upgrade target for its current minor",
       "passed": false,
-      "reason": "Response does not mention 'no minor' exclusion policies or explain how they affect auto-upgrade targets to be patch-only"
+      "reason": "While response mentions 'maintenance exclusions (like \"no minor upgrades\")', it doesn't specifically explain that clusters with no-minor exclusions get patch-only targets"
     },
     {
       "expectation": "Recommends using gcloud container clusters get-upgrade-info to check the actual auto-upgrade status, target versions, and EoS timestamps",
       "passed": true,
-      "reason": "Response provides the exact gcloud container clusters get-upgrade-info command and explains it shows auto-upgrade target and timing"
+      "reason": "Response provides the exact command 'gcloud container clusters get-upgrade-info CLUSTER_NAME --region REGION' and lists what it shows including auto-upgrade target and End of Support timeline"
     },
     {
       "expectation": "Points to the GKE release schedule or release notes for tracking version availability",
       "passed": false,
-      "reason": "Response does not mention or reference GKE release schedule or release notes as resources for tracking version availability"
+      "reason": "Response does not mention or reference the GKE release schedule or release notes for tracking version availability"
     }
   ]
 }

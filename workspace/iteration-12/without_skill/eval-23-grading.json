@@ -3,47 +3,47 @@
     {
       "expectation": "Identifies Service A (minAvailable=100%) as a guaranteed upgrade blocker \u2014 no disruptions allowed at all",
       "passed": true,
-      "reason": "Response clearly identifies Service A as risky and states 'No pods can ever be unavailable, blocking rolling updates completely'"
+      "reason": "Response correctly identifies Service A as 'RISKY - Will Block Upgrades' and explains that 100% minAvailable 'Prevents ANY pod from being disrupted' and causes 'Complete upgrade blockage'"
     },
     {
       "expectation": "Identifies Service B (maxUnavailable=0) as also blocking upgrades \u2014 same effect as 100% minAvailable",
       "passed": true,
-      "reason": "Response identifies Service B as risky and explicitly states 'Equivalent to Service A - no pods can be terminated'"
+      "reason": "Response correctly identifies Service B as 'RISKY - Will Block Upgrades' and explicitly states it's 'Equivalent to 100% availability' with 'Identical to Service A' risk"
     },
     {
       "expectation": "States Service C (minAvailable=2 with 3 replicas) is safe \u2014 allows 1 pod disruption at a time",
-      "passed": true,
-      "reason": "Response marks Service C as safe and states '1 pod can be upgraded at a time'"
+      "passed": false,
+      "reason": "Response categorizes Service C as 'RISKY - Upgrade Issues Likely' rather than safe, warning of potential upgrade timeouts"
     },
     {
       "expectation": "States Service D (maxUnavailable=1 with 5 replicas) is safe \u2014 allows 1 pod down at a time",
       "passed": true,
-      "reason": "Response marks Service D as safe and states '1 pod can be upgraded at a time'"
+      "reason": "Response correctly identifies Service D as 'SAFE - Good for Upgrades' and explains it maintains 4/5 replicas during disruptions"
     },
     {
       "expectation": "Recommends fixing Service A: change to minAvailable=N-1 or maxUnavailable=1",
       "passed": true,
-      "reason": "Response provides specific fix for Service A with 'maxUnavailable: 1' option"
+      "reason": "Response provides specific fixes for Service A including 'maxUnavailable: 1' and 'minAvailable: 80%' options"
     },
     {
       "expectation": "Recommends fixing Service B: change to maxUnavailable=1",
       "passed": true,
-      "reason": "Response provides specific fix for Service B with 'maxUnavailable: 1'"
+      "reason": "Response provides the same recommended fixes for Service B as Service A, including 'maxUnavailable: 1'"
     },
     {
       "expectation": "Explains that GKE respects PDBs for up to 1 hour during surge upgrades, then may force-drain",
       "passed": false,
-      "reason": "Response does not mention GKE-specific behavior or the 1-hour timeout for force-drain"
+      "reason": "Response does not mention GKE-specific behavior regarding 1-hour timeout or force-drain mechanics"
     },
     {
       "expectation": "Provides kubectl patch commands to fix the problematic PDBs",
       "passed": false,
-      "reason": "Response provides complete YAML configurations but does not provide kubectl patch commands"
+      "reason": "Response provides YAML configuration examples but no kubectl patch commands"
     },
     {
       "expectation": "Recommends testing PDB changes in a non-production environment first",
       "passed": false,
-      "reason": "Response mentions testing with dry-run commands but does not explicitly recommend testing in non-production environments first"
+      "reason": "Response mentions 'Test PDBs with actual upgrade scenarios' in best practices but does not specifically recommend testing in non-production first"
     }
   ]
 }

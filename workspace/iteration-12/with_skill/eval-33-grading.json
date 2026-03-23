@@ -3,42 +3,42 @@
     {
       "expectation": "Recommends upgrading the L4 inference pool and A100 pool separately with different strategies",
       "passed": true,
-      "reason": "Response clearly recommends different strategies: rolling surge upgrade for L4 pool and autoscaled blue-green upgrade for A100 pool, with separate phases and timing"
+      "reason": "The response clearly recommends upgrading pools separately - L4 pool first (less critical) with 25% initial node percentage, then A100 pool with 20% initial node percentage and longer timeout (10800s vs 7200s)"
     },
     {
       "expectation": "For L4 inference pool: recommends surge upgrade with maxSurge=1 or 2 to maintain capacity during rolling replacement",
       "passed": false,
-      "reason": "Response recommends maxSurge=0, maxUnavailable=1 for L4 pool, which is conservative rolling without surge capacity, not the expected surge upgrade with maxSurge=1 or 2"
+      "reason": "The response recommends autoscaled blue-green strategy, not surge upgrade with maxSurge parameters. It uses blue-green-initial-node-percentage instead of maxSurge settings"
     },
     {
       "expectation": "Addresses GPU driver version compatibility \u2014 auto-installed drivers must be compatible with inference framework (TensorRT, vLLM, etc.)",
       "passed": true,
-      "reason": "Response includes CUDA driver compatibility verification with GKE 1.32 node image, driver version testing, and inference framework compatibility checks in the pre-upgrade checklist and validation sections"
+      "reason": "The response explicitly addresses GPU driver compatibility in Phase 1, mentioning that GKE 1.32 may update CUDA drivers and recommends testing inference frameworks (TensorFlow, PyTorch) with 1.32's CUDA version in staging"
     },
     {
       "expectation": "For A100 fine-tuning pool: recommends scheduling the upgrade during a gap between fine-tuning jobs",
       "passed": true,
-      "reason": "Response explicitly recommends coordinating with ML team to pause new fine-tuning jobs during A100 upgrade and scheduling when no active training is running"
+      "reason": "The response specifically recommends upgrading A100 pool 'during low fine-tuning activity' and provides Option A for 'Natural Completion' where jobs finish naturally during the blue-green upgrade"
     },
     {
       "expectation": "Notes that GPU VMs do not support live migration \u2014 inference pods will restart during node upgrade, causing brief latency spikes",
       "passed": false,
-      "reason": "Response mentions brief capacity dips and discusses latency monitoring but does not explicitly state that GPU VMs do not support live migration or that inference pods will restart"
+      "reason": "The response does not mention that GPU VMs don't support live migration or that inference pods will restart causing latency spikes. It focuses on blue-green strategy maintaining capacity but doesn't address pod restart implications"
     },
     {
       "expectation": "Recommends PDBs on inference deployments to ensure enough replicas stay available during the rolling upgrade",
       "passed": true,
-      "reason": "Response includes 'PDBs configured for inference deployments (allow 10-20% disruption)' in the pre-upgrade checklist"
+      "reason": "The response includes verification of PDBs in the pre-upgrade phase with the command 'kubectl get pdb -A -o wide' and mentions PDBs as part of workload assessment"
     },
     {
       "expectation": "Addresses auto-scaler interaction \u2014 new nodes created by auto-scaler during upgrade will be at the old version until their pool upgrade completes",
       "passed": false,
-      "reason": "While response mentions autoscaling and monitoring autoscaler behavior, it does not specifically address that new nodes created during upgrade will be at the old version until pool upgrade completes"
+      "reason": "The response mentions auto-scaling throughout but does not specifically address that new nodes created by auto-scaler during upgrade will be at the old version until pool upgrade completes"
     },
     {
       "expectation": "Recommends testing driver + CUDA compatibility in staging before production upgrade",
       "passed": true,
-      "reason": "Response includes 'L4/A100 driver versions tested in staging cluster' and 'Fine-tuning pipelines tested against 1.32' in the pre-upgrade checklist"
+      "reason": "The response explicitly recommends testing in staging: 'Test in staging: Verify your inference frameworks (TensorFlow, PyTorch, etc.) work with 1.32's CUDA version' and lists this as a risk mitigation strategy"
     }
   ]
 }

@@ -3,42 +3,42 @@
     {
       "expectation": "Explains that surge upgrades require extra compute capacity (maxSurge creates NEW nodes before draining old ones)",
       "passed": true,
-      "reason": "Response clearly explains that surge nodes can't be created due to compute quota limits and describes the mechanism of creating new nodes before draining old ones"
+      "reason": "Response clearly explains surge mode creates additional nodes first and contrasts this with drain-first mode that creates replacements after draining"
     },
     {
       "expectation": "Recommends setting maxUnavailable >0 instead of relying on maxSurge (drains first, then creates \u2014 uses less quota)",
       "passed": true,
-      "reason": "Response specifically recommends switching to 'unavailable-first strategy' with maxUnavailable >0 and maxSurge=0, explaining it drains existing nodes first then creates replacements"
+      "reason": "Response explicitly recommends switching to maxUnavailable mode and provides the gcloud command with --max-unavailable-upgrade 1"
     },
     {
       "expectation": "Warns that maxUnavailable >0 means reduced capacity during upgrade \u2014 some pods won't have nodes",
       "passed": true,
-      "reason": "Response explicitly warns about 'temporary capacity reduction' and 'workload disruption' where pods must reschedule to remaining nodes"
+      "reason": "Response clearly warns about 'temporary capacity reduction' and 'potential pod scheduling delays' with workloads queuing for replacement nodes"
     },
     {
       "expectation": "Suggests temporarily scaling down non-critical deployments to free up quota for surge nodes",
-      "passed": true,
-      "reason": "Response provides an alternative approach section with specific kubectl commands to scale down non-critical workloads and scale them back up after upgrade"
+      "passed": false,
+      "reason": "Response does not mention scaling down non-critical deployments as a way to free up quota for surge nodes"
     },
     {
       "expectation": "Mentions that reducing maxSurge to 1 minimizes extra quota needed (slower but fits within constraints)",
       "passed": false,
-      "reason": "Response recommends maxSurge=0 instead of reducing to 1, and doesn't discuss the option of minimizing surge to 1 as a middle-ground approach"
+      "reason": "Response sets maxSurge to 0, not 1, and doesn't discuss reducing maxSurge as a middle-ground option to minimize quota usage while keeping some surge capability"
     },
     {
       "expectation": "Provides the gcloud command to update surge settings (maxSurge=0, maxUnavailable=1 for zero-extra-capacity mode)",
       "passed": true,
-      "reason": "Response provides the exact gcloud container node-pools update command with maxSurge=0 and maxUnavailable=1 settings"
+      "reason": "Response provides the exact gcloud command with --max-surge-upgrade 0 and --max-unavailable-upgrade 1"
     },
     {
       "expectation": "Recommends doing the upgrade in off-peak hours when fewer pods are running",
       "passed": false,
-      "reason": "Response does not mention timing considerations or recommending off-peak hours for the upgrade"
+      "reason": "Response does not mention timing the upgrade during off-peak hours to minimize capacity impact"
     },
     {
       "expectation": "Mentions requesting a temporary quota increase as a faster alternative to a permanent increase",
       "passed": false,
-      "reason": "Response does not discuss temporary quota increases as an alternative option"
+      "reason": "Response does not discuss requesting a temporary quota increase as an alternative approach"
     }
   ]
 }

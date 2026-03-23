@@ -3,42 +3,42 @@
     {
       "expectation": "Explains that exact upgrade dates are difficult to predict but several tools help narrow the window",
       "passed": true,
-      "reason": "Response clearly states 'exact timing cannot be guaranteed' and provides multiple tools like 72-hour notifications, maintenance windows, and release schedules that help narrow the window"
+      "reason": "The response clearly states that exact timing is difficult to predict but provides multiple tools including get-upgrade-info, release schedule, and maintenance windows to narrow the timing window"
     },
     {
       "expectation": "Mentions the GKE release schedule as a 'best case' timeline \u2014 upgrades won't happen before listed dates",
       "passed": true,
-      "reason": "Response explicitly mentions the GKE release schedule and states 'Shows earliest dates new versions will be available' and 'Conservative estimates \u2014 actual upgrades may be later but won't be earlier'"
+      "reason": "Specifically states 'Best-case scenario: Upgrades won't happen BEFORE these dates but may happen later' when discussing the GKE release schedule"
     },
     {
       "expectation": "Recommends checking the cluster's auto-upgrade status for the current target version and any pauses",
       "passed": true,
-      "reason": "Response provides the specific command 'gcloud container clusters get-upgrade-info' and lists what it shows including autoUpgradeStatus and current target versions"
+      "reason": "Provides detailed gcloud commands for checking auto-upgrade status and explicitly mentions checking autoUpgradeStatus, target versions, and EoS timestamps"
     },
     {
       "expectation": "Mentions that new releases roll out progressively across regions over 4-5 business days, and the version promotion path includes channel promotion (Rapid \u2192 Regular \u2192 Stable)",
       "passed": true,
-      "reason": "Response states 'Progressive Rollout (4-5 business days)' and includes a table showing channel progression timing from Rapid to Regular to Stable"
+      "reason": "States 'Progressive rollout: New versions take 4-5 business days to reach all regions' and 'Channel timing: Rapid \u2192 Regular (1-2 weeks) \u2192 Stable (additional 1-2 weeks)'"
     },
     {
       "expectation": "Recommends configuring maintenance windows so upgrades only happen during known time slots. May note that for ultimate predictability, customers can initiate upgrades themselves instead of waiting for auto-upgrade",
       "passed": true,
-      "reason": "Response provides specific maintenance window configuration commands and mentions 'Manual upgrades bypass maintenance windows' as an option for ultimate control"
+      "reason": "Provides detailed maintenance window configuration commands and explicitly mentions user-initiated upgrades as 'Maximum Control' option for planned timing"
     },
     {
       "expectation": "Mentions scheduled upgrade notifications (72h advance, opt-in via Cloud Logging) or the get-upgrade-info API for checking target versions programmatically",
       "passed": true,
-      "reason": "Response mentions '72-hour advance notifications' via Cloud Logging and provides the get-upgrade-info command for programmatic checking of target versions"
+      "reason": "Mentions '72-hour advance notifications for control plane auto-upgrades' via Cloud Logging and provides extensive get-upgrade-info API usage examples"
     },
     {
       "expectation": "Notes that GKE upgrade visibility shows the cluster's target version and EoL timeline",
       "passed": true,
-      "reason": "Response mentions that the get-upgrade-info command shows 'Current target versions' and 'EoS timestamps'"
+      "reason": "Shows output fields including minorTargetVersion, patchTargetVersion, and endOfStandardSupportTimestamp for EoL timeline visibility"
     },
     {
       "expectation": "May mention rollout sequencing (advanced feature, limited adoption) as an option for multi-cluster predictability \u2014 not a primary recommendation",
       "passed": true,
-      "reason": "Response includes a 'Multi-Cluster Fleet Management' section discussing rollout sequencing but notes it's for '10+ cluster environments' and positions it as an advanced feature, not a primary recommendation"
+      "reason": "Includes rollout sequencing in 'Multi-Cluster Coordination (If Needed)' section with appropriate caveats about requiring same release channel, positioning it as an advanced option rather than primary recommendation"
     }
   ]
 }

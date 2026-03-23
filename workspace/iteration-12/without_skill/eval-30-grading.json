@@ -3,47 +3,47 @@
     {
       "expectation": "Recommends migrating all 'No channel' clusters to release channels as a first priority",
       "passed": true,
-      "reason": "The response explicitly identifies this in Phase 1 with specific gcloud commands to update clusters from 'No channel' to release channels"
+      "reason": "The response explicitly states in Phase 1 immediate stabilization to 'Move clusters to release channels' and provides the specific gcloud command to do so"
     },
     {
       "expectation": "Mentions using gcloud container clusters get-upgrade-info to check each cluster's auto-upgrade status, target versions, and EoS timestamps",
       "passed": false,
-      "reason": "The response uses 'gcloud container get-server-config' instead of the specific 'gcloud container clusters get-upgrade-info' command mentioned in the expectation"
+      "reason": "The response uses 'gcloud container clusters get-upgrades' command but does not mention the 'get-upgrade-info' command or checking EoS timestamps specifically"
     },
     {
       "expectation": "Mentions the deprecation insights dashboard for identifying clusters using deprecated APIs",
       "passed": false,
-      "reason": "The response does not mention the deprecation insights dashboard specifically, only general GKE Enterprise Dashboard and fleet views"
+      "reason": "While the response mentions checking for deprecated APIs using kubectl commands, it does not specifically mention the deprecation insights dashboard"
     },
     {
       "expectation": "Recommends checking EoS timelines for each cluster and prioritizing those closest to EoS",
       "passed": false,
-      "reason": "While the response mentions version management and migration strategy, it does not specifically discuss EoS (End of Support) timelines or prioritizing clusters based on EoS dates"
+      "reason": "The response does not mention EoS (End of Support) timelines or prioritizing clusters based on their proximity to EoS"
     },
     {
       "expectation": "Mentions GKE EoS notifications via Cloud Logging as an ongoing monitoring tool",
       "passed": false,
-      "reason": "The response mentions Pub/Sub notifications for cluster events but does not specifically mention GKE EoS notifications via Cloud Logging"
+      "reason": "While the response mentions Cloud Logging for usage patterns, it does not specifically mention GKE EoS notifications via Cloud Logging"
     },
     {
       "expectation": "Recommends enrolling in scheduled upgrade notifications (72h advance) for all clusters",
       "passed": false,
-      "reason": "The response mentions upgrade notifications but does not specify the 72-hour advance scheduled upgrade notifications feature"
+      "reason": "The response does not mention enrolling in scheduled upgrade notifications or the 72-hour advance notice feature"
     },
     {
       "expectation": "Suggests standardizing on a channel strategy: dev\u2192Rapid, staging\u2192Regular, prod\u2192Stable/Extended",
-      "passed": true,
-      "reason": "The response provides release channel recommendations with Rapid for dev/test, Regular for production, and Stable for conservative production environments"
+      "passed": false,
+      "reason": "While the response mentions using different release channels, it does not provide a clear environment-based channel strategy mapping (dev\u2192Rapid, staging\u2192Regular, prod\u2192Stable/Extended)"
     },
     {
       "expectation": "May mention rollout sequencing as an advanced option for fleet-wide upgrade ordering \u2014 should not be the primary recommendation for fleet remediation",
       "passed": true,
-      "reason": "The response does not mention rollout sequencing, which aligns with the expectation that it should not be the primary recommendation"
+      "reason": "The response does not mention rollout sequencing as a primary recommendation, focusing instead on systematic approaches and gradual migration"
     },
     {
       "expectation": "Mentions GKE Insights and Recommendations in the console for identifying issues like version skew",
       "passed": false,
-      "reason": "The response does not specifically mention GKE Insights and Recommendations feature in the console for identifying version skew and other issues"
+      "reason": "While the response mentions Policy Intelligence & Recommendations via gcloud commands, it does not specifically mention GKE Insights and Recommendations in the console"
     }
   ]
 }

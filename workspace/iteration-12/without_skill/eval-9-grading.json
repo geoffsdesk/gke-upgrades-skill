@@ -3,42 +3,42 @@
     {
       "expectation": "Recommends increasing maxSurge for CPU pools (e.g., 10-20) to parallelize node replacements, with justification for the value",
       "passed": true,
-      "reason": "Response recommends maxSurge of 20-30 nodes for CPU pools with specific justification that CPU pools are typically faster to upgrade"
+      "reason": "Response recommends maxSurge: 10 for CPU pools with clear justification that it parallelizes replacements and speeds up upgrades"
     },
     {
       "expectation": "For GPU pools with fixed reservations: recommends increasing maxUnavailable (not maxSurge) as the primary lever since surge capacity is typically unavailable",
       "passed": false,
-      "reason": "Response recommends maxSurge (5-10 nodes) for GPU pools and sets maxUnavailable to 0, failing to recognize that fixed reservations make surge capacity unavailable and maxUnavailable should be the primary lever"
+      "reason": "Response recommends maxSurge: 3 for GPU pools and mentions maxUnavailable: 1, but doesn't specifically explain that maxUnavailable should be the primary lever due to fixed reservations limiting surge capacity"
     },
     {
       "expectation": "Advises checking and requesting increased compute quota before the upgrade for CPU pools",
       "passed": false,
-      "reason": "No mention of checking or requesting increased compute quota before upgrades"
+      "reason": "Response does not mention checking or requesting increased compute quota before upgrades"
     },
     {
       "expectation": "Suggests staggering node pool upgrades or running non-conflicting pools in parallel",
       "passed": true,
-      "reason": "Response includes staggered pool upgrade strategy with specific commands and mentions upgrading CPU pools in parallel"
+      "reason": "Response explicitly suggests parallel pool upgrades with gcloud commands and mentions staggered GPU upgrades during low-utilization periods"
     },
     {
       "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as an option for GPU pools",
       "passed": false,
-      "reason": "Response mentions blue-green strategy but as a general manual approach creating new pools, not specifically GKE's auto-scale blue-green upgrade feature for GPU pools"
+      "reason": "Response mentions blue-green strategy but presents it as a manual process with creating new pools, not specifically GKE's auto-scale blue-green upgrade feature"
     },
     {
       "expectation": "Recommends expanding the maintenance window or splitting across multiple weekends",
       "passed": false,
-      "reason": "No recommendation to expand maintenance window or split upgrades across multiple weekends"
+      "reason": "Response does not recommend expanding the maintenance window or splitting upgrades across multiple weekends"
     },
     {
       "expectation": "Provides the gcloud command for updating surge settings on each pool",
-      "passed": false,
-      "reason": "Response shows YAML configuration for surge settings but does not provide the specific gcloud command to update surge settings on existing pools"
+      "passed": true,
+      "reason": "Response provides gcloud container node-pools update command with max-surge and max-unavailable parameters for GPU pools"
     },
     {
       "expectation": "Includes monitoring commands to track upgrade progress in real-time",
       "passed": true,
-      "reason": "Response includes a monitoring script with gcloud container operations list command to track upgrade progress"
+      "reason": "Response includes multiple monitoring commands: gcloud container operations list, kubectl get nodes with custom columns, and kubectl get pods commands to track progress"
     }
   ]
 }

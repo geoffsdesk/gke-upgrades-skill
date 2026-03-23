@@ -1,243 +1,183 @@
-I'll help you create a GKE upgrade notification triage system. Let me break down the different notification types and create an action framework.
+I'll help you create a clear triage system for GKE upgrade notifications. The key is understanding which notifications require immediate action versus planning versus monitoring only.
 
 # GKE Upgrade Notification Triage System
 
-## Notification Types & Priority Matrix
+## Notification Priority Matrix
 
-### 🚨 **CRITICAL - Immediate Action Required**
+### 🚨 IMMEDIATE ACTION REQUIRED (0-7 days)
 
-**End of Support (EoS) Warnings**
-- **What it means:** Your cluster version will be force-upgraded soon
-- **Timeline:** Usually 30-60 days notice, then systematic enforcement
-- **Action required:** Plan upgrade immediately or apply maintenance exclusion
-- **Sample text:** "Version X.XX will reach end of support on..."
+| Notification Type | When to Act | Action Required |
+|------------------|-------------|-----------------|
+| **End of Support (EoS) enforcement** | Version reaches EoS in <30 days | Apply maintenance exclusion OR upgrade before EoS date |
+| **Security patch auto-upgrade** | Critical CVE fix rolling out | Validate workload compatibility; no action blocks auto-upgrade |
+| **Deprecated API usage detected** | Auto-upgrades paused due to deprecated APIs | Fix deprecated API usage to unblock auto-upgrades |
+| **Upgrade operation failed/stuck** | Operation shows failure/timeout | Troubleshoot and resolve (see diagnostic commands below) |
 
-**Security Patch Notifications (Critical/High CVE)**
-- **What it means:** Security vulnerability requires patching
-- **Timeline:** May auto-upgrade within days
-- **Action required:** Review patch, plan testing, or apply exclusion if you need to delay
-- **Sample text:** "Security update available" with CVE references
+### ⚠️ PLAN & SCHEDULE (7-30 days)
 
-### ⚠️ **HIGH - Action Needed Soon**
+| Notification Type | When to Plan | Action Required |
+|------------------|-------------|-----------------|
+| **Auto-upgrade scheduled** | Upgrade scheduled within maintenance window | Validate maintenance window timing; apply exclusion if needed |
+| **New minor version available** | For manual upgrade planning | Plan upgrade path; test in staging if using manual upgrades |
+| **Extended support ending** | Extended channel version approaching 24-month limit | Plan migration to newer version or renew extended support |
+| **Release channel recommendation** | Cluster on legacy "No channel" | Plan migration to Regular/Stable channel with maintenance exclusions |
 
-**Auto-upgrade Scheduled (72h notice)**
-- **What it means:** Your cluster will upgrade automatically in ~3 days
-- **Timeline:** 72 hours advance notice (preview feature, opt-in)
-- **Action required:** Validate readiness or apply exclusion to defer
-- **Sample text:** "Scheduled upgrade for cluster X on [date]"
+### 📊 INFORMATIONAL ONLY (Monitor)
 
-**Auto-upgrade Failed/Stuck**
-- **What it means:** The automatic upgrade encountered an issue
-- **Timeline:** Immediate - upgrade will retry
-- **Action required:** Troubleshoot blocking issues (PDBs, resource constraints)
-- **Sample text:** "Upgrade operation failed" or "Upgrade paused"
-
-### 📋 **MEDIUM - Plan & Track**
-
-**New Version Available**
-- **What it means:** A newer version is now available in your release channel
-- **Timeline:** Will auto-upgrade based on your maintenance window + disruption interval
-- **Action required:** Review release notes, plan testing in staging
-- **Sample text:** "New version X.XX available in [channel]"
-
-**Release Channel Promotion**
-- **What it means:** Version moved from one channel to another (e.g., Rapid → Regular)
-- **Timeline:** Informational - affects future upgrade timing
-- **Action required:** Note for planning, review if channel strategy needs adjustment
-- **Sample text:** "Version X.XX promoted to Regular channel"
-
-### ℹ️ **LOW - Informational**
-
-**Auto-upgrade Completed Successfully**
-- **What it means:** Your cluster upgraded automatically without issues
-- **Timeline:** Post-completion notification
-- **Action required:** Validate applications, update documentation
-- **Sample text:** "Cluster X successfully upgraded to version Y"
-
-**Maintenance Window Notifications**
-- **What it means:** Upcoming or active maintenance window
-- **Timeline:** Before/during scheduled window
-- **Action required:** Monitor if needed, otherwise informational
-- **Sample text:** "Maintenance window active for cluster X"
+| Notification Type | Response | Action Required |
+|------------------|----------|-----------------|
+| **Patch version available** | New patches rolling to channel | None - auto-upgrades handle this |
+| **Successful upgrade completion** | Cluster/nodepool upgraded successfully | Validate workload health (optional) |
+| **Maintenance window approaching** | Scheduled window in 72h | None - informational heads-up |
+| **Version promotion** | Version moved between channels (Rapid→Regular→Stable) | None - channel progression is normal |
 
 ## Triage Decision Tree
 
 ```
-New GKE Notification Received
-│
-├─ Contains "end of support" OR "EoS" OR "force upgrade"?
-│  └─ YES → 🚨 CRITICAL - Schedule upgrade planning meeting within 48h
-│
-├─ Contains "security" OR "CVE" OR "critical patch"?
-│  └─ YES → 🚨 CRITICAL - Review CVE severity, plan emergency patch if needed
-│
-├─ Contains "scheduled upgrade" with date ≤ 7 days?
-│  └─ YES → ⚠️ HIGH - Validate cluster readiness, confirm maintenance window
-│
-├─ Contains "upgrade failed" OR "upgrade stuck" OR "operation paused"?
-│  └─ YES → ⚠️ HIGH - Start troubleshooting immediately
-│
-├─ Contains "new version available" OR "version promoted"?
-│  └─ YES → 📋 MEDIUM - Add to backlog, review release notes
-│
-└─ Contains "upgrade completed" OR "maintenance window"?
-   └─ YES → ℹ️ LOW - Log for records, validate if needed
+1. Does the notification mention "End of Support" or "EoS"?
+   └─ YES → 🚨 IMMEDIATE ACTION
+   └─ NO → Continue to #2
+
+2. Does it mention "deprecated API" or "upgrade paused"?
+   └─ YES → 🚨 IMMEDIATE ACTION  
+   └─ NO → Continue to #3
+
+3. Does it mention "scheduled" with a date <7 days away?
+   └─ YES → ⚠️ PLAN & SCHEDULE
+   └─ NO → Continue to #4
+
+4. Does it mention "failed," "stuck," or "error"?
+   └─ YES → 🚨 IMMEDIATE ACTION
+   └─ NO → Continue to #5
+
+5. Does it mention "available" or "promotion"?
+   └─ YES → 📊 INFORMATIONAL ONLY
+   └─ NO → Default to ⚠️ PLAN & SCHEDULE
 ```
 
-## Action Playbooks by Priority
+## Response Playbooks
 
-### 🚨 Critical Actions
+### 🚨 Immediate Action Playbooks
 
-**End of Support Warning Response:**
-```
-□ Check cluster's auto-upgrade status: gcloud container clusters get-upgrade-info
-□ Review current maintenance exclusions
-□ If not ready to upgrade:
-  □ Apply 30-day "no upgrades" exclusion for emergency delay
-  □ Or migrate to Extended channel (24-month support for 1.27+)
-□ If ready to upgrade:
-  □ Schedule upgrade in next maintenance window
-  □ Test target version in staging first
-□ Communicate timeline to stakeholders
-```
+**End of Support (EoS) Enforcement:**
+```bash
+# Check EoS timeline
+gcloud container clusters get-upgrade-info CLUSTER_NAME --region REGION
 
-**Security Patch Response:**
-```
-□ Review CVE details and severity score
-□ Check if patch affects your workloads
-□ If critical + prod impact:
-  □ Plan emergency patch within 24-48h
-  □ Test in staging first if possible
-□ If non-critical:
-  □ Allow auto-upgrade during next maintenance window
-  □ Monitor for successful completion
+# Apply 30-day "no upgrades" exclusion for emergency delay
+gcloud container clusters update CLUSTER_NAME \
+  --zone ZONE \
+  --add-maintenance-exclusion-name "EoS-delay-$(date +%Y%m%d)" \
+  --add-maintenance-exclusion-start-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+  --add-maintenance-exclusion-end-time $(date -u -d "+30 days" +%Y-%m-%dT%H:%M:%SZ) \
+  --add-maintenance-exclusion-scope no_upgrades
+
+# Or manually upgrade to next supported version
+gcloud container clusters upgrade CLUSTER_NAME --zone ZONE --master
 ```
 
-### ⚠️ High Priority Actions
+**Deprecated API Usage:**
+```bash
+# Find deprecated API usage
+kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated
 
-**Scheduled Upgrade (72h notice) Response:**
-```
-□ Run pre-flight checklist:
-  □ Check PDBs not overly restrictive
-  □ Verify no bare pods
-  □ Confirm adequate resource quota
-  □ Review workload health
-□ If not ready:
-  □ Apply "no upgrades" exclusion to defer
-  □ Schedule proper upgrade planning
-□ If ready:
-  □ Monitor during maintenance window
-  □ Have on-call available
+# Check GKE deprecation insights
+gcloud recommender insights list \
+  --insight-type=google.container.DiagnosisInsight \
+  --location=LOCATION \
+  --project=PROJECT_ID
+
+# Fix identified deprecated APIs, then auto-upgrades will resume
 ```
 
-**Failed Upgrade Response:**
-```
-□ Check upgrade operation status: gcloud container operations list
-□ Run troubleshooting checklist:
-  □ kubectl get pdb -A (check for blocking PDBs)
-  □ kubectl get pods -A | grep Pending (resource constraints)
-  □ kubectl get events -A --field-selector reason=FailedScheduling
-□ Apply appropriate fix based on root cause
-□ Monitor upgrade resumption
-```
+**Failed/Stuck Upgrades:**
+```bash
+# Check operation status
+gcloud container operations list --cluster CLUSTER_NAME --zone ZONE
 
-### 📋 Medium Priority Actions
-
-**New Version Available Response:**
-```
-□ Review GKE release notes for breaking changes
-□ Check deprecation insights dashboard
-□ Test in dev/staging cluster first
-□ Plan production upgrade timing
-□ Update runbooks if needed
+# Common fixes:
+kubectl get pdb -A -o wide  # Check for restrictive PDBs
+kubectl get pods -A | grep Pending  # Check resource constraints
+kubectl get pods -A | grep Terminating  # Check stuck terminations
 ```
 
-## Notification Management Strategy
+### ⚠️ Planning Playbooks
 
-### Email Filtering Rules
+**Scheduled Auto-upgrade:**
+```bash
+# Check current auto-upgrade target
+gcloud container clusters get-upgrade-info CLUSTER_NAME --region REGION
 
-**Create Gmail/Outlook rules:**
-
-**Critical → High Priority Folder:**
-- Subject contains: "end of support", "EoS", "security", "CVE", "scheduled upgrade", "upgrade failed"
-- Auto-label: "GKE-URGENT"
-- Forward to: Platform team distribution list
-
-**Medium → Planning Folder:**
-- Subject contains: "new version", "version promoted", "available"
-- Auto-label: "GKE-PLANNING"
-- Review: Weekly planning meetings
-
-**Low → Archive:**
-- Subject contains: "completed successfully", "maintenance window"
-- Auto-label: "GKE-INFO"
-- Action: Archive after 30 days
-
-### Team Responsibilities
-
-**Platform Team (Primary):**
-- All critical and high priority notifications
-- Upgrade planning and execution
-- Maintenance exclusion management
-- Cross-team communication
-
-**Application Teams (Secondary):**
-- Receive notifications for their clusters only
-- Validate application readiness
-- Report upgrade-related issues
-
-**On-Call (Escalation):**
-- Failed upgrade troubleshooting
-- Emergency security patches
-- Out-of-hours critical issues
-
-### Monitoring & Metrics
-
-Track these metrics to improve your upgrade operations:
-
-```
-- Time from EoS warning to upgrade completion
-- Number of failed auto-upgrades per month
-- Emergency maintenance exclusions applied
-- Clusters running versions >60 days old
-- Security patch compliance time
+# If timing is bad, apply exclusion to defer
+gcloud container clusters update CLUSTER_NAME \
+  --zone ZONE \
+  --add-maintenance-exclusion-name "defer-$(date +%Y%m%d)" \
+  --add-maintenance-exclusion-start-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+  --add-maintenance-exclusion-end-time $(date -u -d "+14 days" +%Y-%m-%dT%H:%M:%SZ) \
+  --add-maintenance-exclusion-scope no_minor_or_node_upgrades
 ```
 
-### Communication Templates
+**Channel Migration Planning:**
+```bash
+# Check current channel
+gcloud container clusters describe CLUSTER_NAME \
+  --zone ZONE \
+  --format="value(releaseChannel.channel)"
 
-**For EoS Warnings:**
-```
-Subject: ACTION REQUIRED - GKE Cluster [CLUSTER-NAME] End of Support
-
-Cluster: [CLUSTER-NAME]
-Current Version: [VERSION]
-EoS Date: [DATE]
-Required Action: Upgrade by [DATE-30days]
-
-Timeline:
-- Week 1: Plan upgrade, test in staging
-- Week 2: Schedule production upgrade
-- Week 3: Execute upgrade
-- Week 4: Buffer for issues
-
-Contact: [Platform team]
+# Migrate from "No channel" to Regular (recommended)
+gcloud container clusters update CLUSTER_NAME \
+  --zone ZONE \
+  --release-channel regular
 ```
 
-**For Auto-upgrade Notifications:**
+## Notification Source Configuration
+
+Configure notification preferences to reduce noise:
+
+### Cloud Logging Filters (Recommended)
 ```
-Subject: GKE Auto-upgrade Scheduled - [CLUSTER-NAME] in 72h
+# High-priority: EoS and failures only
+resource.type="gke_cluster"
+(jsonPayload.message:"end-of-life" OR jsonPayload.message:"deprecated" OR jsonPayload.message:"failed")
 
-Cluster: [CLUSTER-NAME]
-Upgrade Date: [DATE]
-Target Version: [VERSION]
-Maintenance Window: [WINDOW]
+# Medium-priority: Scheduled upgrades
+resource.type="gke_cluster"
+jsonPayload.message:"scheduled"
 
-Pre-flight Status:
-□ Application team notified
-□ On-call scheduled
-□ Runbook ready
-
-No action required unless issues arise.
+# Low-priority: All other upgrade events (for audit trail)
+resource.type="gke_cluster"
+jsonPayload.message:"upgrade"
 ```
 
-This triage system will help you focus on notifications that truly require action while staying informed about routine maintenance. The key is distinguishing between "requires action" (EoS warnings, failed upgrades) and "requires awareness" (successful completions, available versions).
+### Email Alert Rules
+- **Immediate alerts:** EoS warnings, deprecated API detection, upgrade failures
+- **Daily digest:** Scheduled upgrades, version availability
+- **Weekly summary:** Successful completions, channel promotions
+
+## Team Responsibilities Matrix
+
+| Role | Immediate Action | Planning | Informational |
+|------|-----------------|----------|---------------|
+| **Platform Team** | Fix deprecated APIs, resolve stuck upgrades | Plan upgrade windows, channel strategy | Monitor completion rates |
+| **SRE/Ops** | Apply exclusions for incidents | Validate maintenance windows | Track upgrade success metrics |
+| **Dev Teams** | Update deprecated API usage in apps | Test app compatibility in staging | Review upgrade impact on workloads |
+| **Management** | Approve emergency exclusions | Resource planning for upgrade windows | Compliance and audit reporting |
+
+## Automation Opportunities
+
+Consider automating these common responses:
+
+1. **Auto-apply "no upgrades" exclusion** when incident management system shows active P0/P1
+2. **Slack notifications** for immediate action items with runbook links  
+3. **Automatic deprecated API scanning** in CI/CD pipelines before production deployments
+4. **Dashboard** showing cluster upgrade status, EoS timeline, and exclusion inventory across all clusters
+
+## Key Takeaways
+
+- **Most notifications are informational** - GKE's auto-upgrade system handles routine maintenance
+- **EoS enforcement is the highest priority** - clusters WILL be force-upgraded at End of Support
+- **Deprecated APIs block auto-upgrades** - fix these immediately to avoid security patch delays
+- **Use maintenance exclusions strategically** - they're your primary control mechanism, not a way to avoid upgrades indefinitely
+- **Release channels + exclusions > "No channel"** - modern GKE provides better control through channels
+
+This triage system ensures you respond appropriately to each notification type without getting overwhelmed by informational updates.

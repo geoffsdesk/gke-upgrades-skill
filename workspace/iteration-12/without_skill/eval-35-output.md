@@ -1,295 +1,336 @@
-Here's a production-ready GKE configuration optimized for long-running H100 training workloads:
+Here's a comprehensive strategy to minimize disruption for your H100-based foundation model training while maintaining security:
 
 ## Cluster Configuration
 
 ```yaml
+# cluster-config.yaml
 apiVersion: container.googleapis.com/v1
 kind: Cluster
 metadata:
-  name: foundation-model-training
-  location: us-central1-a  # Single zone for GPU availability
+  name: ml-training-cluster
 spec:
   releaseChannel:
-    channel: REGULAR  # Balanced stability vs security updates
+    channel: REGULAR  # More stable than RAPID, more secure than STABLE
   
-  # Maintenance configuration
   maintenancePolicy:
     window:
-      dailyMaintenanceWindow:
-        startTime: "02:00"  # Off-peak hours
-      maintenanceExclusions:
-        - name: "training-sprint-1"
-          startTime: "2024-01-15T00:00:00Z"
-          endTime: "2024-02-15T00:00:00Z"
-          scope: NO_UPGRADES
+      recurringWindow:
+        window:
+          startTime: "2024-01-01T02:00:00Z"  # Low-usage hours
+          endTime: "2024-01-01T06:00:00Z"
+        recurrence: "FREQ=WEEKLY;BYDAY=SU"  # Weekly Sunday maintenance
+    
+    maintenanceExclusions:
+      training-season-1:
+        startTime: "2024-03-01T00:00:00Z"
+        endTime: "2024-05-31T23:59:59Z"
+        scope: NO_UPGRADES
+      training-season-2:
+        startTime: "2024-09-01T00:00:00Z" 
+        endTime: "2024-11-30T23:59:59Z"
+        scope: NO_UPGRADES
   
-  # Network configuration
-  network: "projects/PROJECT/global/networks/ml-vpc"
-  subnetwork: "projects/PROJECT/regions/us-central1/subnetworks/ml-subnet"
-  
-  # Enable workload identity and other security features
   workloadIdentityConfig:
-    workloadPool: "PROJECT.svc.id.goog"
+    workloadPool: "PROJECT_ID.svc.id.goog"
   
-  # Cluster-level configurations
   networkPolicy:
     enabled: true
   
-  addonsConfig:
-    gkeBackupAgentConfig:
-      enabled: true
+  binaryAuthorization:
+    enabled: true
+    
+  shieldedNodes:
+    enabled: true
 ```
 
 ## Node Pool Strategy
 
-### Primary Training Node Pool (H100s)
 ```yaml
+# training-nodepool.yaml
 apiVersion: container.googleapis.com/v1
 kind: NodePool
 metadata:
   name: h100-training-pool
 spec:
-  cluster: foundation-model-training
+  cluster: ml-training-cluster
   
-  # Conservative node count - scale based on needs
-  initialNodeCount: 4
-  
-  config:
+  nodeConfig:
     machineType: a3-highgpu-8g  # 8x H100 GPUs
-    diskSizeGb: 200
-    diskType: pd-ssd
-    
-    # GPU configuration
     accelerators:
     - acceleratorCount: 8
       acceleratorType: nvidia-h100-80gb
-      gpuDriverInstallationConfig:
-        gpuDriverVersion: LATEST
     
-    # Taints to ensure only ML workloads run here
-    taints:
-    - key: nvidia.com/gpu
-      value: h100
-      effect: NO_SCHEDULE
+    # Spot instances for cost optimization on non-critical workloads
+    spot: false  # Use regular instances for critical training
     
-    labels:
-      workload-type: training
-      gpu-type: h100
-      
-    # Enable preemptible for cost savings if acceptable
-    preemptible: false  # Set true for 60-80% cost savings with risk
+    diskSizeGb: 2000
+    diskType: pd-ssd
     
     # Workload Identity
     workloadMetadataConfig:
       mode: GKE_METADATA
-  
-  # Critical: Node management settings
-  management:
-    autoUpgrade: false  # Manual control for training stability
-    autoRepair: true    # Keep for hardware issues
-  
-  # Upgrade settings for when you do upgrade
-  upgradeSettings:
-    maxSurge: 0
-    maxUnavailable: 1
-    strategy: SURGE
-  
-  # Autoscaling disabled initially - enable carefully
-  autoscaling:
-    enabled: false
-```
-
-### System Node Pool (CPU workloads)
-```yaml
-apiVersion: container.googleapis.com/v1
-kind: NodePool
-metadata:
-  name: system-pool
-spec:
-  cluster: foundation-model-training
-  initialNodeCount: 2
-  
-  config:
-    machineType: n2-standard-4
-    diskSizeGb: 100
-    diskType: pd-standard
     
-    labels:
-      workload-type: system
+    # Security
+    shieldedInstanceConfig:
+      enableSecureBoot: true
+      enableIntegrityMonitoring: true
+    
+    reservationAffinity:
+      consumeReservationType: SPECIFIC_RESERVATION
+      key: "compute.googleapis.com/reservation-name"
+      values: ["training-reservation"]
   
-  management:
-    autoUpgrade: true   # System nodes can upgrade more frequently
-    autoRepair: true
+  # Upgrade strategy
+  upgradeSettings:
+    maxSurge: 0  # No additional nodes during upgrades
+    maxUnavailable: 1  # Only one node at a time
+    strategy: BLUE_GREEN  # Complete replacement strategy
   
+  # Autoscaling
   autoscaling:
     enabled: true
-    minNodeCount: 2
+    minNodeCount: 0
     maxNodeCount: 10
+    
+  # Node management
+  management:
+    autoUpgrade: false  # Manual control over upgrades
+    autoRepair: true   # Keep repair for hardware issues
 ```
 
-## Training Job Configuration
+## Training Workload Configuration
 
 ```yaml
-apiVersion: batch/v1
-kind: Job
+# training-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: foundation-model-training
-  namespace: ml-training
 spec:
-  backoffLimit: 3
+  replicas: 1
+  selector:
+    matchLabels:
+      app: training
   template:
+    metadata:
+      labels:
+        app: training
+        workload-type: long-running
     spec:
-      # Node selection
+      # Prevent disruption
+      terminationGracePeriodSeconds: 3600  # 1 hour for graceful shutdown
+      
       nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-h100-80gb
         workload-type: training
-        gpu-type: h100
       
-      tolerations:
-      - key: nvidia.com/gpu
-        operator: Equal
-        value: h100
-        effect: NoSchedule
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: cloud.google.com/gke-spot
+                operator: NotIn
+                values: ["true"]
       
-      # Prevent eviction during cluster operations
-      priority: 1000
+      # Prevent eviction
       priorityClassName: training-priority
       
-      restartPolicy: Never
-      
       containers:
-      - name: trainer
-        image: gcr.io/PROJECT/training:latest
-        
+      - name: training
+        image: gcr.io/PROJECT_ID/training:latest
         resources:
           requests:
             nvidia.com/gpu: 8
-            cpu: 32
-            memory: 200Gi
-            ephemeral-storage: 100Gi
+            cpu: "96"
+            memory: "1000Gi"
           limits:
             nvidia.com/gpu: 8
-            cpu: 32
-            memory: 200Gi
+            cpu: "96" 
+            memory: "1000Gi"
         
-        # Graceful shutdown handling
-        lifecycle:
-          preStop:
-            exec:
-              command: ["/bin/sh", "-c", "python save_checkpoint.py"]
+        # Checkpoint management
+        volumeMounts:
+        - name: model-checkpoints
+          mountPath: /checkpoints
+        - name: shared-memory
+          mountPath: /dev/shm
         
         env:
         - name: CHECKPOINT_INTERVAL
-          value: "3600"  # Checkpoint every hour
-        
-        volumeMounts:
-        - name: model-data
-          mountPath: /data
-        - name: checkpoints
-          mountPath: /checkpoints
-        
+          value: "3600"  # Hourly checkpoints
+        - name: GRACEFUL_SHUTDOWN_TIMEOUT
+          value: "3000"  # 50 minutes to save state
+      
       volumes:
-      - name: model-data
+      - name: model-checkpoints
         persistentVolumeClaim:
-          claimName: training-data-pvc
-      - name: checkpoints
-        persistentVolumeClaim:
-          claimName: checkpoints-pvc
+          claimName: training-storage
+      - name: shared-memory
+        emptyDir:
+          medium: Memory
+          sizeLimit: 200Gi
 ```
 
-## Priority Classes
+## Priority Class and Pod Disruption Budget
+
 ```yaml
+# priority-class.yaml
 apiVersion: scheduling.k8s.io/v1
 kind: PriorityClass
 metadata:
   name: training-priority
-value: 1000
+value: 1000000
 globalDefault: false
-description: "High priority for training workloads"
+description: "High priority for long-running training jobs"
+
+---
+# pdb.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: training-pdb
+spec:
+  selector:
+    matchLabels:
+      workload-type: long-running
+  maxUnavailable: 0  # Prevent voluntary disruptions
 ```
 
-## Operational Recommendations
+## Monitoring and Alerting
 
-### 1. Maintenance Window Management
-```bash
-# Schedule maintenance exclusions around training runs
-gcloud container clusters update foundation-model-training \
-  --add-maintenance-exclusion-name="training-phase-2" \
-  --add-maintenance-exclusion-start="2024-03-01T00:00:00Z" \
-  --add-maintenance-exclusion-end="2024-03-31T23:59:59Z" \
-  --add-maintenance-exclusion-scope="NO_UPGRADES"
-```
-
-### 2. Monitoring Setup
 ```yaml
+# monitoring.yaml
 apiVersion: v1
-kind: ConfigMap
+kind: ServiceMonitor
+metadata:
+  name: training-metrics
+spec:
+  selector:
+    matchLabels:
+      app: training
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
 metadata:
   name: training-alerts
-data:
-  alerts.yml: |
-    groups:
-    - name: training.rules
-      rules:
-      - alert: TrainingJobDown
-        expr: kube_job_status_failed{job_name=~"foundation-model.*"} > 0
-        for: 5m
-        labels:
-          severity: critical
-        annotations:
-          summary: "Training job failed"
-      
-      - alert: GPUUtilizationLow
-        expr: DCGM_FI_DEV_GPU_UTIL < 80
-        for: 10m
-        labels:
-          severity: warning
-        annotations:
-          summary: "GPU utilization below 80%"
-```
-
-### 3. Backup Strategy
-```yaml
-apiVersion: gkebackup.cnrm.cloud.google.com/v1beta1
-kind: BackupPlan
-metadata:
-  name: training-backup-plan
 spec:
-  cluster: foundation-model-training
-  location: us-central1
-  
-  backupSchedule:
-    cronSchedule: "0 2 * * *"  # Daily at 2 AM
-  
-  backupConfig:
-    includeVolumeData: true
-    includeSecrets: true
+  groups:
+  - name: training.rules
+    rules:
+    - alert: TrainingJobDown
+      expr: up{job="training"} == 0
+      for: 5m
+      annotations:
+        summary: "Training job is down"
     
-    selectedApplications:
-      namespacedNames:
-      - namespace: ml-training
-        name: "*"
+    - alert: NodeMaintenance
+      expr: kube_node_spec_unschedulable > 0
+      for: 1m
+      annotations:
+        summary: "Node entering maintenance mode"
 ```
 
-## Key Operational Practices
+## Operational Procedures
 
-1. **Before Training Starts:**
-   - Set maintenance exclusions for your training duration
-   - Validate checkpoint/resume functionality
-   - Test node replacement scenarios
+### 1. Pre-Training Checklist
+```bash
+#!/bin/bash
+# pre-training-check.sh
 
-2. **During Training:**
-   - Monitor via Cloud Logging and custom metrics
-   - Keep maintenance exclusions updated
-   - Regular checkpoint validation
+# Verify no scheduled maintenance
+gcloud container clusters describe ml-training-cluster \
+  --zone=ZONE --format="value(maintenancePolicy)"
 
-3. **Security Updates:**
-   - Use a staging cluster to test updates first
-   - Plan security updates during natural break points
-   - Consider blue-green node pool strategy for urgent updates
+# Check node health
+kubectl get nodes -l workload-type=training
 
-4. **Cost Optimization:**
-   - Use committed use discounts for predictable workloads
-   - Consider spot instances for fault-tolerant training
-   - Right-size CPU node pools with autoscaling
+# Verify GPU availability
+kubectl describe nodes -l cloud.google.com/gke-accelerator=nvidia-h100-80gb
 
-This configuration prioritizes training stability while maintaining security through controlled updates and comprehensive monitoring.
+# Test checkpoint storage
+kubectl exec -it training-pod -- df -h /checkpoints
+```
+
+### 2. Maintenance Window Management
+```bash
+#!/bin/bash
+# manage-maintenance.sh
+
+# Add exclusion period
+gcloud container clusters update ml-training-cluster \
+  --zone=ZONE \
+  --add-maintenance-exclusion-name=emergency-training \
+  --add-maintenance-exclusion-start=2024-02-01T00:00:00Z \
+  --add-maintenance-exclusion-end=2024-03-15T23:59:59Z \
+  --add-maintenance-exclusion-scope=NO_UPGRADES
+```
+
+### 3. Emergency Checkpoint Script
+```python
+# emergency_checkpoint.py
+import signal
+import sys
+import torch
+import time
+
+class GracefulKiller:
+    def __init__(self):
+        self.kill_now = False
+        signal.signal(signal.SIGTERM, self._handle_signal)
+        signal.signal(signal.SIGINT, self._handle_signal)
+    
+    def _handle_signal(self, signum, frame):
+        print(f"Received signal {signum}, initiating graceful shutdown...")
+        self.kill_now = True
+    
+    def save_checkpoint(self, model, optimizer, epoch, loss):
+        checkpoint = {
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': loss,
+            'timestamp': time.time()
+        }
+        torch.save(checkpoint, f'/checkpoints/emergency_checkpoint_{epoch}.pt')
+        print(f"Emergency checkpoint saved for epoch {epoch}")
+
+# Usage in training loop
+killer = GracefulKiller()
+while not killer.kill_now:
+    # Training code here
+    if killer.kill_now:
+        killer.save_checkpoint(model, optimizer, epoch, loss)
+        sys.exit(0)
+```
+
+## Security Best Practices
+
+1. **Network Security**:
+   - Use private clusters with authorized networks
+   - Implement network policies for pod-to-pod communication
+   - Use Workload Identity for GCP service access
+
+2. **Image Security**:
+   - Scan container images with Container Analysis API
+   - Use Binary Authorization for deployment policies
+   - Regularly update base images
+
+3. **Secrets Management**:
+   - Use Google Secret Manager integration
+   - Rotate credentials regularly
+   - Implement least-privilege access
+
+## Cost Optimization
+
+1. **Reservations**: Use committed use discounts for predictable workloads
+2. **Preemptible Instances**: For fault-tolerant development workloads
+3. **Resource Right-sizing**: Monitor actual usage and adjust requests
+4. **Spot Instances**: For batch processing and experimentation
+
+This configuration provides maximum stability for long-running training jobs while maintaining security and operational flexibility. The key is disabling auto-upgrades on training nodes while keeping auto-repair enabled for hardware failures.

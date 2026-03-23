@@ -1,92 +1,115 @@
-# Urgent Fix: Admission Webhook Blocking Pod Creation After GKE Upgrade
+# GKE Upgrade Incident: Admission Webhook Blocking Pod Creation
 
-## Immediate Diagnosis
+## Immediate Fix (Emergency Bypass)
 
-Check the webhook configuration and recent failures:
+The cert-manager admission webhook is likely rejecting pods due to version compatibility issues. Here's the urgent fix:
 
+### 1. Identify the problematic webhook
 ```bash
-# Check validating webhooks (most common culprit)
-kubectl get validatingwebhookconfigurations
-kubectl describe validatingwebhookconfigurations cert-manager-webhook
-
-# Check mutating webhooks too
-kubectl get mutatingwebhookconfigurations
-kubectl describe mutatingwebhookconfigurations cert-manager-webhook
-
-# Look for recent admission failures
-kubectl get events -A --field-selector reason=FailedCreate,reason=AdmissionWebhookConfigurationFailure --sort-by='.lastTimestamp'
+kubectl get validatingwebhookconfigurations | grep cert-manager
+kubectl get mutatingwebhookconfigurations | grep cert-manager
 ```
 
-## Root Cause (likely)
-
-Cert-manager's admission webhook is probably incompatible with Kubernetes 1.32 API changes or the webhook service itself is unhealthy after the control plane upgrade.
-
-## Immediate Fix Options (in order of preference)
-
-### Option 1: Temporarily disable the webhook (fastest recovery)
-
+### 2. Emergency bypass - Add failure policy
 ```bash
-# Backup the webhook config first
+# Back up the webhook first
 kubectl get validatingwebhookconfigurations cert-manager-webhook -o yaml > cert-manager-webhook-backup.yaml
 
-# Add failure policy to ignore webhook failures
+# Patch to ignore failures temporarily
 kubectl patch validatingwebhookconfigurations cert-manager-webhook \
-  -p '{"webhooks":[{"name":"webhook.cert-manager.io","failurePolicy":"Ignore"}]}'
+  --type='merge' \
+  -p='{"webhooks":[{"name":"webhook.cert-manager.io","failurePolicy":"Ignore"}]}'
+```
 
-# Or completely remove it temporarily (more aggressive)
+This allows pod creation to proceed even if the webhook fails.
+
+### 3. Verify pods can be created
+```bash
+# Try creating a test pod
+kubectl run test-pod --image=nginx --rm -i --tty
+```
+
+## Root Cause Analysis
+
+### Check cert-manager compatibility
+```bash
+# Check cert-manager version
+kubectl get pods -n cert-manager -o wide
+kubectl describe deployment cert-manager -n cert-manager | grep Image
+
+# Check webhook pod logs
+kubectl logs -n cert-manager -l app=webhook --tail=50
+```
+
+Cert-manager versions prior to v1.13 may have compatibility issues with Kubernetes 1.32. The webhook might be:
+- Using deprecated APIs that changed behavior in 1.32
+- Having TLS certificate validation issues with the new API server
+- Experiencing timeout issues with the admission review process
+
+## Permanent Fix Options
+
+### Option 1: Upgrade cert-manager (Recommended)
+```bash
+# Check current cert-manager version
+helm list -n cert-manager
+
+# Upgrade to latest version (1.14+ supports K8s 1.32)
+helm repo update
+helm upgrade cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --version v1.14.2 \
+  --set installCRDs=true
+```
+
+### Option 2: Downgrade webhook to warn-only temporarily
+```bash
+kubectl patch validatingwebhookconfigurations cert-manager-webhook \
+  --type='merge' \
+  -p='{"webhooks":[{"name":"webhook.cert-manager.io","failurePolicy":"Ignore","admissionReviewVersions":["v1","v1beta1"]}]}'
+```
+
+### Option 3: Temporarily disable the webhook entirely
+```bash
+# Only if other options fail - this removes certificate validation
 kubectl delete validatingwebhookconfigurations cert-manager-webhook
 ```
 
-### Option 2: Check if cert-manager pods are healthy
+## Validation Steps
+
+After applying the fix:
 
 ```bash
-# Check cert-manager components
-kubectl get pods -n cert-manager
-kubectl logs -n cert-manager -l app=webhook --tail=50
+# Confirm pods can be created
+kubectl get pods -A | grep Pending | wc -l
+# Should return 0
 
-# If webhook pod is crashlooping, restart it
-kubectl rollout restart deployment/cert-manager-webhook -n cert-manager
-```
-
-### Option 3: Update cert-manager to 1.32-compatible version
-
-```bash
-# Check current cert-manager version
-kubectl get deployment cert-manager -n cert-manager -o yaml | grep image:
-
-# Upgrade to latest (check cert-manager docs for 1.32 compatibility)
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cert-manager.yaml
-```
-
-## Validation
-
-```bash
-# Test pod creation
-kubectl run test-pod --image=nginx --rm -it --restart=Never -- echo "Pod creation works"
-
-# Check webhook is responding (if you kept it enabled)
+# Check webhook is responding (after upgrade)
 kubectl get validatingwebhookconfigurations cert-manager-webhook -o yaml | grep failurePolicy
 
-# Monitor for new admission errors
-kubectl get events -A --field-selector reason=FailedCreate --watch
+# Verify cert-manager functionality
+kubectl get certificates -A
+kubectl describe certificate YOUR_CERT_NAME -n NAMESPACE
 ```
-
-## Recovery Steps
-
-1. **Immediate relief:** Patch the webhook with `failurePolicy: Ignore` or delete it temporarily
-2. **Fix the root cause:** Upgrade cert-manager to a version compatible with K8s 1.32
-3. **Restore protection:** Re-enable the webhook once cert-manager is healthy
 
 ## Prevention for Future Upgrades
 
 Add this to your pre-upgrade checklist:
 
-```
-- [ ] Third-party operators (cert-manager, Istio, etc.) tested against target K8s version
-- [ ] Admission webhooks have failurePolicy: Ignore for non-critical validation
-- [ ] Webhook health monitoring in place
+```markdown
+- [ ] Third-party operator compatibility verified against target K8s version
+- [ ] Cert-manager version supports target Kubernetes version (check compatibility matrix)
+- [ ] Admission webhook failure policies set to "Ignore" for non-critical webhooks during upgrades
+- [ ] Staging cluster tested with same operator versions
 ```
 
-**Time estimate:** Option 1 should restore pod creation within 2-3 minutes. Full cert-manager upgrade may take 10-15 minutes.
+## Compatibility Reference
 
-The key insight: admission webhooks are a common failure point during K8s upgrades because they intercept ALL pod creation. When in doubt, disable them first to restore service, then fix the underlying issue.
+| cert-manager version | Kubernetes support |
+|---------------------|-------------------|
+| v1.14+ | 1.28-1.32 |
+| v1.13 | 1.28-1.31 |
+| v1.12 | 1.27-1.30 |
+
+**Next steps:** Once pods are creating successfully, plan to upgrade cert-manager to v1.14+ during your next maintenance window to ensure full K8s 1.32 compatibility.
+
+The emergency bypass should restore service immediately. The webhook failure policy change allows workloads to deploy while you plan the proper cert-manager upgrade.

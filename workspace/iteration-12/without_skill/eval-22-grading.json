@@ -3,47 +3,47 @@
     {
       "expectation": "Explains this is related to the interaction between maxSurge, drain order, and pod scheduling",
       "passed": true,
-      "reason": "Response explains the interaction between upgrade settings (maxSurge), scheduling behavior, and the drain process, specifically mentioning how pods land on nodes scheduled for drain"
+      "reason": "Response explains the interaction between upgrade velocity, scheduler behavior, and node draining timing, specifically mentioning maxSurge configuration and its impact"
     },
     {
       "expectation": "Notes that GKE cordons nodes before draining them \u2014 pods should prefer scheduling onto uncordoned (upgraded) nodes",
-      "passed": false,
-      "reason": "Response doesn't specifically mention GKE's cordoning behavior or explain that pods should prefer uncordoned nodes"
+      "passed": true,
+      "reason": "Response mentions cordoning nodes and provides node affinity examples to avoid scheduling on cordoned nodes with 'node.kubernetes.io/unschedulable' key"
     },
     {
       "expectation": "Identifies possible cause: too many nodes being drained simultaneously (high maxSurge) before enough upgraded nodes exist",
       "passed": true,
-      "reason": "Response identifies the core issue as scheduler not knowing which nodes are safe vs doomed, and discusses controlling batch size and timing as solutions"
+      "reason": "Response identifies 'Aggressive upgrade timing: Multiple nodes being cordoned/drained simultaneously' as a key cause and addresses upgrade velocity control"
     },
     {
       "expectation": "Recommends reducing maxSurge to 1 to ensure upgraded nodes are available before draining the next batch",
       "passed": true,
-      "reason": "Response explicitly shows setting maxSurge: 1 and maxUnavailable: 0 in the YAML examples with explanation"
+      "reason": "Response provides specific GKE command setting '--max-surge=1' and explains 'This ensures only 1 new node at a time'"
     },
     {
       "expectation": "Suggests using pod anti-affinity or node affinity to prefer already-upgraded nodes",
       "passed": true,
-      "reason": "Response provides detailed node affinity examples to prefer upgraded nodes and avoid nodes being upgraded"
+      "reason": "Response provides detailed YAML examples for both node affinity to prefer upgraded nodes and anti-affinity to avoid cordoned nodes"
     },
     {
       "expectation": "Mentions checking if any taints or tolerations are causing pods to land on the wrong nodes",
-      "passed": true,
-      "reason": "Response discusses using node taints during upgrades and provides commands for tainting/untainting nodes"
+      "passed": false,
+      "reason": "Response does not mention taints or tolerations as a potential cause or troubleshooting step"
     },
     {
       "expectation": "Provides kubectl commands to check node cordoned status and pod scheduling events",
-      "passed": false,
-      "reason": "Response provides monitoring commands for pod distribution and node readiness but doesn't specifically show commands to check cordoned status or scheduling events"
+      "passed": true,
+      "reason": "Response provides multiple kubectl commands including checking node conditions, watching pod movements, and monitoring pending pods"
     },
     {
       "expectation": "Recommends setting maxUnavailable=0 to ensure old nodes aren't removed until pods are safely rescheduled",
       "passed": true,
-      "reason": "Response explicitly shows maxUnavailable: 0 in the YAML example with comment explaining not to remove old nodes until new ones are ready"
+      "reason": "Response shows GKE command with '--max-unavailable=0' and explains 'zero unavailable'"
     },
     {
       "expectation": "May mention GKE's autoscaled blue-green upgrade strategy as an alternative that avoids this issue by cordoning the entire old pool before migrating workloads to new nodes",
-      "passed": true,
-      "reason": "Response mentions blue-green upgrade strategies and provides a blue-green node pool strategy example, though not specifically GKE's autoscaled version"
+      "passed": false,
+      "reason": "Response does not mention GKE's blue-green upgrade strategy or cordoning entire old pools as an alternative approach"
     }
   ]
 }

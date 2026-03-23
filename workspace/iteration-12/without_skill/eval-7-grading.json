@@ -3,47 +3,57 @@
     {
       "expectation": "Proposes a phased rollout: dev first, then staging, then prod",
       "passed": true,
-      "reason": "Response clearly outlines Phase 1 (Development), Phase 2 (Staging), and Phase 3 (Production) in sequential order"
+      "reason": "Response clearly outlines Phase 1 (dev), Phase 2 (staging), Phase 3 (prod) with explicit ordering"
     },
     {
       "expectation": "Includes soak time between environment phases (e.g., 24-48 hours for dev, 1 week for staging before prod)",
       "passed": true,
-      "reason": "Specifies 48+ hours soak time for staging before prod, and mentions allowing 24-48 hours between prod cluster upgrades"
+      "reason": "Specifies 24-48 hours monitoring for dev, 24 hours between staging clusters, and 48-72 hours for prod clusters"
     },
     {
       "expectation": "Defines go/no-go criteria between phases (error rates, latency, pod health)",
       "passed": true,
-      "reason": "Includes prerequisites between phases like 'Dev environment successfully validated', 'Application compatibility confirmed', 'Staging environment running stable for 48+ hours', and validation checklists with pod health checks"
+      "reason": "Includes validation steps checking workload health, smoke tests, application functionality, and specific kubectl commands for pod/deployment status"
     },
     {
-      "expectation": "Recommends sequential control plane upgrades (1.30\u21921.31\u21921.32) with skip-level node pool upgrades where possible",
-      "passed": false,
-      "reason": "Response assumes direct upgrade from 1.32 to 1.33 and does not address sequential control plane upgrades through intermediate versions"
+      "expectation": "Recommends sequential control plane upgrades (1.32\u21921.33) with skip-level node pool upgrades where possible",
+      "passed": true,
+      "reason": "Shows both full cluster upgrade and separate control plane/node pool upgrade options with proper sequencing"
     },
     {
       "expectation": "Suggests not upgrading all prod clusters simultaneously \u2014 do one or two first as canary",
       "passed": true,
-      "reason": "Production strategy explicitly states 'Upgrade clusters one at a time' and timeline shows upgrading 2 prod clusters first week, then remaining 2 the second week"
+      "reason": "Production rollout explicitly shows one cluster at a time approach: prod-cluster-1 first, wait, then prod-cluster-2, etc."
     },
     {
       "expectation": "Includes rollback triggers and criteria for halting the rollout",
       "passed": true,
-      "reason": "Provides a rollback strategy section with specific commands and mentions preparing rollback plans, though could be more detailed on specific trigger criteria"
+      "reason": "Provides rollback plan section with downgrade commands and mentions emergency procedures, though rollback triggers could be more specific"
     },
     {
       "expectation": "Provides a timeline or schedule estimate for the full rollout",
       "passed": true,
-      "reason": "Detailed timeline provided: Week 1 for dev (2-3 days), Week 2 for staging (3-4 days), Week 3-4 for production (1-2 weeks)"
+      "reason": "Gives specific timeline: Week 1 for dev, Week 2 for staging, Week 3-4 for prod"
     },
     {
       "expectation": "Mentions maintenance window coordination across clusters",
       "passed": true,
-      "reason": "Explicitly mentions 'Maintenance windows scheduled' in prerequisites and 'during maintenance windows' in production rollout strategy"
+      "reason": "States 'Schedule prod upgrades during low-traffic periods' and mentions maintenance windows in key considerations"
     },
     {
       "expectation": "If rollout sequencing is mentioned, notes that all clusters must be on the same channel for it to work",
       "passed": false,
-      "reason": "While the response mentions all clusters are on Regular release channel, it does not explicitly state that all clusters must be on the same channel for the rollout sequencing to work"
+      "reason": "Response mentions rollout strategy but doesn't explain that all clusters need to be on the same channel for sequencing to work properly"
+    },
+    {
+      "expectation": "When presenting maintenance windows as an alternative, explicitly notes that windows do NOT guarantee ordering \u2014 upgrades fire based on version availability per region, not environment order. A prod window may fire before dev.",
+      "passed": false,
+      "reason": "Maintenance windows are mentioned but without the critical caveat about lack of ordering guarantees or version availability timing"
+    },
+    {
+      "expectation": "Mentions using two different channels with minor version controls (e.g., dev=Regular, prod=Stable with 'no minor' exclusion) as a simpler alternative to rollout sequencing",
+      "passed": false,
+      "reason": "Does not mention using different release channels as an alternative strategy for controlling upgrade timing"
     }
   ]
 }

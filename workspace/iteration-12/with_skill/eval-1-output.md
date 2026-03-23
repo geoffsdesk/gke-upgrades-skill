@@ -1,202 +1,236 @@
-I notice you mentioned upgrading to 1.32, but you're already running 1.32. I'll assume you meant upgrading to **1.33** before end of quarter and proceed with that plan.
+# GKE Upgrade Plan: 1.32 → 1.33
 
-# GKE Upgrade Plan: Standard Cluster 1.32 → 1.33
-
-## Cluster Overview
-- **Cluster**: Standard GKE, Regular release channel
-- **Current version**: 1.32
-- **Target version**: 1.33
+## Overview
+- **Cluster**: Standard GKE on Regular release channel
 - **Location**: us-central1-a
-- **Node pools**: 3 (general-purpose, high-memory/Postgres, GPU/ML inference)
+- **Current version**: 1.32.x
+- **Target version**: 1.33.x
+- **Timeline**: Before end of quarter
+- **Node pools**: General-purpose, high-memory (Postgres), GPU (ML inference)
 
-## Version Compatibility Assessment
+## Version Compatibility & Availability
 
-**✅ Version availability**: Check that 1.33 is available in Regular channel:
+### Pre-flight checks
 ```bash
-gcloud container get-server-config --zone us-central1-a --format="yaml(channels.regular)"
-```
+# Verify 1.33 availability in Regular channel
+gcloud container get-server-config --zone us-central1-a \
+  --format="yaml(channels)" | grep -A 10 "regular"
 
-**⚠️ Critical checks needed**:
-- **Postgres operator compatibility**: Verify your Postgres operator supports GKE 1.33. Check operator documentation and test in staging first.
-- **GPU driver compatibility**: GKE 1.33 may bundle a different GPU driver version, potentially changing CUDA versions. Test ML inference workloads in staging.
-- **Deprecated APIs**: Run this check to catch any deprecated API usage:
-```bash
-kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated
-```
-
-## Upgrade Strategy
-
-### Control Plane First (Required)
-The control plane must be upgraded before any node pools. This takes ~10-15 minutes with minimal impact.
-
-### Node Pool Upgrade Strategy by Type
-
-**1. General-purpose pool (upgrade first)**
-- **Strategy**: Surge upgrade with aggressive parallelism
-- **Settings**: `maxSurge=3, maxUnavailable=0`
-- **Rationale**: Stateless workloads can handle rapid replacement
-
-**2. High-memory/Postgres pool (upgrade second)**
-- **Strategy**: Conservative surge upgrade
-- **Settings**: `maxSurge=1, maxUnavailable=0`
-- **Rationale**: Let PDBs protect database workloads, minimize disruption
-
-**3. GPU/ML inference pool (upgrade last)**
-- **Strategy**: Likely `maxUnavailable=1, maxSurge=0` (assumes no surge GPU capacity)
-- **Rationale**: GPU VMs don't support live migration, and surge capacity for A100/H100 is typically unavailable
-- **⚠️ Critical**: Confirm your GPU reservation/quota situation. If you DO have surge capacity, use `maxSurge=1, maxUnavailable=0` instead.
-
-### Skip-Level Consideration
-Since you're going 1.32→1.33 (single minor version), this is a straightforward upgrade. No skip-level optimization needed.
-
-## Pre-Upgrade Requirements
-
-### Workload Readiness Checklist
-```markdown
-- [ ] PDBs configured for Postgres workloads (not overly restrictive)
-- [ ] No bare pods running (`kubectl get pods -A -o json | jq -r '.items[] | select(.metadata.ownerReferences | length == 0) | "\(.metadata.namespace)/\(.metadata.name)"'`)
-- [ ] Adequate terminationGracePeriodSeconds for ML inference services
-- [ ] Postgres operator backup completed and PV reclaim policies verified
-- [ ] ML inference health checks configured to handle pod restarts
-- [ ] GPU driver compatibility tested with target GKE version in staging
-```
-
-### Infrastructure Preparation
-```bash
-# Configure maintenance window (example: Saturdays 2-6 AM)
-gcloud container clusters update CLUSTER_NAME \
-  --zone us-central1-a \
-  --maintenance-window-start "2024-01-06T02:00:00Z" \
-  --maintenance-window-end "2024-01-06T06:00:00Z" \
-  --maintenance-window-recurrence "FREQ=WEEKLY;BYDAY=SA"
-
-# If you need to control timing more precisely, add a maintenance exclusion
-# Example: Block auto-upgrades until you're ready to do manual upgrade
-gcloud container clusters update CLUSTER_NAME \
-  --zone us-central1-a \
-  --add-maintenance-exclusion-name "q1-planning" \
-  --add-maintenance-exclusion-start-time "2024-12-15T00:00:00Z" \
-  --add-maintenance-exclusion-end-time "2024-03-31T23:59:59Z" \
-  --add-maintenance-exclusion-scope no_minor_or_node_upgrades
-```
-
-## Upgrade Execution Plan
-
-### Phase 1: Control Plane Upgrade
-```bash
-# Verify current state
+# Check current cluster state
 gcloud container clusters describe CLUSTER_NAME \
   --zone us-central1-a \
   --format="table(name, currentMasterVersion, nodePools[].name, nodePools[].version)"
 
-# Upgrade control plane
+# Check for deprecated API usage (critical - blocks auto-upgrades)
+kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated
+
+# Also check GKE deprecation insights
+gcloud recommender insights list \
+    --insight-type=google.container.DiagnosisInsight \
+    --location=us-central1-a \
+    --project=PROJECT_ID
+```
+
+### Breaking changes review
+Review [GKE 1.33 release notes](https://cloud.google.com/kubernetes-engine/docs/release-notes) for:
+- Kubernetes 1.33 changes from upstream
+- GKE-specific modifications
+- GPU driver version changes (affects your ML inference pool)
+
+## Upgrade Strategy
+
+### Control plane first (required)
+The control plane must be upgraded before any node pools. This is non-negotiable in GKE's upgrade order.
+
+### Node pool upgrade approach
+Given your workload types, I recommend **skip-level upgrades within supported version skew** to minimize total upgrade time:
+
+1. **General-purpose pool**: Surge upgrade with moderate parallelism
+2. **High-memory pool (Postgres)**: Conservative surge to protect database workloads  
+3. **GPU pool**: Drain-first approach (assumes limited GPU surge capacity)
+
+## Node Pool Upgrade Configuration
+
+### General-purpose pool
+```bash
+gcloud container node-pools update general-pool \
+  --cluster CLUSTER_NAME \
+  --zone us-central1-a \
+  --max-surge-upgrade 2 \
+  --max-unavailable-upgrade 0
+```
+**Rationale**: 2 surge nodes provide reasonable upgrade speed while limiting quota impact. Zero unavailable ensures no capacity dip.
+
+### High-memory pool (Postgres operator)
+```bash
+gcloud container node-pools update postgres-pool \
+  --cluster CLUSTER_NAME \
+  --zone us-central1-a \
+  --max-surge-upgrade 1 \
+  --max-unavailable-upgrade 0
+```
+**Rationale**: Conservative single-node surge. Let PodDisruptionBudgets protect Postgres workloads. High-memory VMs are expensive, so minimize surge overhead.
+
+### GPU pool (ML inference)
+```bash
+gcloud container node-pools update gpu-pool \
+  --cluster CLUSTER_NAME \
+  --zone us-central1-a \
+  --max-surge-upgrade 0 \
+  --max-unavailable-upgrade 1
+```
+**Rationale**: GPU VMs typically have fixed reservations with no surge capacity. `maxUnavailable=1` is the primary lever - drains first, no extra GPUs needed, but causes temporary capacity dip. Increase to 2 if you can tolerate more inference capacity reduction during upgrade.
+
+## Pre-Upgrade Checklist
+
+```markdown
+Pre-Upgrade Checklist
+- [ ] Cluster: CLUSTER_NAME | Mode: Standard | Channel: Regular
+- [ ] Current version: 1.32.x | Target version: 1.33.x
+
+Compatibility
+- [ ] Target version 1.33 available in Regular channel
+- [ ] No deprecated API usage (check GKE deprecation insights dashboard)
+- [ ] GKE release notes reviewed for 1.32→1.33 breaking changes
+- [ ] Node version skew within 2 minor versions of control plane ✓
+- [ ] Postgres operator compatibility with K8s 1.33 verified
+- [ ] ML inference framework compatibility with new GPU drivers verified
+
+Workload Readiness
+- [ ] PDBs configured for Postgres workloads (verify minAvailable settings)
+- [ ] No bare pods — all managed by controllers
+- [ ] terminationGracePeriodSeconds adequate for graceful shutdown
+- [ ] Postgres PV backups completed, reclaim policies verified
+- [ ] Resource requests/limits set on all containers
+- [ ] GPU driver compatibility confirmed with target node image
+- [ ] ML inference service health checks configured
+
+Infrastructure
+- [ ] Node pool upgrade strategies configured (see commands above)
+- [ ] Sufficient compute quota for surge nodes (general + postgres pools)
+- [ ] GPU quota verified (N/A for drain-first approach)
+- [ ] Maintenance window configured for off-peak hours
+
+Ops Readiness
+- [ ] Baseline metrics captured (inference latency, Postgres response times)
+- [ ] Upgrade window communicated to stakeholders
+- [ ] On-call team available during upgrade window
+- [ ] Postgres backup verified and tested
+```
+
+## Upgrade Execution Runbook
+
+### Phase 1: Control plane upgrade
+```bash
 gcloud container clusters upgrade CLUSTER_NAME \
   --zone us-central1-a \
   --master \
-  --cluster-version 1.33
+  --cluster-version 1.33.x
 
-# Wait and verify (~10-15 minutes)
-gcloud container clusters describe CLUSTER_NAME \
-  --zone us-central1-a \
-  --format="value(currentMasterVersion)"
+# Monitor (takes ~10-15 minutes)
+watch 'gcloud container clusters describe CLUSTER_NAME --zone us-central1-a --format="value(currentMasterVersion)"'
+
+# Verify system pods healthy
+kubectl get pods -n kube-system
 ```
 
-### Phase 2: General-Purpose Node Pool
-```bash
-# Configure surge settings
-gcloud container node-pools update GENERAL_POOL_NAME \
-  --cluster CLUSTER_NAME \
-  --zone us-central1-a \
-  --max-surge-upgrade 3 \
-  --max-unavailable-upgrade 0
+### Phase 2: Node pool upgrades (sequential)
 
-# Upgrade
-gcloud container node-pools upgrade GENERAL_POOL_NAME \
+**Step 1: General-purpose pool**
+```bash
+gcloud container node-pools upgrade general-pool \
   --cluster CLUSTER_NAME \
   --zone us-central1-a \
-  --cluster-version 1.33
+  --cluster-version 1.33.x
 
 # Monitor progress
 watch 'kubectl get nodes -o wide -L cloud.google.com/gke-nodepool'
 ```
 
-### Phase 3: High-Memory/Postgres Node Pool
+**Step 2: High-memory pool (Postgres)**
 ```bash
-# Configure conservative surge settings
-gcloud container node-pools update POSTGRES_POOL_NAME \
-  --cluster CLUSTER_NAME \
-  --zone us-central1-a \
-  --max-surge-upgrade 1 \
-  --max-unavailable-upgrade 0
+# Verify Postgres pods healthy before starting
+kubectl get pods -A | grep postgres
 
-# Upgrade
-gcloud container node-pools upgrade POSTGRES_POOL_NAME \
+gcloud container node-pools upgrade postgres-pool \
   --cluster CLUSTER_NAME \
   --zone us-central1-a \
-  --cluster-version 1.33
+  --cluster-version 1.33.x
+
+# Monitor Postgres pod stability during upgrade
+kubectl get pods -A -w | grep postgres
 ```
 
-### Phase 4: GPU/ML Inference Node Pool
+**Step 3: GPU pool (ML inference)**
 ```bash
-# Configure for no-surge (assumes limited GPU capacity)
-gcloud container node-pools update GPU_POOL_NAME \
+# Note: This will temporarily reduce inference capacity
+gcloud container node-pools upgrade gpu-pool \
   --cluster CLUSTER_NAME \
   --zone us-central1-a \
-  --max-surge-upgrade 0 \
-  --max-unavailable-upgrade 1
+  --cluster-version 1.33.x
 
-# Upgrade
-gcloud container node-pools upgrade GPU_POOL_NAME \
-  --cluster CLUSTER_NAME \
-  --zone us-central1-a \
-  --cluster-version 1.33
+# Monitor GPU driver installation
+kubectl get nodes -l cloud.google.com/gke-accelerator -o wide
 ```
-
-## Risk Mitigation
-
-### Postgres-Specific Risks
-- **Operator compatibility**: Test in staging first - some Postgres operators have specific GKE version requirements
-- **PV attachment**: High-memory workloads often use large persistent volumes that may have zone-locking considerations
-- **Connection pooling**: Brief connection disruption during pod restart - ensure connection pooling is configured
-
-### ML Inference-Specific Risks
-- **GPU driver changes**: GKE automatically updates GPU drivers - may affect CUDA version and model compatibility
-- **Model loading time**: GPU pods take longer to start due to driver initialization and model loading
-- **No live migration**: Every GPU node replacement requires pod restart - no graceful migration possible
-
-### Rollback Plan
-- **Control plane**: Patch downgrades possible, minor version downgrades require GKE support
-- **Node pools**: Create new pools at 1.32, migrate workloads, delete upgraded pools
-- **Emergency**: Apply "no upgrades" maintenance exclusion to stop auto-upgrades if issues arise
-
-## Timeline Estimation
-- **Control plane**: 15 minutes
-- **General-purpose pool**: 30-45 minutes (depends on pool size)  
-- **Postgres pool**: 45-60 minutes (conservative surge settings)
-- **GPU pool**: 60-90 minutes (no surge, longer startup times)
-- **Total window**: 3-4 hours
 
 ## Validation Steps
+
+After each phase:
 ```bash
-# Post-upgrade health check
+# Node health
 kubectl get nodes
+
+# Workload health
 kubectl get pods -A | grep -v Running | grep -v Completed
-kubectl get pdb -A -o wide
 
-# Postgres-specific validation
-kubectl get pods -n postgres-namespace
-kubectl logs -n postgres-namespace -l app=postgres-operator
+# Specific validation per pool type:
 
-# GPU-specific validation  
-kubectl get pods -n ml-namespace
-nvidia-smi # (if you have access to GPU nodes)
+# Postgres validation
+kubectl get statefulsets -A | grep postgres
+kubectl exec -it POSTGRES_POD -- psql -c "SELECT version();"
+
+# GPU validation
+kubectl get nodes -l cloud.google.com/gke-accelerator
+kubectl describe node GPU_NODE_NAME | grep -A 5 "nvidia.com/gpu"
+
+# Inference service validation
+curl -X POST YOUR_INFERENCE_ENDPOINT/health
 ```
 
-## Next Steps
-1. **Verify 1.33 availability** in Regular channel for your region
-2. **Test in staging** - especially Postgres operator and ML inference workloads
-3. **Schedule maintenance window** aligned with low-traffic periods
-4. **Coordinate with teams** - notify Postgres and ML teams of planned maintenance
-5. **Execute upgrade** following this phased approach
+## Maintenance Window Recommendation
 
-Would you like me to adjust any part of this plan based on your specific Postgres operator or ML inference setup?
+Configure a maintenance window to control auto-upgrade timing:
+```bash
+gcloud container clusters update CLUSTER_NAME \
+  --zone us-central1-a \
+  --maintenance-window-start 2024-01-13T02:00:00Z \
+  --maintenance-window-end 2024-01-13T06:00:00Z \
+  --maintenance-window-recurrence "FREQ=WEEKLY;BYDAY=SU"
+```
+
+## Troubleshooting Preparedness
+
+**Most likely issues for your workload types:**
+
+1. **Postgres PDBs blocking drain**: Check `kubectl get pdb -A` and temporarily relax if needed
+2. **GPU driver compatibility**: New 1.33 node image may change CUDA version - test in staging first
+3. **High-memory node surge capacity**: If surge fails due to quota, switch to `maxUnavailable` mode temporarily
+4. **Long-running inference requests**: Consider shorter graceful termination periods or request queuing
+
+## Timeline Estimate
+
+- Control plane: ~15 minutes
+- General pool: ~30-45 minutes (depends on size)
+- Postgres pool: ~45-60 minutes (conservative pace)
+- GPU pool: ~60-90 minutes (drain-first is slower, driver installation takes time)
+
+**Total window**: Plan for 3-4 hours including validation.
+
+## Rollback Plan
+
+If issues arise:
+- Control plane downgrades require GKE support involvement
+- Node pools can be rolled back by creating new pools at 1.32 and migrating workloads
+- Keep previous node pool configurations documented for quick recreation
+
+Would you like me to adjust any part of this plan based on your specific cluster size, workload patterns, or operational constraints?

@@ -1,66 +1,50 @@
-You have several options to work around the quota constraint for your node pool upgrade:
+You have a few options to work around the quota constraint, depending on your risk tolerance:
 
-## Immediate Solutions
+## Option 1: Reduce Surge Settings (Safest)
+Temporarily reduce the surge upgrade settings to use fewer additional nodes:
 
-### 1. **Zero-downtime manual upgrade**
-```bash
-# Disable surge upgrade temporarily
-kubectl patch nodepool <nodepool-name> --type merge -p '{"spec":{"upgradeConfig":{"maxSurge":0,"maxUnavailable":1}}}'
-
-# Or use kubectl cordon/drain approach
-kubectl cordon <node-name>
-kubectl drain <node-name> --ignore-daemonsets --delete-emptydir-data --force
-# Delete the node, let cluster autoscaler or node pool create replacement
-```
-
-### 2. **Reduce surge settings**
-```bash
-# Set minimal surge to reduce resource requirements
-kubectl patch nodepool <nodepool-name> --type merge -p '{"spec":{"upgradeConfig":{"maxSurge":1,"maxUnavailable":0}}}'
-```
-
-### 3. **Temporary scale-down approach**
-```bash
-# Reduce node count temporarily
-kubectl scale nodepool <nodepool-name> --replicas=<reduced-number>
-# Proceed with upgrade (more room for surge nodes)
-# Scale back up after upgrade
-```
-
-## Alternative Strategies
-
-### 4. **Use different zones/regions**
-- If your cluster spans multiple zones, temporarily shift workloads
-- Create temporary node pool in less constrained zone
-
-### 5. **Preemptible/Spot instances**
 ```yaml
-# Often have separate quotas
-nodePool:
-  config:
-    preemptible: true  # GKE
-    # or spot: true    # EKS
+# For GKE
+maxSurge: 1
+maxUnavailable: 0
+
+# For EKS (in launch template/ASG)
+# Set desired capacity closer to min capacity
 ```
 
-### 6. **Different machine types**
-- Switch to smaller instance types temporarily
-- Use different instance families that might have quota available
+This creates fewer surge nodes at once, potentially staying within quota limits.
 
-## Cloud-specific quick fixes
+## Option 2: Temporary Scale Down
+If you can tolerate some capacity reduction:
 
-**GKE:**
+1. **Scale down non-critical workloads** temporarily
+2. **Reduce node pool size** before upgrade
+3. **Proceed with upgrade** using the freed quota
+4. **Scale back up** after upgrade completes
+
 ```bash
-gcloud container node-pools update <pool-name> \
-  --cluster=<cluster-name> \
-  --max-surge=0 --max-unavailable=1
+# Example for reducing node count
+kubectl scale deployment non-critical-app --replicas=0
 ```
 
-**EKS:**
-```bash
-aws eks update-nodegroup-config \
-  --cluster-name <cluster-name> \
-  --nodegroup-name <nodegroup-name> \
-  --scaling-config maxSize=<current-size>
-```
+## Option 3: Rolling Regional Approach
+If using multiple zones/regions:
+- **Drain and remove nodes** from one zone
+- **Use freed quota** for surge nodes in that zone
+- **Complete upgrade zone by zone**
 
-The safest approach is usually #1 or #2 - you'll have brief unavailability windows but can complete the upgrade without additional quota.
+## Option 4: Different Instance Types
+- **Switch to smaller instance types** for the upgrade
+- **Use the quota headroom** created by smaller instances
+- **Scale back to preferred size** post-upgrade
+
+## Option 5: Manual Node Replacement (Higher Risk)
+1. **Cordon nodes** one at a time
+2. **Drain workloads**
+3. **Terminate old node**
+4. **Let new node launch** in freed capacity
+5. **Repeat** for each node
+
+**⚠️ Risk**: Temporary capacity reduction during the process.
+
+Which option aligns best with your availability requirements?

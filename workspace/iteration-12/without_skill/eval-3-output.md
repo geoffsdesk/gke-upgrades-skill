@@ -1,133 +1,115 @@
-This is a common GKE upgrade issue. Let me help you diagnose and fix the stuck node pool upgrade.
+This is a common GKE upgrade issue. Here's a systematic approach to diagnose and resolve it:
 
-## Immediate Diagnostics
-
-First, check what's blocking the pod drainage:
+## 1. Check Node Pool Upgrade Status
 
 ```bash
-# Check node status and conditions
+# Get detailed upgrade status
 kubectl get nodes -o wide
+gcloud container operations list --filter="operationType=UPGRADE_NODES"
 
-# Look for pods that can't be evicted
-kubectl get pods --all-namespaces --field-selector=status.phase!=Running
+# Check specific node pool status
+gcloud container node-pools describe [NODE_POOL_NAME] \
+  --cluster=[CLUSTER_NAME] --zone=us-east1
+```
+
+## 2. Identify Pod Drainage Issues
+
+The most common cause is pods that can't be evicted:
+
+```bash
+# Check for pods with issues on nodes being upgraded
+kubectl get pods --all-namespaces --field-selector=status.phase=Pending
+kubectl get pods --all-namespaces -o wide | grep -E "(Pending|Terminating)"
 
 # Check for PodDisruptionBudgets that might be blocking drainage
 kubectl get pdb --all-namespaces
-
-# Check events for eviction errors
-kubectl get events --all-namespaces --sort-by='.lastTimestamp' | grep -i evict
+kubectl describe pdb --all-namespaces
 ```
 
-## Common Causes & Fixes
+## 3. Common Blockers to Check
 
-### 1. **PodDisruptionBudgets (PDBs) Too Restrictive**
+**PodDisruptionBudgets (PDBs):**
 ```bash
-# Find problematic PDBs
-kubectl get pdb --all-namespaces -o wide
-
-# Temporarily relax overly restrictive PDBs
-kubectl patch pdb <pdb-name> -n <namespace> --type='merge' -p='{"spec":{"minAvailable":1}}'
+# Look for overly restrictive PDBs
+kubectl get pdb --all-namespaces -o yaml | grep -A5 -B5 "minAvailable\|maxUnavailable"
 ```
 
-### 2. **Pods with Local Storage or No Controller**
+**DaemonSets without proper tolerations:**
 ```bash
-# Find pods without controllers (won't be recreated)
-kubectl get pods --all-namespaces -o json | jq -r '.items[] | select(.metadata.ownerReferences == null) | "\(.metadata.namespace)/\(.metadata.name)"'
-
-# Check for pods using local storage
-kubectl get pods --all-namespaces -o json | jq -r '.items[] | select(.spec.volumes[]?.hostPath or .spec.volumes[]?.emptyDir) | "\(.metadata.namespace)/\(.metadata.name)"'
+kubectl get daemonsets --all-namespaces
+kubectl describe daemonset [DS_NAME] -n [NAMESPACE]
 ```
 
-### 3. **Force Upgrade if Safe**
-If pods are stuck and it's safe to proceed:
-
+**Pods without resource requests (can't be scheduled):**
 ```bash
-# Get your node pool name
-gcloud container node-pools list --cluster=<cluster-name> --zone=us-east1
-
-# Cancel and restart the upgrade with force flag
-gcloud container clusters upgrade <cluster-name> \
-    --node-pool=<node-pool-name> \
-    --cluster-version=1.32 \
-    --zone=us-east1 \
-    --force
+kubectl get pods --all-namespaces -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.containers[*].resources}{"\n"}{end}' | grep -E "map\[\]|^.*\t$"
 ```
 
-### 4. **Check Resource Constraints**
+## 4. Immediate Fixes
+
+**For stuck pods:**
 ```bash
-# Verify remaining nodes can handle the workload
-kubectl describe nodes | grep -A 5 "Allocated resources"
+# Force delete stuck terminating pods (use carefully)
+kubectl delete pod [POD_NAME] -n [NAMESPACE] --grace-period=0 --force
 
-# Check if new pods can be scheduled
-kubectl get pods --all-namespaces | grep Pending
+# Temporarily adjust PDBs
+kubectl patch pdb [PDB_NAME] -n [NAMESPACE] --type='merge' -p='{"spec":{"minAvailable":0}}'
 ```
 
-## Step-by-Step Resolution
-
-1. **Identify blocking pods:**
+**For resource constraints:**
 ```bash
-kubectl get pods --all-namespaces --field-selector=status.phase=Running -o wide | grep <stuck-node-name>
+# Check node resources
+kubectl describe nodes | grep -A5 -B5 "Allocated resources"
+kubectl top nodes
 ```
 
-2. **For each blocking pod, check:**
-   - Does it have a PDB preventing eviction?
-   - Is it managed by a controller (Deployment, StatefulSet, etc.)?
-   - Does it use local storage that would be lost?
+## 5. Advanced Troubleshooting
 
-3. **Safe resolution options:**
+**Check cluster autoscaler logs:**
 ```bash
-# Option A: Manually delete blocking pods (if recreatable)
-kubectl delete pod <pod-name> -n <namespace> --grace-period=30
-
-# Option B: Temporarily scale down problematic deployments
-kubectl scale deployment <deployment-name> --replicas=0 -n <namespace>
-
-# Option C: Adjust PDB temporarily
-kubectl patch pdb <pdb-name> -n <namespace> --type='merge' -p='{"spec":{"minAvailable":0}}'
+kubectl logs -n kube-system deployment/cluster-autoscaler
 ```
 
-4. **Monitor progress:**
+**Examine node conditions:**
 ```bash
-# Watch the upgrade status
-gcloud container operations list --filter="targetLink:node-pools/<node-pool-name>"
-
-# Watch node status
-watch kubectl get nodes
+kubectl describe nodes | grep -A10 "Conditions:"
 ```
 
-## Prevention for Future Upgrades
+**Check for tainted nodes:**
+```bash
+kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, taints: .spec.taints}'
+```
+
+## 6. Resolution Strategy
+
+1. **Temporary fix** - Manually drain problematic nodes:
+   ```bash
+   kubectl drain [NODE_NAME] --ignore-daemonsets --delete-emptydir-data --force
+   ```
+
+2. **If completely stuck** - Cancel and retry:
+   ```bash
+   gcloud container operations cancel [OPERATION_ID]
+   # Wait a few minutes, then retry the upgrade
+   ```
+
+3. **Preventive measures** for retry:
+   - Temporarily relax PDBs
+   - Ensure adequate cluster capacity
+   - Add resource requests to pods missing them
+
+## 7. Monitor Progress
 
 ```bash
-# Set proper PDBs before upgrades
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: my-app-pdb
-spec:
-  minAvailable: 50%  # Allow some disruption
-  selector:
-    matchLabels:
-      app: my-app
+# Watch the upgrade progress
+watch -n 30 'kubectl get nodes -o wide'
+watch -n 30 'gcloud container operations list --limit=5'
 ```
 
-## Emergency Recovery
+**Most likely culprits in your case:**
+1. PodDisruptionBudgets preventing pod eviction
+2. Insufficient cluster capacity for rescheduling pods
+3. Pods without proper resource requests
+4. DaemonSets or system pods interfering with drainage
 
-If the upgrade is completely stuck:
-
-```bash
-# Check operation status
-gcloud container operations describe <operation-id> --zone=us-east1
-
-# As last resort, you might need to:
-# 1. Cordon the stuck nodes
-kubectl cordon <node-name>
-
-# 2. Manually drain with force
-kubectl drain <node-name> --ignore-daemonsets --delete-emptydir-data --force
-
-# 3. Then let GKE continue the upgrade
-```
-
-**What's most likely happening:** Check your PDBs first - they're the most common cause of stuck upgrades. Also verify you have enough capacity on the upgraded nodes to handle the workload from nodes being drained.
-
-Would you like me to help you investigate any specific aspect of these diagnostics?
+Start with checking PDBs and pod resource requests - these are the most common blockers for node pool upgrades.

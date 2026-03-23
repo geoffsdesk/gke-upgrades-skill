@@ -3,42 +3,42 @@
     {
       "expectation": "Recommends increasing maxSurge for CPU pools (e.g., 10-20) to parallelize node replacements, with justification for the value",
       "passed": true,
-      "reason": "Response recommends maxSurge=10 for CPU pools with clear justification that this enables up to 20 CPU nodes upgrading simultaneously, hitting GKE's parallelism limit"
+      "reason": "Response recommends maxSurge=10 for CPU pools with clear justification: '10 = 5% of 200 nodes, within the ~20 node batch limit. This maximizes parallelism while avoiding capacity dip'"
     },
     {
       "expectation": "For GPU pools with fixed reservations: recommends increasing maxUnavailable (not maxSurge) as the primary lever since surge capacity is typically unavailable",
       "passed": true,
-      "reason": "Response correctly recommends maxUnavailable=3 for GPU pools instead of maxSurge, explicitly stating that fixed reservations can't provision surge nodes and this is the primary speed lever"
+      "reason": "Response explicitly recommends maxUnavailable=5 for GPU pools with maxSurge=0, explaining 'Use maxUnavailable since you have fixed reservations (no surge capacity)' and 'This drains first (no extra GPUs needed)'"
     },
     {
       "expectation": "Advises checking and requesting increased compute quota before the upgrade for CPU pools",
       "passed": false,
-      "reason": "Response does not mention checking or requesting increased compute quota for CPU pools before the upgrade"
+      "reason": "While the response mentions checking quota availability for GPU pools, it does not explicitly advise checking or requesting increased compute quota specifically for CPU pools before the upgrade"
     },
     {
       "expectation": "Suggests staggering node pool upgrades or running non-conflicting pools in parallel",
       "passed": true,
-      "reason": "Response provides a strategic sequencing plan: start both CPU pools simultaneously, then start both GPU pools after CPU pools complete, with clear rationale for this staggering approach"
+      "reason": "Response provides detailed staggering strategy with Weekend 1 for CPU pools and Weekend 2 for GPU pools, and explicitly suggests running both CPU pools concurrently: 'Both CPU pools can run concurrently if you have sufficient compute quota'"
     },
     {
       "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as an option for GPU pools",
       "passed": true,
-      "reason": "Response mentions autoscaled blue-green upgrade strategy for GPU pools as an alternative for critical speed, noting it requires 2x GPU capacity temporarily"
+      "reason": "Response includes a specific section 'Consider blue-green for GPU pools' with the exact gcloud command using 'autoscaled-rollout-policy=blue-green-initial-node-percentage=0.5,blue-green-full-batch-timeout=7200s'"
     },
     {
       "expectation": "Recommends expanding the maintenance window or splitting across multiple weekends",
-      "passed": false,
-      "reason": "Response does not recommend expanding the maintenance window or splitting upgrades across multiple weekends - it focuses on optimizations to fit within the existing 8-hour window"
+      "passed": true,
+      "reason": "Response explicitly recommends splitting across multiple weekends with detailed Weekend 1 and Weekend 2 strategies, stating 'Don't try to upgrade all pools in one window' and providing specific timelines"
     },
     {
       "expectation": "Provides the gcloud command for updating surge settings on each pool",
       "passed": true,
-      "reason": "Response provides specific gcloud container node-pools update commands for configuring surge settings on both CPU and GPU pools with exact parameters"
+      "reason": "Response provides specific gcloud commands for updating surge settings for both CPU pools (max-surge-upgrade 10, max-unavailable-upgrade 0) and GPU pools (max-surge-upgrade 0, max-unavailable-upgrade 5)"
     },
     {
       "expectation": "Includes monitoring commands to track upgrade progress in real-time",
       "passed": true,
-      "reason": "Response includes watch commands to monitor upgrade progress: 'watch kubectl get nodes -o wide -L cloud.google.com/gke-nodepool' and 'watch kubectl get nodes -o wide'"
+      "reason": "Response includes multiple monitoring commands: 'watch kubectl get nodes -o wide -L cloud.google.com/gke-nodepool | grep -E cpu-pool' and 'kubectl get pods -A | grep -E gpu-pool.*Terminating' for tracking progress"
     }
   ]
 }

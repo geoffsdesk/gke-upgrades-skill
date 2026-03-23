@@ -3,47 +3,57 @@
     {
       "expectation": "Identifies this as an admission webhook compatibility issue \u2014 the webhook is rejecting pod creation requests",
       "passed": true,
-      "reason": "Response clearly identifies this as an API version deprecation issue in Kubernetes 1.32 causing cert-manager webhook failures and blocking pod creation"
+      "reason": "Response correctly identifies this as a webhook compatibility issue after Kubernetes upgrade and explains that webhooks are preventing pod creation"
     },
     {
       "expectation": "Provides commands to identify the problematic webhook (kubectl get validatingwebhookconfigurations / mutatingwebhookconfigurations)",
       "passed": true,
-      "reason": "Provides both 'kubectl get validatingwebhookconfiguration' and 'kubectl get mutatingwebhookconfiguration' commands to identify the webhooks"
+      "reason": "Response provides kubectl get validatingadmissionwebhooks and kubectl get mutatingadmissionwebhooks commands to identify problematic webhooks"
     },
     {
       "expectation": "Offers an immediate fix: temporarily disable or remove the problematic webhook",
       "passed": true,
-      "reason": "Offers two immediate emergency fixes: Option 1 to disable via patching failurePolicy and Option 2 to delete webhook configurations"
+      "reason": "Response provides Option 1 to delete webhooks and Option 2 to add failurePolicy: Ignore as immediate fixes"
     },
     {
       "expectation": "Provides the kubectl delete command for the webhook configuration as emergency mitigation",
       "passed": true,
-      "reason": "Includes specific kubectl delete commands for both validating and mutating webhook configurations as 'Nuclear Option'"
+      "reason": "Response includes specific kubectl delete commands for both validating and mutating admission webhooks"
     },
     {
       "expectation": "Warns that deleting the webhook removes validation \u2014 it's a temporary fix",
-      "passed": true,
-      "reason": "Labels deletion as 'Nuclear Option' and emphasizes throughout that these are temporary fixes, with reminder to re-enable after upgrading cert-manager"
+      "passed": false,
+      "reason": "While the response mentions these are temporary fixes, it doesn't explicitly warn that deleting webhooks removes validation capabilities"
     },
     {
       "expectation": "Recommends checking cert-manager version compatibility with Kubernetes 1.32",
       "passed": true,
-      "reason": "Includes section 'Check Cert-Manager Version Compatibility' with commands to check current version and references the support matrix"
+      "reason": "Response includes checking cert-manager version and references compatibility matrix for k8s 1.32"
     },
     {
       "expectation": "Advises upgrading cert-manager to a version that supports 1.30 as the permanent fix",
-      "passed": false,
-      "reason": "Recommends upgrading to cert-manager v1.15+ for k8s 1.32 support, but the expectation specifically mentions 1.30 support which is not addressed"
+      "passed": true,
+      "reason": "Response advises upgrading cert-manager to v1.15+ for k8s 1.32 compatibility as the proper fix"
     },
     {
       "expectation": "Mentions setting failurePolicy to Ignore as a less drastic alternative to deletion",
       "passed": true,
-      "reason": "Option 1 specifically shows patching the failurePolicy to 'Ignore' as the first and less drastic alternative to deletion"
+      "reason": "Response provides failurePolicy: Ignore as Option 2, presenting it as an alternative to deletion"
     },
     {
       "expectation": "Includes commands to verify pods can be created after the fix",
       "passed": true,
-      "reason": "Provides verification commands including checking webhook pods, testing connectivity, and creating a test certificate to verify functionality"
+      "reason": "Response includes kubectl run test-pod command with --dry-run=server to test pod creation"
+    },
+    {
+      "expectation": "Notes that any webhook configuration changes (failurePolicy, cert-manager version) must be persisted in the source of truth (Helm chart, GitOps manifests, CI/CD pipeline) to survive redeployment",
+      "passed": false,
+      "reason": "Response does not mention the need to persist changes in source of truth systems like Helm charts or GitOps manifests"
+    },
+    {
+      "expectation": "Qualifies failurePolicy: Ignore as a temporary debugging measure with explicit risks, recommending revert to Fail after the root cause is resolved",
+      "passed": false,
+      "reason": "While the response mentions it as temporary, it doesn't explicitly state the risks of using failurePolicy: Ignore or recommend reverting to Fail after resolution"
     }
   ]
 }

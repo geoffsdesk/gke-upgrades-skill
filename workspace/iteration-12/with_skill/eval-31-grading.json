@@ -2,53 +2,53 @@
   "assertions": [
     {
       "expectation": "Warns that GPU VMs do not support live migration \u2014 every upgrade forces pod restart, which kills training",
-      "passed": false,
-      "reason": "The response does not explicitly warn about GPU VMs lacking live migration support or that every upgrade forces pod restart and kills training. It mentions the need to checkpoint and stop training but doesn't explain the underlying limitation."
+      "passed": true,
+      "reason": "Response explicitly states 'GPU VMs don't support live migration' in risk factors and emphasizes that node upgrades during training would be destructive"
     },
     {
       "expectation": "Recommends waiting for the current training run to complete or reach a checkpoint before upgrading the GPU node pool",
       "passed": true,
-      "reason": "The response explicitly recommends waiting for current training to complete and checkpoint, stating 'Wait for current training run to complete and checkpoint' and 'Schedule upgrade during the gap between training campaigns'."
+      "reason": "Response clearly recommends 'End current training campaign - allow natural completion' and 'Save comprehensive checkpoint' before node upgrades"
     },
     {
       "expectation": "Suggests the cordon-and-wait pattern: cordon GPU nodes, let training finish naturally, then upgrade the empty pool",
       "passed": false,
-      "reason": "While the response mentions cordoning nodes in the rollback section, it does not suggest the cordon-and-wait pattern as the primary upgrade strategy. Instead, it focuses on blue-green upgrades and scheduling between training runs."
+      "reason": "Response does not mention cordoning nodes or the cordon-and-wait pattern. Instead, it recommends scaling down training workloads and using maintenance exclusions"
     },
     {
       "expectation": "Addresses GPU driver version coupling \u2014 GKE auto-installs drivers matching the target version, which may change CUDA versions and break framework compatibility",
-      "passed": false,
-      "reason": "The response mentions verifying driver compatibility and includes commands to check GPU driver versions, but does not explain that GKE auto-installs drivers or warn about potential CUDA version changes breaking framework compatibility."
+      "passed": true,
+      "reason": "Response explicitly mentions 'GPU driver version change: GKE may install a different CUDA version' as a critical risk to test"
     },
     {
       "expectation": "Recommends testing the target GKE version in a staging cluster first to verify driver + CUDA + framework compatibility",
       "passed": true,
-      "reason": "The response includes specific recommendations to 'Test NCCL communication benchmarks on 1.32 in a staging environment' and 'Test interconnect on staging cluster' with deployment of NCCL benchmark on 1.32 staging cluster."
+      "reason": "Response includes 'Pre-production testing: Test the exact upgrade path (1.31\u21921.32) on a smaller staging cluster with the same A3 Mega + GPUDirect-TCPXO setup'"
     },
     {
       "expectation": "Addresses GPUDirect-TCPXO version requirements \u2014 verify the target GKE version supports the networking stack",
       "passed": true,
-      "reason": "The response states 'GPUDirect-TCPXO is supported on both GKE 1.31 and 1.32' and includes verification requirements to 'Confirm A3 Mega + H100 driver compatibility with target node image' and 'Validate RDMA/InfiniBand topology survives node replacement'."
+      "reason": "Response states 'Both GKE 1.31 and 1.32 support GPUDirect-TCPXO for A3 Mega instances' and mentions version compatibility requirements"
     },
     {
       "expectation": "Notes that surge upgrades need extra H100 nodes which are scarce \u2014 recommends maxSurge=0/maxUnavailable=1 (maxUnavailable is the primary lever for GPU pools with fixed reservations), or GKE's auto-scale blue-green strategy if surge quota is unavailable",
-      "passed": true,
-      "reason": "The response addresses scarcity by noting 'Autoscaled blue-green needs capacity for replacement nodes' and recommends 'maxSurge=0' with 'sequential drain approach with maxUnavailable=20' if no surge capacity is available, plus mentions the autoscaled blue-green strategy."
+      "passed": false,
+      "reason": "Response recommends maxSurge=0/maxUnavailable=20 (not 1), mentions scarcity but doesn't discuss blue-green strategy or auto-scale options for GPU pools with fixed reservations"
     },
     {
       "expectation": "Recommends upgrading the control plane first (can be done independently without affecting running training)",
       "passed": true,
-      "reason": "The response explicitly recommends 'Upgrade control plane first (no training impact)' and states 'Control plane upgrade is non-disruptive to running training' with specific commands for master upgrade."
+      "reason": "Response clearly states 'The control plane can be upgraded safely during active training runs' and provides specific commands for control plane-only upgrade"
     },
     {
       "expectation": "Mentions maintenance exclusions ('no minor or node upgrades') to protect against auto-upgrades during active training campaigns",
       "passed": true,
-      "reason": "The response includes specific commands for maintenance exclusions, showing how to 'Block ALL upgrades on training pool during active runs' with detailed gcloud commands for adding maintenance exclusions with 'no_upgrades' scope."
+      "reason": "Response provides detailed commands for maintenance exclusions with 'no_minor_or_node_upgrades' scope to protect training campaigns"
     },
     {
       "expectation": "Addresses compact placement \u2014 verify that replacement nodes land in the same placement group to preserve RDMA topology",
       "passed": true,
-      "reason": "The response explicitly mentions 'Compact placement: Verify replacement nodes maintain RDMA topology in the same placement group' and includes validation of 'RDMA/InfiniBand topology survives node replacement'."
+      "reason": "Response mentions 'Compact placement: Confirm replacement nodes maintain physical topology' and 'Validate compact placement policy preserved' in post-upgrade validation"
     }
   ]
 }

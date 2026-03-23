@@ -3,42 +3,42 @@
     {
       "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
       "passed": true,
-      "reason": "Response clearly categorizes all four types: security patches in CRITICAL section, auto-upgrades in HIGH section, new version available in MEDIUM section, and EOL/deprecation warnings in both CRITICAL and HIGH sections"
+      "reason": "Response clearly categorizes notifications including auto-upgrade notifications, available version updates, end-of-life warnings, and security patches in the triage matrix and script"
     },
     {
       "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
       "passed": true,
-      "reason": "Response assigns CRITICAL priority to security patches (highest), LOW priority to new version available notifications (lowest), with clear priority hierarchy established"
+      "reason": "Response assigns security patches with CVE 7.0+ to CRITICAL priority and new version available to MEDIUM/LOW priority, establishing clear urgency hierarchy"
     },
     {
       "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
       "passed": true,
-      "reason": "Response explicitly states EOL warnings require action with specific timelines: 'Plan upgrade within 2 weeks' for final notices and 'Plan upgrade within 30-60 days' for early warnings"
+      "reason": "Response specifically addresses EOL warnings with timeframes (<30 days = CRITICAL, 30-90 days = HIGH) and includes upgrade planning actions"
     },
     {
       "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
-      "passed": true,
-      "reason": "Response includes specific actions for auto-upgrades: 'Test compatibility, schedule manual upgrade if preferred timing needed' and detailed HIGH priority response playbook with review and planning steps"
+      "passed": false,
+      "reason": "While response mentions auto-upgrade notifications and assigns them HIGH priority for production, it doesn't specifically mention triggering pre-upgrade checklist execution"
     },
     {
       "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
       "passed": true,
-      "reason": "Response explicitly states security patches require 'Act within 24-48 hours' and CRITICAL response playbook includes 'Schedule emergency maintenance if needed'"
+      "reason": "Response assigns security patches to CRITICAL priority with 24-48 hour timeframe and mentions immediate maintenance window planning"
     },
     {
       "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
       "passed": true,
-      "reason": "Response categorizes new version available as MEDIUM priority with 'Evaluate within 30 days, implement in next maintenance cycle' and MEDIUM response includes 'Add to backlog' and 'Include in next planned maintenance'"
+      "reason": "Response correctly categorizes 'Available version updates (non-security)' as MEDIUM priority for planning ahead and 'General availability announcements' as LOW priority informational"
     },
     {
       "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
       "passed": false,
-      "reason": "Response does not mention Pub/Sub or Cloud Monitoring alerts - only discusses email filtering rules and a Python script for triaging notifications"
+      "reason": "Response does not mention Pub/Sub or Cloud Monitoring alerts for GKE upgrade events, focusing instead on email processing and webhook integrations"
     },
     {
       "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
       "passed": true,
-      "reason": "Response mentions 'Review release notes' in multiple sections including the MEDIUM priority action for new versions and the MEDIUM response playbook"
+      "reason": "Response mentions 'Review release notes for breaking changes' as an action item in the HIGH priority section"
     }
   ]
 }

@@ -3,42 +3,42 @@
     {
       "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
       "passed": false,
-      "reason": "The response mentions sequential draining but doesn't explain the atomic recreation behavior specific to TPU slices"
+      "reason": "The response does not explicitly explain the atomic recreation nature of TPU slices or contrast it with rolling upgrades"
     },
     {
       "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
       "passed": true,
-      "reason": "States 'With multislice training, losing even one slice typically breaks the entire distributed job'"
+      "reason": "The response states 'All 4 slices will likely be affected' and 'Maintenance events often affect entire TPU zones/regions'"
     },
     {
       "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
       "passed": true,
-      "reason": "Clearly states 'Your training job will be interrupted and terminated when nodes go down'"
+      "reason": "The response clearly states 'Complete training interruption' and explains that TPU maintenance requires full restart of TPU pods"
     },
     {
       "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
       "passed": false,
-      "reason": "Does not mention the potential for blocking or extended downtime due to resource availability issues"
+      "reason": "The response does not mention resource availability issues during recreation or the potential for extended downtime due to hardware constraints"
     },
     {
       "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
       "passed": true,
-      "reason": "Recommends 'Save checkpoints more frequently before the maintenance window'"
+      "reason": "The response recommends increasing checkpoint frequency before maintenance and provides specific code examples for checkpointing"
     },
     {
       "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
       "passed": true,
-      "reason": "Provides code examples for robust checkpointing and discusses restart procedures"
+      "reason": "The response includes YAML configuration for automatic restart and mentions '--resume_from_checkpoint' argument"
     },
     {
       "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
       "passed": false,
-      "reason": "Does not mention maintenance exclusions as an option to defer the maintenance event"
+      "reason": "The response does not mention maintenance exclusions or the option to defer maintenance events"
     },
     {
       "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
       "passed": false,
-      "reason": "Mentions maintenance windows in timeline context but doesn't suggest scheduling them during planned breaks"
+      "reason": "The response does not discuss maintenance windows or scheduling options to control when maintenance occurs"
     }
   ]
 }

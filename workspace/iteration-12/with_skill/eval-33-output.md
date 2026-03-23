@@ -1,209 +1,207 @@
-# GKE Upgrade Plan: ML Platform GPU Clusters (1.31 → 1.32)
+# GKE Upgrade Plan: ML Inference Platform (1.31 → 1.32)
 
-## Cluster Profile
-- **Cluster**: GKE Standard with GPU workloads
+## Environment Summary
+- **Cluster**: Standard mode with auto-scaling GPU pools
+- **Node pools**: L4 inference (200 nodes) + A100 inference/fine-tuning (100 nodes)
 - **Current**: 1.31 → **Target**: 1.32
-- **Node Pools**: 
-  - L4 pool (200 nodes) - inference workloads
-  - A100 pool (100 nodes) - inference + fine-tuning (4-8h jobs)
-- **Workload**: Latency-sensitive inference + long-running training
+- **Workload types**: Latency-sensitive inference + 4-8h fine-tuning jobs
+- **Priority**: Minimize inference impact, protect fine-tuning jobs
 
-## Upgrade Strategy
+## Recommended Upgrade Strategy
 
-### Control Plane First
-Upgrade control plane during low-traffic period. This has minimal impact on running workloads.
+### Control Plane
+- **Timing**: Off-peak hours when inference traffic is lowest
+- **Duration**: ~10-15 minutes, minimal inference impact
 
-### Node Pool Strategy: Rolling with Inference Protection
+### Node Pool Strategy: Autoscaled Blue-Green
+Given your inference workloads and capacity constraints, **autoscaled blue-green** is optimal:
+- Maintains serving capacity throughout the upgrade
+- No surge quota needed (GPU capacity is typically constrained)
+- Allows fine-tuning jobs to complete naturally
+- Auto-scales replacement nodes based on demand
 
-**L4 Pool (Inference-focused):**
-- **Strategy**: Rolling surge upgrade with conservative settings
-- **Settings**: `maxSurge=0, maxUnavailable=1`
-- **Rationale**: L4 nodes likely have fixed GPU reservations with no surge capacity. Using `maxUnavailable=1` drains one node at a time without needing extra GPUs. This creates brief capacity dips but maintains most inference capacity.
+## Upgrade Plan
 
-**A100 Pool (Mixed workloads):**
-- **Strategy**: Autoscaled blue-green upgrade (GKE's new strategy)
-- **Rationale**: Handles long-running fine-tuning jobs gracefully by allowing controlled transitions with longer eviction periods. Green pool scales up based on demand while blue pool scales down as jobs complete.
+### Phase 1: Pre-Upgrade (Day -7 to -1)
 
-### Timing Coordination
-1. **Schedule during low-traffic hours** for L4 pool upgrade
-2. **Coordinate with ML team** to pause new fine-tuning jobs during A100 upgrade
-3. **Stagger pools**: Upgrade L4 first (faster), then A100 when no active training
-
-## Pre-Upgrade Checklist
-
-```
-Pre-Upgrade Checklist - ML Platform GPU Clusters
-- [ ] Cluster: ML_PLATFORM | Mode: Standard | Channel: ___
-- [ ] Current version: 1.31 | Target version: 1.32
-
-GPU-Specific Compatibility
-- [ ] Target version available in release channel
-- [ ] CUDA driver compatibility verified with GKE 1.32 node image
-- [ ] L4/A100 driver versions tested in staging cluster
-- [ ] Inference framework (TensorFlow/PyTorch) compatible with new driver
-- [ ] Fine-tuning pipelines tested against 1.32
-
-Workload Protection
-- [ ] PDBs configured for inference deployments (allow 10-20% disruption)
-- [ ] Active fine-tuning jobs inventory completed
-- [ ] Inference autoscaler min replicas set appropriately
-- [ ] Long-running job checkpoint/resume capability verified
-- [ ] GPU reservations confirmed (no surge capacity assumed)
-
-Infrastructure Readiness
-- [ ] L4 pool: maxSurge=0, maxUnavailable=1 (conservative rolling)
-- [ ] A100 pool: autoscaled blue-green configured
-- [ ] Maintenance window: Low-traffic hours (e.g., 2-6 AM PST)
-- [ ] Monitoring dashboards active (GPU utilization, inference latency)
-- [ ] Baseline metrics captured (QPS, p95 latency, job completion rates)
-
-Coordination
-- [ ] ML team notified: pause new fine-tuning jobs during A100 upgrade
-- [ ] Traffic routing: can shift load between clusters if needed
-- [ ] Rollback plan: new node pool at 1.31 ready to create if needed
-```
-
-## Upgrade Runbook
-
-### Phase 1: Control Plane (Minimal impact)
-
+#### Version Compatibility Check
 ```bash
-# Upgrade control plane first
-gcloud container clusters upgrade ML_PLATFORM_CLUSTER \
-  --zone ZONE \
+# Verify 1.32 availability in your channel
+gcloud container get-server-config --zone YOUR_ZONE \
+  --format="yaml(channels)" | grep -A 20 "REGULAR\|STABLE"
+
+# Check for deprecated API usage
+kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated
+```
+
+#### GPU Driver Compatibility
+**Critical**: GKE 1.32 may update CUDA drivers. Test in staging:
+- Verify your inference frameworks (TensorFlow, PyTorch, etc.) work with 1.32's CUDA version
+- Check fine-tuning job compatibility
+
+#### Workload Assessment
+```bash
+# Verify PDBs for inference services
+kubectl get pdb -A -o wide
+
+# Check for bare pods (won't reschedule)
+kubectl get pods -A -o json | \
+  jq -r '.items[] | select(.metadata.ownerReferences | length == 0) | "\(.metadata.namespace)/\(.metadata.name)"'
+
+# Confirm resource requests on all pods (required for auto-scaling)
+kubectl get pods -A -o json | \
+  jq '.items[] | select(.spec.containers[].resources.requests == null) | {ns:.metadata.namespace, name:.metadata.name}'
+```
+
+### Phase 2: Control Plane Upgrade
+
+#### Configure Maintenance Window
+```bash
+gcloud container clusters update YOUR_CLUSTER_NAME \
+  --zone YOUR_ZONE \
+  --maintenance-window-start 2024-XX-XXTXX:XX:XXZ \
+  --maintenance-window-end 2024-XX-XXTXX:XX:XXZ \
+  --maintenance-window-recurrence "FREQ=WEEKLY;BYDAY=SU"
+```
+
+#### Upgrade Control Plane
+```bash
+gcloud container clusters upgrade YOUR_CLUSTER_NAME \
+  --zone YOUR_ZONE \
   --master \
-  --cluster-version 1.32.x-gke.xxxxx
+  --cluster-version 1.32.X-gke.XXXX
+```
 
-# Verify control plane (wait ~15 minutes)
-gcloud container clusters describe ML_PLATFORM_CLUSTER \
-  --zone ZONE \
+**Validation** (~15 minutes later):
+```bash
+gcloud container clusters describe YOUR_CLUSTER_NAME \
+  --zone YOUR_ZONE \
   --format="value(currentMasterVersion)"
+
+kubectl get pods -n kube-system | grep -v Running
 ```
 
-### Phase 2: L4 Pool (Inference) - Conservative Rolling
+### Phase 3: Node Pool Upgrades
 
+#### Configure Autoscaled Blue-Green for Both Pools
+
+**L4 Inference Pool** (upgrade first - less critical than A100):
 ```bash
-# Configure conservative settings for L4 pool
 gcloud container node-pools update l4-inference-pool \
-  --cluster ML_PLATFORM_CLUSTER \
-  --zone ZONE \
-  --max-surge-upgrade 0 \
-  --max-unavailable-upgrade 1
-
-# Start L4 pool upgrade
-gcloud container node-pools upgrade l4-inference-pool \
-  --cluster ML_PLATFORM_CLUSTER \
-  --zone ZONE \
-  --cluster-version 1.32.x-gke.xxxxx
-
-# Monitor inference capacity and latency
-watch 'kubectl get nodes -l cloud.google.com/gke-nodepool=l4-inference-pool'
-# Monitor inference pod distribution
-kubectl get pods -l app=inference -o wide
+  --cluster YOUR_CLUSTER_NAME \
+  --zone YOUR_ZONE \
+  --enable-autoscaling \
+  --total-min-nodes 50 \
+  --total-max-nodes 250 \
+  --autoscaled-rollout-policy=blue-green-initial-node-percentage=0.25,blue-green-full-batch-timeout=7200s \
+  --node-version 1.32.X-gke.XXXX
 ```
 
-### Phase 3: A100 Pool (Training) - Autoscaled Blue-Green
-
+**A100 Fine-tuning/Inference Pool** (upgrade during low fine-tuning activity):
 ```bash
-# Pause new fine-tuning job submissions
-# (Coordinate with ML team)
-
-# Configure autoscaled blue-green for A100 pool
-gcloud container node-pools update a100-training-pool \
-  --cluster ML_PLATFORM_CLUSTER \
-  --zone ZONE \
-  --enable-autoscaled-blue-green-upgrade \
-  --node-pool-soak-duration 1800s  # 30 min soak time
-
-# Start A100 pool upgrade
-gcloud container node-pools upgrade a100-training-pool \
-  --cluster ML_PLATFORM_CLUSTER \
-  --zone ZONE \
-  --cluster-version 1.32.x-gke.xxxxx
-
-# Monitor training job completion on blue pool
-kubectl get pods -l workload-type=training -o wide
+gcloud container node-pools update a100-pool \
+  --cluster YOUR_CLUSTER_NAME \
+  --zone YOUR_ZONE \
+  --enable-autoscaling \
+  --total-min-nodes 20 \
+  --total-max-nodes 120 \
+  --autoscaled-rollout-policy=blue-green-initial-node-percentage=0.20,blue-green-full-batch-timeout=10800s \
+  --node-version 1.32.X-gke.XXXX
 ```
 
-## GPU-Specific Validation
-
+#### Monitor Progress
 ```bash
-# Verify GPU drivers post-upgrade
-kubectl get nodes -l accelerator=nvidia-l4 -o yaml | grep nvidia.com/gpu
-kubectl get nodes -l accelerator=nvidia-tesla-a100 -o yaml | grep nvidia.com/gpu
+# Watch node pool status
+watch 'gcloud container node-pools list --cluster YOUR_CLUSTER_NAME --zone YOUR_ZONE'
 
-# Test GPU availability
-kubectl run gpu-test --rm -it --restart=Never \
-  --image=nvidia/cuda:11.8-runtime-ubuntu20.04 \
-  --overrides='{"spec":{"nodeSelector":{"cloud.google.com/gke-nodepool":"l4-inference-pool"},"containers":[{"name":"gpu-test","image":"nvidia/cuda:11.8-runtime-ubuntu20.04","command":["nvidia-smi"],"resources":{"limits":{"nvidia.com/gpu":"1"}}}]}}' \
-  -- nvidia-smi
+# Monitor fine-tuning jobs
+kubectl get pods -A -l workload-type=fine-tuning --field-selector=status.phase=Running
 
-# Verify inference endpoints responding
-curl -X POST http://INFERENCE_ENDPOINT/predict -d '{"test": "data"}'
-
-# Check training job resume capability
-kubectl get jobs -l workload-type=training
+# Check inference latency (replace with your metrics)
+# Monitor your inference service SLOs during the upgrade
 ```
 
-## Monitoring During Upgrade
+### Phase 4: Fine-tuning Job Protection
 
-**Key Metrics to Watch:**
-- GPU utilization (`kubectl top nodes`)
-- Inference request latency (p95, p99)
-- Training job completion rates
-- Node pool readiness
-- Pod eviction events
+For the A100 pool upgrade, coordinate with your ML team:
 
-**Alert Thresholds:**
-- Inference latency >2x baseline → pause upgrade
-- GPU utilization drops >50% → verify pod rescheduling
-- Training jobs failing to restart → check driver compatibility
+#### Option A: Natural Completion (Recommended)
+```bash
+# Check running fine-tuning jobs before starting A100 upgrade
+kubectl get pods -A -l workload-type=fine-tuning -o wide
 
-## Expected Timeline
+# Wait for jobs to complete naturally (4-8 hours)
+# The blue-green strategy will cordon old nodes but let jobs finish
+```
 
-- **Control Plane**: 15 minutes
-- **L4 Pool** (200 nodes, 1 at a time): ~6-8 hours
-- **A100 Pool** (100 nodes, blue-green): ~2-4 hours depending on job completion
-- **Total Window**: 10-14 hours
+#### Option B: Checkpoint and Resume
+If you can't wait:
+```bash
+# Trigger checkpointing in your fine-tuning framework
+# Jobs will resume on new nodes after upgrade
+```
+
+## Timeline
+
+| Phase | Duration | Impact |
+|-------|----------|---------|
+| Control plane | 10-15 min | Minimal - inference continues |
+| L4 pool upgrade | 2-4 hours | Low - auto-scaling maintains capacity |
+| A100 pool upgrade | 4-8 hours | Medium - coordinate with fine-tuning schedule |
 
 ## Rollback Plan
 
-If inference degradation occurs:
+If issues arise:
+```bash
+# Blue-green allows fast rollback - uncordon the blue (old) pool
+kubectl uncordon -l cloud.google.com/gke-nodepool=POOL_NAME
+
+# Scale down green pool if needed
+gcloud container clusters resize YOUR_CLUSTER_NAME \
+  --node-pool green-pool-name \
+  --num-nodes 0 \
+  --zone YOUR_ZONE
+```
+
+## Post-Upgrade Validation Checklist
+
+```markdown
+- [ ] Control plane at 1.32: `gcloud container clusters describe CLUSTER --format="value(currentMasterVersion)"`
+- [ ] Both node pools at 1.32: `gcloud container node-pools list --cluster CLUSTER`
+- [ ] All nodes Ready: `kubectl get nodes | grep -v Ready`
+- [ ] Inference services responding with normal latency
+- [ ] Auto-scaling working: trigger scale-up test
+- [ ] GPU driver version confirmed: `kubectl debug node/NODE_NAME -it -- nvidia-smi`
+- [ ] Fine-tuning jobs can start successfully on new nodes
+- [ ] No stuck pods: `kubectl get pods -A | grep -E "Pending|CrashLoopBackOff"`
+```
+
+## Risk Mitigation
+
+1. **GPU Driver Changes**: Test 1.32 in staging first to catch CUDA compatibility issues
+2. **Fine-tuning Jobs**: Schedule A100 upgrade during natural job gaps
+3. **Inference Latency**: Monitor SLOs during L4 pool upgrade; rollback if degraded
+4. **Auto-scaling**: Verify HPA/VPA configs work with new node versions
+5. **Capacity**: Blue-green temporarily doubles resource usage - confirm quota headroom
+
+## Key Commands Summary
 
 ```bash
-# Create new node pool at 1.31 for emergency rollback
-gcloud container node-pools create l4-inference-rollback \
-  --cluster ML_PLATFORM_CLUSTER \
-  --zone ZONE \
-  --cluster-version 1.31.x-gke.xxxxx \
-  --machine-type g2-standard-12 \
-  --accelerator type=nvidia-l4,count=1 \
-  --num-nodes 10
+# Pre-flight
+gcloud container get-server-config --zone ZONE --format="yaml(channels)"
+kubectl get pdb -A -o wide
 
-# Scale up rollback pool
-gcloud container node-pools update l4-inference-rollback \
-  --cluster ML_PLATFORM_CLUSTER \
-  --zone ZONE \
+# Control plane
+gcloud container clusters upgrade CLUSTER --master --cluster-version 1.32.X-gke.XXXX
+
+# Node pools (autoscaled blue-green)
+gcloud container node-pools update POOL_NAME \
   --enable-autoscaling \
-  --min-nodes 10 \
-  --max-nodes 200
+  --autoscaled-rollout-policy=blue-green-initial-node-percentage=0.25,blue-green-full-batch-timeout=7200s \
+  --node-version 1.32.X-gke.XXXX
 
-# Cordon problematic nodes and let autoscaler migrate workloads
-kubectl cordon -l cloud.google.com/gke-nodepool=l4-inference-pool
+# Validation
+kubectl get nodes -o wide -L cloud.google.com/gke-nodepool
 ```
 
-## Post-Upgrade Validation
-
-```
-Post-Upgrade Checklist - GPU Clusters
-- [ ] All nodes at 1.32: `kubectl get nodes -o wide`
-- [ ] GPU driver versions: `kubectl describe nodes | grep nvidia`
-- [ ] Inference latency within baseline (±10%)
-- [ ] GPU utilization restored to pre-upgrade levels
-- [ ] Training jobs resuming successfully from checkpoints
-- [ ] Autoscaler responding correctly to traffic spikes
-- [ ] No GPU allocation errors in pod events
-- [ ] Fine-tuning job submissions re-enabled
-```
-
-This strategy minimizes inference disruption by using conservative rolling upgrades for L4 nodes and protecting long-running training jobs with blue-green upgrades for A100 nodes. The key is sequencing and coordination with your ML team.
+This plan prioritizes your inference availability while protecting fine-tuning workloads. The autoscaled blue-green strategy is ideal for your GPU-constrained environment and auto-scaling requirements.

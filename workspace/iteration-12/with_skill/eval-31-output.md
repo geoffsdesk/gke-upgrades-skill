@@ -1,231 +1,174 @@
-# GKE Upgrade Plan: Large-Scale LLM Training Cluster
+# GKE 1.31→1.32 Upgrade Plan for Large-Scale LLM Training Cluster
 
-## Cluster Profile
-- **Mode:** GKE Standard
-- **Scale:** 512 H100 nodes (A3 Mega, 8 GPUs per node = 4,096 H100s total)
-- **Workload:** Multi-week LLM training (2-3 weeks per run)
-- **Networking:** GPUDirect-TCPXO inter-node communication
-- **Current:** GKE 1.31 → **Target:** GKE 1.32
-- **Critical constraint:** Cannot interrupt active training runs
+## Executive Summary
 
-## Key Challenges & Solutions
+Your 512-node H100 training cluster requires a **staged upgrade approach** that protects active training runs and preserves GPUDirect-TCPXO interconnect. The key is using **maintenance exclusions** to block node upgrades during training campaigns while allowing control plane security patches.
 
-### 1. GPU Interconnect Compatibility ✅
-**Good news:** GPUDirect-TCPXO is supported on both GKE 1.31 and 1.32. This upgrade path should preserve your GPU interconnect functionality.
+## Current Environment Assessment
 
-**Verification required:**
-- Test NCCL communication benchmarks on 1.32 in a staging environment
-- Confirm A3 Mega + H100 driver compatibility with target node image
-- Validate RDMA/InfiniBand topology survives node replacement
+- **Cluster**: 512 H100 nodes (A3 Mega, 4,096 GPUs total)
+- **Interconnect**: GPUDirect-TCPXO (requires GKE 1.27.7-gke.1121000+)
+- **Training duration**: 2-3 weeks per campaign
+- **Current version**: GKE 1.31 → Target: 1.32
+- **Risk factors**: GPU VMs don't support live migration, RDMA topology sensitivity, limited surge capacity
 
-### 2. Training Job Protection Strategy
+## Upgrade Strategy
 
-**Recommended approach:** Dedicated training vs. infrastructure node pools
+### Phase 1: Control Plane Upgrade (Safe During Training)
+
+The control plane can be upgraded safely during active training runs. It doesn't affect running pods or GPU interconnect.
 
 ```bash
-# Create dedicated training node pool (if not already separated)
-gcloud container node-pools create training-pool \
-  --cluster YOUR_CLUSTER \
-  --zone YOUR_ZONE \
-  --machine-type a3-megagpu-8g \
-  --num-nodes 512 \
-  --cluster-version 1.31.x \
-  --enable-autorepair \
-  --enable-autoupgrade=false \  # CRITICAL: Disable auto-upgrade
-  --node-labels=workload=training,upgrade-policy=manual
-```
-
-**Maintenance exclusion for training pool:**
-```bash
-# Block ALL upgrades on training pool during active runs
-gcloud container node-pools update training-pool \
-  --cluster YOUR_CLUSTER \
-  --zone YOUR_ZONE \
-  --add-maintenance-exclusion-name "training-campaign-q1" \
-  --add-maintenance-exclusion-start-time 2024-01-15T00:00:00Z \
-  --add-maintenance-exclusion-end-time 2024-04-01T00:00:00Z \
-  --add-maintenance-exclusion-scope no_upgrades
-```
-
-### 3. Staged Upgrade Strategy
-
-**Phase 1: Control Plane + Infrastructure (Non-disruptive)**
-```bash
-# Upgrade control plane first (no training impact)
-gcloud container clusters upgrade YOUR_CLUSTER \
-  --zone YOUR_ZONE \
+# Upgrade control plane only
+gcloud container clusters upgrade CLUSTER_NAME \
+  --zone ZONE \
   --master \
-  --cluster-version 1.32.x
-
-# Upgrade non-GPU node pools (system, monitoring, etc.)
-gcloud container node-pools upgrade system-pool \
-  --cluster YOUR_CLUSTER \
-  --zone YOUR_ZONE \
-  --cluster-version 1.32.x
+  --cluster-version 1.32.X-gke.XXXXX
 ```
 
-**Phase 2: GPU Node Pool (Scheduled between training runs)**
-- Wait for current training run to complete and checkpoint
-- Schedule upgrade during the gap between training campaigns
-- Use autoscaled blue-green upgrade to minimize risk
+**Timeline**: ~15-20 minutes, zero training impact.
 
-### 4. GPU-Optimized Upgrade Configuration
+### Phase 2: Node Pool Protection During Training
 
-**For 512-node GPU pool, use autoscaled blue-green:**
-```bash
-# Configure autoscaled blue-green upgrade (preserves capacity)
-gcloud container node-pools update training-pool \
-  --cluster YOUR_CLUSTER \
-  --zone YOUR_ZONE \
-  --enable-blue-green-autoscaled-node-upgrade \
-  --blue-green-node-pool-soak-duration 1h \
-  --max-unavailable-upgrade 0 \
-  --max-surge-upgrade 0
-```
-
-**Critical considerations:**
-- **Capacity requirement:** Autoscaled blue-green needs capacity for replacement nodes. With 512 A3 Mega nodes, verify your reservation covers this.
-- **If no surge capacity available:** Use sequential drain approach with `maxUnavailable=20` (respects GKE's ~20 node max parallelism)
-- **Compact placement:** Verify replacement nodes maintain RDMA topology in the same placement group
-
-### 5. Pre-Upgrade Validation Checklist
+Apply maintenance exclusions to prevent automatic node upgrades while training is active:
 
 ```bash
-# Checkpoint active training job
-kubectl exec -it TRAINING_POD -- /checkpoint-script.sh
-
-# Verify GPU driver compatibility
-gcloud container get-server-config --zone YOUR_ZONE \
-  --format="yaml(validNodeVersions)" | grep 1.32
-
-# Test interconnect on staging cluster
-# Deploy NCCL all-reduce benchmark on 1.32 staging cluster
-kubectl apply -f nccl-benchmark.yaml
-
-# Verify reservation capacity
-gcloud compute reservations list --filter="name~a3-mega"
+# Block node upgrades during training campaign (allows CP patches)
+gcloud container clusters update CLUSTER_NAME \
+  --zone ZONE \
+  --add-maintenance-exclusion-name "training-campaign-Q1-2024" \
+  --add-maintenance-exclusion-start-time $(date -u +"%Y-%m-%dT%H:%M:%SZ") \
+  --add-maintenance-exclusion-end-time "2024-04-01T00:00:00Z" \
+  --add-maintenance-exclusion-scope no_minor_or_node_upgrades
 ```
 
-**Training Job Protection:**
+**Key benefit**: Control plane receives security patches, nodes stay stable for training.
+
+### Phase 3: Node Pool Upgrade (Between Training Runs)
+
+Schedule node upgrades during planned gaps between training campaigns using the **parallel strategy** for maximum efficiency:
+
+#### Pre-Upgrade Preparation
+
 ```bash
-# Configure PDB for training workload (prevents eviction)
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: training-pdb
-spec:
-  minAvailable: "100%"  # Prevent ANY eviction during training
-  selector:
-    matchLabels:
-      workload: llm-training
+# 1. Verify training job completion and checkpoint saved
+kubectl get pods -A | grep training
+
+# 2. Scale training workloads to zero
+kubectl scale deployment training-job --replicas=0
+
+# 3. Remove maintenance exclusion
+gcloud container clusters update CLUSTER_NAME \
+  --zone ZONE \
+  --remove-maintenance-exclusion-name "training-campaign-Q1-2024"
 ```
 
-### 6. Execution Timeline
+#### GPU Node Pool Upgrade Configuration
 
-**Immediate (Control Plane):**
+For your H100 cluster, use **maxUnavailable** as the primary lever (surge capacity for H100s is extremely limited):
+
 ```bash
-# Upgrade control plane (safe during active training)
-gcloud container clusters upgrade YOUR_CLUSTER \
-  --zone YOUR_ZONE \
-  --master \
-  --cluster-version 1.32.x
+# Configure for parallel upgrade (max GKE concurrency)
+gcloud container node-pools update h100-pool \
+  --cluster CLUSTER_NAME \
+  --zone ZONE \
+  --max-surge-upgrade 0 \
+  --max-unavailable-upgrade 20
 ```
 
-**Next training gap (GPU nodes):**
-1. Ensure training job checkpointed and stopped
-2. Remove/relax PDB temporarily
-3. Execute autoscaled blue-green upgrade of training pool
-4. Validate GPU interconnect with NCCL benchmarks
-5. Resume training from checkpoint
+**Rationale**: 
+- `maxSurge=0`: No extra H100 capacity needed
+- `maxUnavailable=20`: Matches GKE's ~20 node upgrade parallelism limit
+- **Estimated duration**: 512 nodes ÷ 20 parallel = ~26 batches × 15min = **6-8 hours total**
 
-### 7. Rollback Plan
+#### Execute Node Upgrade
 
-**If interconnect issues detected:**
 ```bash
-# Create new pool at 1.31 (faster than rolling back)
-gcloud container node-pools create training-pool-rollback \
-  --cluster YOUR_CLUSTER \
-  --zone YOUR_ZONE \
-  --machine-type a3-megagpu-8g \
-  --cluster-version 1.31.x \
-  --num-nodes 512 \
-  --enable-autoupgrade=false
+# Upgrade node pool
+gcloud container node-pools upgrade h100-pool \
+  --cluster CLUSTER_NAME \
+  --zone ZONE \
+  --cluster-version 1.32.X-gke.XXXXX
 
-# Migrate training workload back
-kubectl cordon -l cloud.google.com/gke-nodepool=training-pool
-# Drain and reschedule on rollback pool
+# Monitor progress
+watch 'kubectl get nodes -o wide | grep -E "Ready|NotReady|VERSION"'
 ```
 
-## Maintenance Runbook
+### Phase 4: Post-Upgrade Validation
 
-### Pre-flight Commands
+Critical checks for your GPU interconnect environment:
+
 ```bash
-# Current state
-gcloud container clusters describe YOUR_CLUSTER --zone YOUR_ZONE \
-  --format="table(name, currentMasterVersion, nodePools[].name, nodePools[].version)"
+# 1. Verify all nodes at target version
+gcloud container node-pools list --cluster CLUSTER_NAME --zone ZONE
 
-# Active training jobs
-kubectl get pods -l workload=llm-training -o wide
+# 2. Check GPU driver version (auto-installed by GKE)
+kubectl describe nodes | grep -A 10 "nvidia.com/gpu"
 
-# GPU topology health
-kubectl get nodes -l workload=training -o yaml | grep topology.gke.io
+# 3. Verify RDMA/GPUDirect-TCPXO functionality
+# Test inter-node communication with your training framework
+
+# 4. Validate compact placement policy preserved
+# Check that nodes are still co-located as expected
+
+# 5. Test training workload startup
+kubectl scale deployment training-job --replicas=1
+# Verify successful pod scheduling and GPU allocation
 ```
 
-### Upgrade Execution
-```bash
-# Phase 1: Control plane (safe during training)
-gcloud container clusters upgrade YOUR_CLUSTER \
-  --zone YOUR_ZONE \
-  --master \
-  --cluster-version 1.32.x
+## GPUDirect-TCPXO Considerations
 
-# Phase 2: Training pool (only between runs)
-gcloud container node-pools upgrade training-pool \
-  --cluster YOUR_CLUSTER \
-  --zone YOUR_ZONE \
-  --cluster-version 1.32.x
-```
+**Version compatibility**: Both GKE 1.31 and 1.32 support GPUDirect-TCPXO for A3 Mega instances. The upgrade should preserve interconnect functionality.
 
-### Validation
-```bash
-# Node health
-kubectl get nodes -l workload=training
+**Critical risks to test**:
+- **GPU driver version change**: GKE may install a different CUDA version
+- **Network MTU preservation**: Verify high-MTU VPC config survives upgrade  
+- **Compact placement**: Confirm replacement nodes maintain physical topology
 
-# GPU driver version
-kubectl describe nodes -l workload=training | grep nvidia.com/gpu
+**Pre-production testing**: Test the exact upgrade path (1.31→1.32) on a smaller staging cluster with the same A3 Mega + GPUDirect-TCPXO setup.
 
-# Interconnect test (deploy NCCL benchmark)
-kubectl apply -f - <<EOF
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: nccl-test
-spec:
-  template:
-    spec:
-      containers:
-      - name: nccl-test
-        image: nvcr.io/nvidia/nccl-tests:latest
-        command: ["/usr/local/bin/all_reduce_perf", "-b", "1G", "-e", "8G"]
-        resources:
-          limits:
-            nvidia.com/gpu: 8
-      nodeSelector:
-        workload: training
-      restartPolicy: Never
-EOF
-```
+## Timeline & Scheduling
 
-## Expected Timeline
-- **Control plane upgrade:** ~15 minutes (no training impact)
-- **GPU node pool upgrade:** 4-6 hours for 512 nodes (20 nodes parallel max)
-- **Total maintenance window:** Plan 8-hour weekend window between training runs
+| Phase | Duration | Training Impact | When to Execute |
+|-------|----------|-----------------|-----------------|
+| Control plane upgrade | 15-20 min | **None** | Anytime |
+| Maintenance exclusion setup | 2 min | **None** | Before/during training |
+| Node pool upgrade | 6-8 hours | **Full cluster down** | Between training campaigns only |
+| Validation | 1-2 hours | Partial (testing) | After node upgrade |
 
 ## Risk Mitigation
-- ✅ Control plane upgrade is non-disruptive to running training
-- ✅ Training pool upgrade only during scheduled gaps
-- ✅ Autoscaled blue-green minimizes capacity disruption risk
-- ✅ PDB prevents accidental training job eviction
-- ✅ Rollback plan via new node pool creation
 
-Your GPUDirect-TCPXO interconnect should survive this upgrade path, but stage the GPU node upgrade carefully between training campaigns to avoid disrupting multi-week runs.
+### Training Run Protection
+```bash
+# Set persistent exclusion that tracks End of Support
+gcloud container clusters update CLUSTER_NAME \
+  --zone ZONE \
+  --add-maintenance-exclusion-until-end-of-support \
+  --add-maintenance-exclusion-name "training-protection" \
+  --add-maintenance-exclusion-scope no_minor_or_node_upgrades
+```
+
+This exclusion automatically renews when you upgrade to 1.32, protecting future training runs.
+
+### Rollback Plan
+- **Control plane**: Contact GKE support for minor version rollback (not customer-initiated)
+- **Node pools**: Create new pool at 1.31, migrate workloads, delete upgraded pool
+- **Training checkpoints**: Ensure comprehensive checkpointing before upgrade window
+
+### Emergency Scenarios
+```bash
+# If upgrade stalls or fails, cancel operation
+gcloud container operations list --cluster CLUSTER_NAME --zone ZONE
+# Contact GKE support with operation ID for large GPU clusters
+```
+
+## Recommended Execution Window
+
+1. **End current training campaign** - allow natural completion
+2. **Save comprehensive checkpoint** 
+3. **Execute control plane upgrade** (can be done immediately)
+4. **Schedule 8-hour maintenance window** for node upgrade
+5. **Validate interconnect** thoroughly before starting next campaign
+6. **Begin next training run** once validation passes
+
+This approach minimizes risk to your multi-million dollar training campaigns while keeping the cluster updated and secure.

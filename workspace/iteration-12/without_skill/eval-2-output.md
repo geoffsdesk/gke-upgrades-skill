@@ -1,92 +1,79 @@
-Here's a comprehensive upgrade checklist tailored for your GKE Autopilot production clusters upgrading from 1.31 to 1.32:
+Here's a tailored upgrade checklist for your GKE Autopilot clusters upgrading from 1.31 to 1.32:
 
 ## Pre-Upgrade Checklist
 
-### 📋 Planning & Preparation
-- [ ] **Schedule maintenance window** - Plan for potential disruption during upgrade
-- [ ] **Review Kubernetes 1.32 release notes** and breaking changes
-- [ ] **Test upgrade on dev clusters first** (switch one dev cluster to Stable temporarily if needed)
-- [ ] **Backup critical data** and etcd snapshots if possible
-- [ ] **Document current cluster state** (node versions, workload counts, etc.)
+### Testing & Validation
+- [ ] **Test on dev clusters first** - Upgrade your Rapid channel dev clusters and validate all applications
+- [ ] **Application compatibility testing** - Verify your apps work with K8s 1.32 APIs
+- [ ] **Check deprecated APIs** - Review [Kubernetes 1.32 deprecations](https://kubernetes.io/docs/reference/using-api/deprecation-guide/)
+- [ ] **Validate CI/CD pipelines** against dev clusters post-upgrade
 
-### 🔍 Compatibility Assessment
-- [ ] **Check deprecated APIs** - Verify no workloads use APIs removed in 1.32
-- [ ] **Review PSP to PSS migration** - Ensure Pod Security Standards are properly configured
-- [ ] **Validate CNI compatibility** - Check any custom networking configurations
-- [ ] **Assess storage drivers** - Verify CSI driver compatibility
-- [ ] **Check third-party integrations** (monitoring, service mesh, etc.)
+### Backup & Documentation
+- [ ] **Export cluster configurations** using `gcloud container clusters describe`
+- [ ] **Backup critical ConfigMaps and Secrets**
+- [ ] **Document current workload states** and resource utilizations
+- [ ] **Create rollback plan** (note: Autopilot doesn't support downgrades, so focus on workload rollback strategies)
 
-### 📦 Application Readiness
-- [ ] **Container image compatibility** - Test applications against 1.32
-- [ ] **Helm chart versions** - Update to versions supporting 1.32
-- [ ] **Operator compatibility** - Verify all operators support 1.32
-- [ ] **Custom controllers** - Test custom workloads in dev environment
+### Monitoring & Alerting
+- [ ] **Set up upgrade monitoring** - Enable cluster upgrade notifications
+- [ ] **Prepare monitoring dashboards** to track cluster and workload health
+- [ ] **Configure alerting** for critical application metrics during upgrade window
+- [ ] **Identify maintenance window** for each prod cluster
 
-### 🛡️ Security & Compliance
-- [ ] **Review security policies** - Ensure PSS policies are correctly set
-- [ ] **Check RBAC configurations** - Verify no deprecated permissions
-- [ ] **Validate network policies** - Test in dev after upgrade
-- [ ] **Review admission controllers** - Check for any custom webhooks
-
-### 🔧 Infrastructure
-- [ ] **Node pool readiness** - Autopilot handles this, but verify quotas
-- [ ] **Load balancer health** - Document current LB configurations
-- [ ] **DNS configuration** - Note any custom CoreDNS settings
-- [ ] **Monitoring setup** - Ensure metrics collection will continue
+### Application Readiness
+- [ ] **Review Pod Disruption Budgets (PDBs)** - Ensure they're properly configured
+- [ ] **Check workload resource requests/limits** - Autopilot may adjust these
+- [ ] **Validate health checks** (readiness/liveness probes) are robust
+- [ ] **Review HorizontalPodAutoscalers** for proper scaling behavior
 
 ## Post-Upgrade Checklist
 
-### ✅ Immediate Validation (0-30 minutes)
-- [ ] **Cluster status** - Verify cluster shows as "Running"
-- [ ] **Node readiness** - All nodes in Ready state
-- [ ] **System pods** - kube-system namespace pods healthy
-- [ ] **API server response** - kubectl commands work properly
-- [ ] **Control plane components** - All components reporting healthy
+### Immediate Validation (First 30 minutes)
+- [ ] **Verify cluster status** - `gcloud container clusters describe [CLUSTER_NAME]`
+- [ ] **Check node pool status** - Autopilot manages this, but verify all nodes are ready
+- [ ] **Validate core system pods** in kube-system namespace
+- [ ] **Test cluster DNS resolution**
 
-### 🚀 Application Validation (30 minutes - 2 hours)
-- [ ] **Pod status** - All application pods running
-- [ ] **Service discovery** - Internal service communication working
-- [ ] **Load balancer health** - External traffic routing correctly
-- [ ] **Ingress controllers** - HTTP/HTTPS traffic flowing
-- [ ] **Persistent volumes** - Storage mounts functioning
-- [ ] **ConfigMaps/Secrets** - Configuration data accessible
+### Application Health Check
+- [ ] **Verify all deployments are ready** - `kubectl get deployments --all-namespaces`
+- [ ] **Check pod status across namespaces** - Look for CrashLoopBackOff or Pending states
+- [ ] **Test application endpoints** - Both internal services and external ingresses
+- [ ] **Validate autoscaling behavior** - HPA and VPA functionality
 
-### 📊 Performance & Monitoring (2-24 hours)
-- [ ] **Resource utilization** - CPU/memory usage normal
-- [ ] **Application performance** - Response times acceptable
-- [ ] **Logging pipeline** - Logs flowing to destinations
-- [ ] **Metrics collection** - Prometheus/monitoring working
-- [ ] **Alerting system** - Alerts firing appropriately
-- [ ] **Backup systems** - Automated backups functioning
+### Monitoring & Performance
+- [ ] **Review cluster metrics** - CPU, memory, and network utilization
+- [ ] **Check application performance** - Response times and error rates
+- [ ] **Monitor logging pipeline** - Ensure logs are flowing properly
+- [ ] **Validate monitoring stack** (Prometheus, Grafana, etc.)
 
-### 🔒 Security Validation
-- [ ] **Pod Security Standards** - Policies enforcing correctly
-- [ ] **Network policies** - Traffic restrictions working
-- [ ] **RBAC functionality** - Permissions working as expected
-- [ ] **Admission webhooks** - Custom policies functioning
+### Security & Compliance
+- [ ] **Verify RBAC policies** still function correctly
+- [ ] **Test service account authentication**
+- [ ] **Validate network policies** (if using)
+- [ ] **Check security scanning results** for new vulnerabilities
 
-### 📈 Extended Monitoring (24-72 hours)
-- [ ] **Application stability** - No increase in error rates
-- [ ] **Resource consumption** - Memory leaks or unusual usage
-- [ ] **Scheduled jobs** - CronJobs running successfully
-- [ ] **Auto-scaling behavior** - HPA/VPA working correctly
+## Autopilot-Specific Considerations
 
-## Autopilot-Specific Notes
+### Before Upgrade:
+- [ ] **Review resource quotas** - Autopilot may adjust compute classes
+- [ ] **Check for unsupported workloads** - Privileged containers, DaemonSets, etc.
+- [ ] **Validate node selectors/affinity rules** - May not apply in Autopilot
 
-### During Upgrade:
-- Autopilot handles node upgrades automatically
-- No manual node pool management required
-- Workloads will be gracefully drained and rescheduled
-- Expect temporary pod restarts during the process
+### After Upgrade:
+- [ ] **Verify compute class assignments** - Ensure workloads got appropriate resources
+- [ ] **Check for any workload migrations** - Autopilot may move pods during upgrade
+- [ ] **Validate cost implications** - Monitor for any resource allocation changes
 
-### Rollback Plan:
-- GKE Autopilot doesn't support downgrades
-- Ensure you can redeploy workloads to a new 1.31 cluster if needed
-- Keep infrastructure-as-code configs ready for cluster recreation
+## Timeline Recommendation
 
-### Communication Plan:
-- [ ] **Notify stakeholders** before upgrade begins
-- [ ] **Status updates** during maintenance window
-- [ ] **Post-upgrade report** to confirm successful completion
+1. **Week 1**: Test dev cluster upgrades (Rapid channel should upgrade first)
+2. **Week 2**: Validate applications and fix any issues found
+3. **Week 3**: Plan prod upgrade windows and communicate to stakeholders
+4. **Week 4**: Execute prod upgrades with this checklist
 
-Would you like me to elaborate on any specific section or add checks for particular technologies you're using in your clusters?
+## Emergency Contacts
+- [ ] **Ensure on-call rotation is aware** of upgrade schedule
+- [ ] **Have escalation contacts ready** for critical issues
+- [ ] **Prepare stakeholder communication** templates for any issues
+
+Would you like me to elaborate on any specific section or add additional checks based on your particular application stack?

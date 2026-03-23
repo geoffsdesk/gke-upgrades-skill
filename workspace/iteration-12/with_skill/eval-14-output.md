@@ -1,142 +1,161 @@
-This is a classic post-upgrade performance regression. Let me walk you through a systematic diagnosis to identify the root cause.
+This sounds like a post-upgrade performance regression. Let me walk you through a systematic diagnosis to identify the root cause.
 
 ## Immediate Diagnostic Steps
 
-**1. Check API server health and resource usage:**
+### 1. Check Control Plane Health
 ```bash
-# API server pod status
-kubectl get pods -n kube-system -l component=kube-apiserver
+# Verify control plane is stable at 1.32
+gcloud container clusters describe CLUSTER_NAME \
+  --zone ZONE \
+  --format="value(currentMasterVersion,status)"
 
-# API server logs for errors
-kubectl logs -n kube-system -l component=kube-apiserver --tail=100 | grep -E "ERROR|WARN|timeout|throttl"
-
-# Check for any failing system components
-kubectl get pods -n kube-system | grep -v Running
+# Check system pods for any restarts or issues
+kubectl get pods -n kube-system -o wide
+kubectl get events -n kube-system --sort-by='.lastTimestamp' | tail -20
 ```
 
-**2. Examine cluster resource utilization:**
+### 2. API Server Metrics Analysis
 ```bash
-# Node resource pressure
+# Check API server request latency
+kubectl get --raw /metrics | grep apiserver_request_duration_seconds
+
+# Look for error rates
+kubectl get --raw /metrics | grep apiserver_request_total | grep -E "code=\"[45]"
+
+# Check if API server is throttling requests
+kubectl get --raw /metrics | grep apiserver_flowcontrol
+```
+
+### 3. Node Resource Utilization
+```bash
+# Check node resource usage post-upgrade
 kubectl top nodes
-kubectl describe nodes | grep -A 5 "Allocated resources"
+kubectl describe nodes | grep -A 10 "Allocated resources"
 
-# Look for resource pressure conditions
-kubectl get nodes -o json | jq '.items[] | select(.status.conditions[] | select(.type=="MemoryPressure" or .type=="DiskPressure" or .type=="PIDPressure") | .status=="True") | .metadata.name'
+# Look for memory/CPU pressure
+kubectl get nodes -o json | jq '.items[] | {name:.metadata.name, conditions:.status.conditions[] | select(.type=="MemoryPressure" or .type=="DiskPressure" or .type=="PIDPressure")}'
 ```
 
-**3. Check for networking/DNS issues:**
+## Common 1.31→1.32 Issues
+
+### 1. etcd Performance Changes
+GKE 1.32 includes etcd optimizations that can initially cause performance fluctuations:
 ```bash
-# CoreDNS health (common culprit after upgrades)
+# Check etcd metrics if accessible
+kubectl get --raw /metrics | grep etcd_request_duration_seconds
+```
+
+### 2. Increased Control Plane Resource Usage
+1.32 introduced new features that may consume more control plane resources:
+```bash
+# Check if you're hitting API server limits
+kubectl get --raw /metrics | grep apiserver_registered_watchers
+kubectl get --raw /metrics | grep apiserver_storage_objects
+```
+
+### 3. CNI/Networking Changes
+```bash
+# Verify pod networking is healthy
+kubectl get pods -A -o wide | grep -v Running
+
+# Check for CNI-related events
+kubectl get events -A --field-selector reason=NetworkNotReady
+
+# Test pod-to-pod connectivity
+kubectl run test-pod --image=busybox --rm -it -- nslookup kubernetes.default.svc.cluster.local
+```
+
+## Workload-Level Investigation
+
+### 1. Service Discovery Issues
+```bash
+# Check if services are resolving correctly
+kubectl get services -A
+kubectl get endpoints -A | grep -v endpoints
+
+# Verify kube-dns/CoreDNS is healthy
 kubectl get pods -n kube-system -l k8s-app=kube-dns
 kubectl logs -n kube-system -l k8s-app=kube-dns --tail=50
-
-# Service mesh sidecars (if using Istio/Anthos Service Mesh)
-kubectl get pods -A -o json | jq '.items[] | select(.spec.containers[] | .name=="istio-proxy") | "\(.metadata.namespace)/\(.metadata.name)"'
 ```
 
-## Common 1.31 → 1.32 Issues
-
-**API Priority and Fairness (APF) changes:**
-GKE 1.32 introduced stricter API request throttling. Check if you're hitting new rate limits:
-
+### 2. Application-Level Changes
 ```bash
-# Check for APF throttling in API server logs
-kubectl logs -n kube-system -l component=kube-apiserver | grep "request.*throttled"
+# Check for admission webhook issues (common cause of 503s)
+kubectl get validatingwebhookconfigurations
+kubectl get mutatingwebhookconfigurations
 
-# Look at current APF configuration
-kubectl get flowschemas -o wide
-kubectl get prioritylevelconfigurations -o wide
+# Look for webhook timeout/failure events
+kubectl get events -A --field-selector reason=AdmissionWebhookEvaluationFailed
 ```
 
-**Deprecated API usage:**
-Even though the upgrade "succeeded," deprecated APIs may now be failing:
+## Specific Troubleshooting Actions
 
+### If API latency is the primary issue:
 ```bash
-# Check for deprecated API calls causing 503s
-kubectl get --raw /metrics | grep apiserver_request_total | grep -E "deprecated|removed"
+# Check for resource contention
+kubectl get --raw /metrics | grep go_memstats_alloc_bytes
+kubectl get --raw /metrics | grep process_cpu_seconds_total
 
-# Review application logs for API failures
-kubectl logs -n YOUR_NAMESPACE deployment/YOUR_APP --tail=100 | grep -E "503|timeout|connection refused"
+# Verify no stuck controllers
+kubectl get pods -n kube-system | grep controller
 ```
 
-## Application-Level Investigation
-
-**1. Check your service health endpoints:**
+### If 503 errors are service-specific:
 ```bash
-# Verify service endpoints are populated
-kubectl get endpoints -A | grep -E "YOUR_SERVICE|<none>"
+# Check ingress controller health
+kubectl get pods -n kube-system -l app=nginx-ingress-controller
+kubectl get pods -A -l app.kubernetes.io/name=ingress-nginx
 
-# Check service discovery
-kubectl get services -A -o wide
+# Verify load balancer backends
+kubectl get ingress -A
+gcloud compute backend-services list
 ```
 
-**2. Examine ingress/load balancer status:**
+## GKE 1.32 Breaking Changes to Check
+
+1. **Deprecated API removal**: Some beta APIs were removed in K8s 1.32
+2. **PSP to Pod Security Standards**: If using Pod Security Policies
+3. **CSI driver changes**: Storage-related performance impacts
+4. **Network policy enforcement**: Changes in CNI behavior
+
+## Recovery Actions
+
+### Immediate mitigation:
 ```bash
-# GKE Ingress controller logs
-kubectl logs -n kube-system -l k8s-app=glbc --tail=100
+# Scale up critical services if needed
+kubectl scale deployment YOUR_SERVICE --replicas=N
 
-# Service NEG status (if using GKE Ingress)
-kubectl describe service YOUR_SERVICE | grep -A 10 "NEG"
+# Check if horizontal pod autoscaling is working
+kubectl get hpa -A
 ```
 
-**3. Resource requests/limits impact:**
-GKE 1.32 has stricter resource accounting. Check if pods are getting OOMKilled:
-
+### If the issue persists:
 ```bash
-# Recent pod restarts
-kubectl get pods -A -o json | jq '.items[] | select(.status.restartCount > 0) | {ns:.metadata.namespace, name:.metadata.name, restarts:.status.restartCount}'
-
-# OOMKilled events
-kubectl get events -A --field-selector reason=OOMKilling --sort-by='.lastTimestamp'
+# Consider rolling back node pools (control plane rollback requires support)
+# Create new node pool at 1.31 and migrate workloads
+gcloud container node-pools create rollback-pool-131 \
+  --cluster CLUSTER_NAME \
+  --zone ZONE \
+  --cluster-version 1.31.X-gke.XXXX \
+  --num-nodes NUM_NODES \
+  --machine-type MACHINE_TYPE
 ```
 
-## Quick Fixes to Try
+## Monitoring Setup
 
-**1. Restart critical system components:**
-```bash
-# Restart CoreDNS (often resolves DNS-related latency)
-kubectl rollout restart deployment/coredns -n kube-system
+Set up these queries in Cloud Monitoring to track the issue:
+- API server request duration (99th percentile)
+- 5xx error rate from your services
+- Control plane CPU/memory utilization
+- Pod restart rates
 
-# Restart kube-proxy daemonset
-kubectl rollout restart daemonset/kube-proxy -n kube-system
-```
+## Next Steps
 
-**2. Scale up API server replicas (if you have API server scaling configured):**
-```bash
-# Check current API server configuration
-gcloud container clusters describe CLUSTER_NAME --zone ZONE --format="value(autopilot.enablePrivateEndpoint,masterAuth)"
-```
+1. **Collect baseline metrics** from before the upgrade if available
+2. **Test in a staging cluster** at 1.32 to isolate the issue
+3. **Check GKE release notes** for 1.32 breaking changes specific to your workloads
+4. **Contact GKE support** if the performance regression is severe - include cluster name, zone, and specific symptoms
 
-**3. Verify no resource exhaustion:**
-```bash
-# Check if any nodes are approaching resource limits
-kubectl describe nodes | grep -E "cpu|memory" -A 2 -B 2
-```
+The fact that all nodes show Ready but you're seeing API/service issues suggests this is likely a control plane performance regression or an application compatibility issue with K8s 1.32 rather than a node-level problem.
 
-## What to Monitor Going Forward
-
-Set up monitoring for these metrics to catch similar issues early:
-
-```bash
-# Key metrics to track post-upgrade
-# - API server request latency (apiserver_request_duration_seconds)
-# - API server request rate (apiserver_request_total)
-# - Pod startup time
-# - Service response time at application level
-```
-
-## Most Likely Culprits (in order of frequency)
-
-1. **CoreDNS configuration mismatch** — restart CoreDNS first
-2. **Resource pressure** — new resource accounting in 1.32 may expose under-provisioned workloads
-3. **API Priority and Fairness throttling** — overly aggressive clients getting rate-limited
-4. **Deprecated API usage** — apps still calling removed APIs, causing fallback behavior
-5. **Service mesh sidecar compatibility** — if using Istio, check sidecar versions
-
-## Rollback Consideration
-
-If the issue is severe and affecting production traffic, you may need to:
-1. **Node pools:** Create a new node pool at 1.31, migrate workloads, delete 1.32 pool
-2. **Control plane:** Contact GKE support for control plane downgrade (requires support involvement)
-
-What specific services are showing 503s? Are they internal (pod-to-pod) or external (ingress)? This will help narrow down whether it's a networking, DNS, or application-level issue.
+Would you like me to focus on any specific area based on what you're seeing in these diagnostic outputs?

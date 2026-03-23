@@ -1,90 +1,105 @@
-When GKE schedules a maintenance event for your TPU v5e multislice setup, here's what you can expect and how to prepare:
+When GKE schedules a maintenance event for your TPU multislice setup, here's what you can expect and how to prepare:
 
 ## What Will Happen
 
-**During Maintenance:**
-- TPU nodes will be cordoned and drained sequentially
-- Your training job will be **interrupted and terminated** when nodes go down
-- With multislice training, losing even one slice typically breaks the entire distributed job
-- Pods will be evicted with a termination grace period (usually 30 seconds to a few minutes)
+**Likely Impact:**
+- **Complete training interruption** - TPU maintenance typically requires a full restart of the TPU pods
+- **All 4 slices will likely be affected** - Maintenance events often affect entire TPU zones/regions
+- **Memory state loss** - All model states, optimizer states, and intermediate computations in TPU memory will be lost
+- **Duration**: Typically 15-60 minutes, but can vary
 
-**Timeline:**
-- You'll typically get 24-48 hours advance notice
-- The actual maintenance window may last several hours
-- TPU nodes will come back online automatically after maintenance
-
-## How to Prepare
+## Preparation Steps
 
 ### 1. **Implement Robust Checkpointing**
 ```python
-# Ensure frequent checkpointing
-checkpoint_interval = 100  # steps, adjust based on your needs
-checkpoint_manager = tf.train.CheckpointManager(
-    checkpoint, 
-    directory=checkpoint_dir,
-    max_to_keep=3
+# Increase checkpoint frequency before maintenance
+checkpoint_every_n_steps = 50  # vs normal 500-1000
+save_checkpoint_with_metadata(
+    step=current_step,
+    model_state=model_state,
+    optimizer_state=optimizer_state,
+    data_iterator_state=data_iter.state,
+    timestamp=time.time()
 )
-
-# Save on preemption signal
-import signal
-def signal_handler(signum, frame):
-    logging.info("Received termination signal, saving checkpoint...")
-    checkpoint_manager.save()
-    
-signal.signal(signal.SIGTERM, signal_handler)
 ```
 
-### 2. **Use Preemptible-Aware Job Management**
+### 2. **Enable Preemption Handling**
 ```yaml
-# In your Job/Deployment spec
+# In your deployment YAML
 spec:
   template:
     spec:
-      terminationGracePeriodSeconds: 120  # Give time for checkpoint save
       containers:
       - name: training
-        lifecycle:
-          preStop:
-            exec:
-              command: ["/bin/sh", "-c", "echo 'Saving final checkpoint'; python save_checkpoint.py"]
+        env:
+        - name: ENABLE_CHECKPOINT_ON_PREEMPTION
+          value: "true"
 ```
 
-### 3. **Plan Your Response Strategy**
+### 3. **Set Up Monitoring & Alerts**
+```python
+# Monitor for preemption signals
+import signal
+import sys
 
-**Option A: Ride it out**
-- Save checkpoints more frequently before the maintenance window
-- Accept the downtime and restart training afterward
-- Best for: Non-critical timelines, cost-sensitive workloads
+def preemption_handler(signum, frame):
+    logger.info("Preemption signal received, saving checkpoint...")
+    save_emergency_checkpoint()
+    sys.exit(0)
 
-**Option B: Migrate workload**
-- Move to a different zone/region before maintenance
-- Requires: Available TPU capacity elsewhere, checkpoint portability
-- Best for: Time-critical training runs
-
-### 4. **Operational Preparations**
-- **Verify checkpoint integrity** before the maintenance window
-- **Document restart procedures** for your team
-- **Set up monitoring** to detect when nodes come back online
-- **Pre-stage restart scripts** to quickly resume training
-
-### 5. **Post-Maintenance Actions**
-```bash
-# Check TPU health after maintenance
-kubectl get nodes
-kubectl describe tpu-node <node-name>
-
-# Restart training job
-kubectl apply -f your-training-job.yaml
-
-# Monitor convergence after restart
-# (check for any training instability)
+signal.signal(signal.SIGTERM, preemption_handler)
 ```
 
-## Pro Tips
+### 4. **Configure Automatic Restart**
+```yaml
+apiVersion: batch/v1
+kind: Job
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: training
+        args: ["--resume_from_checkpoint", "gs://your-bucket/checkpoints/latest"]
+```
 
-1. **Test your checkpoint/restart flow regularly** - don't find out it's broken during an actual outage
-2. **Consider async checkpointing** to reduce training overhead
-3. **Monitor GKE notifications** closely - you might get updates on timing
-4. **Have a rollback plan** if post-maintenance training shows issues
+## Best Practices for Your Scale
 
-The key is accepting that interruption is inevitable with infrastructure maintenance, so focus on minimizing recovery time rather than preventing the interruption itself.
+### **Multislice Considerations:**
+- **Synchronized checkpointing**: Ensure all 4 slices checkpoint at the same global step
+- **Data pipeline state**: Save data iterator state to avoid reprocessing
+- **Gradient accumulation**: Consider your accumulation boundaries around checkpoint timing
+
+### **Storage Strategy:**
+```python
+# Use multiple checkpoint locations
+checkpoint_locations = [
+    "gs://primary-bucket/checkpoints/",
+    "gs://backup-bucket/checkpoints/",
+    "/mnt/persistent-disk/checkpoints/"  # Local fallback
+]
+```
+
+### **Recovery Optimization:**
+- Pre-warm your data pipeline during restart
+- Implement checkpoint validation to catch corruption
+- Consider async checkpointing to minimize training interruption
+
+## Timeline Management
+
+**Before maintenance (24-48h prior):**
+- Increase checkpoint frequency
+- Verify checkpoint/restart procedures
+- Clear any non-essential workloads
+
+**During maintenance:**
+- Monitor GKE events and pod status
+- Have your team ready for manual intervention if auto-restart fails
+
+**After maintenance:**
+- Verify all 4 slices restart properly
+- Check training loss continuity for any issues
+- Monitor for performance regressions
+
+The key insight for your scale: with 1024 total TPU chips, even a few minutes of downtime is expensive, so invest in making your restart as fast and reliable as possible. Most well-prepared LLM training jobs can resume within 5-10 minutes after TPU resources are available again.

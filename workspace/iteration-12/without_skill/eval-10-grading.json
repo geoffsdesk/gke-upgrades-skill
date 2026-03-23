@@ -3,42 +3,42 @@
     {
       "expectation": "Explains that spot VMs can be preempted at any time, which interacts with the upgrade drain process",
       "passed": true,
-      "reason": "Response clearly explains dual disruption risk from spot preemption and upgrade process, and mentions treating it as a 'double disruption' scenario"
+      "reason": "The response clearly explains that spot VMs can be preempted at any time, including during the upgrade process, creating a 'double jeopardy' scenario where nodes might be lost due to both upgrade operations and spot preemption."
     },
     {
       "expectation": "Notes that spot node pools may already have workloads designed for interruption (good for upgrades)",
       "passed": false,
-      "reason": "While the response mentions workload fault-tolerance in the context of risk mitigation, it doesn't explicitly note that spot workloads are already designed for interruption making them well-suited for upgrades"
+      "reason": "The response does not explicitly mention that spot workloads are typically designed for interruption, which would make them better suited for upgrades. It focuses more on the challenges rather than this advantage."
     },
     {
       "expectation": "Recommends higher maxSurge for spot pools since the workloads should already be fault-tolerant",
-      "passed": true,
-      "reason": "Response shows maxSurge: 2 with comment 'Higher surge for spot pools' and explains this is recommended for spot instances"
+      "passed": false,
+      "reason": "The response actually recommends conservative surge settings (max-surge-upgrade=1 or 2) rather than higher maxSurge values, contradicting this expectation."
     },
     {
       "expectation": "Advises setting maxUnavailable >0 for spot pools since workloads are already preemption-tolerant",
       "passed": false,
-      "reason": "Response actually recommends maxUnavailable: 0 with comment 'Avoid unavailable nodes with spot risk', which is opposite to the expectation"
+      "reason": "The response shows max-unavailable-upgrade=0 in the first example and max-unavailable-upgrade=1 in the second, but doesn't specifically advise setting it >0 because workloads are preemption-tolerant. The reasoning provided is about being conservative."
     },
     {
       "expectation": "Mentions that spot VM availability may affect surge node creation (not guaranteed to get spot instances)",
-      "passed": true,
-      "reason": "Response mentions planning upgrades during periods when 'spot availability is higher' and discusses spot availability considerations"
+      "passed": false,
+      "reason": "The response does not mention potential issues with spot VM availability affecting the ability to create surge nodes during upgrades."
     },
     {
       "expectation": "Recommends having PDBs even for spot workloads to ensure orderly drain during upgrade",
       "passed": true,
-      "reason": "Response provides a specific PodDisruptionBudget YAML example under workload protection section"
+      "reason": "The response includes a specific PodDisruptionBudget example and emphasizes ensuring proper PDBs are in place as part of workload preparation."
     },
     {
       "expectation": "Provides the gcloud command for configuring surge settings on the spot pool",
-      "passed": false,
-      "reason": "Response shows YAML configuration for surge settings but does not provide the actual gcloud command to configure these settings on a node pool"
+      "passed": true,
+      "reason": "The response provides multiple gcloud commands showing how to configure surge settings, including specific examples for spot pools with max-surge-upgrade and max-unavailable-upgrade parameters."
     },
     {
       "expectation": "Suggests upgrading spot pools before on-demand pools since they're lower risk",
       "passed": false,
-      "reason": "Response does not suggest upgrading spot pools before on-demand pools or mention that spot pools are lower risk for upgrades"
+      "reason": "The response actually suggests the opposite - upgrading on-demand pools first ('upgrade on-demand first') and then upgrading spot pools, treating spot pools as higher risk rather than lower risk."
     }
   ]
 }

@@ -3,22 +3,22 @@
     {
       "expectation": "Explains that Extended channel provides up to 24 months of support vs 14 months for standard channels",
       "passed": true,
-      "reason": "Response clearly states '24-month support window (vs. 14 months on Regular)' in the benefits section"
+      "reason": "Response clearly states 'Extended channel provides up to 24 months of support for specific GKE versions (1.27+), compared to the standard 14 months'"
     },
     {
       "expectation": "Mentions that Extended channel has additional cost (it's not free)",
       "passed": true,
-      "reason": "Response explicitly states 'Additional charges apply only during the extended support period (months 15-24)' and mentions 'Cost is per-node-hour during extended support period'"
+      "reason": "Response explicitly mentions 'Additional cost: Extra charges apply only during the extended support period (months 15-24)' and includes cost implications section"
     },
     {
       "expectation": "Notes that Extended channel gets the same versions as Regular but keeps them available longer",
-      "passed": true,
-      "reason": "Response states 'Extended gets the same versions as Regular at the same time initially' and 'The difference is Extended keeps versions longer past their normal EoS date'"
+      "passed": false,
+      "reason": "Response does not explicitly explain that Extended gets the same versions as Regular channel but keeps them available longer - it only mentions Extended has select versions with extended support"
     },
     {
       "expectation": "Warns that staying on older versions longer means missing new features and accumulating technical debt",
       "passed": false,
-      "reason": "While the response mentions that Extended doesn't delay access to new features, it doesn't warn about missing features or technical debt from staying on older versions longer"
+      "reason": "Response mentions 'Delayed security patches' as a tradeoff but does not specifically warn about missing new features or accumulating technical debt"
     },
     {
       "expectation": "Provides the gcloud command to change the release channel to Extended",
@@ -28,22 +28,22 @@
     {
       "expectation": "Advises checking that the current version (1.31) is available on Extended before switching",
       "passed": true,
-      "reason": "Response includes commands to 'Check available versions in Extended channel' and states 'Since you're on GKE 1.31, you're eligible for Extended support (available for 1.27+)'"
+      "reason": "Response includes 'Verify Extended Support Availability' section with command to check if 1.31 has extended support available"
     },
     {
       "expectation": "Recommends Extended for environments with compliance requirements or slow internal change processes",
       "passed": false,
-      "reason": "While the response mentions control and upgrade pressure, it doesn't specifically mention compliance requirements or slow internal change processes as use cases for Extended"
+      "reason": "Response does not specifically mention compliance requirements or slow internal change processes as use cases for Extended channel"
     },
     {
       "expectation": "Mentions that Extended doesn't mean you can skip upgrades forever \u2014 you still must upgrade within 24 months",
       "passed": true,
-      "reason": "Response states 'Extended delays automatic EoS upgrades until end of extended support' and mentions planning 'manual upgrades before end of extended support'"
+      "reason": "Response implies this through mentions of 'end of extended support' enforcement and 24-month support window limitations"
     },
     {
       "expectation": "Notes that minor version upgrades on Extended are NOT automated (except at EoS) \u2014 customers must plan and initiate them manually",
       "passed": true,
-      "reason": "Response explicitly states 'Minor version upgrades are NOT automated on Extended (except at end of extended support)' and 'You must manually initiate minor upgrades'"
+      "reason": "Response clearly states 'Manual minor upgrades required: Minor version upgrades are NOT automated on Extended channel (except at end of extended support). You must plan and execute minor upgrades yourself' and provides detailed manual upgrade process"
     }
   ]
 }

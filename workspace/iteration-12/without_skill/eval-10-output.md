@@ -1,72 +1,44 @@
-When upgrading node pools with spot VMs from Kubernetes 1.31 to 1.32, here are the key considerations and best practices:
+When upgrading node pools with spot VMs from Kubernetes 1.31 to 1.32, there are several important considerations to ensure a smooth transition:
 
-## Spot VM-Specific Considerations
+## Key Spot VM Upgrade Considerations
 
-### 1. **Increased Interruption Risk During Upgrades**
+### 1. **Higher Interruption Risk During Upgrades**
+- Spot VMs can be preempted at any time, including during the upgrade process
+- This creates a "double jeopardy" scenario where nodes might be lost due to both upgrade operations and spot preemption
+
+### 2. **Upgrade Strategy Planning**
+
+**For Mixed Node Pools (Spot + On-Demand):**
 ```bash
-# Check current spot interruption rates before upgrade
-gcloud compute operations list --filter="operationType:compute.instances.preempted" --limit=50
+# Check your current node pool configuration
+kubectl get nodes -o custom-columns=NAME:.metadata.name,INSTANCE-TYPE:.metadata.labels.node\.kubernetes\.io/instance-type,SPOT:.metadata.labels.cloud\.google\.com/gce-preemptible
+
+# Upgrade with careful surge settings
+gcloud container node-pools update POOL_NAME \
+    --cluster=CLUSTER_NAME \
+    --max-surge-upgrade=1 \
+    --max-unavailable-upgrade=0
 ```
 
-- Spot VMs face dual disruption: spot preemption + upgrade process
-- Plan upgrades during low-demand periods when spot availability is higher
-- Consider temporarily increasing on-demand instance ratio
+**Consider Separate Upgrades:**
+```bash
+# If you have separate spot and on-demand pools, upgrade on-demand first
+gcloud container node-pools upgrade on-demand-pool \
+    --cluster=CLUSTER_NAME \
+    --node-version=1.32.x
 
-### 2. **Upgrade Strategy Configuration**
+# Then upgrade spot pool with more conservative settings
+gcloud container node-pools upgrade spot-pool \
+    --cluster=CLUSTER_NAME \
+    --node-version=1.32.x \
+    --max-surge-upgrade=2 \
+    --max-unavailable-upgrade=1
+```
+
+### 3. **Workload Preparation**
+
+**Ensure Proper PodDisruptionBudgets:**
 ```yaml
-# Configure surge settings for mixed instance pools
-nodePool:
-  upgradeSettings:
-    maxSurge: 2           # Higher surge for spot pools
-    maxUnavailable: 0     # Avoid unavailable nodes with spot risk
-    strategy: "SURGE"     # Recommended for spot instances
-```
-
-### 3. **Pre-Upgrade Preparation**
-```bash
-# Scale up on-demand instances temporarily
-gcloud container node-pools update [NODE_POOL_NAME] \
-    --cluster=[CLUSTER_NAME] \
-    --zone=[ZONE] \
-    --enable-autoscaling \
-    --max-nodes=20 \
-    --min-nodes=5
-
-# Check workload distribution
-kubectl get pods -o wide --all-namespaces | grep -E "(spot|preemptible)"
-```
-
-## Recommended Upgrade Process
-
-### 1. **Staged Approach**
-```bash
-# Option 1: Upgrade control plane first
-gcloud container clusters upgrade [CLUSTER_NAME] --master --cluster-version=1.32
-
-# Option 2: Create new node pool with 1.32, then migrate
-gcloud container node-pools create "pool-132-mixed" \
-    --cluster=[CLUSTER_NAME] \
-    --machine-type=e2-standard-4 \
-    --spot \
-    --num-nodes=3 \
-    --node-version=1.32 \
-    --enable-autoscaling \
-    --max-nodes=10 \
-    --min-nodes=2
-```
-
-### 2. **Enhanced Monitoring**
-```bash
-# Monitor spot interruptions during upgrade
-kubectl get events --field-selector reason=Preempted -w
-
-# Track node readiness
-kubectl get nodes -l cloud.google.com/gke-spot=true -w
-```
-
-### 3. **Workload Protection**
-```yaml
-# Enhance PodDisruptionBudgets for critical workloads
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
@@ -76,52 +48,91 @@ spec:
   selector:
     matchLabels:
       app: critical-app
----
-# Use node affinity to prefer on-demand during upgrade
-affinity:
-  nodeAffinity:
-    preferredDuringSchedulingIgnoredDuringExecution:
-    - weight: 100
-      preference:
-        matchExpressions:
-        - key: cloud.google.com/gke-spot
-          operator: DoesNotExist
 ```
 
-## Best Practices for Mixed Instance Pools
-
-### 1. **Gradual Migration Strategy**
-```bash
-# Cordon spot nodes before upgrade
-kubectl cordon -l cloud.google.com/gke-spot=true
-
-# Drain workloads gradually
-kubectl drain NODE_NAME --ignore-daemonsets --delete-emptydir-data --grace-period=300
-```
-
-### 2. **Enhanced Cluster Autoscaler Configuration**
+**Configure Node Affinity for Critical Workloads:**
 ```yaml
-# Configure CA for mixed instances
-cluster-autoscaler.kubernetes.io/scale-down-delay-after-add: "10m"
-cluster-autoscaler.kubernetes.io/scale-down-unneeded-time: "10m"
-cluster-autoscaler.kubernetes.io/skip-nodes-with-local-storage: "false"
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: cloud.google.com/gce-preemptible
+                operator: NotIn
+                values: ["true"]
 ```
 
-### 3. **Post-Upgrade Validation**
+### 4. **Monitoring and Timing**
+
+**Pre-upgrade Checks:**
 ```bash
-# Verify node versions
-kubectl get nodes -o custom-columns=NAME:.metadata.name,VERSION:.status.nodeInfo.kubeletVersion,SPOT:.metadata.labels.cloud\.google\.com/gke-spot
+# Monitor current spot instance interruption rates
+kubectl get events --field-selector reason=Preempted
 
 # Check workload distribution
-kubectl top nodes
-kubectl get pods -o wide | awk '{print $7}' | sort | uniq -c
+kubectl get pods -o wide --all-namespaces | grep -E "(spot|preemptible)"
 ```
 
-## Risk Mitigation
+**Optimal Timing:**
+- Schedule upgrades during low-traffic periods
+- Avoid upgrades during known high spot-interruption windows
+- Consider regional spot pricing trends
 
-1. **Backup Strategy**: Ensure workloads can handle simultaneous spot preemption + upgrade disruption
-2. **Timing**: Upgrade during periods of high spot availability (typically weekends/off-hours)
-3. **Capacity Planning**: Temporarily increase on-demand capacity during upgrade window
-4. **Monitoring**: Set up alerts for high spot interruption rates during upgrade
+### 5. **Progressive Upgrade Approach**
 
-The key is treating this as a "double disruption" scenario and planning accordingly with enhanced surge capacity and careful timing.
+```bash
+# 1. Start with a small batch
+gcloud container node-pools update spot-pool \
+    --cluster=CLUSTER_NAME \
+    --node-version=1.32.x \
+    --max-surge-upgrade=1 \
+    --max-unavailable-upgrade=0
+
+# 2. Monitor for 15-30 minutes between batches
+kubectl get nodes -w
+
+# 3. Gradually increase if stable
+```
+
+### 6. **Backup Strategies**
+
+**Temporary On-Demand Capacity:**
+```bash
+# Create temporary on-demand node pool for critical workloads
+gcloud container node-pools create temp-upgrade-pool \
+    --cluster=CLUSTER_NAME \
+    --machine-type=e2-standard-4 \
+    --num-nodes=2 \
+    --node-version=1.32.x
+```
+
+### 7. **Post-Upgrade Validation**
+
+```bash
+# Verify all nodes are running the new version
+kubectl get nodes -o custom-columns=NAME:.metadata.name,VERSION:.status.nodeInfo.kubeletVersion,SPOT:.metadata.labels.cloud\.google\.com/gce-preemptible
+
+# Check for any stuck pods
+kubectl get pods --all-namespaces --field-selector=status.phase=Pending
+
+# Validate workload distribution
+kubectl top nodes
+```
+
+## Best Practices Summary
+
+1. **Upgrade during low-traffic periods** to minimize impact
+2. **Use conservative surge settings** (max-surge-upgrade=1 or 2)
+3. **Ensure robust PodDisruptionBudgets** are in place
+4. **Consider temporary on-demand capacity** for critical workloads
+5. **Monitor spot interruption patterns** in your region
+6. **Test the upgrade process** in a staging environment first
+7. **Have rollback plans** ready in case of issues
+
+The key is being more patient and conservative with spot VM upgrades compared to regular on-demand instances, as you're dealing with inherently less reliable infrastructure.

@@ -2,48 +2,48 @@
   "assertions": [
     {
       "expectation": "Recommends upgrading the control plane first before any node pools",
-      "passed": false,
-      "reason": "The response does not mention upgrading the control plane first, it jumps directly into node pool upgrades"
+      "passed": true,
+      "reason": "Phase 1 explicitly shows upgrading the GKE control plane first with 'gcloud container clusters upgrade' --master command"
     },
     {
       "expectation": "Provides a specific node pool upgrade order with rationale (coordinating\u2192data\u2192master, or similar logical sequence)",
       "passed": true,
-      "reason": "Clearly outlines coordinating\u2192data\u2192master upgrade order with rationale that coordinating nodes are lowest risk and masters are most critical"
+      "reason": "Response provides clear order: coordinating nodes first (least critical for data), then data nodes, then master nodes, with rationale for each phase"
     },
     {
       "expectation": "Addresses PV safety: regional pd-ssd volumes can reattach to nodes in other zones, which is good for upgrades",
-      "passed": true,
-      "reason": "Mentions in the final paragraph that 'regional PD-SSD volumes will automatically reattach to new nodes, preserving all data' and includes a safety consideration about monitoring PV attachment"
+      "passed": false,
+      "reason": "Response mentions regional pd-ssd in context but doesn't specifically address how these volumes can reattach to nodes in other zones during upgrades"
     },
     {
       "expectation": "Recommends setting PDB for Elasticsearch master nodes to ensure quorum (minAvailable=2 for 3-master setup)",
       "passed": false,
-      "reason": "Does not mention PodDisruptionBudgets (PDB) for master nodes or quorum protection"
+      "reason": "Response does not mention PodDisruptionBudget (PDB) configuration for master nodes to ensure quorum"
     },
     {
       "expectation": "Recommends maxSurge=1, maxUnavailable=0 for all ES node pools (conservative, data-safe)",
       "passed": true,
-      "reason": "Explicitly specifies '--max-surge-upgrade=1 --max-unavailable-upgrade=0' for both data and master node pool upgrades"
+      "reason": "Response shows '--max-surge=1 --max-unavailable=0' flags in the gcloud commands for node pool upgrades"
     },
     {
       "expectation": "Advises verifying Elasticsearch cluster health (green status) between each node pool upgrade",
       "passed": true,
-      "reason": "Includes specific commands to check cluster health before and between upgrades, including a while loop to wait for green status between data node upgrades"
+      "reason": "Response includes multiple cluster health checks between upgrade phases and provides specific curl commands for health verification"
     },
     {
       "expectation": "Mentions checking PV reclaim policy is set to Retain (not Delete) as a safety measure",
       "passed": false,
-      "reason": "Does not mention checking or setting PV reclaim policy to Retain"
+      "reason": "Response does not mention checking or setting PV reclaim policy to Retain as a safety measure"
     },
     {
       "expectation": "Includes kubectl commands for checking StatefulSet rollout status",
-      "passed": true,
-      "reason": "Includes 'kubectl get pods' commands to watch pod status and monitor the StatefulSet rollout during upgrades"
+      "passed": false,
+      "reason": "Response includes various kubectl commands but does not specifically show commands for checking StatefulSet rollout status (e.g., kubectl rollout status)"
     },
     {
       "expectation": "Recommends taking an Elasticsearch snapshot backup before starting",
       "passed": true,
-      "reason": "First step in pre-upgrade preparation includes detailed curl commands for creating Elasticsearch snapshots"
+      "reason": "Pre-upgrade checklist includes detailed commands for creating snapshot repository and taking a backup before starting the upgrade"
     }
   ]
 }

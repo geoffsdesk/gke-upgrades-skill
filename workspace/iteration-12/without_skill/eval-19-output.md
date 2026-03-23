@@ -1,177 +1,338 @@
-I'll help you create a systematic approach to triage GKE upgrade notifications. Here's a priority-based framework:
+I'll help you create a comprehensive triage system for GKE upgrade notifications. Here's a priority-based approach:
 
-## 🚨 **CRITICAL - Immediate Action Required**
+## GKE Notification Triage Matrix
 
-### Security Patches & Vulnerabilities
-- **Indicators**: "security patch", "CVE", "vulnerability", "security update"
-- **Timeline**: Act within 24-48 hours
-- **Action**: Review patch details, test in staging, apply immediately
+### 🚨 **CRITICAL - Immediate Action Required**
+**Timeframe: Within 24-48 hours**
 
-### End-of-Life (EOL) Warnings - Final Notice
-- **Indicators**: "will be deprecated", "support ending", "final notice"
-- **Timeline**: Plan upgrade within 2 weeks
-- **Action**: Schedule maintenance window, upgrade before EOL date
+- **Security patches with CVE ratings 7.0+**
+- **End-of-life warnings with <30 days remaining**
+- **Forced upgrade notifications**
+- **Auto-upgrade failures**
 
-## 🟧 **HIGH - Action Needed Soon**
+**Actions:**
+- Plan immediate maintenance window
+- Test in staging environment
+- Coordinate with team for upgrade execution
 
-### Forced Auto-Upgrades
-- **Indicators**: "auto-upgrade scheduled", "mandatory upgrade", specific date mentioned
-- **Timeline**: Plan within 1-2 weeks before scheduled date
-- **Action**: Test compatibility, schedule manual upgrade if preferred timing needed
+### ⚠️ **HIGH PRIORITY - Action Required Soon**
+**Timeframe: Within 1-2 weeks**
 
-### EOL Early Warnings
-- **Indicators**: "will be deprecated in X months", advance EOL notices
-- **Timeline**: Plan upgrade within 30-60 days
-- **Action**: Begin compatibility testing, plan migration timeline
+- **End-of-life warnings with 30-90 days remaining**
+- **Security patches with CVE ratings 4.0-6.9**
+- **Auto-upgrade notifications for production clusters**
+- **Version skew warnings (node vs control plane)**
 
-## 🟨 **MEDIUM - Plan Ahead**
+**Actions:**
+- Schedule maintenance window
+- Begin testing new versions
+- Review release notes for breaking changes
 
-### New Version Available
-- **Indicators**: "new version available", "recommended upgrade", "stable release"
-- **Timeline**: Evaluate within 30 days, implement in next maintenance cycle
-- **Action**: Review release notes, test in development environment
+### 📋 **MEDIUM PRIORITY - Plan Ahead**
+**Timeframe: Within 30-60 days**
 
-### Feature Deprecations
-- **Indicators**: "feature will be removed", "API deprecation", future compatibility warnings
-- **Timeline**: Plan migration within 3-6 months
-- **Action**: Audit usage, plan code/config updates
+- **Available version updates (non-security)**
+- **Auto-upgrade notifications for dev/staging**
+- **End-of-life warnings with 90+ days remaining**
+- **Feature deprecation notices**
 
-## 🟩 **LOW - Informational**
+**Actions:**
+- Add to upgrade planning backlog
+- Monitor for stability reports
+- Begin compatibility testing
 
-### General Announcements
-- **Indicators**: "now available", "beta release", "preview features"
-- **Timeline**: Review when convenient
-- **Action**: Monitor for stability, consider for future upgrades
+### ℹ️ **LOW PRIORITY - Informational**
+**Timeframe: Monitor and track**
 
-## **Triage Automation Script**
+- **General availability announcements**
+- **New feature notifications**
+- **Best practices recommendations**
+- **Successful auto-upgrade confirmations**
+
+**Actions:**
+- File for future reference
+- Update documentation
+- Consider for next planned upgrade cycle
+
+## Automated Triage Script
 
 Here's a script to help categorize notifications:
 
 ```python
 import re
+import json
 from datetime import datetime, timedelta
+from dataclasses import dataclass
+from typing import List, Optional
+from enum import Enum
 
-class GKENotificationTriager:
+class Priority(Enum):
+    CRITICAL = "CRITICAL"
+    HIGH = "HIGH"
+    MEDIUM = "MEDIUM"
+    LOW = "LOW"
+
+@dataclass
+class TriageResult:
+    priority: Priority
+    action_required: bool
+    timeframe: str
+    reasoning: str
+    next_steps: List[str]
+
+class GKENotificationTriage:
     def __init__(self):
         self.critical_keywords = [
-            'security patch', 'cve', 'vulnerability', 'security update',
-            'final notice', 'support ending', 'will be deprecated'
+            "security patch", "cve", "vulnerability", "forced upgrade",
+            "end of life", "eol", "deprecated", "auto-upgrade failed"
         ]
         
-        self.high_keywords = [
-            'auto-upgrade scheduled', 'mandatory upgrade', 'forced upgrade',
-            'deprecated in.*month', 'end of life'
+        self.high_priority_keywords = [
+            "version skew", "unsupported", "upgrade required",
+            "maintenance required"
         ]
         
-        self.medium_keywords = [
-            'new version available', 'recommended upgrade', 'stable release',
-            'feature.*deprecated', 'api.*deprecated'
+        self.medium_priority_keywords = [
+            "available update", "new version", "recommended upgrade"
+        ]
+
+    def extract_cve_score(self, content: str) -> Optional[float]:
+        """Extract CVE score from notification content"""
+        cve_pattern = r"CVE-\d{4}-\d+.*?(\d+\.\d+)"
+        matches = re.findall(cve_pattern, content, re.IGNORECASE)
+        if matches:
+            return float(matches[0])
+        return None
+
+    def extract_eol_date(self, content: str) -> Optional[datetime]:
+        """Extract end-of-life date from notification"""
+        date_patterns = [
+            r"end of life.*?(\d{4}-\d{2}-\d{2})",
+            r"deprecated.*?(\d{4}-\d{2}-\d{2})",
+            r"support ends.*?(\d{4}-\d{2}-\d{2})"
         ]
         
-        self.date_patterns = [
-            r'(\d{4}-\d{2}-\d{2})',
-            r'(\w+ \d{1,2}, \d{4})',
-            r'(in \d+ days?)',
-            r'(in \d+ weeks?)'
-        ]
-    
-    def extract_dates(self, text):
-        dates = []
-        for pattern in self.date_patterns:
-            matches = re.findall(pattern, text, re.IGNORECASE)
-            dates.extend(matches)
-        return dates
-    
-    def triage_notification(self, subject, body):
-        text = f"{subject} {body}".lower()
-        dates = self.extract_dates(text)
+        for pattern in date_patterns:
+            match = re.search(pattern, content, re.IGNORECASE)
+            if match:
+                try:
+                    return datetime.strptime(match.group(1), "%Y-%m-%d")
+                except ValueError:
+                    continue
+        return None
+
+    def triage_notification(self, subject: str, content: str, 
+                          cluster_type: str = "production") -> TriageResult:
+        """Main triage function"""
+        subject_lower = subject.lower()
+        content_lower = content.lower()
         
-        # Check for critical indicators
-        for keyword in self.critical_keywords:
-            if keyword in text:
-                return {
-                    'priority': 'CRITICAL',
-                    'action_needed': 'Immediate (24-48 hours)',
-                    'reason': f'Contains: {keyword}',
-                    'dates_found': dates
-                }
+        # Check for critical conditions
+        if any(keyword in subject_lower or keyword in content_lower 
+               for keyword in self.critical_keywords):
+            return self._handle_critical(subject, content, cluster_type)
         
-        # Check for high priority
-        for keyword in self.high_keywords:
-            if keyword in text:
-                return {
-                    'priority': 'HIGH', 
-                    'action_needed': 'Within 1-2 weeks',
-                    'reason': f'Contains: {keyword}',
-                    'dates_found': dates
-                }
+        # Check for high priority conditions
+        if any(keyword in subject_lower or keyword in content_lower 
+               for keyword in self.high_priority_keywords):
+            return self._handle_high_priority(subject, content, cluster_type)
         
         # Check for medium priority
-        for keyword in self.medium_keywords:
-            if keyword in text:
-                return {
-                    'priority': 'MEDIUM',
-                    'action_needed': 'Next maintenance cycle (30 days)',
-                    'reason': f'Contains: {keyword}',
-                    'dates_found': dates
-                }
+        if any(keyword in subject_lower or keyword in content_lower 
+               for keyword in self.medium_priority_keywords):
+            return self._handle_medium_priority(subject, content, cluster_type)
         
-        return {
-            'priority': 'LOW',
-            'action_needed': 'Review when convenient',
-            'reason': 'General informational',
-            'dates_found': dates
-        }
+        # Default to low priority
+        return TriageResult(
+            priority=Priority.LOW,
+            action_required=False,
+            timeframe="Monitor and track",
+            reasoning="Informational notification",
+            next_steps=["File for reference", "Update documentation"]
+        )
+
+    def _handle_critical(self, subject: str, content: str, 
+                        cluster_type: str) -> TriageResult:
+        """Handle critical notifications"""
+        reasoning_parts = []
+        next_steps = ["Plan immediate maintenance window"]
+        
+        # Check CVE score
+        cve_score = self.extract_cve_score(content)
+        if cve_score and cve_score >= 7.0:
+            reasoning_parts.append(f"High CVE score: {cve_score}")
+            next_steps.append("Review security impact immediately")
+        
+        # Check EOL date
+        eol_date = self.extract_eol_date(content)
+        if eol_date:
+            days_remaining = (eol_date - datetime.now()).days
+            if days_remaining < 30:
+                reasoning_parts.append(f"EOL in {days_remaining} days")
+                next_steps.append("Execute upgrade within days")
+        
+        # Auto-upgrade failure
+        if "failed" in content.lower():
+            reasoning_parts.append("Auto-upgrade failure detected")
+            next_steps.append("Investigate failure cause")
+            next_steps.append("Plan manual upgrade")
+        
+        if not reasoning_parts:
+            reasoning_parts.append("Contains critical keywords")
+        
+        return TriageResult(
+            priority=Priority.CRITICAL,
+            action_required=True,
+            timeframe="24-48 hours",
+            reasoning="; ".join(reasoning_parts),
+            next_steps=next_steps
+        )
+
+    def _handle_high_priority(self, subject: str, content: str, 
+                             cluster_type: str) -> TriageResult:
+        """Handle high priority notifications"""
+        next_steps = ["Schedule maintenance window", "Test in staging"]
+        
+        if cluster_type == "production":
+            next_steps.append("Coordinate with team")
+        
+        return TriageResult(
+            priority=Priority.HIGH,
+            action_required=True,
+            timeframe="1-2 weeks",
+            reasoning="Requires planned action",
+            next_steps=next_steps
+        )
+
+    def _handle_medium_priority(self, subject: str, content: str, 
+                               cluster_type: str) -> TriageResult:
+        """Handle medium priority notifications"""
+        return TriageResult(
+            priority=Priority.MEDIUM,
+            action_required=True,
+            timeframe="30-60 days",
+            reasoning="Should be planned for upcoming cycle",
+            next_steps=[
+                "Add to upgrade backlog",
+                "Monitor stability reports",
+                "Begin compatibility testing"
+            ]
+        )
 
 # Usage example
-triager = GKENotificationTriager()
-result = triager.triage_notification(
-    "GKE auto-upgrade scheduled for cluster-prod",
-    "Your cluster will be automatically upgraded on 2024-02-15"
-)
-print(f"Priority: {result['priority']}")
-print(f"Action: {result['action_needed']}")
+def process_notification_email(email_subject: str, email_content: str, 
+                             cluster_name: str) -> None:
+    """Process a GKE notification email"""
+    
+    # Determine cluster type from name (customize for your naming convention)
+    cluster_type = "production" if "prod" in cluster_name.lower() else "development"
+    
+    triage = GKENotificationTriage()
+    result = triage.triage_notification(email_subject, email_content, cluster_type)
+    
+    # Output results
+    print(f"🎯 TRIAGE RESULT for {cluster_name}")
+    print(f"Priority: {result.priority.value}")
+    print(f"Action Required: {'Yes' if result.action_required else 'No'}")
+    print(f"Timeframe: {result.timeframe}")
+    print(f"Reasoning: {result.reasoning}")
+    print("Next Steps:")
+    for step in result.next_steps:
+        print(f"  • {step}")
+    print("-" * 50)
+    
+    # Send to appropriate channels based on priority
+    if result.priority == Priority.CRITICAL:
+        send_to_oncall_channel(cluster_name, result)
+    elif result.priority == Priority.HIGH:
+        send_to_team_channel(cluster_name, result)
+    else:
+        send_to_planning_channel(cluster_name, result)
+
+def send_to_oncall_channel(cluster_name: str, result: TriageResult):
+    """Send critical notifications to on-call channel"""
+    # Implement your alerting mechanism (Slack, PagerDuty, etc.)
+    pass
+
+def send_to_team_channel(cluster_name: str, result: TriageResult):
+    """Send high priority notifications to team channel"""
+    # Implement your team notification mechanism
+    pass
+
+def send_to_planning_channel(cluster_name: str, result: TriageResult):
+    """Send medium/low priority to planning channel"""
+    # Implement your planning notification mechanism
+    pass
+
+# Example usage
+if __name__ == "__main__":
+    # Example notification
+    subject = "GKE Security Patch Available - CVE-2023-12345 (Score: 8.1)"
+    content = """
+    A security patch is available for your GKE cluster.
+    CVE-2023-12345 with score 8.1 affects container runtime.
+    Auto-upgrade scheduled for production-cluster-1 in 7 days.
+    """
+    
+    process_notification_email(subject, content, "production-cluster-1")
 ```
 
-## **Response Playbook**
-
-### For Each Priority Level:
-
-**CRITICAL Response:**
-1. Alert on-call engineer immediately
-2. Review security bulletin/EOL notice
-3. Test patch in staging environment
-4. Schedule emergency maintenance if needed
-5. Apply upgrade with rollback plan ready
-
-**HIGH Response:**
-1. Create ticket for tracking
-2. Schedule team review within 48 hours
-3. Check cluster health and compatibility
-4. Plan maintenance window
-5. Communicate to stakeholders
-
-**MEDIUM Response:**
-1. Add to backlog with target date
-2. Review release notes
-3. Test in development environment
-4. Include in next planned maintenance
-5. Update upgrade roadmap
-
-**LOW Response:**
-1. File for future reference
-2. Update knowledge base
-3. Consider for next quarterly planning
-
-## **Email Filtering Rules**
-
-Set up email rules to auto-categorize:
+## Quick Reference Decision Tree
 
 ```
-Critical: Subject contains "security" OR "EOL" OR "deprecated"
-High: Subject contains "auto-upgrade" OR "mandatory" 
-Medium: Subject contains "available" OR "recommended"
-Low: Everything else
+Is it a security patch?
+├── CVE score ≥ 7.0? → CRITICAL
+├── CVE score 4.0-6.9? → HIGH
+└── CVE score < 4.0? → MEDIUM
+
+Is it an EOL warning?
+├── < 30 days remaining? → CRITICAL
+├── 30-90 days remaining? → HIGH
+└── > 90 days remaining? → MEDIUM
+
+Is it an auto-upgrade notification?
+├── Production cluster? → HIGH
+├── Failed upgrade? → CRITICAL
+└── Dev/staging cluster? → MEDIUM
+
+Is it a version update?
+├── Forced upgrade? → CRITICAL
+├── Recommended for security? → HIGH
+└── General availability? → LOW
 ```
 
-This system will help you quickly identify which GKE notifications need immediate attention versus those that are just keeping you informed of available updates.
+## Slack/Teams Integration Template
+
+```yaml
+# .github/workflows/gke-notification-triage.yml
+name: GKE Notification Triage
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'  # Check every 4 hours
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Process GKE notifications
+        run: |
+          # Your email processing logic here
+          python scripts/triage_gke_notifications.py
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          GMAIL_CREDENTIALS: ${{ secrets.GMAIL_CREDENTIALS }}
+```
+
+## Response Time SLAs
+
+| Priority | Response Time | Resolution Time |
+|----------|---------------|-----------------|
+| Critical | 2 hours | 24-48 hours |
+| High | 1 business day | 1-2 weeks |
+| Medium | 3 business days | 30-60 days |
+| Low | 1 week | Next planning cycle |
+
+This system should help you automatically categorize and respond to GKE notifications appropriately. Customize the keywords and logic based on your specific environment and requirements.

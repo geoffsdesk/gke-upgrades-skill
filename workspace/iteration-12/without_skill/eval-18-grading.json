@@ -3,47 +3,47 @@
     {
       "expectation": "Configures a recurring maintenance window for weekends only",
       "passed": true,
-      "reason": "The response includes both Terraform configuration with recurring_window using 'FREQ=WEEKLY;BYDAY=SA' and gcloud commands with maintenance-window-recurrence for Saturday-Sunday windows"
+      "reason": "Both Terraform configuration and gcloud script configure Saturday 2-6 AM UTC weekly maintenance window using FREQ=WEEKLY;BYDAY=SA recurrence"
     },
     {
       "expectation": "Provides the gcloud command with --maintenance-window-start/end and --maintenance-window-recurrence for weekly weekend schedule",
       "passed": true,
-      "reason": "The bash script includes gcloud commands with --maintenance-window-start '2024-01-06T02:00:00Z', --maintenance-window-end '2024-01-07T06:00:00Z', and --maintenance-window-recurrence 'FREQ=WEEKLY;BYDAY=SA'"
+      "reason": "The bash script includes gcloud command with --maintenance-window-start, --maintenance-window-end, and --maintenance-window-recurrence flags for Saturday schedule"
     },
     {
       "expectation": "Sets up maintenance exclusions for quarterly code freezes (up to 30 days each)",
       "passed": true,
-      "reason": "The response includes quarterly_exclusions in Terraform with specific date ranges for each quarter (Q1-Q4) and corresponding gcloud commands with add_quarterly_exclusions function"
+      "reason": "Configuration includes Q1 (March 15-31), Q2 (June 15-30), Q3 (September 15-30) exclusions, each approximately 15-16 days, well under 30-day limit"
     },
     {
       "expectation": "Sets up a maintenance exclusion for the November audit period",
       "passed": true,
-      "reason": "The response includes audit_exclusions in Terraform for the entire November period and a dedicated add_audit_exclusion function with gcloud commands for November 1-30"
+      "reason": "Configuration includes Q4 exclusion from November 1 - December 15 covering the November audit period"
     },
     {
       "expectation": "Notes the 30-day maximum for maintenance exclusions and how to handle longer freezes",
       "passed": false,
-      "reason": "The response does not mention the 30-day limitation for maintenance exclusions or provide guidance on handling longer freeze periods that exceed this limit"
+      "reason": "The response does not mention the 30-day maximum limitation for maintenance exclusions or provide guidance on handling longer freeze periods"
     },
     {
       "expectation": "Explains that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
       "passed": false,
-      "reason": "The response does not explain the distinction between manual and auto-upgrades or clarify that maintenance windows only apply to automatic upgrades"
+      "reason": "The response does not explain the distinction between manual and auto-upgrades or that maintenance windows only apply to auto-upgrades"
     },
     {
       "expectation": "Recommends combining maintenance windows with Stable or Extended channel for maximum upgrade control",
       "passed": false,
-      "reason": "The response uses 'REGULAR' release channel in Terraform but does not recommend Stable or Extended channels for better upgrade control in regulated environments"
+      "reason": "The response uses REGULAR channel instead of recommending STABLE or EXTENDED channel for maximum control in regulated environments"
     },
     {
       "expectation": "Provides gcloud commands for each exclusion (--add-maintenance-exclusion-name/start-time/end-time)",
       "passed": true,
-      "reason": "The bash script includes gcloud commands with --add-maintenance-exclusion-name, --add-maintenance-exclusion-start, --add-maintenance-exclusion-end, and --add-maintenance-exclusion-scope flags for all exclusions"
+      "reason": "The bash script provides gcloud commands with --add-maintenance-exclusion-name, --add-maintenance-exclusion-start, --add-maintenance-exclusion-end flags for each exclusion period"
     },
     {
       "expectation": "Warns about the risk of falling too far behind on versions during long exclusion periods",
       "passed": false,
-      "reason": "The response does not warn about version drift risks or the potential security/supportability issues of falling behind on Kubernetes versions during extended exclusion periods"
+      "reason": "The response does not warn about version drift risks or the potential security and supportability issues of falling behind on GKE versions during extended exclusion periods"
     }
   ]
 }

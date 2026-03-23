@@ -3,42 +3,42 @@
     {
       "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
       "passed": true,
-      "reason": "Response explicitly states 'Atomic recreation: Each 256-chip TPU slice is recreated entirely in a single step \u2014 not rolling' and emphasizes this concept multiple times"
+      "reason": "Response explicitly states 'All 4 slices will be recreated simultaneously' and 'there is no rolling update for multislice TPU environments'"
     },
     {
       "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
       "passed": true,
-      "reason": "Response clearly states 'Cascading restart: A maintenance event on ANY slice triggers restart of ALL 4 slices simultaneously'"
+      "reason": "Response clearly states 'Cascading restart: A maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment'"
     },
     {
       "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
       "passed": true,
-      "reason": "Response explicitly states 'All pods restart: Every pod across all 1,024 TPU chips will terminate and restart' and describes 'complete interruption'"
+      "reason": "Response states 'Every pod across all slices will restart \u2014 your training job will be completely interrupted'"
     },
     {
       "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
       "passed": true,
-      "reason": "Response states 'If insufficient TPU v5e resources exist during recreation, slices block until hardware is available' and mentions 'Hours if TPU v5e capacity is constrained during recreation'"
+      "reason": "Response states 'If insufficient TPU v5e resources exist during recreation, your slices will block until hardware becomes available' and mentions extended downtime risks"
     },
     {
       "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
       "passed": true,
-      "reason": "Response includes specific command 'kubectl exec -it TRAINING_POD -- python save_checkpoint.py --force' under 'Before maintenance: Force checkpoint save'"
+      "reason": "Response includes 'Trigger immediate checkpoint in your training job' and 'Training job checkpoint saved at latest opportunity' in checklist"
     },
     {
       "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
       "passed": true,
-      "reason": "Response includes checklist item 'Configure training framework for automatic resumption from latest checkpoint' and provides specific resumption commands"
+      "reason": "Response includes 'Training resumption script tested from checkpoint' and provides specific recovery steps for resuming from checkpoints"
     },
     {
       "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
       "passed": true,
-      "reason": "Response provides detailed gcloud commands for applying maintenance exclusions and mentions 'Apply no upgrades maintenance exclusion to defer 30 days if needed'"
+      "reason": "Response provides detailed gcloud command for applying 30-day maintenance exclusion and suggests using this time to reach natural training pauses"
     },
     {
       "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
-      "passed": true,
-      "reason": "Response includes checklist item 'Schedule maintenance during natural training gap if possible' and suggests 'Plan training campaigns in <30 day cycles with natural maintenance gaps'"
+      "passed": false,
+      "reason": "While the response mentions 'maintenance window timing confirmed with team' in the checklist, it does not explain how to configure or control maintenance windows to schedule during planned breaks"
     }
   ]
 }

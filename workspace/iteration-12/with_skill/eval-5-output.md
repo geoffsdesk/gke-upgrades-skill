@@ -1,138 +1,105 @@
-You have a critical **version skew violation**. Your node pool is 3 minor versions behind the control plane (1.28 vs 1.31), but GKE only supports a 2-minor-version maximum skew. This configuration is unsupported and can cause API compatibility issues, scheduling problems, and unpredictable behavior.
+You're in an **unsupported version skew** situation. GKE requires nodes to be within 2 minor versions of the control plane, and your 1.28 nodes are 3 versions behind your 1.31 control plane (1.28 → 1.29 → 1.30 → 1.31).
 
 ## What you're dealing with
 
-- **Immediate risk**: API incompatibilities between 1.28 nodes and 1.31 control plane
-- **Blocking issue**: You cannot upgrade the control plane further until node pools catch up
-- **Support limitation**: This configuration is outside GKE's support matrix
+- **Unsupported configuration**: 3-version skew violates GKE's compatibility matrix
+- **Potential stability issues**: API mismatches, scheduler problems, networking issues
+- **Security exposure**: 1.28 nodes missing 1+ years of security patches
+- **Auto-upgrade blocked**: GKE won't auto-upgrade nodes that are >2 versions behind
+- **Limited support**: Google support may be limited for this configuration
 
-## Fix Strategy
+## Fix options (in order of preference)
 
-You'll need to upgrade the node pool through the intermediate versions. Here's your upgrade path:
+### Option 1: Skip-level upgrade within supported skew (RECOMMENDED)
 
-**Node Pool Upgrade Sequence**: 1.28 → 1.29 → 1.30 → 1.31
-
----
-
-# Node Pool Recovery Runbook
-
-## Pre-flight checks
+Upgrade the 1.28 pool directly to 1.30 (2-version jump, which GKE supports):
 
 ```bash
-# Confirm current versions
-gcloud container clusters describe CLUSTER_NAME \
-  --zone ZONE \
-  --format="table(name, currentMasterVersion, nodePools[].name, nodePools[].version)"
+# Check what 1.30 versions are available
+gcloud container get-server-config --zone YOUR_ZONE --format="yaml(channels)"
 
-# Check which versions are available
-gcloud container get-server-config --zone ZONE \
-  --format="yaml(validNodeVersions)" | head -20
-
-# Verify cluster health
-kubectl get nodes
-kubectl get pods -A | grep -E "Pending|CrashLoop|Error"
-```
-
-## Step 1: Prepare for upgrade
-
-```bash
-# Configure conservative surge settings (adjust based on your capacity)
-gcloud container node-pools update NODE_POOL_NAME \
-  --cluster CLUSTER_NAME \
-  --zone ZONE \
-  --max-surge-upgrade 1 \
-  --max-unavailable-upgrade 0
-
-# Check PDBs that might block drain
-kubectl get pdb -A -o wide
-```
-
-## Step 2: Sequential node pool upgrades
-
-**Upgrade 1.28 → 1.29:**
-```bash
+# Upgrade 1.28 → 1.30 directly (skip 1.29)
 gcloud container node-pools upgrade NODE_POOL_NAME \
   --cluster CLUSTER_NAME \
-  --zone ZONE \
-  --cluster-version 1.29.9-gke.1273000
+  --zone YOUR_ZONE \
+  --cluster-version 1.30.X-gke.XXXX
 
-# Monitor progress (~15-30 min depending on pool size)
-watch 'kubectl get nodes -o wide -L cloud.google.com/gke-nodepool'
-```
-
-**Wait for completion, then 1.29 → 1.30:**
-```bash
+# Then upgrade 1.30 → 1.31 to match control plane
 gcloud container node-pools upgrade NODE_POOL_NAME \
   --cluster CLUSTER_NAME \
-  --zone ZONE \
-  --cluster-version 1.30.6-gke.1125000
-
-# Monitor again
-watch 'kubectl get nodes -o wide -L cloud.google.com/gke-nodepool'
+  --zone YOUR_ZONE \
+  --cluster-version 1.31.X-gke.XXXX
 ```
 
-**Finally 1.30 → 1.31:**
-```bash
-gcloud container node-pools upgrade NODE_POOL_NAME \
-  --cluster CLUSTER_NAME \
-  --zone ZONE \
-  --cluster-version 1.31.2-gke.1372000
+### Option 2: Blue-green replacement (if Option 1 fails)
 
-# Final monitoring
-watch 'kubectl get nodes -o wide -L cloud.google.com/gke-nodepool'
-```
-
-## Step 3: Validation
-
-```bash
-# Confirm version alignment
-gcloud container clusters describe CLUSTER_NAME \
-  --zone ZONE \
-  --format="table(name, currentMasterVersion, nodePools[].name, nodePools[].version)"
-
-# Check cluster health
-kubectl get nodes
-kubectl get pods -A | grep -v Running | grep -v Completed
-
-# Verify no version skew warnings
-gcloud container clusters describe CLUSTER_NAME --zone ZONE | grep -i warning
-```
-
-## Alternative: Blue-green approach (if you have capacity)
-
-If you need faster resolution and have sufficient quota:
+Create a new pool at 1.31 and migrate workloads:
 
 ```bash
 # Create new node pool at 1.31
-gcloud container node-pools create NODE_POOL_NAME-131 \
+gcloud container node-pools create POOL_NAME-v131 \
   --cluster CLUSTER_NAME \
-  --zone ZONE \
-  --cluster-version 1.31.2-gke.1372000 \
+  --zone YOUR_ZONE \
+  --cluster-version 1.31.X-gke.XXXX \
   --num-nodes NUM_NODES \
   --machine-type MACHINE_TYPE
 
-# Cordon old pool
-kubectl cordon -l cloud.google.com/gke-nodepool=NODE_POOL_NAME
+# Cordon old pool to prevent new pods
+kubectl cordon -l cloud.google.com/gke-nodepool=OLD_POOL_NAME
 
-# Wait for workloads to migrate, then delete old pool
-gcloud container node-pools delete NODE_POOL_NAME \
+# Drain workloads (may take time)
+kubectl drain NODE_NAME --ignore-daemonsets --delete-emptydir-data
+
+# Delete old pool once workloads migrated
+gcloud container node-pools delete OLD_POOL_NAME \
   --cluster CLUSTER_NAME \
-  --zone ZONE
+  --zone YOUR_ZONE
 ```
 
-## Important notes
+## Pre-upgrade checklist for your situation
 
-- **Use specific patch versions** from the available list rather than just minor versions
-- **Each upgrade takes time** - budget 20-45 minutes per step depending on pool size
-- **Monitor for stuck pods** during each upgrade - PDBs or resource constraints can block progress
-- **Don't skip versions** - go through each minor version sequentially for node pools
+Given the severe version skew, be extra careful:
 
-## Prevention
+```
+- [ ] Backup critical workloads and data
+- [ ] Test in staging first if possible
+- [ ] Check for deprecated APIs (1.28→1.31 span includes major API changes)
+- [ ] Review PDBs - may need to relax during upgrade
+- [ ] Ensure adequate quota for surge/replacement nodes
+- [ ] Plan for extended maintenance window (this will take longer than normal)
+- [ ] Have rollback plan ready (blue-green approach gives you the safest rollback)
+```
 
-To avoid this situation in the future:
-- Enable auto-upgrades on node pools OR
-- Set up maintenance exclusions to control timing while keeping auto-upgrades enabled
-- Monitor version skew warnings in the GKE console
-- Consider migrating to a release channel for automated lifecycle management
+## Deprecated API check (CRITICAL)
 
-The sequential upgrade will take 1-3 hours total depending on your node pool size, but this will get you back to a supported configuration.
+The 1.28→1.31 jump spans significant API deprecations. Check immediately:
+
+```bash
+# Check for deprecated API usage
+kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated
+
+# Check GKE insights for deprecation warnings
+gcloud recommender insights list \
+    --insight-type=google.container.DiagnosisInsight \
+    --location=YOUR_LOCATION \
+    --project=YOUR_PROJECT_ID
+```
+
+## Why this happened
+
+Common causes:
+- Node pool auto-upgrade was disabled
+- Maintenance exclusions blocked upgrades for too long
+- Manual version pinning without a upgrade plan
+- Cluster on legacy "No channel" with per-nodepool settings
+
+## Prevention for the future
+
+1. **Use release channels** with maintenance windows instead of manual version management
+2. **Set up maintenance exclusions properly** - use "no minor or node upgrades" scope rather than disabling auto-upgrade entirely  
+3. **Monitor version skew** - set up alerts for nodes >1 version behind control plane
+4. **Regular upgrade cadence** - don't let nodes fall more than 1 minor version behind
+
+**Immediate action**: I'd recommend Option 1 (skip-level upgrade 1.28→1.30→1.31) as it's faster and uses GKE's supported upgrade path. Only fall back to Option 2 if the direct upgrade fails due to deprecated APIs or other compatibility issues.
+
+Would you like me to produce a detailed runbook for either approach, or do you need help with the deprecated API analysis first?

@@ -3,42 +3,42 @@
     {
       "expectation": "Explains the key difference: surge upgrades nodes in-place with rolling replacement, blue-green creates an entirely new pool",
       "passed": true,
-      "reason": "The response clearly explains that surge upgrade drains nodes while blue-green creates new nodes that stay available while old nodes remain, effectively describing the key difference between in-place rolling replacement vs new pool creation"
+      "reason": "Response clearly explains surge upgrade replaces nodes one at a time vs blue-green creating an entirely new pool of nodes"
     },
     {
       "expectation": "Recommends blue-green for this scenario due to local SSDs (data can't migrate between nodes)",
-      "passed": true,
-      "reason": "Explicitly recommends blue-green upgrade and explains that local SSD data cannot migrate between nodes, making surge risky for this workload"
+      "passed": false,
+      "reason": "Response incorrectly recommends surge upgrade instead of blue-green, despite acknowledging local SSD data locality issues"
     },
     {
       "expectation": "Explains that local SSD data is lost when a node is drained during surge upgrade",
       "passed": true,
-      "reason": "States 'New nodes get fresh local SSDs - no data migration' and explains that surge upgrade leads to data being temporarily unavailable when nodes are drained"
+      "reason": "Response clearly explains that local SSD data must be rebuilt from replicas during surge upgrade process"
     },
     {
-      "expectation": "Recommends GKE's auto-scale blue-green upgrade strategy as the native approach, or describes the blue-green process if manual workflow is needed",
-      "passed": true,
-      "reason": "Provides specific gcloud commands for configuring GKE's native blue-green upgrade with batch settings and soak duration"
+      "expectation": "Recommends GKE's autoscaled blue-green upgrade strategy configured with --enable-autoscaling and --autoscaled-rollout-policy (NOT surge parameters like maxSurge/maxUnavailable which don't apply to blue-green), or describes the blue-green process if manual workflow is needed",
+      "passed": false,
+      "reason": "Response provides blue-green configuration using only --enable-blue-green-upgrade, missing the correct autoscaling parameters for blue-green upgrades"
     },
     {
       "expectation": "Addresses Cassandra-specific concerns: need to decommission from the ring before draining, rebuild on new nodes",
-      "passed": true,
-      "reason": "Discusses Cassandra ring dynamics, rebalancing overhead, quorum risks, and mentions that new nodes join the ring and receive data before old nodes leave"
+      "passed": false,
+      "reason": "Response mentions data rebuilding but does not address the critical need to properly decommission nodes from the Cassandra ring before draining"
     },
     {
       "expectation": "Provides gcloud commands for creating the new node pool with matching configuration",
-      "passed": true,
-      "reason": "Provides specific gcloud commands for configuring and initiating blue-green upgrade with batch settings"
+      "passed": false,
+      "reason": "Response does not provide commands for creating a new node pool with matching configuration for blue-green deployment"
     },
     {
       "expectation": "Includes kubectl commands for cordoning and draining",
       "passed": false,
-      "reason": "The response does not include kubectl cordon or drain commands - it focuses on GKE's automated blue-green process and monitoring commands instead"
+      "reason": "Response does not include specific kubectl commands for cordoning and draining nodes"
     },
     {
       "expectation": "Mentions PDB configuration to protect the Cassandra quorum during migration",
-      "passed": false,
-      "reason": "PodDisruptionBudget (PDB) configuration is not mentioned anywhere in the response, despite being important for protecting Cassandra quorum"
+      "passed": true,
+      "reason": "Response includes PodDisruptionBudget configuration with minAvailable: 7 to protect quorum during the upgrade process"
     }
   ]
 }

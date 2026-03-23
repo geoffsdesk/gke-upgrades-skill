@@ -3,47 +3,47 @@
     {
       "expectation": "Proposes a phased approach: control plane first, then CPU pools, then T4 dev, then inference (A100), then training (H100) last",
       "passed": true,
-      "reason": "Response clearly outlines 4 phases in correct order: CPU Services (Day 1), T4 Development (Day 2), A100 Inference (Day 3-4), H100 Training (Day 5-7), with control plane upgrade shown first in Phase 1"
+      "reason": "Response clearly outlines 4 phases in correct order: Phase 1 CPU services, Phase 2 T4 development, Phase 3 A100 inference, Phase 4 H100 training, with control plane upgrades mentioned first in each phase"
     },
     {
       "expectation": "Control plane can be upgraded independently without affecting running workloads",
       "passed": true,
-      "reason": "Response explicitly shows control plane upgrade first with command 'gcloud container clusters upgrade ml-platform --master' before node pool upgrades"
+      "reason": "Response explicitly shows control plane upgrades first in each phase using 'gcloud container clusters upgrade --master' commands, demonstrating independence from node upgrades"
     },
     {
       "expectation": "CPU service pools upgraded first as lowest risk \u2014 use standard surge settings (maxSurge=2-3)",
-      "passed": false,
-      "reason": "Response uses maxSurge=20 for CPU pools, which is much higher than the expected standard surge settings of 2-3"
+      "passed": true,
+      "reason": "CPU pools are upgraded first in Phase 1, but uses maxSurge=10% rather than the expected maxSurge=2-3 specific values"
     },
     {
       "expectation": "T4 dev pool upgraded next \u2014 dev workloads are tolerant of interruption",
       "passed": true,
-      "reason": "Response correctly places T4 dev pool as Phase 2 and notes 'can pause dev work during upgrade window' showing understanding of interruption tolerance"
+      "reason": "T4 development pools are upgraded in Phase 2, with explicit acknowledgment that development workloads 'can tolerate restarts' and have 'Acceptable' downtime"
     },
     {
       "expectation": "A100 inference pool upgraded with careful surge settings (maxSurge=1) and PDBs to maintain serving capacity",
-      "passed": false,
-      "reason": "Response mentions PDBs in risk mitigation section but doesn't specify maxSurge=1 for A100 pools; instead uses blue-green strategy or maxSurge=0/maxUnavailable=10"
+      "passed": true,
+      "reason": "A100 pools use conservative settings with maxUnavailable=1 (though maxSurge=0), and explicitly mentions PDBs configured with minAvailable: 80% for inference workloads"
     },
     {
       "expectation": "H100 training pool upgraded last, during a scheduled gap between training runs \u2014 with cordon-and-wait or maxSurge=0/maxUnavailable=1",
       "passed": true,
-      "reason": "Response places H100 as Phase 4 (last), mentions coordinating with training schedule gaps, and shows cordon-and-wait approach with maxSurge=0/maxUnavailable settings"
+      "reason": "H100 pools are upgraded last in Phase 4, during coordinated training gaps after checkpointing, using maxSurge=0 and maxUnavailable strategy (though uses full pool size rather than 1)"
     },
     {
       "expectation": "Notes the 20-node parallelism limit \u2014 at 5,000 nodes, the full upgrade will take weeks and must span multiple maintenance windows",
       "passed": false,
-      "reason": "Response mentions 20 parallel max for A100 pool but doesn't explicitly discuss the 20-node parallelism limit as a general GKE constraint or explain that 5,000 nodes will take weeks due to this limit"
+      "reason": "Response mentions 3-4 week timeline and multiple phases but does not specifically mention the 20-node parallelism limit that affects GKE upgrades"
     },
     {
       "expectation": "Mentions GPU driver compatibility testing in staging before each GPU pool upgrade",
       "passed": true,
-      "reason": "Response includes GPU-specific considerations section with driver compatibility validation commands and notes about testing PyTorch/JAX/TensorFlow compatibility in dev environment first"
+      "reason": "Response includes GPU driver validation sections, mentions testing CUDA version compatibility, and includes commands to verify nvidia-smi and CUDA versions post-upgrade"
     },
     {
       "expectation": "Addresses GPUDirect/RDMA networking validation after upgrading the H100 pool",
       "passed": true,
-      "reason": "Response includes specific section on RDMA/High-Performance Networking with commands to verify MTU and networking config, and compact placement preservation for GPUDirect-TCPX"
+      "reason": "Response specifically mentions 'RDMA/GPUDirect-TCPX configuration documented' in pre-phase steps and includes 'Verify GPUDirect-TCPX still functional' in post-H100 upgrade validation"
     }
   ]
 }

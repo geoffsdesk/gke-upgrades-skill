@@ -1,110 +1,111 @@
-# TPU Multislice Maintenance Impact & Preparation Plan
+# TPU Multislice Maintenance Event Guide
 
 ## What Will Actually Happen
 
-Your training job will experience **complete interruption** due to TPU multislice's atomic upgrade behavior:
+**Critical point:** Your TPU multislice environment has fundamentally different maintenance behavior than regular GPU nodes. Here's what to expect:
 
-### Multislice Maintenance Behavior
-- **Atomic recreation:** Each 256-chip TPU slice is recreated entirely in a single step — not rolling
-- **Cascading restart:** A maintenance event on ANY slice triggers restart of ALL 4 slices simultaneously
-- **All pods restart:** Every pod across all 1,024 TPU chips will terminate and restart
-- **Capacity dependency:** If insufficient TPU v5e resources exist during recreation, slices block until hardware is available
+### Atomic Recreation, Not Rolling Updates
+- **All 4 slices will be recreated simultaneously** — there is no rolling update for multislice TPU environments
+- **Every pod across all slices will restart** — your training job will be completely interrupted
+- **Cascading restart:** A maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment
 
-### Expected Downtime
-- **Minimum:** 10-15 minutes for slice recreation + pod restart
-- **Realistic:** 30-60 minutes including training job restart and checkpoint loading
-- **Risk scenario:** Hours if TPU v5e capacity is constrained during recreation
+### Timeline and Capacity Risk
+- **Downtime:** Expect 30-60 minutes minimum for slice recreation (can be longer if TPU capacity is constrained)
+- **Capacity dependency:** If insufficient TPU v5e resources exist during recreation, your slices will block until hardware becomes available
+- **No graceful migration:** Unlike CPU/GPU nodes, TPU slices cannot be live-migrated — recreation is the only path
 
 ## Preparation Checklist
 
-```
-TPU Multislice Maintenance Preparation
-- [ ] Checkpoint strategy finalized
-- [ ] Training resumption tested
-- [ ] Maintenance window identified
-- [ ] Capacity risk mitigated
-- [ ] Monitoring configured
-
-Checkpointing (Critical)
-- [ ] Enable frequent checkpointing (every 30-60 minutes vs daily)
-- [ ] Verify checkpoint save location (GCS bucket accessible across zones)
-- [ ] Test checkpoint restore in staging environment
-- [ ] Configure training framework for automatic resumption from latest checkpoint
-- [ ] Document checkpoint restore command sequence for ops team
-
-Maintenance Control
-- [ ] Apply "no upgrades" maintenance exclusion to defer 30 days if needed:
-      gcloud container clusters update CLUSTER_NAME \
-        --zone ZONE \
-        --add-maintenance-exclusion-name "llm-training-campaign" \
-        --add-maintenance-exclusion-start-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
-        --add-maintenance-exclusion-end-time $(date -u -d '+30 days' +%Y-%m-%dT%H:%M:%SZ) \
-        --add-maintenance-exclusion-scope no_upgrades
-- [ ] Coordinate with GCP account team on TPU v5e capacity availability during maintenance window
-- [ ] Schedule maintenance during natural training gap if possible
-
-Operational Readiness
-- [ ] On-call team briefed on multislice restart behavior
-- [ ] Training progress/loss monitoring active
-- [ ] Runbook for manual training restart post-maintenance
-- [ ] Stakeholder communication: "Training will restart from checkpoint, expect 1-2 hour gap"
+```markdown
+Pre-Maintenance Checklist - TPU Multislice
+- [ ] Training job checkpoint saved at latest opportunity
+- [ ] Checkpoint verification: can restore from latest checkpoint successfully
+- [ ] Training resumption script tested from checkpoint
+- [ ] Model artifacts backed up to Cloud Storage
+- [ ] TPU quota confirmed sufficient for recreation (1,024 v5e chips total)
+- [ ] Maintenance window timing confirmed with team
+- [ ] Training progress documented (steps completed, loss curves, etc.)
 ```
 
-## Mitigation Strategies
+## Recommended Action Plan
 
-### Option 1: Checkpoint and Accept Restart (Recommended)
+### Option 1: Proactive Checkpoint and Wait (Recommended)
 ```bash
-# Before maintenance: Force checkpoint save
-kubectl exec -it TRAINING_POD -- python save_checkpoint.py --force
+# 1. Trigger immediate checkpoint in your training job
+# (implementation depends on your training framework)
 
-# After maintenance: Verify all slices healthy, restart training
-kubectl get pods -A | grep tpu
-python resume_training.py --from-checkpoint=gs://BUCKET/latest
+# 2. Verify checkpoint integrity
+# Test restoration on a smaller slice if possible
+
+# 3. Gracefully stop training before the maintenance window
+# This prevents mid-step interruption and potential checkpoint corruption
 ```
 
-### Option 2: Defer Maintenance (30-day max)
+### Option 2: Request Maintenance Exclusion
 ```bash
-# Apply "no upgrades" exclusion to delay maintenance
+# Apply a 30-day "no upgrades" exclusion to defer maintenance
 gcloud container clusters update CLUSTER_NAME \
   --zone ZONE \
-  --add-maintenance-exclusion-name "critical-training-run" \
+  --add-maintenance-exclusion-name "training-campaign-protection" \
   --add-maintenance-exclusion-start-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
   --add-maintenance-exclusion-end-time $(date -u -d '+30 days' +%Y-%m-%dT%H:%M:%SZ) \
   --add-maintenance-exclusion-scope no_upgrades
 ```
 
-### Option 3: Coordinate Training Cycles
-Plan training campaigns in <30 day cycles with natural maintenance gaps between campaigns.
+**Important:** This only delays the inevitable. Use this time to reach a natural checkpoint/pause in your training campaign.
+
+## Post-Maintenance Recovery
+
+### Validation Steps
+```bash
+# 1. Verify all slices are healthy
+kubectl get pods -n NAMESPACE -o wide
+kubectl get nodes -l cloud.google.com/gke-accelerator=tpu-v5-lite-podslice
+
+# 2. Check TPU topology is correct
+# Your training framework should verify slice interconnect
+
+# 3. Validate checkpoint accessibility
+# Ensure GCS buckets/persistent volumes are mounted correctly
+```
+
+### Training Resumption
+```bash
+# Start training from latest checkpoint
+# Monitor for any topology/performance regressions
+# Verify loss curves resume at expected values
+```
 
 ## Critical Considerations
 
-**Checkpoint Strategy:** This is your primary defense. Ensure checkpoints are:
-- Saved frequently (every 30-60 min for large models)
-- Stored in persistent storage (GCS, not local disks)
-- Tested for successful restoration
-- Include optimizer state, learning rate schedules, and random number generator states
+### Multislice-Specific Risks
+- **Slice placement:** Recreated slices may not land in the same physical topology, potentially affecting RDMA performance
+- **All-or-nothing:** Unlike GPU clusters where you can upgrade pools sequentially, all TPU slices restart simultaneously
+- **Capacity scarcity:** TPU v5e chips are in high demand — recreation may queue if no capacity is available
 
-**Capacity Risk:** TPU v5e is in high demand. If GKE can't provision replacement slices during maintenance:
-- Your job blocks until hardware becomes available
-- Could extend downtime from minutes to hours
-- Work with your GCP account team to understand capacity availability
+### Training Job Protection
+- **Never run maintenance during active training steps** — checkpoint corruption risk is high
+- **Plan for extended downtime** — 30-60+ minutes is normal for large multislice recreation
+- **Verify compact placement policies** if you use them — maintenance may break physical co-location
 
-**Training Framework Integration:** Common frameworks handle this differently:
-- **JAX/Flax:** Use `orbax` for checkpointing, configure auto-resumption
-- **PyTorch/XLA:** Use `torch_xla.distributed.checkpoint`, verify `WORLD_SIZE` consistency after restart
-- **Custom training:** Ensure your checkpointing includes all necessary state
+## Framework-Specific Notes
 
-## Post-Maintenance Validation
+### JAX/Flax Training
+- Use `jax.checkpoint` with regular saves to GCS
+- Test restoration on a smaller slice configuration first
+- Monitor for any JAX compilation regressions post-maintenance
 
-```bash
-# Verify all TPU slices healthy
-kubectl get pods -A -o wide | grep tpu
+### PyTorch/XLA Training
+- Leverage `torch_xla.core.xla_model.save()` for checkpoints
+- Verify distributed training state is properly restored
+- Check for any XLA backend issues after TPU recreation
 
-# Check TPU topology preserved
-kubectl exec -it TRAINING_POD -- python -c "import torch_xla.core.xla_model as xm; print(xm.get_ordinal(), xm.xrt_world_size())"
+## When to Contact Support
 
-# Restart training from checkpoint
-python resume_training.py --from-checkpoint=gs://BUCKET/checkpoints/latest
-```
+Contact GKE support immediately if:
+- Slice recreation has been stuck for >2 hours
+- Recreated slices are missing from expected zones
+- Training performance drops significantly post-maintenance (may indicate topology issues)
+- Any slices show hardware errors after recreation
 
-The key insight for TPU multislice: **plan for full restart, not graceful migration**. Unlike GPU node upgrades where individual nodes can be cordoned/drained, TPU slices are atomic units that recreate entirely. Your checkpoint strategy is your primary tool for minimizing training progress loss.
+**Key insight:** Plan TPU multislice maintenance like you would plan a complete training restart — because that's exactly what it is. The "maintenance event" is really a full environment recreation that requires training job coordination.

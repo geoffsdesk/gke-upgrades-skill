@@ -5,8 +5,8 @@
   "prompt": "We somehow let our Standard cluster get into a bad state. The control plane is at 1.31 but one of our node pools is still at 1.28. We're getting warnings about version skew. What are we dealing with and how do we fix it?",
   "provider": "claude",
   "model": "claude-sonnet-4-20250514",
-  "start_time": "2026-03-23T00:35:02.018218+00:00",
+  "start_time": "2026-03-23T17:23:33.014986+00:00",
   "input_tokens": 64,
-  "output_tokens": 559,
-  "time_seconds": 13.07
+  "output_tokens": 1028,
+  "time_seconds": 19.89
 }

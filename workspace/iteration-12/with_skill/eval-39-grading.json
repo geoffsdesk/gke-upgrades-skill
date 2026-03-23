@@ -3,42 +3,42 @@
     {
       "expectation": "Recommends GKE's native node pool upgrade strategies rather than the manual create/cordon/drain/delete workflow described",
       "passed": true,
-      "reason": "The response explicitly states the manual approach is 'not the recommended way' and promotes GKE's native upgrade strategies as the better option"
+      "reason": "Response explicitly states 'No, that manual approach is not the right way' and recommends GKE's native upgrade strategies throughout"
     },
     {
       "expectation": "For GPU pools with fixed reservations: recommends surge upgrade with maxSurge=0 and maxUnavailable set as the primary lever (since no surge capacity is available)",
       "passed": true,
-      "reason": "Provides specific gcloud command with maxSurge=0 and maxUnavailable=4 settings, explaining this is for GPU pools with no extra capacity in reservations"
+      "reason": "Specifically recommends maxSurge=0 and maxUnavailable=8 configuration with detailed explanation of why this works for fixed reservations"
     },
     {
       "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as a native alternative that handles cordon and migration automatically",
       "passed": true,
-      "reason": "Includes an entire section on 'Auto-scale Blue-Green' with specific gcloud commands and explains it 'cordons the old pool and auto-scales a replacement'"
+      "reason": "Provides 'GKE's Autoscaled Blue-Green (Preview)' section with gcloud commands and explanation of automatic handling"
     },
     {
       "expectation": "Explains that native strategies are the supported path and handle edge cases (PDB respect, drain timeouts, progress tracking) that manual workflows miss",
       "passed": true,
-      "reason": "States native strategies are 'the supported path' and lists specific downsides of manual approach including being 'more error-prone' and 'not the supported path'"
+      "reason": "Lists problems with manual approach including 'No GKE integration', 'bypasses GKE's safety mechanisms', and mentions PDBs are respected by GKE"
     },
     {
       "expectation": "Only suggests manual blue-green as a last resort if native strategies don't meet a specific requirement",
       "passed": true,
-      "reason": "Concludes with recommendation to 'Start with the native surge upgrade approach' and only consider manual approaches 'if you have a specific requirement that native strategies can't satisfy'"
+      "reason": "Response strongly discourages manual approach and only presents native GKE strategies as solutions"
     },
     {
       "expectation": "Addresses GPU driver compatibility \u2014 need to verify target version's auto-installed driver is compatible",
       "passed": true,
-      "reason": "Includes specific warning about GKE 1.32 auto-installing GPU drivers that may change CUDA version, with kubectl command to verify driver version after upgrade"
+      "reason": "Includes 'GPU-Specific Considerations' section with commands to check driver versions and warns about CUDA compatibility changes"
     },
     {
       "expectation": "Recommends scheduling the upgrade during a gap in GPU workloads to minimize impact",
       "passed": true,
-      "reason": "Checklist includes 'Maintenance window scheduled during training gap' and mentions 'Training jobs can checkpoint/restart gracefully'"
+      "reason": "Mentions 'Backup/checkpoint any running training jobs', 'Set maintenance window for off-peak hours', and 'Consider maintenance exclusion if you need to control timing'"
     },
     {
       "expectation": "Provides gcloud commands for the recommended native approach",
       "passed": true,
-      "reason": "Includes multiple specific gcloud commands for both surge upgrade and blue-green upgrade approaches with detailed parameter explanations"
+      "reason": "Multiple gcloud command examples provided for surge upgrade configuration, node pool upgrade, and cluster upgrade"
     }
   ]
 }

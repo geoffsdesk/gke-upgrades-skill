@@ -3,42 +3,42 @@
     {
       "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
       "passed": true,
-      "reason": "Response clearly categorizes all notification types including 'Auto-upgrade Scheduled', 'New Version Available', 'End of Support (EoS) Warnings', and 'Security Patch Notifications'"
+      "reason": "Response clearly categorizes all four types: auto-upgrade scheduled, new version available, end-of-life/deprecation warnings, and security patches with detailed tables and examples"
     },
     {
       "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
       "passed": true,
-      "reason": "Response assigns security patches to CRITICAL priority level (highest), while new version available notifications are assigned to MEDIUM priority (though not explicitly lowest, the hierarchy is clear)"
+      "reason": "Response uses clear priority levels: IMMEDIATE ACTION for security patches and EoS, PLAN & SCHEDULE for scheduled upgrades, and INFORMATIONAL ONLY for new version available notifications"
     },
     {
       "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
       "passed": true,
-      "reason": "Response explicitly states EoS warnings as CRITICAL requiring 'Plan upgrade immediately' with specific action items including scheduling upgrade planning meeting within 48h and timeline guidance"
+      "reason": "Response explicitly states EoS enforcement requires immediate action within 0-7 days and provides specific commands for applying maintenance exclusions or upgrading before EoS date"
     },
     {
       "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
       "passed": true,
-      "reason": "Response includes detailed pre-flight checklist for scheduled upgrades including checking PDBs, bare pods, resource quota, and workload health"
+      "reason": "Response includes auto-upgrade scheduled in PLAN & SCHEDULE category with specific actions like 'Validate maintenance window timing' and provides playbook with commands to check upgrade info and apply exclusions if needed"
     },
     {
       "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
       "passed": true,
-      "reason": "Response specifically mentions security patches 'may auto-upgrade within days' and includes action for 'emergency patch within 24-48h' for critical security issues"
+      "reason": "Response categorizes security patch auto-upgrades as IMMEDIATE ACTION requiring validation of workload compatibility, noting that no action blocks the auto-upgrade from proceeding expeditiously"
     },
     {
       "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
       "passed": true,
-      "reason": "Response categorizes 'New Version Available' as MEDIUM priority with action 'Add to backlog, review release notes' and states it's for planning purposes"
+      "reason": "Response correctly categorizes 'New minor version available' under PLAN & SCHEDULE for planning purposes and 'Patch version available' under INFORMATIONAL ONLY with 'None - auto-upgrades handle this'"
     },
     {
       "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
       "passed": false,
-      "reason": "Response focuses on email filtering rules and notification management but does not mention Pub/Sub or Cloud Monitoring alerts setup"
+      "reason": "Response mentions Cloud Logging filters and email alert rules but does not specifically recommend Pub/Sub or Cloud Monitoring alerts for GKE upgrade events"
     },
     {
       "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
-      "passed": true,
-      "reason": "Response explicitly mentions 'Review GKE release notes for breaking changes' in the action items for new version available notifications"
+      "passed": false,
+      "reason": "Response does not mention GKE release notes as a source for understanding version changes, focusing instead on triage procedures and command examples"
     }
   ]
 }

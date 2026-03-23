@@ -3,42 +3,42 @@
     {
       "expectation": "Explains the key difference: surge upgrades nodes in-place with rolling replacement, blue-green creates an entirely new pool",
       "passed": true,
-      "reason": "Response clearly explains that surge upgrade migrates nodes one at a time while blue-green creates entirely new nodes, and addresses the fundamental differences between approaches"
+      "reason": "Response correctly explains that blue-green creates an entirely new node pool while surge upgrade upgrades nodes incrementally in-place"
     },
     {
       "expectation": "Recommends blue-green for this scenario due to local SSDs (data can't migrate between nodes)",
       "passed": false,
-      "reason": "Response recommends surge upgrade instead of blue-green, which is incorrect for local SSD scenarios where data cannot migrate between nodes"
+      "reason": "Response incorrectly recommends surge upgrade instead of blue-green, despite the local SSD constraint that makes blue-green more appropriate"
     },
     {
       "expectation": "Explains that local SSD data is lost when a node is drained during surge upgrade",
       "passed": false,
-      "reason": "Response incorrectly states that surge upgrade preserves data and allows 'gradual migration', failing to explain that local SSD data is lost during node replacement"
+      "reason": "Response mentions blue-green loses local SSD data but fails to explain that surge upgrade also loses local SSD data when nodes are drained and replaced"
     },
     {
-      "expectation": "Recommends GKE's auto-scale blue-green upgrade strategy as the native approach, or describes the blue-green process if manual workflow is needed",
+      "expectation": "Recommends GKE's autoscaled blue-green upgrade strategy configured with --enable-autoscaling and --autoscaled-rollout-policy (NOT surge parameters like maxSurge/maxUnavailable which don't apply to blue-green), or describes the blue-green process if manual workflow is needed",
       "passed": false,
-      "reason": "Response does not recommend blue-green approach or provide any blue-green configuration or process description"
+      "reason": "Response provides surge upgrade configuration with maxSurge/maxUnavailable parameters instead of blue-green configuration with autoscaling parameters"
     },
     {
       "expectation": "Addresses Cassandra-specific concerns: need to decommission from the ring before draining, rebuild on new nodes",
-      "passed": false,
-      "reason": "Response mentions 'proper decommissioning' briefly but does not provide specific steps or commands for decommissioning Cassandra nodes from the ring before draining"
+      "passed": true,
+      "reason": "Response addresses Cassandra-specific concerns including proper decommissioning with 'nodetool drain' in lifecycle hooks and discusses replication and fault tolerance"
     },
     {
       "expectation": "Provides gcloud commands for creating the new node pool with matching configuration",
       "passed": false,
-      "reason": "Response provides upgrade commands but not commands for creating a new node pool, which would be needed for blue-green approach"
+      "reason": "Response provides Kubernetes YAML configuration instead of gcloud commands for creating a new node pool"
     },
     {
       "expectation": "Includes kubectl commands for cordoning and draining",
       "passed": false,
-      "reason": "Response does not include any kubectl commands for cordoning and draining nodes, only basic monitoring commands"
+      "reason": "Response does not include kubectl cordon or drain commands, only monitoring and verification commands"
     },
     {
       "expectation": "Mentions PDB configuration to protect the Cassandra quorum during migration",
       "passed": false,
-      "reason": "Response does not mention PodDisruptionBudget (PDB) configuration to protect Cassandra quorum during the upgrade process"
+      "reason": "Response does not mention PodDisruptionBudget (PDB) configuration to protect Cassandra quorum during the migration process"
     }
   ]
 }

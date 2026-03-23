@@ -1,43 +1,70 @@
-I'll help you diagnose and fix the stuck node pool upgrade. Since your control plane is already on 1.32, we need to get your node pools upgraded to maintain version compatibility.
+# GKE Node Pool Upgrade Recovery
 
-## Immediate Diagnostic Steps
+Your cluster is in a partially upgraded state - this is recoverable. Let's diagnose the stuck upgrade and get you back on track.
 
-First, let's identify what's blocking the upgrade:
+## Immediate Assessment
 
+**Check current cluster state:**
 ```bash
-# Check current upgrade operation status
-gcloud container operations list --cluster CLUSTER_NAME --zone ZONE --filter="operationType=UPGRADE_NODES"
-
-# See which nodes are upgraded vs stuck
+# See which nodes are on which versions
 kubectl get nodes -o wide -L cloud.google.com/gke-nodepool
 
-# Check for stuck/pending pods (most common cause)
-kubectl get pods -A | grep -v Running | grep -v Completed
+# Check operation status and error details
+gcloud container operations list \
+  --cluster CLUSTER_NAME \
+  --zone ZONE \
+  --filter="operationType=UPGRADE_NODES" \
+  --limit=5
 
-# Look for PDB issues (very common blocker)
-kubectl get pdb -A -o wide
-# Look for ALLOWED DISRUPTIONS = 0
+# Get the failed operation details
+gcloud container operations describe OPERATION_ID \
+  --zone ZONE
 ```
 
-## Most Common Fixes
-
-**1. PDB Blocking Drain** (happens in ~70% of stuck upgrades)
+**Version skew check:**
 ```bash
-# Check which PDBs are preventing eviction
-kubectl describe pdb -A | grep -A 10 -B 5 "DisruptionsAllowed.*0"
+# Confirm control plane is on 1.32
+gcloud container clusters describe CLUSTER_NAME \
+  --zone ZONE \
+  --format="value(currentMasterVersion)"
 
-# Temporarily relax the problematic PDB
+# Check node pool versions
+gcloud container node-pools list --cluster CLUSTER_NAME --zone ZONE
+```
+
+## Common Causes & Fixes
+
+### 1. PDB Blocking Pod Eviction (Most Likely)
+
+**Diagnose:**
+```bash
+kubectl get pdb -A -o wide
+# Look for ALLOWED DISRUPTIONS = 0
+
+# Check for pods that can't be evicted
+kubectl get pods -A | grep Terminating
+```
+
+**Fix - temporarily relax PDB:**
+```bash
+# Back up the problematic PDB first
+kubectl get pdb PDB_NAME -n NAMESPACE -o yaml > pdb-backup.yaml
+
+# Temporarily allow more disruptions
 kubectl patch pdb PDB_NAME -n NAMESPACE \
   -p '{"spec":{"maxUnavailable":"50%"}}'
 ```
 
-**2. Resource Constraints** (no room for pods on remaining nodes)
-```bash
-# Check node resource usage
-kubectl top nodes
-kubectl describe nodes | grep -A 5 "Allocated resources"
+### 2. Resource Constraints
 
-# If nodes are packed, increase surge capacity
+**Diagnose:**
+```bash
+kubectl get pods -A | grep Pending
+kubectl top nodes
+```
+
+**Fix - increase surge capacity:**
+```bash
 gcloud container node-pools update MAIN_WORKLOAD_POOL \
   --cluster CLUSTER_NAME \
   --zone ZONE \
@@ -45,67 +72,75 @@ gcloud container node-pools update MAIN_WORKLOAD_POOL \
   --max-unavailable-upgrade 0
 ```
 
-**3. Bare Pods** (can't be rescheduled)
+### 3. Bare Pods Blocking Drain
+
+**Diagnose:**
 ```bash
-# Find pods without owner references
 kubectl get pods -A -o json | \
   jq -r '.items[] | select(.metadata.ownerReferences | length == 0) | "\(.metadata.namespace)/\(.metadata.name)"'
+```
 
-# Delete them (they won't reschedule anyway)
+**Fix:** Delete bare pods (they won't reschedule):
+```bash
 kubectl delete pod POD_NAME -n NAMESPACE
 ```
 
-## Recovery Steps
+## Resume the Upgrade
 
-1. **Resume the stuck upgrade** - After fixing the blocking issue above:
+Once you've addressed the blocking issue:
+
 ```bash
-# The upgrade should automatically resume
-# Monitor progress:
-watch 'kubectl get nodes -o wide -L cloud.google.com/gke-nodepool'
-```
-
-2. **If upgrade doesn't auto-resume** (rare), you may need to retry:
-```bash
-# Get the target version from your upgraded nodes
-TARGET_VERSION=$(kubectl get nodes -l cloud.google.com/gke-nodepool=MAIN_WORKLOAD_POOL -o jsonpath='{.items[0].status.nodeInfo.kubeletVersion}' | grep -o 'v1\.32\.[0-9]*')
-
-# Retry the node pool upgrade
+# The upgrade should automatically resume, but you can trigger it manually
 gcloud container node-pools upgrade MAIN_WORKLOAD_POOL \
   --cluster CLUSTER_NAME \
   --zone ZONE \
-  --cluster-version ${TARGET_VERSION#v}
+  --cluster-version 1.32
+
+# Monitor progress
+watch 'kubectl get nodes -o wide -L cloud.google.com/gke-nodepool'
 ```
 
-3. **After main pool completes**, upgrade your remaining node pools:
+## Post-Recovery Steps
+
+**After the main pool completes:**
+
+1. **Restore original PDBs:**
 ```bash
-# Upgrade remaining pools one at a time
+kubectl apply -f pdb-backup.yaml
+```
+
+2. **Upgrade remaining node pools:**
+```bash
 gcloud container node-pools upgrade NODE_POOL_2 \
   --cluster CLUSTER_NAME \
   --zone ZONE \
-  --cluster-version TARGET_VERSION
+  --cluster-version 1.32
+
+gcloud container node-pools upgrade NODE_POOL_3 \
+  --cluster CLUSTER_NAME \
+  --zone ZONE \
+  --cluster-version 1.32
 ```
 
-## Validation Commands
-
+3. **Validate cluster health:**
 ```bash
-# Confirm all nodes are upgraded and healthy
-kubectl get nodes -o wide
-
-# Check all workloads are running
+kubectl get nodes
 kubectl get pods -A | grep -v Running | grep -v Completed
-
-# Verify no stuck operations
-gcloud container operations list --cluster CLUSTER_NAME --zone ZONE --limit=5
 ```
 
-## If Still Stuck
+## If the Issue Persists
 
-If the above doesn't resolve it after 30 minutes, contact GKE support with:
-- Cluster name and zone
-- Operation ID from the operations list
-- Timeline of when it stuck
-- Any error messages from the console
+If the upgrade remains stuck after addressing pod-level issues:
 
-The key insight: **partial upgrades are normal and recoverable**. The most likely cause is a PDB or resource constraint that can be quickly resolved. Once fixed, the upgrade typically resumes automatically.
+1. **Check for admission webhooks:**
+```bash
+kubectl get validatingwebhookconfigurations
+kubectl get mutatingwebhookconfigurations
+```
 
-What specific error message are you seeing, and what does `kubectl get pdb -A` show?
+2. **Contact GKE support** with:
+   - Cluster name and zone
+   - Failed operation ID
+   - Error message from the operation describe output
+
+The key insight: **GKE node pool upgrades are resumable.** Your 8 upgraded nodes will stay on 1.32, and the upgrade will continue from where it left off once the blocking issue is resolved. You don't need to start over or touch the already-upgraded nodes.

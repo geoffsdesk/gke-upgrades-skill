@@ -1,253 +1,279 @@
-# GKE Upgrade Runbook: 1.32 → 1.32 (Patch Update)
+# GKE Upgrade Runbook: 1.32 → 1.33
 
-**Cluster:** `your-cluster-name` | **Zone:** `us-west1-b` | **Channel:** Regular  
-**Current:** 1.32.x | **Target:** Latest 1.32 patch
+**Cluster:** Standard | **Channel:** Regular | **Zone:** us-west1-b  
+**Current:** 1.32.x → **Target:** 1.33.x
 
-> ⚠️ **Replace `your-cluster-name` with your actual cluster name in all commands below**
+This is a **minor version upgrade** requiring both control plane and node pool upgrades. Total time: ~2-3 hours depending on cluster size.
 
 ## Phase 1: Pre-flight Checks (15 minutes)
 
-### 1.1 Get current cluster information
+### 1.1 Verify current cluster state
 ```bash
 # Check current versions
-gcloud container clusters describe your-cluster-name \
+gcloud container clusters describe CLUSTER_NAME \
   --zone us-west1-b \
   --format="table(name, currentMasterVersion, nodePools[].name, nodePools[].version)"
-```
-**Expected output:** Shows control plane and both node pools at some 1.32.x version
 
-### 1.2 Check available versions
+# Verify all nodes are healthy
+kubectl get nodes -o wide
+```
+**Expected:** All nodes should show `Ready` status.
+
+### 1.2 Check if 1.33 is available in Regular channel
 ```bash
-# See what 1.32 patch versions are available
 gcloud container get-server-config --zone us-west1-b \
-  --format="yaml(channels.regular.validVersions)" | grep "1.32"
+  --format="yaml(channels.REGULAR.validVersions)" | grep "1\.33"
 ```
+**Expected:** Should show 1.33.x versions available.
 
-### 1.3 Verify cluster health
+### 1.3 Check for deprecated API usage (critical!)
 ```bash
-# All nodes should be Ready
-kubectl get nodes
+# Quick check via metrics
+kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated
+
+# If any results show, get details
+kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated | head -10
 ```
-**Expected:** All nodes show `STATUS: Ready`
+**Expected:** No output (no deprecated APIs). If you see results, **STOP** — contact your platform team before proceeding.
 
+### 1.4 Verify workload health baseline
 ```bash
-# Check for any problematic pods
+# Check all pods are running
 kubectl get pods -A | grep -v Running | grep -v Completed
-```
-**Expected:** Should return empty or only completed jobs
 
-### 1.4 Check for PodDisruptionBudgets
-```bash
-# List all PDBs - these can block upgrades
+# Check PDBs (Pod Disruption Budgets)
 kubectl get pdb -A -o wide
 ```
-**Note any PDBs with ALLOWED DISRUPTIONS = 0** - we may need to relax these temporarily
+**Expected:** Only Running/Completed pods, no overly restrictive PDBs (ALLOWED DISRUPTIONS should be > 0).
 
-### 1.5 Check for bare pods (pods without controllers)
+### 1.5 Check for bare pods (will cause upgrade failure)
 ```bash
-# Find any bare pods that won't be rescheduled
 kubectl get pods -A -o json | \
   jq -r '.items[] | select(.metadata.ownerReferences | length == 0) | "\(.metadata.namespace)/\(.metadata.name)"'
 ```
-**If any bare pods exist, delete them now or they'll block the upgrade**
+**Expected:** No output. If you see pods listed, they need to be managed by Deployments/StatefulSets or deleted.
 
-## Phase 2: Configure Upgrade Strategy (10 minutes)
+---
 
-### 2.1 Set conservative surge settings for both node pools
+## Phase 2: Configure Node Pool Upgrade Settings (10 minutes)
+
+Before upgrading, configure how each node pool handles the upgrade process.
+
+### 2.1 Configure default-pool upgrade strategy
 ```bash
-# Configure default-pool for safe upgrade
+# Conservative surge settings for first upgrade
 gcloud container node-pools update default-pool \
-  --cluster your-cluster-name \
-  --zone us-west1-b \
-  --max-surge-upgrade 1 \
-  --max-unavailable-upgrade 0
-
-# Configure workload-pool for safe upgrade  
-gcloud container node-pools update workload-pool \
-  --cluster your-cluster-name \
+  --cluster CLUSTER_NAME \
   --zone us-west1-b \
   --max-surge-upgrade 1 \
   --max-unavailable-upgrade 0
 ```
 
-**What this does:** Creates 1 new node before terminating old ones, ensuring no capacity loss
-
-### 2.2 Verify surge settings applied
+### 2.2 Configure workload-pool upgrade strategy
 ```bash
-gcloud container node-pools list --cluster your-cluster-name --zone us-west1-b \
-  --format="table(name,config.machineType,initialNodeCount,management.upgradeOptions.surgeSettings)"
+# Same conservative settings
+gcloud container node-pools update workload-pool \
+  --cluster CLUSTER_NAME \
+  --zone us-west1-b \
+  --max-surge-upgrade 1 \
+  --max-unavailable-upgrade 0
 ```
 
-## Phase 3: Control Plane Upgrade (15-20 minutes)
+**What this means:** During upgrades, GKE will create 1 new node before draining the old one. This prevents capacity loss but requires temporary extra quota.
+
+---
+
+## Phase 3: Control Plane Upgrade (30-45 minutes)
+
+The control plane must be upgraded before node pools. **Note:** Control plane upgrades cause a brief API server restart (~2-3 minutes of kubectl downtime).
 
 ### 3.1 Start control plane upgrade
 ```bash
-# Get the latest 1.32 patch version from step 1.2 output and use it here
-gcloud container clusters upgrade your-cluster-name \
+gcloud container clusters upgrade CLUSTER_NAME \
   --zone us-west1-b \
   --master \
-  --cluster-version 1.32.LATEST_PATCH_NUMBER
+  --cluster-version 1.33
 ```
 
-**Confirmation prompt:** Type `Y` when prompted
+**What happens:** GKE will prompt for confirmation. Type `Y` and press Enter.
 
-**Expected:** Command will show "Upgrading your-cluster-name..." and complete in 10-15 minutes
-
-### 3.2 Monitor control plane upgrade
+### 3.2 Monitor control plane upgrade progress
 ```bash
-# Check upgrade progress (run every few minutes)
-gcloud container operations list --cluster your-cluster-name --zone us-west1-b --limit=1
-```
+# Check upgrade status (run every 5 minutes)
+gcloud container operations list \
+  --cluster CLUSTER_NAME \
+  --zone us-west1-b \
+  --filter="operationType=UPGRADE_MASTER" \
+  --limit=1
 
-Wait until the operation shows `DONE` status before proceeding.
-
-### 3.3 Verify control plane upgraded
-```bash
-# Confirm control plane is at target version
-gcloud container clusters describe your-cluster-name \
+# When complete, verify new version
+gcloud container clusters describe CLUSTER_NAME \
   --zone us-west1-b \
   --format="value(currentMasterVersion)"
 ```
 
-**Expected:** Shows the new 1.32.x version you specified
+**Expected:** Operation status progresses from `RUNNING` → `DONE`. Control plane version shows 1.33.x.
 
+### 3.3 Verify control plane health
 ```bash
-# Verify system pods are healthy
-kubectl get pods -n kube-system
+# Test API server connectivity
+kubectl get nodes
+
+# Check system pods
+kubectl get pods -n kube-system | grep -v Running
 ```
+**Expected:** kubectl commands work, all system pods Running.
 
-**Expected:** All pods should be Running or Completed
+---
 
-## Phase 4: Node Pool Upgrades (30-45 minutes total)
+## Phase 4: Node Pool Upgrades (60-90 minutes total)
 
-### 4.1 Upgrade default-pool
+Upgrade node pools one at a time. **Never upgrade multiple pools simultaneously on your first upgrade.**
+
+### 4.1 Upgrade default-pool first
 ```bash
-# Start upgrading the first node pool
 gcloud container node-pools upgrade default-pool \
-  --cluster your-cluster-name \
-  --zone us-west1-b \
-  --cluster-version 1.32.LATEST_PATCH_NUMBER
+  --cluster CLUSTER_NAME \
+  --zone us-west1-b
 ```
 
-**Confirmation prompt:** Type `Y` when prompted
+**What happens:** GKE automatically uses the control plane version (1.33.x). Type `Y` to confirm.
 
 ### 4.2 Monitor default-pool upgrade
 ```bash
-# Watch node upgrade progress (run this in a separate terminal)
-watch 'kubectl get nodes -o wide'
-```
+# Watch nodes being replaced (run in separate terminal)
+watch 'kubectl get nodes -o wide -L cloud.google.com/gke-nodepool'
 
-**What to expect:**
-- Nodes will show `SchedulingDisabled` when being drained
-- New nodes appear with the new version
-- Old nodes disappear as upgrade completes
-- Process takes 15-25 minutes depending on workloads
-
-### 4.3 Verify default-pool completed
-```bash
-# Check all nodes in default-pool are at new version
-gcloud container node-pools describe default-pool \
-  --cluster your-cluster-name \
+# Check upgrade operation status
+gcloud container operations list \
+  --cluster CLUSTER_NAME \
   --zone us-west1-b \
-  --format="value(version)"
+  --filter="operationType=UPGRADE_NODES AND targetId=default-pool" \
+  --limit=1
 ```
 
+**What to watch for:**
+- Old nodes show `SchedulingDisabled` (cordoned)
+- New nodes appear with 1.33.x version
+- Pods migrate from old → new nodes
+- Old nodes disappear
+
+### 4.3 Verify default-pool completion
 ```bash
-# Verify no pods are stuck
-kubectl get pods -A | grep -E "Pending|Terminating"
-```
+# All nodes in default-pool should be 1.33.x
+kubectl get nodes -l cloud.google.com/gke-nodepool=default-pool -o wide
 
-**Expected:** Should return empty
+# Check for any stuck pods
+kubectl get pods -A | grep -v Running | grep -v Completed
+```
 
 ### 4.4 Upgrade workload-pool
 ```bash
-# Start upgrading the second node pool
 gcloud container node-pools upgrade workload-pool \
-  --cluster your-cluster-name \
-  --zone us-west1-b \
-  --cluster-version 1.32.LATEST_PATCH_NUMBER
+  --cluster CLUSTER_NAME \
+  --zone us-west1-b
 ```
 
 ### 4.5 Monitor workload-pool upgrade
 ```bash
-# Continue watching node progress
-watch 'kubectl get nodes -o wide'
-```
+# Watch progress
+watch 'kubectl get nodes -o wide -L cloud.google.com/gke-nodepool'
 
-Wait for all workload-pool nodes to complete upgrading.
-
-## Phase 5: Post-Upgrade Validation (10 minutes)
-
-### 5.1 Verify all versions match
-```bash
-# Final version check - everything should match
-gcloud container clusters describe your-cluster-name \
+# Check operation status
+gcloud container operations list \
+  --cluster CLUSTER_NAME \
   --zone us-west1-b \
-  --format="table(name, currentMasterVersion, nodePools[].name, nodePools[].version)"
+  --filter="operationType=UPGRADE_NODES AND targetId=workload-pool" \
+  --limit=1
 ```
 
-**Expected:** Control plane and both node pools show identical 1.32.x version
+---
 
-### 5.2 Check cluster health
+## Phase 5: Post-Upgrade Validation (15 minutes)
+
+### 5.1 Verify all components upgraded
 ```bash
-# All nodes Ready
-kubectl get nodes
+# Control plane version
+gcloud container clusters describe CLUSTER_NAME \
+  --zone us-west1-b \
+  --format="value(currentMasterVersion)"
+
+# All node pool versions
+gcloud container node-pools list --cluster CLUSTER_NAME --zone us-west1-b
+
+# All individual nodes
+kubectl get nodes -o wide
 ```
+**Expected:** Everything shows 1.33.x versions.
 
+### 5.2 Check workload health
 ```bash
-# All pods healthy
+# No stuck pods
 kubectl get pods -A | grep -v Running | grep -v Completed
+
+# Deployments at desired replica count
+kubectl get deployments -A -o wide
+
+# StatefulSets healthy (if any)
+kubectl get statefulsets -A
 ```
 
+### 5.3 Test application connectivity
 ```bash
-# System pods healthy
-kubectl get pods -n kube-system
-```
-
-### 5.3 Verify workload functionality
-```bash
-# Check your applications (adjust namespaces as needed)
-kubectl get deployments -A
+# Check ingress/services responding
+kubectl get ingress -A
 kubectl get services -A
+
+# Run your application's health check endpoints
+# curl YOUR_APP_HEALTH_CHECK_URL
 ```
 
-**Test your applications:** Visit any web interfaces or run smoke tests to confirm everything works
+---
 
-## Troubleshooting
+## What If Something Goes Wrong?
 
-If any step fails, here's what to check:
-
-**Upgrade stuck on node drain:**
+### Upgrade stuck on "Draining nodes"
+**Cause:** Pods can't be evicted, usually due to PDBs.
 ```bash
-# Check for restrictive PDBs
+# Check PDBs blocking drain
 kubectl get pdb -A -o wide
-# If ALLOWED DISRUPTIONS = 0, temporarily patch:
-kubectl patch pdb PDB_NAME -n NAMESPACE -p '{"spec":{"maxUnavailable":"50%"}}'
+
+# Temporarily relax restrictive PDBs
+kubectl patch pdb PDB_NAME -n NAMESPACE \
+  -p '{"spec":{"maxUnavailable":"50%"}}'
 ```
 
-**Pods stuck Pending:**
+### Upgrade stuck on "Pending pods"
+**Cause:** Not enough resources for surge nodes.
 ```bash
-# Check for resource constraints
-kubectl describe pods STUCK_POD_NAME -n NAMESPACE
-# Look for "Insufficient cpu/memory" in events
+# Check pending pods
+kubectl get pods -A | grep Pending
+
+# Increase surge capacity
+gcloud container node-pools update NODE_POOL_NAME \
+  --cluster CLUSTER_NAME \
+  --zone us-west1-b \
+  --max-surge-upgrade 2
 ```
 
-**Operation appears hung (>30 minutes with no progress):**
-```bash
-# Get operation details
-gcloud container operations list --cluster your-cluster-name --zone us-west1-b
-# Contact support with the operation ID if truly stuck
-```
+### API server temporarily unavailable
+**Normal during control plane upgrade.** Wait 2-3 minutes and retry kubectl commands.
 
-## Success Checklist
+### Need help?
+1. Check GKE operations: `gcloud container operations list --cluster CLUSTER_NAME --zone us-west1-b`
+2. Look at recent events: `kubectl get events -A --sort-by='.lastTimestamp' | tail -20`
+3. If stuck >2 hours, contact GKE support with cluster name and operation ID
 
-- [ ] Control plane upgraded to 1.32.latest
-- [ ] Both node pools upgraded to 1.32.latest  
-- [ ] All nodes showing Ready status
-- [ ] All pods running normally
-- [ ] Applications responding correctly
-- [ ] No error events in cluster
+---
 
-**Total expected time:** 60-90 minutes
+## Completion Checklist
 
-> 💡 **Future upgrades:** Since you're on the Regular channel, GKE will automatically upgrade to new 1.32 patches and eventually to 1.33 when it becomes available. Set up maintenance windows to control when these happen: [Maintenance Windows Guide](https://cloud.google.com/kubernetes-engine/docs/how-to/updating-clusters#maintenance-windows)
+- [ ] Control plane at 1.33.x
+- [ ] Both node pools at 1.33.x  
+- [ ] All nodes show `Ready`
+- [ ] All pods `Running` or `Completed`
+- [ ] Application health checks passing
+- [ ] Upgrade documented in team changelog
+
+**Estimated total time:** 2-3 hours  
+**Next upgrade:** GKE will auto-upgrade to future 1.33.x patches. The next minor (1.34) will arrive in Regular channel ~4-6 weeks after it appears in Rapid.

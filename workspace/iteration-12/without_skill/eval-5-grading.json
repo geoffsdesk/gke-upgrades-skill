@@ -3,42 +3,42 @@
     {
       "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
       "passed": true,
-      "reason": "Response clearly states that nodes can only be up to 2 minor versions behind the control plane and explains this is the supported version skew policy"
+      "reason": "Response explicitly states 'Kubernetes only supports max 2 minor version skew' and identifies the gap as '3 minor versions' which exceeds the limit"
     },
     {
-      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (3 minor versions)",
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (nodes must be within 2 minor versions of control plane)",
       "passed": true,
-      "reason": "Response explicitly states the skew is 3 versions (1.31 vs 1.28) and that this violates the policy and is unsupported"
+      "reason": "Response clearly identifies the version gap as 3 minor versions and states this is 'beyond supported limits' and 'unsupported configuration'"
     },
     {
       "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
       "passed": true,
-      "reason": "Response lists API compatibility problems, unpredictable pod scheduling behavior, network policy enforcement issues, and potential cluster instability"
+      "reason": "Response lists risks including 'API compatibility issues', 'Pod scheduling failures', 'Workload instability', and 'Potential cluster dysfunction'"
     },
     {
-      "expectation": "Recommends skip-level (N+2) node pool upgrades where possible to reduce time and disruption (e.g., 1.28\u21921.30 then 1.30\u21921.31), rather than upgrading through every minor",
+      "expectation": "Recommends skip-level (N+2) node pool upgrades within supported version skew to reduce time and disruption. For the N+3 gap (1.28 with 1.31 CP), recommends multiple sequential skip-level upgrades within supported skew (e.g., 1.28\u21921.30 then 1.30\u21921.31) or creating a new node pool at the target version and migrating workloads. Never recommends an unsupported skip-level upgrade.",
       "passed": false,
-      "reason": "Response shows incremental upgrades (1.29 \u2192 1.30 \u2192 1.31) rather than recommending skip-level upgrades like 1.28\u21921.30 then 1.30\u21921.31"
+      "reason": "Response recommends incremental upgrades 1.28\u21921.29\u21921.30\u21921.31 (single minor version jumps) rather than skip-level upgrades within supported skew (1.28\u21921.30\u21921.31). Does offer new node pool creation as alternative but doesn't emphasize skip-level upgrades as a valid approach"
     },
     {
       "expectation": "Provides gcloud commands for the node pool upgrade steps",
       "passed": true,
-      "reason": "Response provides specific gcloud container clusters upgrade command with proper parameters for node pool upgrades"
+      "reason": "Response provides specific gcloud commands for upgrading node pools, creating new node pools, and deleting old ones"
     },
     {
       "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
       "passed": false,
-      "reason": "Response does not mention surge settings or conservative upgrade parameters despite acknowledging the risky state"
+      "reason": "Response does not mention surge settings or recommend conservative upgrade parameters for the risky state"
     },
     {
       "expectation": "Advises monitoring closely between each version bump for issues",
       "passed": true,
-      "reason": "Response includes monitoring section with specific kubectl commands to check pod placement and advises watching for API calls, networking, and pod startup failures"
+      "reason": "Response includes a 'During the Fix' section with monitoring commands and advises to 'Wait for completion' between upgrades"
     },
     {
       "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
       "passed": false,
-      "reason": "Response mentions automated cluster upgrades and upgrade policies but does not specifically mention release channel enrollment or maintenance windows"
+      "reason": "Response mentions maintenance windows but does not mention release channel enrollment as a prevention strategy"
     }
   ]
 }

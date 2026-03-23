@@ -3,42 +3,42 @@
     {
       "expectation": "Addresses Istio control plane version compatibility with the target Kubernetes version",
       "passed": true,
-      "reason": "Response explicitly checks Istio version compatibility with GKE 1.32 and recommends Istio 1.19+ for GKE 1.32"
+      "reason": "Response explicitly mentions checking compatibility with 'Istio 1.20+ should work fine with GKE 1.32' and includes a verification command"
     },
     {
       "expectation": "Recommends checking the Istio-Kubernetes version compatibility matrix before upgrading GKE",
       "passed": true,
-      "reason": "Response includes checking current Istio version and GKE 1.32 compatibility as part of pre-upgrade assessment"
+      "reason": "Response includes a specific command 'Verify GKE 1.32 compatibility with your Istio version' in the pre-upgrade planning section"
     },
     {
       "expectation": "Advises upgrading Istio first if the current Istio version doesn't support the target Kubernetes version",
       "passed": true,
-      "reason": "Response clearly recommends upgrading Istio first in the upgrade order, before upgrading GKE control plane"
+      "reason": "Response demonstrates upgrading Istio control plane before GKE nodes and explicitly states 'Upgrade GKE nodes after Istio is stable' in GKE-specific considerations"
     },
     {
       "expectation": "Explains that sidecar injection happens via mutating webhook and may cause issues during node drain/recreation",
       "passed": false,
-      "reason": "Response does not specifically mention mutating webhook or explain how sidecar injection works during node drain/recreation"
+      "reason": "Response does not explain the mutating webhook mechanism or specifically address issues during node drain/recreation processes"
     },
     {
       "expectation": "Mentions that new pods on upgraded nodes will get sidecar injected \u2014 verify the sidecar version matches",
       "passed": true,
-      "reason": "Response includes commands to verify sidecar versions and addresses gradual workload migration with sidecar version verification"
+      "reason": "Response includes steps to restart pods to get new sidecars and verify proxy versions with 'istioctl proxy-status'"
     },
     {
       "expectation": "Recommends monitoring Istio proxy version consistency across the mesh after upgrade",
       "passed": true,
-      "reason": "Response includes monitoring for sidecar version mismatches and provides commands to check for version skew across the mesh"
+      "reason": "Response includes specific monitoring commands and mentions checking proxy versions and configuration sync multiple times"
     },
     {
       "expectation": "Includes commands to check Istio version and proxy sync status (istioctl or kubectl)",
       "passed": true,
-      "reason": "Response provides multiple commands including 'istioctl version', 'istioctl proxy-status', and kubectl commands to check proxy sync status"
+      "reason": "Response provides multiple specific commands including 'istioctl version', 'istioctl proxy-status', and 'istioctl proxy-config' commands"
     },
     {
       "expectation": "Warns about potential traffic disruption if Istio control plane and sidecar versions are mismatched",
-      "passed": true,
-      "reason": "Response includes a section on 'Sidecar Version Mismatches' as a common gotcha and provides commands to check for version skew issues"
+      "passed": false,
+      "reason": "While the response mentions monitoring and validation, it does not explicitly warn about traffic disruption from control plane/sidecar version mismatches"
     }
   ]
 }

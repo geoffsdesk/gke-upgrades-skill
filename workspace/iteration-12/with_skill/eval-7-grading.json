@@ -3,47 +3,57 @@
     {
       "expectation": "Proposes a phased rollout: dev first, then staging, then prod",
       "passed": true,
-      "reason": "Response clearly outlines Phase 1 (Dev), Phase 2 (Staging), Phase 3 (Prod) with proper sequencing"
+      "reason": "The response clearly outlines a 3-week phased approach with Week 1 for dev, Week 2 for staging, and Week 3 for production"
     },
     {
       "expectation": "Includes soak time between environment phases (e.g., 24-48 hours for dev, 1 week for staging before prod)",
       "passed": true,
-      "reason": "Specifies 48-hour soak for dev, 72-hour soak for staging, and 48-hour canary soak in prod"
+      "reason": "The response specifies soak periods: 24-48h for dev, 48h for staging, and 72h for production, with clear validation periods between phases"
     },
     {
       "expectation": "Defines go/no-go criteria between phases (error rates, latency, pod health)",
       "passed": true,
-      "reason": "Defines validation criteria including smoke tests, performance benchmarks within baseline, integration tests, and SLA maintenance"
+      "reason": "The response includes specific go/no-go criteria: validation checks pass, no CrashLoopBackOff pods, failed health checks, or performance regression >10%"
     },
     {
-      "expectation": "Recommends sequential control plane upgrades (1.30\u21921.31\u21921.32) with skip-level node pool upgrades where possible",
-      "passed": false,
-      "reason": "Does not address sequential version upgrades; assumes direct upgrade from 1.32 to 1.33 without discussing intermediate versions"
+      "expectation": "Recommends sequential control plane upgrades (1.32\u21921.33) with skip-level node pool upgrades where possible",
+      "passed": true,
+      "reason": "The response shows control plane upgrade first followed by node pools, upgrading from 1.32.x directly to 1.33.x, which is the correct sequential approach"
     },
     {
       "expectation": "Suggests not upgrading all prod clusters simultaneously \u2014 do one or two first as canary",
       "passed": true,
-      "reason": "Explicitly outlines canary approach with prod-cluster-1 first, then batch 1 (2 clusters), then batch 2 (1 cluster)"
+      "reason": "The response explicitly states 'Upgrade prod clusters 1-2 on Monday' followed by monitoring for 48h before upgrading clusters 3-4, implementing a canary approach"
     },
     {
       "expectation": "Includes rollback triggers and criteria for halting the rollout",
       "passed": true,
-      "reason": "Provides detailed rollback strategy with emergency brake commands and specific triggers for different scenarios"
+      "reason": "The response includes a rollback plan with specific commands and criteria for halting (CrashLoopBackOff pods, failed health checks, performance regression)"
     },
     {
       "expectation": "Provides a timeline or schedule estimate for the full rollout",
       "passed": true,
-      "reason": "Includes detailed timeline summary table showing 3-4 weeks total with specific durations for each phase"
+      "reason": "The response provides a detailed 3-week timeline with specific days for upgrades and includes a summary table with timeline breakdown"
     },
     {
       "expectation": "Mentions maintenance window coordination across clusters",
       "passed": true,
-      "reason": "Provides specific gcloud commands for setting maintenance windows with staggered times across clusters"
+      "reason": "The response includes specific gcloud commands for configuring maintenance windows with start times, duration, and recurrence patterns"
     },
     {
       "expectation": "If rollout sequencing is mentioned, notes that all clusters must be on the same channel for it to work",
+      "passed": false,
+      "reason": "While the response mentions that all environments are on the Regular channel, it doesn't explicitly state that rollout sequencing requires all clusters to be on the same channel"
+    },
+    {
+      "expectation": "When presenting maintenance windows as an alternative, explicitly notes that windows do NOT guarantee ordering \u2014 upgrades fire based on version availability per region, not environment order. A prod window may fire before dev.",
+      "passed": false,
+      "reason": "The response presents maintenance windows but does not explicitly warn that windows don't guarantee ordering and that prod could upgrade before dev based on version availability"
+    },
+    {
+      "expectation": "Mentions using two different channels with minor version controls (e.g., dev=Regular, prod=Stable with 'no minor' exclusion) as a simpler alternative to rollout sequencing",
       "passed": true,
-      "reason": "Explicitly states 'Since all environments are on the same release channel (Regular), we can't use GKE's native rollout sequencing feature (which requires different channels)'"
+      "reason": "The response includes Option 2 that suggests moving dev to Rapid channel, keeping staging on Regular, and moving prod to Stable channel as an alternative strategy"
     }
   ]
 }

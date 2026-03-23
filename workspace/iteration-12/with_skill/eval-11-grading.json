@@ -3,47 +3,47 @@
     {
       "expectation": "Recommends upgrading the control plane first before any node pools",
       "passed": true,
-      "reason": "Phase 3 explicitly shows control plane upgrade before any node pool upgrades, with command 'gcloud container clusters upgrade CLUSTER_NAME --master'"
+      "reason": "Step 1 explicitly shows upgrading control plane first with 'gcloud container clusters upgrade' command using --master flag"
     },
     {
       "expectation": "Provides a specific node pool upgrade order with rationale (coordinating\u2192data\u2192master, or similar logical sequence)",
       "passed": true,
-      "reason": "Specifies upgrade order as coordinating\u2192master\u2192data with clear rationale: coordinating nodes are stateless, master upgrades maintain 2/3 quorum, data nodes last ensures stable cluster"
+      "reason": "Provides clear upgrade order: coordinating nodes first (least critical), then master nodes (maintain quorum), then data nodes (most critical) - each with detailed rationale"
     },
     {
       "expectation": "Addresses PV safety: regional pd-ssd volumes can reattach to nodes in other zones, which is good for upgrades",
       "passed": true,
-      "reason": "Mentions 'Regional pd-ssd PVs with Retain policy protect against accidental deletion' and notes that regional pd-ssd can reattach during upgrades"
+      "reason": "Explicitly mentions in Risk Mitigation section: 'Regional PVs: Your pd-ssd volumes can reattach to nodes in any zone - \u2705 Good'"
     },
     {
       "expectation": "Recommends setting PDB for Elasticsearch master nodes to ensure quorum (minAvailable=2 for 3-master setup)",
       "passed": true,
-      "reason": "Provides specific PDB configuration for masters with 'maxUnavailable: 1' which maintains 2/3 quorum, and includes verification command 'kubectl get pdb -n elasticsearch'"
+      "reason": "Provides complete PDB configuration with minAvailable: 2 for master nodes, explicitly commenting 'Keep quorum (2 of 3)'"
     },
     {
       "expectation": "Recommends maxSurge=1, maxUnavailable=0 for all ES node pools (conservative, data-safe)",
       "passed": true,
-      "reason": "Explicitly shows commands setting '--max-surge-upgrade 1 --max-unavailable-upgrade 0' for all three node pools (coordinating, master, data)"
+      "reason": "Shows exact gcloud commands for all node pools setting --max-surge-upgrade 1 and --max-unavailable-upgrade 0, with comment 'Conservative for Stateful Workloads'"
     },
     {
       "expectation": "Advises verifying Elasticsearch cluster health (green status) between each node pool upgrade",
       "passed": true,
-      "reason": "Shows cluster health checks after each phase, including 'curl -X GET localhost:9200/_cluster/health?pretty' and waiting for green status in post-upgrade validation"
+      "reason": "Multiple instances of checking cluster health with curl commands for GREEN status, including 'Wait for GREEN cluster status before proceeding' after each step"
     },
     {
       "expectation": "Mentions checking PV reclaim policy is set to Retain (not Delete) as a safety measure",
       "passed": true,
-      "reason": "Pre-flight checklist includes 'PV reclaim policy set to Retain' and provides specific kubectl command to check this: 'kubectl get pv -o custom-columns=NAME:.metadata.name,POLICY:.spec.persistentVolumeReclaimPolicy'"
+      "reason": "Pre-upgrade checklist includes 'kubectl get pv -o custom-columns=NAME:.metadata.name,RECLAIM:.spec.persistentVolumeReclaimPolicy' to verify reclaim policies"
     },
     {
       "expectation": "Includes kubectl commands for checking StatefulSet rollout status",
       "passed": false,
-      "reason": "While it includes many monitoring commands for pods and nodes, it doesn't specifically include 'kubectl rollout status' commands for checking StatefulSet rollout status"
+      "reason": "While the response includes many kubectl commands for monitoring pods and cluster health, it does not include specific 'kubectl rollout status' commands for StatefulSet monitoring"
     },
     {
       "expectation": "Recommends taking an Elasticsearch snapshot backup before starting",
       "passed": true,
-      "reason": "Pre-upgrade checklist explicitly includes 'Recent full snapshot to GCS/other backup completed' as a required step"
+      "reason": "Pre-upgrade checklist step 4 shows: 'curl -X PUT \"localhost:9200/_snapshot/backup_repo/pre_upgrade_snapshot?wait_for_completion=true&pretty\"' for backing up cluster state and indices"
     }
   ]
 }

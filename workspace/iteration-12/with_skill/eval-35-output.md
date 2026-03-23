@@ -1,280 +1,240 @@
-# GKE Configuration for Foundation Model Training
+# GKE Cluster Configuration for H100 Foundation Model Training
 
 ## Executive Summary
 
-For multi-week H100 training runs, your primary goal is **preventing mid-training evictions** while maintaining security patches. This requires a dual-strategy approach: aggressive upgrade control during training campaigns, plus streamlined upgrade paths during natural training gaps.
+For H100-based foundation model training with multi-week runs, your primary concern is **preventing any node-level disruption during active training campaigns**. This requires careful configuration of release channels, maintenance exclusions, and dedicated node pool isolation.
 
-## Recommended Cluster Configuration
+## Core Configuration Strategy
 
-### Release Channel Strategy
+### 1. Release Channel Selection
+
+**Recommendation: Regular or Stable channel** (NOT Rapid or Extended)
+
 ```bash
-# Use Regular channel (not Stable) - provides better security patch velocity
 gcloud container clusters create training-cluster \
-  --release-channel regular \
-  --zone us-central1-c \
-  --enable-autorepair \
-  --enable-autoupgrade
+    --release-channel regular \
+    --location us-central1-a
 ```
 
-**Why Regular over Stable:** Foundation model training clusters need security patches more frequently than the Stable channel provides, but don't need the bleeding-edge features of Rapid. Regular strikes the right balance for production AI workloads with full SLA coverage.
+**Why Regular/Stable:**
+- **Regular**: Full SLA, balanced security patching without bleeding-edge instability
+- **Stable**: Maximum stability if you can tolerate slightly delayed patches
+- **Avoid Rapid**: No SLA for upgrade stability - versions may have issues
+- **Avoid Extended**: Minor upgrades are NOT automated, requiring manual intervention
 
-### Node Pool Architecture - Separation of Concerns
+### 2. Maintenance Exclusions for Training Protection
 
-Create **separate node pools** for different workload types:
-
-```bash
-# Training node pool (H100s) - tight upgrade control
-gcloud container node-pools create training-h100 \
-  --cluster training-cluster \
-  --zone us-central1-c \
-  --machine-type a3-highgpu-8g \
-  --accelerator type=nvidia-h100-80gb,count=8 \
-  --num-nodes 16 \
-  --node-locations us-central1-c \
-  --placement-type COMPACT \
-  --max-surge-upgrade 0 \
-  --max-unavailable-upgrade 1 \
-  --enable-autorepair \
-  --disk-size 1000GB \
-  --disk-type pd-ssd
-
-# System/monitoring node pool (CPU) - allow auto-upgrades
-gcloud container node-pools create system-cpu \
-  --cluster training-cluster \
-  --zone us-central1-c \
-  --machine-type n2-standard-8 \
-  --num-nodes 3 \
-  --max-surge-upgrade 1 \
-  --max-unavailable-upgrade 0 \
-  --enable-autorepair
-```
-
-**Key decisions:**
-- **Compact placement:** Preserves RDMA topology for H100 interconnect
-- **maxSurge=0, maxUnavailable=1:** Assumes no H100 surge capacity available (typical with reservations)
-- **Separate pools:** System workloads can upgrade independently of training nodes
-
-### Maintenance Window Configuration
+**Configure "no minor or node upgrades" exclusion** - this allows critical control plane security patches while blocking all disruptive changes:
 
 ```bash
-# Set maintenance window during your natural training gaps
 gcloud container clusters update training-cluster \
-  --zone us-central1-c \
-  --maintenance-window-start 2024-12-15T06:00:00Z \
-  --maintenance-window-end 2024-12-15T10:00:00Z \
-  --maintenance-window-recurrence "FREQ=WEEKLY;BYDAY=SU"
+    --location us-central1-a \
+    --add-maintenance-exclusion-name "training-campaign-protection" \
+    --add-maintenance-exclusion-scope no_minor_or_node_upgrades \
+    --add-maintenance-exclusion-until-end-of-support
 ```
 
-Configure this to align with your training schedule - when you typically restart/checkpoint jobs.
+**Key benefits:**
+- Blocks node pool upgrades (the main disruption source)
+- Blocks minor version upgrades
+- Still allows control plane security patches
+- Automatically tracks End of Support dates - no manual renewal needed
 
-## Training Campaign Protection Strategy
+### 3. Node Pool Architecture
 
-### During Active Training (Multi-Week Runs)
-
-Apply **cluster-level maintenance exclusion** to block ALL disruptive upgrades:
+**Dedicated Training Pool Strategy:**
 
 ```bash
-# Block minor version upgrades AND node pool upgrades, allow control plane patches
+# Training node pool - H100 GPUs with upgrade protection
+gcloud container node-pools create h100-training-pool \
+    --cluster training-cluster \
+    --location us-central1-a \
+    --machine-type a3-highgpu-8g \
+    --accelerator type=nvidia-h100-80gb,count=8 \
+    --num-nodes 4 \
+    --enable-autoscaling \
+    --min-nodes 0 \
+    --max-nodes 16 \
+    --spot \
+    --reservation-affinity any \
+    --max-surge-upgrade 0 \
+    --max-unavailable-upgrade 1
+
+# System/management node pool - separate from training workloads
+gcloud container node-pools create system-pool \
+    --cluster training-cluster \
+    --location us-central1-a \
+    --machine-type n2-standard-4 \
+    --num-nodes 2 \
+    --enable-autoscaling \
+    --min-nodes 1 \
+    --max-nodes 4
+```
+
+**Critical H100-specific settings:**
+- `--max-surge-upgrade 0, --max-unavailable-upgrade 1`: H100 reservations typically have no surge capacity
+- `--spot`: Significantly reduces costs for training workloads
+- `--reservation-affinity any`: Uses your H100 reservation efficiently
+
+### 4. Maintenance Windows
+
+**Configure maintenance windows during planned training gaps:**
+
+```bash
 gcloud container clusters update training-cluster \
-  --zone us-central1-c \
-  --add-maintenance-exclusion-name "training-campaign-q1-2024" \
-  --add-maintenance-exclusion-start-time 2024-03-01T00:00:00Z \
-  --add-maintenance-exclusion-end-time 2024-04-15T23:59:59Z \
-  --add-maintenance-exclusion-scope no_minor_or_node_upgrades
+    --location us-central1-a \
+    --maintenance-window-start "2024-01-15T02:00:00Z" \
+    --maintenance-window-end "2024-01-15T06:00:00Z" \
+    --maintenance-window-recurrence "FREQ=WEEKLY;BYDAY=SU"
 ```
 
-**This exclusion:**
-- ✅ Allows control plane security patches (non-disruptive)
-- ❌ Blocks control plane minor version upgrades
-- ❌ Blocks ALL node pool upgrades (patches + minor versions)
-- Automatically expires when training campaign ends
+### 5. Training Campaign Workflow
 
-### Between Training Campaigns (Upgrade Windows)
-
-Remove the exclusion and perform accelerated upgrades:
+**Before starting a multi-week training run:**
 
 ```bash
-# Remove training protection
+# 1. Verify no pending upgrades
+gcloud container clusters get-upgrade-info training-cluster \
+    --location us-central1-a
+
+# 2. Ensure maintenance exclusion is active
+gcloud container clusters describe training-cluster \
+    --location us-central1-a \
+    --format="value(maintenancePolicy.exclusions)"
+
+# 3. Add temporary "no upgrades" exclusion if EoS is approaching
 gcloud container clusters update training-cluster \
-  --zone us-central1-c \
-  --remove-maintenance-exclusion-name "training-campaign-q1-2024"
-
-# Optionally trigger immediate upgrade to latest available
-gcloud container clusters upgrade training-cluster \
-  --zone us-central1-c \
-  --master
-
-# Then upgrade H100 node pool
-gcloud container node-pools upgrade training-h100 \
-  --cluster training-cluster \
-  --zone us-central1-c
+    --location us-central1-a \
+    --add-maintenance-exclusion-name "active-training-freeze" \
+    --add-maintenance-exclusion-start-time "2024-01-15T00:00:00Z" \
+    --add-maintenance-exclusion-end-time "2024-02-14T23:59:59Z" \
+    --add-maintenance-exclusion-scope no_upgrades
 ```
 
-## H100-Specific Node Pool Strategy
+## Security and Compliance Balance
 
-### GPU Node Pool Upgrade Approach
+### Control Plane Patches (Still Allowed)
 
-For H100 pools, use the **cordon-and-wait pattern** during planned upgrades:
+Your configuration allows control plane security patches while blocking node disruption:
+- CVE fixes apply automatically to the control plane
+- API server security updates don't affect running training jobs
+- No pod restarts from control plane patches
+
+### Monitoring for Security Updates
 
 ```bash
-# 1. Cordon H100 nodes (prevents new scheduling)
-kubectl cordon -l cloud.google.com/gke-nodepool=training-h100
-
-# 2. Wait for current training jobs to complete naturally or reach checkpoint
-
-# 3. Upgrade the empty node pool (fast since no running workloads)
-gcloud container node-pools upgrade training-h100 \
-  --cluster training-cluster \
-  --zone us-central1-c
-
-# 4. Uncordon when upgrade completes
-kubectl uncordon -l cloud.google.com/gke-nodepool=training-h100
+# Set up alerting for available upgrades
+gcloud container clusters get-upgrade-info training-cluster \
+    --location us-central1-a \
+    --format="table(autoUpgradeStatus, minorTargetVersion, patchTargetVersion)"
 ```
 
-**Why this approach:**
-- **No forced eviction** of multi-day training jobs
-- **Minimal capacity loss** during the transition period
-- **Fast upgrade** since nodes drain cleanly
-- **GPU driver compatibility** automatically handled by GKE
+### Planned Upgrade Windows
 
-### Alternative: Autoscaled Blue-Green for H100
-
-If you have sufficient H100 quota/reservations for 2x capacity:
+**Between training campaigns, perform comprehensive upgrades:**
 
 ```bash
-gcloud container node-pools update training-h100 \
-  --cluster training-cluster \
-  --zone us-central1-c \
-  --enable-blue-green-upgrade \
-  --node-pool-soak-duration 7200s \
-  --standard-rollout-policy-max-unavailable-percentage 0 \
-  --standard-rollout-policy-max-surge-percentage 100
+# Remove training protection temporarily
+gcloud container clusters update training-cluster \
+    --location us-central1-a \
+    --remove-maintenance-exclusion-name "training-campaign-protection"
+
+# Upgrade node pool during training gap
+gcloud container node-pools upgrade h100-training-pool \
+    --cluster training-cluster \
+    --location us-central1-a
+
+# Restore protection before next training run
+gcloud container clusters update training-cluster \
+    --location us-central1-a \
+    --add-maintenance-exclusion-name "training-campaign-protection" \
+    --add-maintenance-exclusion-scope no_minor_or_node_upgrades \
+    --add-maintenance-exclusion-until-end-of-support
 ```
 
-This creates a parallel H100 pool, gradually migrates workloads, then removes the old pool. **Only use if you have confirmed H100 surge capacity.**
+## Training Workload Configuration
 
-## Workload Protection Configuration
-
-### Pod Disruption Budgets for Training Jobs
+### Pod Disruption Budget
 
 ```yaml
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: training-job-pdb
-  namespace: training
 spec:
-  minAvailable: 100%  # Prevent ANY pod eviction
+  minAvailable: "100%"  # Prevent ANY eviction during training
   selector:
     matchLabels:
-      workload-type: training
----
+      app: foundation-model-training
+```
+
+### StatefulSet with Anti-Affinity
+
+```yaml
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: llm-training
-  namespace: training
 spec:
-  replicas: 16  # Match your H100 node count
-  selector:
-    matchLabels:
-      workload-type: training
+  replicas: 4
   template:
-    metadata:
-      labels:
-        workload-type: training
     spec:
-      terminationGracePeriodSeconds: 3600  # 1 hour for graceful checkpoint
       nodeSelector:
-        cloud.google.com/gke-nodepool: training-h100
+        cloud.google.com/gke-nodepool: h100-training-pool
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: foundation-model-training
+            topologyKey: kubernetes.io/hostname
       containers:
       - name: training
-        image: your-training-image
         resources:
           requests:
             nvidia.com/gpu: 8
           limits:
             nvidia.com/gpu: 8
+        terminationGracePeriodSeconds: 300  # Allow graceful checkpoint saving
 ```
 
-### Checkpointing Strategy
+## Monitoring and Alerting
 
-Ensure your training framework supports:
-- **Automatic checkpointing** every few hours
-- **SIGTERM handling** for graceful shutdown
-- **Resume from checkpoint** capability
-
-## Operational Runbook
-
-### Pre-Training Campaign Checklist
-
-```
-- [ ] Maintenance exclusion applied for campaign duration
-- [ ] Training node pool cordoned if upgrading before campaign
-- [ ] GPU driver version confirmed compatible with training framework
-- [ ] Checkpointing tested and working
-- [ ] PDBs configured to prevent eviction
-- [ ] Monitoring alerts configured for node health
-```
-
-### Training Campaign Commands
+### Key Metrics to Track
 
 ```bash
-# Apply protection (start of campaign)
-gcloud container clusters update training-cluster \
-  --zone us-central1-c \
-  --add-maintenance-exclusion-name "training-campaign-$(date +%Y%m%d)" \
-  --add-maintenance-exclusion-start-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
-  --add-maintenance-exclusion-end-time $(date -u -d "+30 days" +%Y-%m-%dT%H:%M:%SZ) \
-  --add-maintenance-exclusion-scope no_minor_or_node_upgrades
+# Check for forced upgrades due to EoS
+gcloud logging read 'resource.type="gke_cluster" 
+protoPayload.methodName="google.container.v1.ClusterManager.UpdateCluster"
+protoPayload.request.update.desiredMasterVersion!=""' \
+--limit=10 --format=json
 
-# Monitor cluster health during training
-kubectl get nodes -l cloud.google.com/gke-nodepool=training-h100
-kubectl get pods -n training -o wide
-
-# Remove protection (end of campaign)
-gcloud container clusters update training-cluster \
-  --zone us-central1-c \
-  --remove-maintenance-exclusion-name "training-campaign-$(date +%Y%m%d)"
+# Monitor training job stability
+kubectl top pods -n training --containers | grep training
 ```
 
-### Emergency Upgrade (Security Patches During Training)
+### Upgrade Notifications
 
-If a critical security patch requires immediate node upgrade during training:
+Enable 72-hour advance notifications (preview feature):
 
 ```bash
-# 1. Trigger checkpoint immediately in training code
-# 2. Cordon nodes
-kubectl cordon -l cloud.google.com/gke-nodepool=training-h100
-
-# 3. Wait for graceful job termination
-kubectl delete pods -n training -l workload-type=training --grace-period=3600
-
-# 4. Force upgrade
-gcloud container node-pools upgrade training-h100 \
-  --cluster training-cluster \
-  --zone us-central1-c
-
-# 5. Resume training from checkpoint
+gcloud container clusters update training-cluster \
+    --location us-central1-a \
+    --enable-scheduled-upgrade-notifications
 ```
 
-## Security vs Availability Trade-offs
+## Summary Configuration Checklist
 
-This configuration prioritizes **training job continuity** over **immediate patching**:
+- [x] **Release channel**: Regular or Stable (full SLA, predictable timing)
+- [x] **Maintenance exclusion**: "no minor or node upgrades" scope with end-of-support tracking
+- [x] **Node pools**: Dedicated H100 training pool isolated from system workloads  
+- [x] **Upgrade settings**: `maxSurge=0, maxUnavailable=1` (no surge capacity assumption)
+- [x] **Maintenance windows**: Aligned with planned training gaps
+- [x] **PDB protection**: 100% availability requirement for active training jobs
+- [x] **Monitoring**: Upgrade notifications and EoS tracking enabled
 
-- ✅ **Control plane** gets security patches automatically (non-disruptive)
-- ⚠️ **Node patches** are delayed during training campaigns
-- ✅ **Systematic upgrades** happen between campaigns
-- ✅ **Emergency path** available for critical vulnerabilities
-
-For most foundation model training scenarios, this is the right balance. The control plane receives security updates, and node vulnerabilities have limited attack surface in a dedicated training environment.
-
-## Monitoring and Alerts
-
-Set up alerts for:
-- Node health degradation during training
-- Automatic repair events (may disrupt training)
-- Approaching End of Support versions
-- Training job failures due to node issues
-
-This configuration gives you **maximum protection for multi-week training runs** while maintaining **security patch velocity** on the control plane and **streamlined upgrade paths** during natural training gaps.
+This configuration provides maximum protection for multi-week training runs while maintaining essential security patches and a clear upgrade path during planned maintenance windows.

@@ -1,4 +1,4 @@
-Here's the exact GKE maintenance exclusion configuration for your requirements:
+I'll help you set up maintenance exclusions for your GKE clusters to handle your specific requirements. Here's the exact configuration:
 
 ## 1. Terraform Configuration
 
@@ -7,23 +7,21 @@ resource "google_container_cluster" "primary" {
   name     = "your-cluster-name"
   location = "us-central1"
 
-  # Disable automatic upgrades for control plane and nodes
+  # Disable automatic minor version upgrades
   node_config {
     # Node configuration
   }
 
-  # Control plane maintenance policy
+  # Maintenance policy configuration
   maintenance_policy {
-    # Recurring maintenance window (optional - for patches only)
-    recurring_window {
-      start_time = "2024-01-01T09:00:00Z"
-      end_time   = "2024-01-01T17:00:00Z"
-      recurrence = "FREQ=WEEKLY;BYDAY=SU"
+    # Set maintenance window (adjust timezone as needed)
+    daily_maintenance_window {
+      start_time = "03:00"  # 3 AM local time
     }
 
     # Quarterly code freeze in June
     maintenance_exclusion {
-      exclusion_name = "june-code-freeze"
+      exclusion_name = "quarterly-code-freeze-june"
       start_time     = "2024-06-01T00:00:00Z"
       end_time       = "2024-06-30T23:59:59Z"
       exclusion_options {
@@ -31,120 +29,142 @@ resource "google_container_cluster" "primary" {
       }
     }
 
-    # Black Friday/Cyber Monday exclusion (extended period)
+    # Black Friday period exclusion
     maintenance_exclusion {
       exclusion_name = "black-friday-cyber-monday"
-      start_time     = "2024-11-20T00:00:00Z"  # Week before Black Friday
-      end_time       = "2024-12-03T23:59:59Z"  # Tuesday after Cyber Monday
+      start_time     = "2024-11-15T00:00:00Z"  # Start before Black Friday
+      end_time       = "2024-12-03T23:59:59Z"  # End after Cyber Monday
       exclusion_options {
         scope = "ALL_UPGRADES"
       }
     }
 
-    # Permanent exclusion for minor version upgrades
+    # Recurring June exclusion for future years
     maintenance_exclusion {
-      exclusion_name = "no-minor-version-auto-upgrades"
-      start_time     = "2024-01-01T00:00:00Z"
-      end_time       = "2030-12-31T23:59:59Z"  # Long-term exclusion
+      exclusion_name = "quarterly-code-freeze-june-2025"
+      start_time     = "2025-06-01T00:00:00Z"
+      end_time       = "2025-06-30T23:59:59Z"
       exclusion_options {
-        scope = "MINOR_UPGRADES"
+        scope = "ALL_UPGRADES"
+      }
+    }
+
+    # Recurring November exclusion for future years
+    maintenance_exclusion {
+      exclusion_name = "black-friday-cyber-monday-2025"
+      start_time     = "2025-11-15T00:00:00Z"
+      end_time       = "2025-12-03T23:59:59Z"
+      exclusion_options {
+        scope = "ALL_UPGRADES"
       }
     }
   }
 
-  # Disable automatic upgrades
-  remove_default_node_pool = true
-}
-
-resource "google_container_node_pool" "primary_nodes" {
-  name       = "primary-node-pool"
-  cluster    = google_container_cluster.primary.name
-  location   = google_container_cluster.primary.location
-  node_count = 3
-
-  # Disable automatic upgrades for node pool
-  management {
-    auto_repair  = true   # Keep auto-repair for node health
-    auto_upgrade = false  # Disable auto-upgrade
+  # Disable automatic minor version upgrades
+  release_channel {
+    channel = "REGULAR"  # or "STABLE" for more conservative updates
   }
 
-  node_config {
-    machine_type = "e2-medium"
-    
-    oauth_scopes = [
-      "https://www.googleapis.com/auth/cloud-platform"
-    ]
+  # Prevent automatic minor version upgrades
+  min_master_version = "1.28.3-gke.1286000"  # Pin to specific version
+}
+
+# Node pool with upgrade controls
+resource "google_container_node_pool" "primary_nodes" {
+  cluster    = google_container_cluster.primary.name
+  location   = google_container_cluster.primary.location
+  
+  # Disable automatic upgrades for nodes
+  management {
+    auto_upgrade = false
+    auto_repair  = true  # Keep auto-repair enabled for stability
+  }
+
+  upgrade_settings {
+    # Control upgrade strategy
+    max_surge       = 1
+    max_unavailable = 0
+    strategy        = "SURGE"
   }
 }
 ```
 
-## 2. gcloud CLI Configuration
+## 2. gcloud CLI Commands
 
 ```bash
-# Create the cluster with maintenance exclusions
+# Create cluster with maintenance exclusions
 gcloud container clusters create your-cluster-name \
-  --zone=us-central1-a \
-  --maintenance-window-start="2024-01-01T09:00:00Z" \
-  --maintenance-window-end="2024-01-01T17:00:00Z" \
-  --maintenance-window-recurrence="FREQ=WEEKLY;BYDAY=SU" \
-  --no-enable-autoupgrade \
-  --enable-autorepair
+    --zone=us-central1-a \
+    --maintenance-window-start="2024-01-01T03:00:00Z" \
+    --maintenance-window-end="2024-01-01T07:00:00Z" \
+    --maintenance-window-recurrence="FREQ=DAILY" \
+    --no-enable-autoupgrade \
+    --release-channel=regular
 
 # Add June code freeze exclusion
 gcloud container clusters update your-cluster-name \
-  --zone=us-central1-a \
-  --add-maintenance-exclusion-name="june-code-freeze" \
-  --add-maintenance-exclusion-start="2024-06-01T00:00:00Z" \
-  --add-maintenance-exclusion-end="2024-06-30T23:59:59Z" \
-  --add-maintenance-exclusion-scope="ALL_UPGRADES"
+    --zone=us-central1-a \
+    --add-maintenance-exclusion-end="2024-06-30T23:59:59Z" \
+    --add-maintenance-exclusion-name="quarterly-code-freeze-june-2024" \
+    --add-maintenance-exclusion-scope="ALL_UPGRADES" \
+    --add-maintenance-exclusion-start="2024-06-01T00:00:00Z"
 
 # Add Black Friday/Cyber Monday exclusion
 gcloud container clusters update your-cluster-name \
-  --zone=us-central1-a \
-  --add-maintenance-exclusion-name="black-friday-cyber-monday" \
-  --add-maintenance-exclusion-start="2024-11-20T00:00:00Z" \
-  --add-maintenance-exclusion-end="2024-12-03T23:59:59Z" \
-  --add-maintenance-exclusion-scope="ALL_UPGRADES"
+    --zone=us-central1-a \
+    --add-maintenance-exclusion-end="2024-12-03T23:59:59Z" \
+    --add-maintenance-exclusion-name="black-friday-cyber-monday-2024" \
+    --add-maintenance-exclusion-scope="ALL_UPGRADES" \
+    --add-maintenance-exclusion-start="2024-11-15T00:00:00Z"
 
-# Add permanent minor version upgrade exclusion
-gcloud container clusters update your-cluster-name \
-  --zone=us-central1-a \
-  --add-maintenance-exclusion-name="no-minor-version-auto-upgrades" \
-  --add-maintenance-exclusion-start="2024-01-01T00:00:00Z" \
-  --add-maintenance-exclusion-end="2030-12-31T23:59:59Z" \
-  --add-maintenance-exclusion-scope="MINOR_UPGRADES"
+# Disable automatic node upgrades
+gcloud container node-pools update default-pool \
+    --cluster=your-cluster-name \
+    --zone=us-central1-a \
+    --no-enable-autoupgrade
 ```
 
-## 3. YAML Configuration (for existing clusters)
+## 3. YAML Configuration for GitOps
 
 ```yaml
-# maintenance-policy.yaml
-apiVersion: v1
-kind: ConfigMap
+# maintenance-exclusions.yaml
+apiVersion: container.cnrm.cloud.google.com/v1beta1
+kind: ContainerCluster
 metadata:
-  name: maintenance-exclusions-config
-data:
-  exclusions: |
-    # June Code Freeze
-    - name: "june-code-freeze"
-      start: "2024-06-01T00:00:00Z"
-      end: "2024-06-30T23:59:59Z"
-      scope: "ALL_UPGRADES"
-    
-    # Black Friday/Cyber Monday
-    - name: "black-friday-cyber-monday" 
-      start: "2024-11-20T00:00:00Z"
-      end: "2024-12-03T23:59:59Z"
-      scope: "ALL_UPGRADES"
-    
-    # No Minor Version Auto-upgrades
-    - name: "no-minor-version-auto-upgrades"
-      start: "2024-01-01T00:00:00Z"  
-      end: "2030-12-31T23:59:59Z"
-      scope: "MINOR_UPGRADES"
+  name: your-cluster-name
+spec:
+  location: us-central1-a
+  maintenancePolicy:
+    dailyMaintenanceWindow:
+      startTime: "03:00"
+    maintenanceExclusions:
+    - exclusionName: "quarterly-code-freeze-june-2024"
+      startTime: "2024-06-01T00:00:00Z"
+      endTime: "2024-06-30T23:59:59Z"
+      exclusionOptions:
+        scope: "ALL_UPGRADES"
+    - exclusionName: "black-friday-cyber-monday-2024"
+      startTime: "2024-11-15T00:00:00Z"
+      endTime: "2024-12-03T23:59:59Z"
+      exclusionOptions:
+        scope: "ALL_UPGRADES"
+    - exclusionName: "quarterly-code-freeze-june-2025"
+      startTime: "2025-06-01T00:00:00Z"
+      endTime: "2025-06-30T23:59:59Z"
+      exclusionOptions:
+        scope: "ALL_UPGRADES"
+    - exclusionName: "black-friday-cyber-monday-2025"
+      startTime: "2025-11-15T00:00:00Z"
+      endTime: "2025-12-03T23:59:59Z"
+      exclusionOptions:
+        scope: "ALL_UPGRADES"
+  releaseChannel:
+    channel: "REGULAR"
+  nodeConfig:
+    machineType: "e2-medium"
 ```
 
-## 4. Automated Annual Updates Script
+## 4. Automation Script for Annual Updates
 
 ```bash
 #!/bin/bash
@@ -155,57 +175,49 @@ ZONE="us-central1-a"
 CURRENT_YEAR=$(date +%Y)
 NEXT_YEAR=$((CURRENT_YEAR + 1))
 
-# Remove old exclusions
+# Add next year's June exclusion
 gcloud container clusters update $CLUSTER_NAME \
-  --zone=$ZONE \
-  --remove-maintenance-exclusion="june-code-freeze-$CURRENT_YEAR" \
-  --remove-maintenance-exclusion="black-friday-cyber-monday-$CURRENT_YEAR"
+    --zone=$ZONE \
+    --add-maintenance-exclusion-end="${NEXT_YEAR}-06-30T23:59:59Z" \
+    --add-maintenance-exclusion-name="quarterly-code-freeze-june-${NEXT_YEAR}" \
+    --add-maintenance-exclusion-scope="ALL_UPGRADES" \
+    --add-maintenance-exclusion-start="${NEXT_YEAR}-06-01T00:00:00Z"
 
-# Add new exclusions for next year
+# Add next year's Black Friday exclusion
 gcloud container clusters update $CLUSTER_NAME \
-  --zone=$ZONE \
-  --add-maintenance-exclusion-name="june-code-freeze-$NEXT_YEAR" \
-  --add-maintenance-exclusion-start="${NEXT_YEAR}-06-01T00:00:00Z" \
-  --add-maintenance-exclusion-end="${NEXT_YEAR}-06-30T23:59:59Z" \
-  --add-maintenance-exclusion-scope="ALL_UPGRADES"
+    --zone=$ZONE \
+    --add-maintenance-exclusion-end="${NEXT_YEAR}-12-03T23:59:59Z" \
+    --add-maintenance-exclusion-name="black-friday-cyber-monday-${NEXT_YEAR}" \
+    --add-maintenance-exclusion-scope="ALL_UPGRADES" \
+    --add-maintenance-exclusion-start="${NEXT_YEAR}-11-15T00:00:00Z"
 
-gcloud container clusters update $CLUSTER_NAME \
-  --zone=$ZONE \
-  --add-maintenance-exclusion-name="black-friday-cyber-monday-$NEXT_YEAR" \
-  --add-maintenance-exclusion-start="${NEXT_YEAR}-11-20T00:00:00Z" \
-  --add-maintenance-exclusion-end="${NEXT_YEAR}-12-03T23:59:59Z" \
-  --add-maintenance-exclusion-scope="ALL_UPGRADES"
+echo "Added maintenance exclusions for ${NEXT_YEAR}"
 ```
 
-## 5. Verification Commands
+## 5. Monitoring and Alerting
 
 ```bash
-# Check current maintenance policy
+# Check current maintenance exclusions
 gcloud container clusters describe your-cluster-name \
-  --zone=us-central1-a \
-  --format="value(maintenancePolicy)"
+    --zone=us-central1-a \
+    --format="value(maintenancePolicy.maintenanceExclusions[].exclusionName,maintenancePolicy.maintenanceExclusions[].startTime,maintenancePolicy.maintenanceExclusions[].endTime)"
 
-# List all maintenance exclusions
-gcloud container clusters describe your-cluster-name \
-  --zone=us-central1-a \
-  --format="table(maintenancePolicy.exclusions[].exclusionName,
-                   maintenancePolicy.exclusions[].startTime,
-                   maintenancePolicy.exclusions[].endTime,
-                   maintenancePolicy.exclusions[].exclusionOptions.scope)"
+# Remove expired exclusions (run after each period)
+gcloud container clusters update your-cluster-name \
+    --zone=us-central1-a \
+    --remove-maintenance-exclusion-name="quarterly-code-freeze-june-2024"
 ```
 
-## Key Configuration Details:
+## Key Points:
 
-1. **June Code Freeze**: Blocks ALL upgrades for entire month of June
-2. **Black Friday/Cyber Monday**: Extended exclusion from Nov 20 - Dec 3 (covers preparation and recovery time)
-3. **Minor Version Control**: Long-term exclusion (until 2030) prevents automatic minor version upgrades
-4. **Scope Options**:
-   - `ALL_UPGRADES`: Blocks all maintenance
-   - `MINOR_UPGRADES`: Blocks only minor version upgrades
-   - `PATCH_UPGRADES`: Blocks only patch upgrades
+1. **Minor Version Control**: Set `auto_upgrade = false` on node pools and avoid using `--enable-autoupgrade`
+2. **Exclusion Scope**: Use `"ALL_UPGRADES"` to block both master and node upgrades
+3. **Timing**: Black Friday exclusion starts Nov 15th and ends Dec 3rd to cover the entire period
+4. **Recurring Setup**: You'll need to add future year exclusions manually or via automation
+5. **Manual Upgrades**: With auto-upgrade disabled, you control when upgrades happen
 
-**Important Notes**:
-- Security patches may still be applied during exclusions if critical
-- You'll need to manually trigger upgrades during allowed windows
-- Update the years annually for recurring exclusions
-- Consider time zones when setting exclusion windows
+Remember to:
+- Update the years in exclusions annually
+- Remove expired exclusions to keep the configuration clean
+- Test upgrades in staging environments before applying to production
+- Monitor GKE release notes for security patches that might need immediate attention

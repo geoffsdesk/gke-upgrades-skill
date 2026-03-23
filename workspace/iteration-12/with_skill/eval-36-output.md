@@ -1,106 +1,77 @@
-You're hitting a common GPU upgrade constraint — H100/A3-mega machines are in extremely high demand and there's no surge capacity available. Here are your options to proceed without additional GPU quota:
+You have several options to upgrade without additional GPU quota. Here's your best path forward:
 
-## Option 1: Switch to maxUnavailable mode (Recommended)
+## Recommended: Use maxUnavailable mode (no surge capacity needed)
 
-This is the most common approach for GPU pools with fixed reservations. Instead of creating surge nodes, GKE will drain first, then replace.
+This is the most common approach for GPU pools with fixed reservations:
 
 ```bash
-# Configure node pool for drain-first upgrades
-gcloud container node-pools update YOUR_NODE_POOL_NAME \
+# Configure the node pool for drain-first upgrades
+gcloud container node-pools update YOUR_POOL_NAME \
   --cluster CLUSTER_NAME \
   --zone ZONE \
   --max-surge-upgrade 0 \
   --max-unavailable-upgrade 4
 
-# Then proceed with upgrade
-gcloud container node-pools upgrade YOUR_NODE_POOL_NAME \
+# Then retry the upgrade
+gcloud container node-pools upgrade YOUR_POOL_NAME \
   --cluster CLUSTER_NAME \
   --zone ZONE \
   --cluster-version TARGET_VERSION
 ```
 
-**Trade-off:** You'll have a temporary capacity reduction (4 fewer nodes at a time), but no extra quota needed.
+**How this works:**
+- `maxSurge=0` means no extra nodes are created
+- `maxUnavailable=4` means 4 nodes at a time are cordoned, drained, and replaced
+- No additional quota needed — uses your existing 64-node allocation
 
-For your 64-node pool, `maxUnavailable=4` means:
-- Upgrade happens in 16 waves of 4 nodes each
-- 60 nodes remain available during each wave
-- Total time: ~2-3 hours depending on workload drain time
+**Trade-offs:**
+- **Capacity dip:** You'll temporarily have 60 nodes available instead of 64 during each batch
+- **Slower:** Processes 4 nodes at a time instead of creating surge capacity
+- **Zero extra cost:** No temporary GPU charges
 
-You can increase `maxUnavailable` to speed up the upgrade (e.g., `maxUnavailable=8` for 8 waves), but this creates a larger capacity dip.
+## Alternative: Autoscaled Blue-Green (if you can tolerate the capacity requirements)
 
-## Option 2: Use GKE's autoscaled blue-green upgrade
-
-This is specifically designed for scenarios where surge capacity is unavailable:
+If your reservation actually has headroom or you can temporarily expand:
 
 ```bash
-gcloud container node-pools upgrade YOUR_NODE_POOL_NAME \
+gcloud container node-pools update YOUR_POOL_NAME \
   --cluster CLUSTER_NAME \
   --zone ZONE \
-  --cluster-version TARGET_VERSION \
-  --blue-green-settings autoscaled-blue-green-settings=batch-node-count=4,batch-soak-duration=60s
+  --enable-autoscaling \
+  --total-min-nodes 64 --total-max-nodes 128 \
+  --autoscaled-rollout-policy=blue-green-initial-node-percentage=0.25,blue-green-full-batch-timeout=3600s
 ```
 
-**How it works:**
-- Creates a new "green" node pool that scales up based on workload demand
-- Cordons the existing "blue" pool 
-- Pods are gradually evicted and rescheduled to green nodes
-- Blue pool scales down as pods move
-- More cost-effective than traditional blue-green since it doesn't double capacity
+This creates replacement nodes gradually as workloads are drained, but still requires capacity for replacement nodes.
 
-## Option 3: Manual blue-green with smaller batches
+## For large training workloads: Consider timing
 
-Create a small replacement pool and migrate workloads in batches:
+Given your 64-node cluster size, this is likely a training environment. Consider:
 
-```bash
-# Create a small green pool (8 nodes to start)
-gcloud container node-pools create green-pool \
-  --cluster CLUSTER_NAME \
-  --zone ZONE \
-  --cluster-version TARGET_VERSION \
-  --machine-type a3-megagpu-8g \
-  --num-nodes 8 \
-  --node-locations ZONE
+1. **Checkpoint current training jobs** before starting the upgrade
+2. **Use a larger maxUnavailable** (8-16 nodes) to complete faster if your workloads can tolerate the capacity reduction
+3. **Apply a maintenance exclusion** to delay auto-upgrades until your next planned training gap:
 
-# Cordon original pool to prevent new scheduling
-kubectl cordon -l cloud.google.com/gke-nodepool=YOUR_NODE_POOL_NAME
-
-# Scale green pool up as needed, migrate workloads in batches
-# Delete original pool when migration complete
-```
-
-## Special considerations for A3-mega
-
-**RDMA topology:** A3-mega nodes use compact placement policies for RDMA connectivity. Verify your replacement nodes land in the same placement group:
-
-```bash
-# Check current placement
-gcloud compute instances list --filter="name~'gke-CLUSTER.*'" --format="table(name,zone,scheduling.nodeAffinities)"
-
-# Ensure new nodes maintain topology during upgrade
-```
-
-**Long-running training jobs:** If you have multi-day training runs:
-
-1. **Apply maintenance exclusion first** to prevent auto-upgrades:
 ```bash
 gcloud container clusters update CLUSTER_NAME \
   --zone ZONE \
   --add-maintenance-exclusion-name "training-campaign" \
-  --add-maintenance-exclusion-start-time $(date -u +"%Y-%m-%dT%H:%M:%SZ") \
-  --add-maintenance-exclusion-end-time $(date -u -d "+30 days" +"%Y-%m-%dT%H:%M:%SZ") \
+  --add-maintenance-exclusion-start-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+  --add-maintenance-exclusion-end-time "2024-12-31T23:59:59Z" \
   --add-maintenance-exclusion-scope no_minor_or_node_upgrades
 ```
 
-2. **Wait for current training jobs to checkpoint/complete**
-3. **Then proceed with the upgrade using Option 1 or 2**
+## Fastest option: Parallel maintenance during training gap
 
-## My recommendation
+If you can schedule downtime for all nodes:
 
-**Start with Option 1** (`maxSurge=0, maxUnavailable=4`). It's the simplest approach and works with your existing reservation. Monitor the first few node replacements to ensure:
-- Training workloads checkpoint properly before eviction
-- New nodes get the correct GPU drivers for your target GKE version
-- RDMA connectivity is preserved if you're using it
+1. Scale training workloads to zero or checkpoint
+2. Apply the host maintenance label to all nodes simultaneously:
+```bash
+kubectl label nodes -l cloud.google.com/gke-nodepool=YOUR_POOL_NAME \
+  cloud.google.com/perform-maintenance=true
+```
+3. Wait ~4 hours for host maintenance to complete
+4. All nodes upgraded in parallel (fastest wall-clock time)
 
-You can always increase `maxUnavailable` to 8 or 12 if the initial batch goes smoothly and you want to speed up the process.
-
-Would you like me to produce a detailed runbook for the maxUnavailable approach, or do you need help with any of the other options?
+**Recommendation:** Start with `maxSurge=0, maxUnavailable=4` for your first attempt. Increase `maxUnavailable` to 8 if the 4-node capacity dip is acceptable to your workloads. This is the standard pattern for GPU pools with fixed reservations.

@@ -1,187 +1,157 @@
-# GKE Upgrade Plan: Spot VM Node Pool Considerations
+# GKE Upgrade Plan: Standard Cluster with Spot VMs (1.31→1.32)
 
-## Executive Summary
+## Spot VM Upgrade Considerations
 
-Spot VM node pools require special handling during upgrades due to their interruption behavior. The key is configuring surge settings that account for spot preemptions and ensuring workloads can tolerate the additional disruption.
+**Key insight:** Spot VMs add eviction unpredictability during upgrades. You'll face both planned eviction (upgrade process) and potential unplanned eviction (spot preemption) simultaneously.
 
-## Spot VM Upgrade Challenges
+### Primary Considerations
 
-**Preemption during upgrade:** Spot VMs can be preempted by Google Cloud at any time, including during the upgrade process. This creates a "double disruption" scenario:
-- Normal upgrade eviction (planned)
-- Spot preemption (unplanned, 30-second notice)
+**1. Dual eviction risk**
+- Normal upgrade process: controlled drain with `terminationGracePeriodSeconds`
+- Spot preemption: 30-second notice, immediate termination
+- **Risk:** Pods may be preempted while waiting to drain during upgrade, causing cascading disruption
 
-**Unpredictable timing:** Unlike on-demand upgrades with predictable drain timing, spot nodes may disappear mid-upgrade, potentially leaving pods in an unknown state.
+**2. Replacement node availability**
+- Spot VMs may not be available in the same zone during surge upgrades
+- If `maxSurge` can't provision spot replacement nodes, upgrade stalls
+- **Mitigation:** Configure fallback to on-demand for surge capacity
 
-**Capacity availability:** Spot capacity is not guaranteed. During upgrade, replacement spot nodes may not be available, causing the upgrade to stall until capacity becomes available.
+**3. Workload tolerance**
+- Stateless workloads: generally fine with spot
+- Stateful workloads: avoid spot entirely or use very conservative upgrade settings
 
 ## Recommended Upgrade Strategy
 
-### 1. Increase surge capacity significantly
+### Option A: Conservative Surge (Recommended)
 ```bash
-gcloud container node-pools update SPOT_NODE_POOL_NAME \
+# Configure conservative surge settings
+gcloud container node-pools update YOUR_SPOT_POOL \
   --cluster CLUSTER_NAME \
   --zone ZONE \
-  --max-surge-upgrade 3 \
-  --max-unavailable-upgrade 1
-```
-
-**Rationale:** Higher surge protects against spot preemptions during upgrade. If a surge node gets preempted, others can continue the upgrade process.
-
-### 2. Mixed pool approach (if not already separated)
-
-**Current state assessment:**
-- Are spot and on-demand nodes in the same pool or separate pools?
-- If mixed in one pool, consider separating them for better upgrade control
-
-**Recommended topology:**
-```bash
-# Spot pool - higher surge, more tolerant settings
-gcloud container node-pools update spot-pool \
-  --max-surge-upgrade 3 \
-  --max-unavailable-upgrade 2
-
-# On-demand pool - conservative settings
-gcloud container node-pools update ondemand-pool \
   --max-surge-upgrade 1 \
   --max-unavailable-upgrade 0
+
+# This creates ONE replacement node at a time, waits for successful drain
 ```
 
-### 3. Workload placement strategy
+**Pros:** Minimal resource disruption, controlled pace
+**Cons:** Slower upgrade (especially for large pools)
 
-**Spot-tolerant workloads:**
-- Batch processing
-- Stateless services with multiple replicas
-- Development/testing workloads
+### Option B: Mixed Pool Strategy (Best Practice)
+If you have both spot and on-demand nodes in the SAME pool, consider splitting them:
 
-**On-demand for critical workloads:**
-- Databases and stateful services
-- Single-replica services
-- Real-time processing
+```bash
+# Create separate on-demand pool
+gcloud container node-pools create on-demand-pool \
+  --cluster CLUSTER_NAME \
+  --zone ZONE \
+  --machine-type n1-standard-4 \
+  --num-nodes 3 \
+  --cluster-version 1.32.x-gke.xxx \
+  --preemptible=false
 
-Use node selectors or node affinity to control placement:
-```yaml
-nodeSelector:
-  cloud.google.com/gke-preemptible: "true"  # For spot VMs
+# Create separate spot pool  
+gcloud container node-pools create spot-pool \
+  --cluster CLUSTER_NAME \
+  --zone ZONE \
+  --machine-type n1-standard-4 \
+  --num-nodes 5 \
+  --cluster-version 1.32.x-gke.xxx \
+  --preemptible=true
 ```
 
-## Pre-Upgrade Checklist (Spot-Specific)
+Then upgrade pools separately with different strategies.
+
+### Option C: Blue-Green for Critical Workloads
+For workloads that can't tolerate dual eviction risk:
+
+```bash
+# Use GKE's blue-green upgrade strategy
+gcloud container node-pools update SPOT_POOL \
+  --cluster CLUSTER_NAME \
+  --zone ZONE \
+  --enable-blue-green-update \
+  --blue-green-update-policy-node-pool-soak-duration=600s
+```
+
+**Note:** Blue-green requires 2x capacity - may be challenging with spot availability.
+
+## Workload-Specific Guidance
+
+### Stateless Applications (web servers, APIs)
+- **Strategy:** Surge upgrade with `maxSurge=1-2, maxUnavailable=0`
+- **PDB:** Set `maxUnavailable: 25%` to allow some disruption
+- **Recommendation:** These handle spot eviction well during upgrades
+
+### Stateful Applications (databases, caches)
+- **Strategy:** Avoid spot VMs entirely for stateful workloads
+- **If must use spot:** `maxSurge=0, maxUnavailable=1` with strict PDBs
+- **Recommendation:** Move to on-demand node pool before upgrading
+
+### Batch/Job Workloads
+- **Strategy:** Drain completely before upgrade
+- **Commands:**
+```bash
+# Scale down batch workloads
+kubectl scale deployment batch-processor --replicas=0
+# Proceed with upgrade
+# Scale back up after completion
+```
+
+## Pre-Upgrade Checklist
 
 ```markdown
-Spot VM Pre-Upgrade Checklist
-- [ ] Spot capacity availability confirmed in target zones
-- [ ] Surge settings increased: maxSurge=3, maxUnavailable=1-2
-- [ ] Workload distribution reviewed (spot-tolerant vs. critical)
-- [ ] PDBs configured but not overly restrictive (spot + upgrade = high disruption)
-- [ ] Monitoring alert for spot preemption rate during upgrade window
-- [ ] Backup on-demand capacity available if spot upgrade stalls
-- [ ] terminationGracePeriodSeconds ≤ 30 seconds (spot preemption limit)
-```
-
-## Upgrade Commands
-
-### Pre-flight checks
-```bash
-# Check current node pool composition
-kubectl get nodes -l cloud.google.com/gke-preemptible=true -o wide
-
-# Verify workload distribution
-kubectl get pods -A -o wide | grep NODE_NAME
-
-# Check recent spot preemption rate
-gcloud logging read 'resource.type="k8s_node" AND jsonPayload.reason="Preempted"' \
-  --limit=50 --format="table(timestamp, jsonPayload.involvedObject.name)"
-```
-
-### Configure surge for spot pools
-```bash
-gcloud container node-pools update SPOT_NODE_POOL_NAME \
-  --cluster CLUSTER_NAME \
-  --zone ZONE \
-  --max-surge-upgrade 3 \
-  --max-unavailable-upgrade 2
-```
-
-### Upgrade sequence
-```bash
-# 1. Upgrade control plane first
-gcloud container clusters upgrade CLUSTER_NAME \
-  --zone ZONE \
-  --master \
-  --cluster-version 1.32
-
-# 2. Upgrade on-demand pools first (more predictable)
-gcloud container node-pools upgrade ONDEMAND_NODE_POOL_NAME \
-  --cluster CLUSTER_NAME \
-  --zone ZONE \
-  --cluster-version 1.32
-
-# 3. Upgrade spot pools last
-gcloud container node-pools upgrade SPOT_NODE_POOL_NAME \
-  --cluster CLUSTER_NAME \
-  --zone ZONE \
-  --cluster-version 1.32
+Spot VM Upgrade Checklist
+- [ ] Spot instance availability confirmed in target zones
+- [ ] Workload tolerance assessed (stateless vs stateful)
+- [ ] PDBs configured appropriately for dual eviction risk
+- [ ] Node taints/tolerations reviewed (spot vs on-demand scheduling)
+- [ ] Cluster autoscaler settings checked (if enabled)
+- [ ] Monitoring configured for both spot preemption AND upgrade events
 ```
 
 ## Monitoring During Upgrade
 
+Watch for both upgrade events AND spot preemption:
+
 ```bash
-# Watch node status and preemptions
+# Monitor upgrade progress
+kubectl get events -A --field-selector reason=NodeUpgrade -w
+
+# Monitor spot preemption
+kubectl get events -A --field-selector reason=Preempted -w
+
+# Track node availability
 watch 'kubectl get nodes -l cloud.google.com/gke-preemptible=true'
-
-# Monitor for preemption events
-kubectl get events -A --field-selector reason=Preempted --watch
-
-# Check upgrade progress
-gcloud container operations list --cluster CLUSTER_NAME --zone ZONE --limit=1
 ```
 
-## Troubleshooting Spot VM Upgrade Issues
+## Troubleshooting Spot-Specific Issues
 
-**Issue:** Upgrade stalls due to no spot capacity
+**Issue:** Surge nodes won't provision (spot unavailable)
 ```bash
-# Check for pending nodes
-kubectl get nodes | grep NotReady
+# Check for FailedCreate events
+kubectl get events -A --field-selector reason=FailedCreate
 
-# Look for capacity-related events
-kubectl get events -A --field-selector reason=FailedScheduling
+# Fallback: increase maxUnavailable instead
+gcloud container node-pools update SPOT_POOL \
+  --max-surge-upgrade 0 \
+  --max-unavailable-upgrade 1
 ```
 
-**Fix:** Temporarily add an on-demand node pool as surge capacity:
+**Issue:** Workloads stuck on terminating spot nodes
 ```bash
-gcloud container node-pools create temp-ondemand-surge \
-  --cluster CLUSTER_NAME \
-  --zone ZONE \
-  --machine-type MACHINE_TYPE \
-  --num-nodes 2 \
-  --cluster-version 1.32
+# Force delete stuck pods (last resort)
+kubectl delete pod POD_NAME --grace-period=0 --force
 ```
 
-**Issue:** High preemption rate during upgrade
-- This is expected behavior
-- Monitor that workloads reschedule successfully
-- Consider pausing upgrade during high preemption periods if critical
+## Recommendation Summary
 
-## Post-Upgrade Validation
+For a mixed spot/on-demand environment upgrading 1.31→1.32:
 
-```bash
-# Verify all spot nodes upgraded
-kubectl get nodes -l cloud.google.com/gke-preemptible=true \
-  -o custom-columns=NAME:.metadata.name,VERSION:.status.nodeInfo.kubeletVersion
+1. **Separate node pools** by instance type (spot vs on-demand) if not already done
+2. **Upgrade on-demand pools first** using standard surge strategy
+3. **Upgrade spot pools second** with conservative settings (`maxSurge=1, maxUnavailable=0`)
+4. **Monitor aggressively** for both upgrade stalls and spot preemption cascades
+5. **Consider maintenance windows** during low-traffic periods to minimize dual eviction impact
 
-# Check workload health after dual disruption
-kubectl get pods -A --field-selector=status.phase!=Running,status.phase!=Succeeded
-
-# Verify no stuck PDBs from preemption events
-kubectl get pdb -A -o wide
-```
-
-## Key Recommendations
-
-1. **Higher surge is critical** for spot pools — use `maxSurge=3` minimum
-2. **Separate spot and on-demand** into different node pools for upgrade control
-3. **Upgrade on-demand first** for more predictable baseline capacity
-4. **Monitor preemption rates** and pause upgrade if excessive
-5. **Keep termination grace periods ≤ 30 seconds** (spot preemption limit)
-6. **Have backup on-demand capacity** ready if spot upgrade stalls
-
-The 1.31 → 1.32 upgrade itself has no spot-specific breaking changes, but the upgrade process mechanics require these spot-aware configurations.
+The 1.31→1.32 upgrade itself has no breaking changes affecting spot VMs specifically, but the dual eviction risk makes upgrade strategy more critical than with regular VMs.

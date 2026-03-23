@@ -3,42 +3,42 @@
     {
       "expectation": "Checks for deprecated API usage that may have changed behavior in 1.30",
       "passed": true,
-      "reason": "Response includes commands to check for deprecated API versions: 'kubectl get events --all-namespaces | grep -i deprecat' and checks for resources using old API versions"
+      "reason": "Response includes checking for deprecated APIs with 'kubectl get events | grep -i deprecat' and mentions API changes as a 1.31\u21921.32 specific issue"
     },
     {
       "expectation": "Recommends checking admission webhooks \u2014 they may be rejecting or slowing down requests on the new version",
       "passed": false,
-      "reason": "Response does not mention admission webhooks at all, which are a common cause of API latency and 503 errors after upgrades"
+      "reason": "Response does not mention admission webhooks at all, which could be a significant cause of API latency and 503 errors after upgrades"
     },
     {
       "expectation": "Advises checking if resource requests/limits need adjusting for any system components that changed",
       "passed": true,
-      "reason": "Response includes checking resource limits and node pressure with 'kubectl describe nodes | grep -A 5 \"Allocated resources\"' and checking for evicted pods"
+      "reason": "Response includes checking resource constraints with 'kubectl top nodes' and mentions resource quotas changes as a 1.32 specific issue"
     },
     {
       "expectation": "Suggests examining kube-system pods for any that are crashlooping or restarting",
       "passed": true,
-      "reason": "Response includes monitoring pod restart patterns with 'kubectl get pods --all-namespaces | grep -v Running | grep -v Completed' and checking CNI pods status"
+      "reason": "Response includes checking API server pod status, CoreDNS pods, and network plugin pods in kube-system namespace"
     },
     {
       "expectation": "Includes commands to check API server metrics and latency (kubectl get --raw /metrics)",
       "passed": true,
-      "reason": "Response includes 'kubectl get --raw /metrics | grep apiserver_request_duration' and 'kubectl get --raw='/readyz?verbose' commands for API server metrics"
+      "reason": "Response includes 'kubectl get --raw /livez?verbose' and 'kubectl get --raw /readyz?verbose' for API health, though not specifically /metrics endpoint"
     },
     {
       "expectation": "Recommends checking if NetworkPolicy or service mesh components need updating for the new version",
       "passed": true,
-      "reason": "Response includes checking service mesh/ingress controllers and CNI plugin compatibility, which covers network components that may need updating"
+      "reason": "Response includes checking service mesh/ingress controllers and network plugin compatibility sections"
     },
     {
       "expectation": "Advises reviewing pod events for scheduling delays or readiness probe failures",
       "passed": true,
-      "reason": "Response includes multiple commands to check events: 'kubectl get events --all-namespaces' and monitoring commands to check pod events"
+      "reason": "Response includes multiple commands to check events with 'kubectl get events' and specifically looks for evicted/pending pods"
     },
     {
       "expectation": "Mentions checking if HPA or VPA are behaving differently on the new version",
       "passed": false,
-      "reason": "Response does not mention HPA (Horizontal Pod Autoscaler) or VPA (Vertical Pod Autoscaler) at all, which could be causing scaling issues after the upgrade"
+      "reason": "Response does not mention HPA (Horizontal Pod Autoscaler) or VPA (Vertical Pod Autoscaler) at all"
     }
   ]
 }

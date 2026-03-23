@@ -3,42 +3,42 @@
     {
       "expectation": "Explains the difference between Rapid and Stable channels \u2014 including that Rapid has no SLA for upgrade stability while Stable carries a full SLA, and clearly distinguishes minor version vs patch version differences between the channels",
       "passed": true,
-      "reason": "Response clearly explains Rapid has 'no SLA for upgrade stability' while Stable has 'full SLA' and details timing differences for version arrival and validation"
+      "reason": "Response clearly explains that Rapid has no upgrade stability SLA while Stable has full GKE SLA coverage, and describes timing differences between channels (2 weeks vs 6-8 weeks). It distinguishes between version types in the maintenance exclusion section."
     },
     {
       "expectation": "Notes that channel changes don't trigger an immediate upgrade or downgrade",
       "passed": true,
-      "reason": "Explicitly states 'After migration, you'll stay on 1.32 until it's promoted to Stable channel' and 'channel migration doesn't trigger upgrades'"
+      "reason": "Explicitly states 'No immediate upgrade \u2014 your cluster won't downgrade or change versions during migration' and 'Current 1.32 version: Will remain until Stable channel catches up'"
     },
     {
       "expectation": "Warns that if 1.30 isn't yet available on Stable, the cluster may not receive patches until Stable catches up",
       "passed": false,
-      "reason": "The response discusses version 1.32 and potential downgrades but doesn't specifically mention version 1.30 or patches being delayed until Stable catches up to the current version"
+      "reason": "The response mentions that the cluster will remain on current version until Stable catches up, but doesn't specifically warn about potential patch delivery delays for version 1.32 specifically, only mentions slower security patches in general"
     },
     {
       "expectation": "Provides the gcloud command to change the release channel",
       "passed": true,
-      "reason": "Provides the exact command: 'gcloud container clusters update CLUSTER_NAME --zone ZONE --release-channel stable'"
+      "reason": "Provides the exact command: 'gcloud container clusters update CLUSTER_NAME --region REGION --release-channel stable'"
     },
     {
       "expectation": "Recommends checking version availability on Stable before switching (gcloud container get-server-config)",
       "passed": true,
-      "reason": "Includes 'gcloud container get-server-config --zone YOUR_ZONE --format=\"yaml(channels.STABLE)\"' in pre-migration assessment section"
+      "reason": "Includes the specific command in pre-migration checks: 'gcloud container get-server-config --region REGION --format=\"yaml(channels.STABLE.validVersions[])\"'"
     },
     {
       "expectation": "Discusses the impact on auto-upgrade timing going forward",
       "passed": true,
-      "reason": "Details how 'auto-upgrade target changes' and explains future upgrade cadence will be slower with upgrades arriving '~2-3 months later than on Rapid'"
+      "reason": "Extensively discusses auto-upgrade behavior changes, including timeline expectations and how upgrades will follow Stable channel timeline going forward"
     },
     {
       "expectation": "Mentions that the Extended channel is an option if they need even slower cadence (with cost implications)",
       "passed": false,
-      "reason": "The response only discusses Rapid and Stable channels but does not mention the Extended channel as an alternative option"
+      "reason": "The Extended channel is not mentioned anywhere in the response. Only discusses Rapid, Regular, and Stable channels"
     },
     {
       "expectation": "Advises coordinating the change during a maintenance window",
-      "passed": true,
-      "reason": "Concludes with 'execute the migration during your next maintenance window' as a recommendation"
+      "passed": false,
+      "reason": "While the response mentions setting up maintenance windows for future upgrades, it doesn't specifically advise coordinating the actual channel change during a maintenance window - it states the migration has zero downtime"
     }
   ]
 }

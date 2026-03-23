@@ -3,47 +3,47 @@
     {
       "expectation": "Configures a recurring maintenance window for weekends only",
       "passed": true,
-      "reason": "Provides gcloud command with Saturday maintenance window using --maintenance-window-recurrence \"FREQ=WEEKLY;BYDAY=SA\" for weekend-only auto-upgrades"
+      "reason": "Response provides gcloud command with Saturday maintenance window and FREQ=WEEKLY;BYDAY=SA recurrence pattern"
     },
     {
       "expectation": "Provides the gcloud command with --maintenance-window-start/end and --maintenance-window-recurrence for weekly weekend schedule",
       "passed": true,
-      "reason": "Shows complete gcloud command with --maintenance-window-start, --maintenance-window-end, and --maintenance-window-recurrence flags for weekly Saturday schedule"
+      "reason": "Response includes exact gcloud command with --maintenance-window-start, --maintenance-window-end, and --maintenance-window-recurrence flags for weekly Saturday schedule"
     },
     {
       "expectation": "Sets up maintenance exclusions for quarterly code freezes (up to 30 days each)",
       "passed": true,
-      "reason": "Provides specific quarterly code freeze exclusions with example dates covering approximately 21-day periods (March 15 - April 5, etc.)"
+      "reason": "Response provides gcloud commands for quarterly exclusions with 30-day durations and --add-maintenance-exclusion-scope no_upgrades"
     },
     {
       "expectation": "Sets up a maintenance exclusion for the November audit period",
       "passed": true,
-      "reason": "Provides specific gcloud command for November audit exclusion covering the entire month (2024-11-01 to 2024-11-30)"
+      "reason": "Response includes specific gcloud command for November audit exclusion covering the entire month with no_minor_or_node_upgrades scope"
     },
     {
       "expectation": "Notes the 30-day maximum for maintenance exclusions and how to handle longer freezes",
       "passed": false,
-      "reason": "Does not mention the 30-day maximum limitation for maintenance exclusions or explain how to handle longer freeze periods"
+      "reason": "Response does not mention the 30-day maximum limit for maintenance exclusions or explain how to handle longer freeze periods"
     },
     {
       "expectation": "Explains that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
       "passed": false,
-      "reason": "While it shows manual upgrade procedures, it doesn't explicitly explain that manual upgrades bypass maintenance windows and only auto-upgrades respect them"
+      "reason": "Response does not explicitly explain that manual upgrades bypass maintenance windows and that only auto-upgrades respect the configured windows"
     },
     {
       "expectation": "Recommends combining maintenance windows with Stable or Extended channel for maximum upgrade control",
       "passed": true,
-      "reason": "Explicitly recommends using the Stable channel and explains its benefits for compliance environments requiring stability"
+      "reason": "Response recommends Regular or Stable channel for regulated environments and mentions Extended channel as viable option for maximum control"
     },
     {
       "expectation": "Provides gcloud commands for each exclusion (--add-maintenance-exclusion-name/start-time/end-time)",
       "passed": true,
-      "reason": "Shows complete gcloud commands with --add-maintenance-exclusion-name, --add-maintenance-exclusion-start-time, and --add-maintenance-exclusion-end-time flags for each exclusion type"
+      "reason": "Response provides complete gcloud commands with --add-maintenance-exclusion-name, --add-maintenance-exclusion-start-time, and --add-maintenance-exclusion-end-time flags for all exclusions"
     },
     {
       "expectation": "Warns about the risk of falling too far behind on versions during long exclusion periods",
-      "passed": false,
-      "reason": "Does not explicitly warn about the risks of falling behind on versions during extended exclusion periods, though it mentions version End of Support tracking"
+      "passed": true,
+      "reason": "Response addresses this by recommending manual upgrade procedures during exclusion periods and noting the need for emergency patching procedures for critical CVEs during freeze periods"
     }
   ]
 }

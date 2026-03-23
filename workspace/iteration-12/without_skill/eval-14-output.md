@@ -1,118 +1,122 @@
-This sounds like a common issue with Kubernetes 1.32 upgrades, particularly related to changes in API server behavior and resource management. Here's a systematic troubleshooting approach:
+The symptoms you're describing are common after Kubernetes upgrades and could stem from several areas. Let's systematically troubleshoot this:
 
-## Immediate Checks
+## 1. Check API Server Health
 
-**1. Check API Server Health & Metrics**
+First, examine the API server components:
+
 ```bash
-# Check API server logs for errors
-kubectl logs -n kube-system -l component=kube-apiserver --tail=100
+# Check API server pod status and logs
+kubectl get pods -n kube-system | grep apiserver
+kubectl logs -n kube-system <apiserver-pod-name> --tail=100
 
 # Check API server metrics
-kubectl top nodes
-kubectl get --raw /metrics | grep apiserver_request_duration
+kubectl top pods -n kube-system --containers
 ```
 
-**2. Verify Service Mesh/Ingress Controllers**
-```bash
-# If using nginx-ingress, istio, etc.
-kubectl get pods -n ingress-nginx -o wide
-kubectl logs -n ingress-nginx deployment/ingress-nginx-controller
-```
+## 2. Verify Cluster Resource Constraints
 
-## Known 1.32 Issues to Check
-
-**1. Deprecated API Versions**
-Kubernetes 1.32 removed several beta APIs. Check for deprecated API usage:
-```bash
-# Look for API deprecation warnings
-kubectl get events --all-namespaces | grep -i deprecat
-
-# Check for resources using old API versions
-kubectl api-resources --verbs=list --namespaced -o name | \
-  xargs -n 1 kubectl get --show-kind --ignore-not-found --all-namespaces
-```
-
-**2. CNI Plugin Compatibility**
-```bash
-# Check CNI pods status
-kubectl get pods -n kube-system | grep -E "(cni|network)"
-
-# Check for CNI-related errors
-kubectl describe nodes | grep -A 10 -B 5 "NetworkUnavailable\|NotReady"
-```
-
-**3. Resource Limits & Node Pressure**
 ```bash
 # Check node resource usage
-kubectl describe nodes | grep -A 5 "Allocated resources"
+kubectl top nodes
 
-# Check for evicted pods
-kubectl get pods --all-namespaces | grep Evicted
+# Check for resource pressure
+kubectl describe nodes | grep -A 10 "Conditions:"
+
+# Look for evicted/pending pods
+kubectl get pods --all-namespaces | grep -E "(Evicted|Pending)"
 ```
 
-## Specific 1.32 Changes to Investigate
+## 3. Check Network Plugin Compatibility
 
-**1. Feature Gate Changes**
-Some feature gates changed defaults in 1.32. Check your cluster configuration:
+Network plugins often need updates with Kubernetes upgrades:
+
 ```bash
-# Check current feature gates
-kubectl get nodes -o jsonpath='{.items[0].status.nodeInfo.kubeletVersion}'
+# Check CNI pod status
+kubectl get pods -n kube-system | grep -E "(calico|flannel|weave|cilium)"
+
+# Check for network-related errors
+kubectl get events --all-namespaces --sort-by='.lastTimestamp' | tail -20
 ```
 
-**2. Pod Security Standards**
-1.32 has stricter pod security enforcement:
+## 4. Validate DNS Resolution
+
 ```bash
-# Check for pod security violations
-kubectl get events --all-namespaces | grep -i "security\|violation"
+# Test DNS functionality
+kubectl run dns-test --image=busybox --rm -it --restart=Never -- nslookup kubernetes.default
+
+# Check CoreDNS status
+kubectl get pods -n kube-system -l k8s-app=kube-dns
+kubectl logs -n kube-system -l k8s-app=kube-dns
+```
+
+## 5. Check Service Mesh/Ingress Controllers
+
+If you're using service mesh or ingress controllers:
+
+```bash
+# Check ingress controller pods
+kubectl get pods -n ingress-nginx  # or your ingress namespace
+
+# For Istio/service mesh
+kubectl get pods -n istio-system
+```
+
+## 6. Application-Level Issues
+
+```bash
+# Check your application pods
+kubectl get pods -A | grep -v Running
+
+# Look at recent events
+kubectl get events --sort-by='.lastTimestamp' | tail -20
+
+# Check if any deployments are stuck
+kubectl get deployments -A | grep -v "AVAILABLE"
+```
+
+## Common 1.31→1.32 Specific Issues
+
+1. **API Changes**: Check if your applications use deprecated APIs
+```bash
+# Look for deprecation warnings
+kubectl get events | grep -i deprecat
+```
+
+2. **Pod Security Standards**: 1.32 enforces stricter security policies
+```bash
+# Check for PSS violations
+kubectl get events | grep -i "security"
+```
+
+3. **Resource Quotas**: Some resource calculations changed
+```bash
+kubectl get resourcequotas --all-namespaces
 ```
 
 ## Quick Fixes to Try
 
-**1. Restart Core Components**
+1. **Restart key system components**:
 ```bash
-# Restart coredns
+kubectl rollout restart daemonset/kube-proxy -n kube-system
 kubectl rollout restart deployment/coredns -n kube-system
-
-# Restart ingress controller (adjust namespace as needed)
-kubectl rollout restart deployment -n ingress-nginx
 ```
 
-**2. Check Service Endpoints**
+2. **Check for stuck finalizers**:
 ```bash
-# Verify service endpoints are populated
-kubectl get endpoints --all-namespaces
-kubectl describe service <your-service-name> -n <namespace>
+kubectl get pods --all-namespaces -o json | jq '.items[] | select(.metadata.deletionTimestamp != null) | .metadata.name'
 ```
-
-**3. Temporary API Server Scaling** (if using managed cluster)
-Some providers allow temporary API server scaling during high load periods.
 
 ## Monitoring Commands
 
-Run these to monitor the situation:
+Set up continuous monitoring while troubleshooting:
+
 ```bash
+# Watch pod status
+watch "kubectl get pods --all-namespaces | grep -v Running"
+
 # Monitor API response times
-kubectl get --raw='/readyz?verbose' && echo "API server ready"
-
-# Check service response codes
-kubectl get events --all-namespaces --sort-by='.lastTimestamp' | tail -20
-
-# Monitor pod restart patterns
-kubectl get pods --all-namespaces | grep -v Running | grep -v Completed
+kubectl get --raw /livez?verbose
+kubectl get --raw /readyz?verbose
 ```
 
-## If Issues Persist
-
-**1. Consider Rollback Strategy**
-Document current state before considering rollback:
-```bash
-kubectl get nodes -o wide
-kubectl get pods --all-namespaces -o wide
-```
-
-**2. Check Provider-Specific Issues**
-- **EKS**: Check AWS Load Balancer Controller version compatibility
-- **GKE**: Verify autopilot settings and node pool configurations  
-- **AKS**: Check Azure CNI and ingress controller versions
-
-What's your cluster setup (cloud provider, size, ingress controller)? And are you seeing any specific error patterns in the 503 responses?
+What's the output of `kubectl get events --sort-by='.lastTimestamp' | tail -10` and `kubectl top nodes`? This will help narrow down whether it's a resource, network, or application-specific issue.

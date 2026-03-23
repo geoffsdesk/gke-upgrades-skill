@@ -1,271 +1,261 @@
-# Elasticsearch GKE Upgrade Plan: 1.31 → 1.32
+# GKE Upgrade Plan: Elasticsearch Cluster (1.31 → 1.32)
 
 ## Cluster Overview
-- **Mode:** GKE Standard
-- **Upgrade:** 1.31 → 1.32 (single minor version jump)
-- **Workload:** StatefulSet-based Elasticsearch
-- **Topology:** 3 masters, 5 data, 2 coordinating nodes (separate pools)
+- **Mode:** Standard
+- **Current:** 1.31 → **Target:** 1.32
+- **Topology:** 3 masters + 5 data + 2 coordinating nodes (separate pools)
 - **Storage:** Regional pd-ssd PVs
+- **Critical requirements:** Zero data loss, maintain availability
 
 ## Pre-Upgrade Checklist
 
-```
-Pre-Upgrade Checklist - Elasticsearch
-- [ ] Cluster health: `kubectl get nodes` (all Ready)
-- [ ] Elasticsearch cluster health: `curl -X GET "ELASTIC_ENDPOINT/_cluster/health?pretty"`
-- [ ] All indices green status, no relocating shards
-- [ ] Elasticsearch version compatibility with K8s 1.32 confirmed
-- [ ] Recent full snapshot to GCS/other backup completed
-- [ ] PV reclaim policy set to "Retain": `kubectl get pv -o custom-columns=NAME:.metadata.name,POLICY:.spec.persistentVolumeReclaimPolicy`
-- [ ] PDBs configured per pool (recommend: masters=2, data=4, coordinating=1)
-- [ ] No bare pods in elasticsearch namespace
-- [ ] GKE 1.32 available in release channel verified
-```
-
-## Upgrade Strategy: Conservative Rolling Approach
-
-For Elasticsearch, we'll use **surge upgrades with minimal disruption** per pool, upgrading in this order to maintain quorum and data availability:
-
-1. **Coordinating nodes** (least critical)
-2. **Master nodes** (maintain quorum: 3→2→3)  
-3. **Data nodes** (Elasticsearch handles shard rebalancing)
-
-### Why This Order?
-- Coordinating nodes are stateless load balancers
-- Master upgrades maintain 2/3 quorum throughout
-- Data nodes last ensures stable cluster during shard movements
-
-## Step-by-Step Runbook
-
-### Phase 1: Pre-flight Checks
-
+### Elasticsearch-Specific Preparation
 ```bash
-# Verify current versions
-gcloud container clusters describe CLUSTER_NAME \
-  --zone ZONE \
-  --format="table(name, currentMasterVersion, nodePools[].name, nodePools[].version)"
+# 1. Check cluster health
+curl -X GET "localhost:9200/_cluster/health?pretty"
+# Must be GREEN before proceeding
 
-# Check Elasticsearch cluster health
-kubectl exec -it elasticsearch-master-0 -n elasticsearch -- \
-  curl -X GET "localhost:9200/_cluster/health?pretty"
-
-# Verify all shards assigned (should be 0)
-kubectl exec -it elasticsearch-master-0 -n elasticsearch -- \
-  curl -X GET "localhost:9200/_cat/shards?v" | grep UNASSIGNED
-
-# Check PV reclaim policies
-kubectl get pv -o custom-columns=NAME:.metadata.name,POLICY:.spec.persistentVolumeReclaimPolicy | grep elasticsearch
-```
-
-### Phase 2: Elasticsearch Pre-Upgrade Configuration
-
-```bash
-# Disable shard allocation (prevents unnecessary movement during upgrades)
-kubectl exec -it elasticsearch-master-0 -n elasticsearch -- \
-  curl -X PUT "localhost:9200/_cluster/settings" -H 'Content-Type: application/json' -d'
+# 2. Disable shard allocation (prevents rebalancing during upgrade)
+curl -X PUT "localhost:9200/_cluster/settings" -H 'Content-Type: application/json' -d'
 {
   "persistent": {
     "cluster.routing.allocation.enable": "primaries"
   }
 }'
 
-# Verify PDBs are properly configured
-kubectl get pdb -n elasticsearch
+# 3. Perform synced flush
+curl -X POST "localhost:9200/_flush/synced?pretty"
+
+# 4. Back up cluster state and indices
+curl -X PUT "localhost:9200/_snapshot/backup_repo/pre_upgrade_snapshot?wait_for_completion=true&pretty"
 ```
 
-Expected PDB configuration:
+### GKE Compatibility Checks
+```bash
+# Verify target version available
+gcloud container get-server-config --zone ZONE --format="yaml(channels)"
+
+# Check for deprecated API usage
+kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated
+
+# Verify PV reclaim policies
+kubectl get pv -o custom-columns=NAME:.metadata.name,RECLAIM:.spec.persistentVolumeReclaimPolicy | grep elasticsearch
+```
+
+### PDB Configuration
 ```yaml
-# Master PDB - allows 1 disruption (maintains 2/3 quorum)
+# Ensure restrictive PDBs for each component
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: elasticsearch-master-pdb
 spec:
-  maxUnavailable: 1
+  minAvailable: 2  # Keep quorum (2 of 3)
   selector:
     matchLabels:
-      app: elasticsearch-master
-
-# Data PDB - allows 1 disruption (maintains data availability)  
+      app: elasticsearch
+      role: master
+---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: elasticsearch-data-pdb
 spec:
-  maxUnavailable: 1
+  minAvailable: 4  # Keep most data nodes (4 of 5)
   selector:
     matchLabels:
-      app: elasticsearch-data
-
-# Coordinating PDB - allows 1 disruption
+      app: elasticsearch
+      role: data
+---
 apiVersion: policy/v1
-kind: PodDisruptionBudget  
+kind: PodDisruptionBudget
 metadata:
   name: elasticsearch-coordinating-pdb
 spec:
-  maxUnavailable: 1
+  minAvailable: 1  # Keep at least 1 coordinator (1 of 2)
   selector:
     matchLabels:
-      app: elasticsearch-coordinating
+      app: elasticsearch
+      role: coordinating
 ```
 
-### Phase 3: Control Plane Upgrade
+## Upgrade Strategy
 
+### Node Pool Upgrade Settings (Conservative for Stateful Workloads)
 ```bash
-# Upgrade control plane to 1.32
+# Configure conservative surge settings for all pools
+# Master nodes: 1 at a time, zero extra capacity
+gcloud container node-pools update elasticsearch-master-pool \
+  --cluster CLUSTER_NAME \
+  --zone ZONE \
+  --max-surge-upgrade 1 \
+  --max-unavailable-upgrade 0
+
+# Data nodes: 1 at a time, zero extra capacity  
+gcloud container node-pools update elasticsearch-data-pool \
+  --cluster CLUSTER_NAME \
+  --zone ZONE \
+  --max-surge-upgrade 1 \
+  --max-unavailable-upgrade 0
+
+# Coordinating nodes: 1 at a time, zero extra capacity
+gcloud container node-pools update elasticsearch-coordinating-pool \
+  --cluster CLUSTER_NAME \
+  --zone ZONE \
+  --max-surge-upgrade 1 \
+  --max-unavailable-upgrade 0
+```
+
+## Step-by-Step Upgrade Execution
+
+### Step 1: Control Plane Upgrade
+```bash
+# Upgrade control plane first
 gcloud container clusters upgrade CLUSTER_NAME \
   --zone ZONE \
   --master \
-  --cluster-version 1.32.XX-gke.XXXXX
+  --cluster-version 1.32
 
-# Wait and verify (10-15 minutes)
+# Monitor progress (~10-15 minutes)
 gcloud container clusters describe CLUSTER_NAME \
   --zone ZONE \
   --format="value(currentMasterVersion)"
 
 # Verify system pods healthy
-kubectl get pods -n kube-system | grep -v Running
+kubectl get pods -n kube-system
 ```
 
-### Phase 4: Node Pool Upgrades
-
-#### 4.1 Coordinating Nodes First
-
+### Step 2: Coordinating Nodes (Least Critical)
 ```bash
-# Configure conservative surge settings
-gcloud container node-pools update elasticsearch-coordinating \
+# Start with coordinating pool - these handle client requests but no data
+gcloud container node-pools upgrade elasticsearch-coordinating-pool \
   --cluster CLUSTER_NAME \
   --zone ZONE \
-  --max-surge-upgrade 1 \
-  --max-unavailable-upgrade 0
+  --cluster-version 1.32
 
-# Upgrade coordinating pool
-gcloud container node-pools upgrade elasticsearch-coordinating \
-  --cluster CLUSTER_NAME \
-  --zone ZONE \
-  --cluster-version 1.32.XX-gke.XXXXX
+# Monitor Elasticsearch health after each node
+watch 'curl -s "localhost:9200/_cluster/health" | jq'
 
-# Monitor progress
-watch 'kubectl get nodes -l cloud.google.com/gke-nodepool=elasticsearch-coordinating'
-
-# Verify coordinating pods healthy
-kubectl get pods -n elasticsearch -l app=elasticsearch-coordinating
+# Verify coordinating pods rescheduled
+kubectl get pods -l role=coordinating -o wide
 ```
 
-#### 4.2 Master Nodes Second
+**Wait for GREEN cluster status before proceeding.**
 
+### Step 3: Master Nodes (Maintain Quorum)
 ```bash
-# Configure conservative surge for masters
-gcloud container node-pools update elasticsearch-master \
+# Upgrade master pool - PDB ensures 2/3 masters stay available
+gcloud container node-pools upgrade elasticsearch-master-pool \
   --cluster CLUSTER_NAME \
   --zone ZONE \
-  --max-surge-upgrade 1 \
-  --max-unavailable-upgrade 0
+  --cluster-version 1.32
 
-# Upgrade master pool
-gcloud container node-pools upgrade elasticsearch-master \
-  --cluster CLUSTER_NAME \
-  --zone ZONE \
-  --cluster-version 1.32.XX-gke.XXXXX
+# Critical: Monitor master quorum throughout
+watch 'curl -s "localhost:9200/_cat/master" && curl -s "localhost:9200/_cluster/health"'
 
-# Critical: Monitor master quorum during upgrade
-watch 'kubectl exec -it elasticsearch-master-0 -n elasticsearch -- curl -s localhost:9200/_cat/master'
-
-# Verify master pods and cluster health
-kubectl get pods -n elasticsearch -l app=elasticsearch-master
-kubectl exec -it elasticsearch-master-0 -n elasticsearch -- \
-  curl -X GET "localhost:9200/_cluster/health?pretty"
+# Verify all masters rejoin cluster
+kubectl get pods -l role=master -o wide
 ```
 
-#### 4.3 Data Nodes Last
+**Wait for GREEN cluster status and stable master election before proceeding.**
 
+### Step 4: Data Nodes (Most Critical)
 ```bash
-# Configure conservative surge for data nodes
-gcloud container node-pools update elasticsearch-data \
+# Upgrade data pool last - PDB keeps 4/5 data nodes available
+gcloud container node-pools upgrade elasticsearch-data-pool \
   --cluster CLUSTER_NAME \
   --zone ZONE \
-  --max-surge-upgrade 1 \
-  --max-unavailable-upgrade 0
+  --cluster-version 1.32
 
-# Upgrade data pool
-gcloud container node-pools upgrade elasticsearch-data \
-  --cluster CLUSTER_NAME \
-  --zone ZONE \
-  --cluster-version 1.32.XX-gke.XXXXX
+# Monitor shard health closely
+watch 'curl -s "localhost:9200/_cluster/health" | jq && kubectl get pods -l role=data'
 
-# Monitor data node health and shard allocation
-watch 'kubectl get pods -n elasticsearch -l app=elasticsearch-data'
-kubectl exec -it elasticsearch-master-0 -n elasticsearch -- \
-  curl -s "localhost:9200/_cat/shards?v" | head -20
+# Check PV attachment after each data node restart
+kubectl get pvc -A | grep elasticsearch
 ```
 
-### Phase 5: Post-Upgrade Validation
-
+### Step 5: Post-Upgrade Recovery
 ```bash
 # Re-enable shard allocation
-kubectl exec -it elasticsearch-master-0 -n elasticsearch -- \
-  curl -X PUT "localhost:9200/_cluster/settings" -H 'Content-Type: application/json' -d'
+curl -X PUT "localhost:9200/_cluster/settings" -H 'Content-Type: application/json' -d'
 {
   "persistent": {
     "cluster.routing.allocation.enable": null
   }
 }'
 
-# Comprehensive health checks
-kubectl exec -it elasticsearch-master-0 -n elasticsearch -- \
-  curl -X GET "localhost:9200/_cluster/health?wait_for_status=green&timeout=10m&pretty"
+# Wait for cluster to fully recover
+watch 'curl -s "localhost:9200/_cluster/health"'
 
-# Verify all nodes in cluster
-kubectl exec -it elasticsearch-master-0 -n elasticsearch -- \
-  curl -X GET "localhost:9200/_cat/nodes?v"
-
-# Check shard allocation completed
-kubectl exec -it elasticsearch-master-0 -n elasticsearch -- \
-  curl -X GET "localhost:9200/_cat/allocation?v"
-
-# Verify all node pools at 1.32
-gcloud container node-pools list --cluster CLUSTER_NAME --zone ZONE
+# Verify all shards allocated
+curl -X GET "localhost:9200/_cat/shards?v&h=index,shard,prirep,state,node"
 ```
 
-## Post-Upgrade Checklist
-
-```
-Post-Upgrade Validation - Elasticsearch
-- [ ] All node pools at 1.32: `gcloud container node-pools list --cluster CLUSTER --zone ZONE`
-- [ ] All K8s nodes Ready: `kubectl get nodes`
-- [ ] Elasticsearch cluster status GREEN
-- [ ] All 10 Elasticsearch nodes visible in cluster: `_cat/nodes`
-- [ ] No unassigned shards: `_cat/shards | grep UNASSIGNED` (should be empty)
-- [ ] Index write/read tests successful
-- [ ] Application health checks passing
-- [ ] Monitoring and logging normal
-- [ ] Shard allocation re-enabled (verified above)
-```
-
-## Rollback Plan (if needed)
+## Validation Checklist
 
 ```bash
-# If issues arise during data node upgrade:
-# 1. Cancel the upgrade operation
-gcloud container operations list --cluster CLUSTER_NAME --zone ZONE
-# Note the operation ID, then contact GKE support to halt if needed
+# Cluster versions
+gcloud container node-pools list --cluster CLUSTER_NAME --zone ZONE
 
-# 2. Elasticsearch should self-heal with remaining nodes
-kubectl exec -it elasticsearch-master-0 -n elasticsearch -- \
-  curl -X GET "localhost:9200/_cluster/health?pretty"
+# All nodes at 1.32
+kubectl get nodes -o custom-columns=NAME:.metadata.name,VERSION:.status.nodeInfo.kubeletVersion
 
-# 3. If data loss suspected, restore from snapshot
-kubectl exec -it elasticsearch-master-0 -n elasticsearch -- \
-  curl -X POST "localhost:9200/_snapshot/REPO_NAME/SNAPSHOT_NAME/_restore"
+# Elasticsearch cluster GREEN
+curl -X GET "localhost:9200/_cluster/health?pretty"
+
+# All indices healthy  
+curl -X GET "localhost:9200/_cat/indices?v&health=green"
+
+# PVs still bound
+kubectl get pvc -A | grep elasticsearch | grep Bound
+
+# Data integrity check
+curl -X GET "localhost:9200/_cat/count?v"
 ```
 
-## Key Elasticsearch-Specific Considerations
+## Rollback Plan (If Needed)
 
-1. **PV Safety**: Regional pd-ssd PVs with "Retain" policy protect against accidental deletion
-2. **Quorum Maintenance**: Master upgrade maintains 2/3 quorum throughout
-3. **Shard Management**: Temporarily disabling allocation prevents unnecessary shard movement
-4. **Surge Strategy**: `maxSurge=1, maxUnavailable=0` ensures no capacity loss during upgrade
-5. **Order Matters**: Coordinating→Master→Data preserves cluster stability
-6. **PDB Protection**: Properly configured PDBs prevent simultaneous eviction of critical pods
+If Elasticsearch cluster becomes unhealthy during upgrade:
 
-This approach ensures zero data loss and maintains Elasticsearch availability throughout the upgrade process.
+```bash
+# 1. Stop the upgrade operation
+gcloud container operations list --cluster CLUSTER_NAME --zone ZONE
+# Note: Cannot cancel mid-node, but can prevent next nodes
+
+# 2. Re-enable allocation immediately
+curl -X PUT "localhost:9200/_cluster/settings" -H 'Content-Type: application/json' -d'
+{
+  "persistent": {
+    "cluster.routing.allocation.enable": null
+  }
+}'
+
+# 3. Restore from snapshot if data corruption
+curl -X POST "localhost:9200/_snapshot/backup_repo/pre_upgrade_snapshot/_restore?pretty"
+
+# 4. Create new node pools at 1.31 if needed
+gcloud container node-pools create elasticsearch-data-pool-rollback \
+  --cluster CLUSTER_NAME \
+  --zone ZONE \
+  --cluster-version 1.31.x \
+  --num-nodes 5 \
+  --machine-type n1-standard-4
+```
+
+## Risk Mitigation
+
+- **Regional PVs:** Your pd-ssd volumes can reattach to nodes in any zone - ✅ Good
+- **PDB Protection:** Conservative settings prevent simultaneous node loss - ✅ 
+- **Quorum Preserved:** Master PDB maintains 2/3 availability - ✅
+- **Gradual Approach:** Coordinating → Masters → Data reduces blast radius - ✅
+- **Shard Allocation Control:** Prevents unnecessary data movement during upgrade - ✅
+
+## Timeline Estimate
+
+- Control plane: ~15 minutes
+- Coordinating pool: ~20 minutes (2 nodes × ~10 min each)
+- Master pool: ~30 minutes (3 nodes × ~10 min each)  
+- Data pool: ~50 minutes (5 nodes × ~10 min each)
+- **Total: ~2 hours**
+
+Schedule during low-traffic period. The cluster will remain available throughout, but performance may be reduced as nodes restart.

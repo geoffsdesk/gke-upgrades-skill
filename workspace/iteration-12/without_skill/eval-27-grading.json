@@ -3,42 +3,42 @@
     {
       "expectation": "Recommends combining release channels with maintenance exclusions as the approach for maximum control",
       "passed": true,
-      "reason": "Response explicitly recommends using REGULAR release channel combined with maintenance exclusions, showing both in YAML configuration and explaining this provides maximum control"
+      "reason": "Response explicitly recommends REGULAR release channel and shows maintenance exclusions configuration with financial-quarter-end example"
     },
     {
       "expectation": "Recommends 'no minor or node upgrades' exclusion to prevent disruptive changes while allowing control plane security patches. May also mention persistent exclusions with --add-maintenance-exclusion-until-end-of-support (no longer a 6-month max, auto-tracks EoS)",
       "passed": false,
-      "reason": "Response shows maintenance exclusions but uses 'NO_UPGRADES' scope rather than specifically recommending 'no minor or node upgrades' exclusion. Does not mention persistent exclusions or --add-maintenance-exclusion-until-end-of-support"
+      "reason": "Response shows a basic maintenance exclusion with 'NO_UPGRADES' scope but doesn't specifically mention 'no minor or node upgrades' exclusions or the --add-maintenance-exclusion-until-end-of-support feature"
     },
     {
       "expectation": "Recommends maintenance windows to control WHEN patches are applied (e.g., weekend windows only)",
       "passed": true,
-      "reason": "Response explicitly configures maintenance windows with Sunday 2-6 AM UTC timing and shows how to control when patches are applied during approved change windows"
+      "reason": "Response clearly shows maintenance window configuration with Sunday 2-6 AM window using recurringWindow with weekly recurrence"
     },
     {
       "expectation": "Mentions the cluster disruption budget (disruption interval) to control upgrade frequency \u2014 patch interval default 7d (max 90d), minor interval default 30d (max 90d)",
       "passed": false,
-      "reason": "Response does not mention cluster disruption budget or disruption intervals for controlling upgrade frequency"
+      "reason": "Response does not mention cluster disruption budget or disruption intervals at all"
     },
     {
       "expectation": "Suggests Stable or Extended channel for production clusters in regulated environments. Extended channel provides maximum flexibility around EoS enforcement (additional cost only during extended period)",
       "passed": false,
-      "reason": "Response recommends REGULAR channel instead of Stable or Extended channels for regulated financial services environment, and does not mention Extended channel benefits or costs"
+      "reason": "Response recommends REGULAR channel instead of STABLE or Extended channel, and doesn't mention Extended channel at all"
     },
     {
       "expectation": "Notes that disabling control plane patches entirely is not recommended due to security risks \u2014 monthly patches at minimum",
       "passed": false,
-      "reason": "Response does not explicitly warn against disabling control plane patches entirely or mention minimum monthly patch requirements"
+      "reason": "Response doesn't explicitly warn against disabling control plane patches entirely or mention minimum monthly patching requirements"
     },
     {
       "expectation": "May mention rollout sequencing as an advanced option for controlling upgrade order across multiple clusters, and/or the cluster disruption budget for controlling CP patch frequency",
       "passed": false,
-      "reason": "Response shows multi-environment strategy but does not mention rollout sequencing as an advanced option, nor cluster disruption budget for controlling control plane patch frequency"
+      "reason": "Response shows staged upgrade process across dev/staging/prod but doesn't mention rollout sequencing as a GKE feature or cluster disruption budget"
     },
     {
       "expectation": "Provides gcloud commands for configuring the recommended exclusion type and maintenance window",
-      "passed": true,
-      "reason": "Response provides gcloud commands for creating clusters with maintenance windows, though the exclusion configuration is shown in YAML rather than gcloud commands"
+      "passed": false,
+      "reason": "Response shows YAML configuration for maintenance windows and exclusions but doesn't provide the actual gcloud commands to configure them"
     }
   ]
 }

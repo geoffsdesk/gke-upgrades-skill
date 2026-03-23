@@ -1,44 +1,44 @@
 {
   "assertions": [
     {
-      "expectation": "Recommends GKE's autoscaled blue-green node pool upgrade strategy as the primary approach for batch workloads \u2014 it supports wait-for-drain time, longer graceful termination, and PDB upgrade timeout to let jobs complete",
-      "passed": true,
-      "reason": "Response explicitly recommends autoscaled blue-green upgrade strategy as 'perfect for batch jobs' and provides specific gcloud commands with --wait-for-drain-timeout 24h parameter"
+      "expectation": "Recommends GKE's autoscaled blue-green node pool upgrade strategy as the primary approach for batch workloads \u2014 configured with --enable-autoscaling and --autoscaled-rollout-policy flags (NOT surge parameters). Supports wait-for-drain time, longer graceful termination, and PDB upgrade timeout to let jobs complete",
+      "passed": false,
+      "reason": "The response recommends surge upgrades with max-surge-upgrade and max-unavailable-upgrade parameters, not autoscaled blue-green strategy with --enable-autoscaling and --autoscaled-rollout-policy flags"
     },
     {
       "expectation": "Explains that GKE respects terminationGracePeriodSeconds during pod eviction, but surge upgrades have a max eviction timeout",
       "passed": false,
-      "reason": "While the response mentions terminationGracePeriodSeconds in job definitions and discusses surge upgrade limitations, it doesn't explicitly explain how GKE respects terminationGracePeriodSeconds during pod eviction or the relationship to surge upgrade max timeout"
+      "reason": "The response mentions pod eviction timeout but does not explain the relationship between terminationGracePeriodSeconds and surge upgrade max eviction timeout"
     },
     {
       "expectation": "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour \u2014 far less than 8-16 hour jobs",
       "passed": true,
-      "reason": "Response specifically states 'Long-running batch jobs (8-16 hours) vs GKE's 1-hour PDB timeout' and mentions this as a key challenge"
+      "reason": "The response explicitly states 'GKE's default pod eviction timeout during upgrades is only 1 hour, which will force-kill your long-running jobs'"
     },
     {
       "expectation": "Recommends pausing new batch job submissions before starting the upgrade",
       "passed": false,
-      "reason": "The response does not explicitly recommend pausing new batch job submissions before starting the upgrade process"
+      "reason": "The response suggests waiting for job gaps but does not specifically recommend pausing new batch job submissions before starting upgrades"
     },
     {
       "expectation": "Advises waiting for in-flight jobs to complete naturally before upgrading their node pool",
       "passed": true,
-      "reason": "Response explicitly states 'Wait for Natural Job Completion Window' and provides commands to monitor running jobs, plus mentions 'Blue pool scales down as pods naturally complete'"
+      "reason": "The response explicitly recommends waiting for job completion gaps before performing node pool upgrades and includes this in the upgrade timing strategy"
     },
     {
       "expectation": "Suggests using node affinity or taints to isolate batch workloads on a dedicated node pool",
       "passed": true,
-      "reason": "Response recommends creating 'dedicated batch node pool' and provides gcloud commands for creating separate node pools for batch workloads"
+      "reason": "The response includes a dedicated batch node pool strategy with specific taint configuration: '--node-taints=workload=batch:NoSchedule'"
     },
     {
       "expectation": "Recommends upgrading non-batch node pools first while batch jobs complete on the old pool",
       "passed": true,
-      "reason": "Response shows a phased approach with 'Phase 1: Control Plane Upgrade' first, then node pool upgrades, and mentions cordoning old pools while jobs complete naturally"
+      "reason": "The response suggests separating batch and non-batch workloads, stating 'Other node pools can auto-upgrade normally' while 'Batch pool stays frozen until you manually upgrade during job gaps'"
     },
     {
-      "expectation": "Does NOT recommend 'No channel' as the approach \u2014 uses release channels with maintenance exclusions instead",
+      "expectation": "Does NOT recommend 'No channel' or '--enable-autoupgrade=false' (deprecated) \u2014 uses release channels with maintenance exclusions instead",
       "passed": true,
-      "reason": "Response maintains Regular release channel throughout and extensively uses maintenance exclusions with specific gcloud commands, never suggesting switching to 'No channel'"
+      "reason": "The response focuses on maintenance exclusions with the Regular release channel and does not recommend disabling autoupgrade or switching to no channel"
     }
   ]
 }

@@ -3,42 +3,42 @@
     {
       "expectation": "Uses 'no upgrades' exclusion (30-day max) for the BFCM period \u2014 blocks everything including patches",
       "passed": false,
-      "reason": "Uses ALL_UPGRADES scope for BFCM but doesn't mention the 30-day maximum limit or use the correct 'no upgrades' terminology from GKE documentation"
+      "reason": "Uses 'ALL_UPGRADES' scope which is correct, but doesn't mention the 30-day maximum limit or that this blocks patches too. The BFCM exclusion spans 18 days which is within limits, but the constraint isn't acknowledged."
     },
     {
       "expectation": "Uses 'no upgrades' exclusion for the June code freeze period",
-      "passed": false,
-      "reason": "Uses ALL_UPGRADES scope for June but doesn't mention the 30-day maximum limit or use the correct 'no upgrades' terminology from GKE documentation"
+      "passed": true,
+      "reason": "Correctly uses 'ALL_UPGRADES' scope for the June code freeze exclusion, spanning the entire month of June."
     },
     {
       "expectation": "For permanent minor version control: uses 'no minor upgrades' (scope 'no_minor') if they only want to block minor versions, or 'no minor or node upgrades' (scope 'no_minor_or_node') if they also want to stop node upgrades. May recommend persistent exclusion with --add-maintenance-exclusion-until-end-of-support which auto-tracks EoS date",
       "passed": false,
-      "reason": "Uses MINOR_UPGRADES scope instead of the correct 'no_minor' or 'no_minor_or_node' scopes, and doesn't mention the --add-maintenance-exclusion-until-end-of-support option"
+      "reason": "Does not use 'no_minor' or 'no_minor_or_node' scopes for permanent minor version control. Instead uses 'auto_upgrade = false' and release channels, which is a different approach but doesn't address the maintenance exclusion scopes specifically requested."
     },
     {
       "expectation": "Notes the 30-day maximum for 'no upgrades' exclusions vs up-to-EoS for 'no minor or node upgrades'",
       "passed": false,
-      "reason": "Doesn't mention the 30-day maximum limit for 'no upgrades' exclusions or the up-to-EoS capability for minor/node upgrade exclusions"
+      "reason": "Does not mention the 30-day maximum limitation for 'no upgrades' exclusions or the difference with 'no minor or node upgrades' exclusions that can last up to end-of-support."
     },
     {
       "expectation": "Provides specific gcloud commands with --add-maintenance-exclusion-scope flags for each exclusion type",
       "passed": true,
-      "reason": "Provides gcloud commands with --add-maintenance-exclusion-scope flags for different exclusion types"
+      "reason": "Provides specific gcloud commands with --add-maintenance-exclusion-scope flags set to 'ALL_UPGRADES' for the exclusions."
     },
     {
       "expectation": "Notes that you can have a maximum of three 'no upgrades' exclusions, and they must allow 48h of maintenance in any 32-day window",
       "passed": false,
-      "reason": "Doesn't mention the maximum of three 'no upgrades' exclusions or the 48h maintenance requirement in any 32-day window"
+      "reason": "Does not mention the maximum of three 'no upgrades' exclusions limit or the 48-hour maintenance window requirement in any 32-day period."
     },
     {
       "expectation": "Mentions that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
       "passed": false,
-      "reason": "Doesn't explicitly mention that manual upgrades bypass maintenance windows and exclusions"
+      "reason": "Does not explicitly mention that manual upgrades bypass maintenance windows and exclusions, only that auto-upgrades respect them."
     },
     {
       "expectation": "Warns about the risk of falling too far behind on versions during extended exclusion periods",
       "passed": false,
-      "reason": "Doesn't warn about the risk of falling behind on versions during extended exclusion periods"
+      "reason": "Does not warn about the risks of falling behind on versions during extended exclusion periods, though it mentions monitoring for security patches."
     }
   ]
 }
