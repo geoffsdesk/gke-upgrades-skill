@@ -122,7 +122,7 @@ When asked to plan an upgrade, produce a structured document covering:
 - **Control plane:** Recommend sequential minor version upgrades (e.g., 1.31→1.32→1.33). Control plane must be upgraded before node pools — this is the required order.
   - **Two-step control plane minor upgrade (Preview):** GKE supports a rollback-safe two-step process for manual minor upgrades (1.33+). Step 1 ("binary upgrade") upgrades the binary but emulates the previous minor version's API behavior — you can test the new binary while keeping old API compatibility. During a configurable soak period (6h–7d), you can roll back to the previous minor version if issues arise. Step 2 ("emulated version upgrade") enables the new minor version's features and APIs — after this step, rollback is NOT possible. Use `gcloud beta container clusters upgrade --control-plane-soak-duration` to configure soak time. This is the recommended approach for cautious production minor upgrades.
   - **One-step upgrade:** Standard direct upgrade to a later version. No rollback to previous minor version after completion (patch downgrades within the same minor are still possible).
-- **Node pools:** Support skip-level (N+2) upgrades within supported version skew. Always recommend skip-level upgrades within the 2-version skew limit to reduce total upgrade time. For pools that are 3+ versions behind (N+3), do multiple sequential skip-level upgrades within supported skew (e.g., 1.28→1.30, then 1.30→1.32) — never attempt an unsupported skip-level upgrade. Alternative for severely skewed pools: create a new node pool at the target version and migrate workloads. Best practice: keep nodes on the same minor version as the control plane in steady state; version skew should only occur during upgrade operations.
+- **Node pools:** Support skip-level (N+2) upgrades within supported version skew. Always recommend skip-level upgrades within the 2-version skew limit to reduce total upgrade time and minimize drain cycles. Example: upgrade control plane 1.31→1.32→1.33 sequentially, then upgrade node pools 1.31→1.33 in a single skip-level jump (requires CP already at 1.33). For pools that are 3+ versions behind (N+3), do multiple sequential skip-level upgrades within supported skew (e.g., 1.28→1.30, then 1.30→1.32) — never attempt an unsupported skip-level upgrade. Alternative for severely skewed pools: create a new node pool at the target version and migrate workloads. Best practice: keep nodes on the same minor version as the control plane in steady state; version skew should only occur during upgrade operations.
 - **Version skew constraints:** Nodes can't be more than 2 minor versions behind the control plane. Nodes can't run a version newer than the control plane. Nodes can't run a minor version that has reached end of support. These are hard constraints enforced by GKE.
 - **Rollback:** Control plane patch downgrades can be done by the customer (set a maintenance exclusion first to prevent GKE from auto-upgrading back). Control plane minor version downgrades are only possible during a two-step upgrade's soak period, or require GKE support involvement. Node pools can be rolled back during an in-progress upgrade, or downgraded after completion by specifying an earlier version.
 - For multi-cluster: define rollout sequence with soak time between groups
@@ -159,7 +159,7 @@ The "No minor or node upgrades" exclusion is the recommended approach for maximu
 
 **Persistent maintenance exclusions:** Use `--add-maintenance-exclusion-until-end-of-support` to create an exclusion that automatically tracks the version's End of Support date and auto-renews when a new minor version is adopted. There is no longer a 6-month maximum for these — no need to chain exclusions. This flag is available for scope "no minor" and "no minor or node" exclusions.
 
-**Cluster disruption budget (disruption interval):** GKE enforces a disruption interval between upgrades on a given cluster, preventing back-to-back upgrades:
+**Cluster disruption budget (disruption interval):** GKE enforces a disruption interval between upgrades on a given cluster, preventing back-to-back upgrades. This is a key lever for regulated environments that need to control upgrade frequency:
 - **Patch disruption interval:** Default 24h, configurable up to 90 days. Controls frequency of control plane patch upgrades. Use `--maintenance-patch-version-disruption-interval` to configure.
 - **Minor disruption interval:** Default 30d, configurable up to 90 days. Controls frequency of minor version upgrades. Use `--maintenance-minor-version-disruption-interval` to configure.
 - **Format:** Accepts duration strings (e.g., `45d`, `24h`, `3600s`). Range: 0s–7776000s (0–90 days). Internally stored in seconds.
@@ -170,6 +170,20 @@ gcloud container clusters update CLUSTER_NAME \
     --maintenance-minor-version-disruption-interval=45d \
     --maintenance-patch-version-disruption-interval=7d
 ```
+
+**Regulated environment recommended configuration (financial services, healthcare, compliance):**
+For maximum upgrade control while maintaining security posture, combine Extended channel + disruption budget + "no minor or node" exclusion:
+```
+gcloud container clusters update CLUSTER_NAME \
+    --release-channel extended \
+    --add-maintenance-exclusion-scope no_minor_or_node_upgrades \
+    --add-maintenance-exclusion-until-end-of-support \
+    --maintenance-patch-version-disruption-interval=90d \
+    --maintenance-window-start "2026-01-01T02:00:00Z" \
+    --maintenance-window-duration 4h \
+    --maintenance-window-recurrence "FREQ=WEEKLY;BYDAY=SA"
+```
+This gives: Extended support (24 months, cost only during extended period), auto-applied CP security patches only (no minor or node auto-upgrades), patches limited to once every 90 days within a Saturday 2-6 AM window, and manual control over when minor upgrades happen. Ideal for FedRAMP, SOC2, HIPAA environments.
 
 **Control plane patch controls (new):** Customers who need tight control over control plane patches can now benefit from:
 - GKE keeps control plane patches for 90 days after the patch is removed from a release channel (Stable & Regular), enabling upgrade/downgrade flexibility
@@ -200,9 +214,14 @@ Key flags:
 
 **Critical constraint:** Rollout sequencing does NOT work across different release channels. All clusters in a rollout sequence must be on the same channel AND ideally the same minor version. If environments use different channels (e.g., dev=Rapid, prod=Stable), rollout sequencing cannot orchestrate them.
 
-**Maintenance windows are NOT a substitute for rollout sequencing.** Staggering maintenance windows across environments does NOT guarantee upgrade ordering. A new version may become available in region X on Tuesday and region Y on Friday — meaning prod could be upgraded before dev depending on window timing. Maintenance windows control timing and spread, not sequence order.
+**Maintenance windows are NOT a substitute for rollout sequencing.** Staggering maintenance windows across environments does NOT guarantee upgrade ordering. A new version may become available in region X on Tuesday and region Y on Friday — meaning prod could be upgraded before dev depending on window timing. Maintenance windows control WHEN upgrades happen, not the ORDER across environments.
 
-**Alternative to rollout sequencing (simpler):** Use two different release channels (e.g., dev=Regular, prod=Stable) with "no minor" exclusions and user-triggered minor upgrades. This keeps environments on the same minor version while giving manual control over when each environment upgrades. This is simpler than rollout sequencing and sufficient for most teams.
+**Alternative to rollout sequencing (simpler — recommended for most teams):** Use different release channels across environments with "no minor or node" exclusions and user-triggered minor upgrades:
+- Dev clusters on Regular channel (gets versions first)
+- Staging clusters on Stable channel (receives versions ~1 month after Regular)
+- Prod clusters on Stable + "no minor or node upgrades" exclusion (only auto-applies CP security patches; you manually trigger minor upgrades after staging validation)
+
+This guarantees ordering because channel progression is deterministic: Regular always gets versions before Stable. Combined with exclusions and manual triggers, you get full control. This is simpler than rollout sequencing and sufficient for most teams.
 
 **Important context:** Rollout sequencing is an advanced feature with limited adoption — by design, it targets sophisticated platform teams managing large fleets. Do not recommend it as a default or first-line tool. Mention it as an option when the user explicitly has multi-cluster coordination needs, but prefer simpler approaches for most customers. Only suggest rollout sequencing when the user has 10+ clusters or explicitly asks about automated fleet-wide upgrade orchestration.
 
@@ -397,6 +416,16 @@ kubectl get pods -l app=LABEL -n NAMESPACE -o wide --sort-by='.status.startTime'
 
 **Stateful upgrade order:** For multi-tier stateful systems (e.g., Elasticsearch masters + data + coordinators), upgrade coordinator/stateless nodes first, then data nodes, then masters last. Use `maxSurge=1, maxUnavailable=0` for all stateful pools — conservative, one-at-a-time replacement preserves data.
 
+**Application-level backups before upgrade:** Always take an application-level snapshot BEFORE starting node pool upgrades for stateful workloads — PVs survive upgrades, but operator bugs or version incompatibilities can corrupt data post-upgrade. Examples: Elasticsearch `_snapshot` API, PostgreSQL `pg_dump`, Redis `BGSAVE`, Cassandra `nodetool snapshot`. Take backups after pre-flight checks pass but before cordoning/draining begins.
+
+**Cassandra/ScyllaDB: decommission before drain.** Never directly drain a Cassandra node without first running `nodetool decommission` to gracefully redistribute data. Draining without decommissioning causes rebalancing storms and potential data loss. Use blue-green strategy for Cassandra to allow time for decommissioning within the soak period. Workflow: cordon node → `nodetool decommission` → wait for status "Left" → drain. After upgrade, the new node rejoins the ring and rebuilds automatically.
+
+**Manual cordon/drain commands for operator control:**
+```
+kubectl cordon NODE_NAME
+kubectl drain NODE_NAME --ignore-daemonsets --delete-emptydir-data --grace-period=300
+```
+
 ### Nodepool upgrade concurrency (preview, available April 2026)
 GKE is adding nodepool upgrade concurrency for auto-upgrades to speed up fleet-wide upgrades. Multiple node pools within a cluster can now be upgraded concurrently during auto-upgrades, rather than sequentially. This significantly reduces the total upgrade time for clusters with many node pools.
 
@@ -525,7 +554,7 @@ When a user reports a stuck or failing upgrade, walk through diagnosis systemati
 3. Bare pods → can't be rescheduled, must delete
 4. Admission webhooks → rejecting pod creation OR blocking node drain → check webhook configs: `kubectl get validatingwebhookconfigurations` and `kubectl get mutatingwebhookconfigurations`. Webhooks can silently block drain by rejecting pod recreation on new nodes.
 5. PVC attachment issues → volumes can't migrate → check PV status
-6. Taints/tolerations mismatch → pods evicted from draining nodes land on nodes also about to be drained ("musical chairs") → reduce `maxSurge` to 1 so upgraded nodes are available before the next batch drains. Check for node taints that prevent scheduling on upgraded nodes: `kubectl describe nodes | grep Taints`
+6. Taints/tolerations mismatch → pods evicted from draining nodes land on nodes also about to be drained ("musical chairs") → reduce `maxSurge` to 1 so upgraded nodes are available before the next batch drains. Check for node taints: `kubectl describe nodes | grep Taints`. Use pod anti-affinity or node affinity to prefer upgraded nodes during scheduling. Consider autoscaled blue-green upgrade as an alternative — it avoids the musical chairs problem entirely by creating the new pool before draining the old one.
 
 ### Partial node pool upgrade failure — recovery
 
