@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Checks for deprecated API usage that may have changed behavior in 1.30",
+      "passed": true,
+      "reason": "Includes command `kubectl get events --all-namespaces | grep -i deprecat` to check for deprecated API usage"
+    },
+    {
+      "expectation": "Recommends checking admission webhooks \u2014 they may be rejecting or slowing down requests on the new version",
+      "passed": false,
+      "reason": "No mention of admission webhooks or validating/mutating webhook configurations that could cause latency or rejections"
+    },
+    {
+      "expectation": "Advises checking if resource requests/limits need adjusting for any system components that changed",
+      "passed": true,
+      "reason": "Includes resource constraint checks with commands like `kubectl describe nodes | grep -A 5 \"Conditions:\\|Allocated resources:\"` and `kubectl top nodes/pods`"
+    },
+    {
+      "expectation": "Suggests examining kube-system pods for any that are crashlooping or restarting",
+      "passed": true,
+      "reason": "Multiple commands check kube-system pods status including `kubectl get pods -n kube-system` and looking for crashlooping components"
+    },
+    {
+      "expectation": "Includes commands to check API server metrics and latency (kubectl get --raw /metrics)",
+      "passed": false,
+      "reason": "While it checks API server logs and pod metrics with kubectl top, it doesn't include the specific `kubectl get --raw /metrics` command for API server metrics"
+    },
+    {
+      "expectation": "Recommends checking if NetworkPolicy or service mesh components need updating for the new version",
+      "passed": true,
+      "reason": "Includes checking network policies with `kubectl get networkpolicies --all-namespaces` and service mesh components like istio-system"
+    },
+    {
+      "expectation": "Advises reviewing pod events for scheduling delays or readiness probe failures",
+      "passed": true,
+      "reason": "Includes commands to check events (`kubectl get events`) and specifically mentions checking readiness/liveness probes with `kubectl describe pods`"
+    },
+    {
+      "expectation": "Mentions checking if HPA or VPA are behaving differently on the new version",
+      "passed": false,
+      "reason": "No mention of HPA (Horizontal Pod Autoscaler) or VPA (Vertical Pod Autoscaler) components or their potential behavior changes"
+    }
+  ]
+}

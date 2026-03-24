@@ -1,0 +1,19 @@
+{
+  "eval_id": 40,
+  "mode": "with_skill",
+  "iteration": 19,
+  "prompt": "We're trying to get maximum control over our GKE upgrades. Someone on our team suggested we move all clusters to 'No channel' so we can control exactly when upgrades happen. Is that a good idea? We're currently on Regular channel.",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-24T22:12:20.347989+00:00",
+  "input_tokens": 20977,
+  "output_tokens": 911,
+  "time_seconds": 21.26,
+  "skill_files": [
+    "skill/SKILL.md",
+    "skill/evals/evals.json",
+    "skill/references/checklists.md",
+    "skill/references/runbook-template.md",
+    "skill/references/troubleshooting.md"
+  ]
+}

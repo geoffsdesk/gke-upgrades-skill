@@ -1,0 +1,12 @@
+{
+  "eval_id": 18,
+  "mode": "without_skill",
+  "iteration": 19,
+  "prompt": "We're in a regulated environment (financial services, SOX compliance) and need to set up maintenance windows and exclusions for our 3 GKE Standard clusters. We have quarterly code freezes, an annual audit in November, and want auto-upgrades to only happen on weekends. Can you configure this?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-24T21:45:42.366223+00:00",
+  "input_tokens": 73,
+  "output_tokens": 3580,
+  "time_seconds": 47.86
+}

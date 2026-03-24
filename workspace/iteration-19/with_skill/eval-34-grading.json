@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": true,
+      "reason": "Response explicitly states 'Atomic recreation of ALL slices' and emphasizes 'This is NOT a rolling upgrade' with comparison table showing the difference from rolling GPU maintenance"
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": true,
+      "reason": "Clearly states 'A maintenance event on ANY single slice triggers restart of ALL slices in your multislice environment. Even if only one slice needs maintenance, your entire 4-slice training job will restart.'"
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "Explicitly states 'Complete training interruption: Your LLM training job will be forcibly terminated' and 'all 4 TPU v5e slices (1,024 total chips) will be recreated simultaneously'"
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": true,
+      "reason": "States 'If insufficient TPU v5e capacity exists during recreation... your slices may be blocked until hardware becomes available. This could extend downtime from minutes to hours or longer.'"
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "Includes 'Force a fresh checkpoint' in the preparation checklist and provides specific code example for triggering immediate checkpoint before maintenance"
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "Includes 'Training script handles checkpoint resumption gracefully' in checklist and shows 'Restart training from checkpoint' procedures with specific commands"
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": false,
+      "reason": "The response does not mention maintenance exclusions or the ability to defer the maintenance event"
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": false,
+      "reason": "While the response mentions 'expected maintenance window' and preparation timelines, it does not discuss controlling or scheduling when the maintenance occurs or planning breaks around it"
+    }
+  ]
+}

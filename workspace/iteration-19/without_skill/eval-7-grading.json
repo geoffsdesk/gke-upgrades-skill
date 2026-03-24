@@ -1,0 +1,59 @@
+{
+  "assertions": [
+    {
+      "expectation": "Proposes a phased rollout: dev first, then staging, then prod",
+      "passed": true,
+      "reason": "Response clearly outlines Phase 1: Development Environment, Phase 2: Staging Environment, Phase 3: Production Environment in sequential order"
+    },
+    {
+      "expectation": "Includes soak time between environment phases (e.g., 24-48 hours for dev, 1 week for staging before prod)",
+      "passed": true,
+      "reason": "Explicitly states 'Dev environment stable for 48+ hours' as prerequisite for staging, and 'Staging environment stable for 72+ hours' for production"
+    },
+    {
+      "expectation": "Defines go/no-go criteria between phases (error rates, latency, pod health)",
+      "passed": true,
+      "reason": "Includes validation steps like 'Verify all pods are running and healthy', 'Monitor cluster metrics', performance testing, and success criteria checking workloads, performance degradation, and integrations"
+    },
+    {
+      "expectation": "Recommends sequential control plane upgrades (1.32\u21921.33) with skip-level node pool upgrades where possible",
+      "passed": true,
+      "reason": "Shows control plane upgrade first with '--master' flag, followed by separate node pool upgrade commands, demonstrating the sequential approach"
+    },
+    {
+      "expectation": "Suggests not upgrading all prod clusters simultaneously \u2014 do one or two first as canary",
+      "passed": true,
+      "reason": "Production phase explicitly includes 'Sub-Phase 3a: Canary Production' with one cluster first, then remaining clusters 'one at a time with 24-48h intervals'"
+    },
+    {
+      "expectation": "Includes rollback triggers and criteria for halting the rollout",
+      "passed": true,
+      "reason": "Provides specific rollback commands and mentions 'Emergency rollback (if within rollback window)' with gcloud rollback commands"
+    },
+    {
+      "expectation": "Provides a timeline or schedule estimate for the full rollout",
+      "passed": true,
+      "reason": "Clearly states Phase 1: Week 1 (2-3 days), Phase 2: Week 2 (3-4 days), Phase 3: Week 3-4 (5-7 days)"
+    },
+    {
+      "expectation": "Mentions maintenance window coordination across clusters",
+      "passed": true,
+      "reason": "Includes '--maintenance-window-start' and '--maintenance-window-end' flags in production upgrade commands and mentions 'Schedule production upgrades during low-traffic periods'"
+    },
+    {
+      "expectation": "If rollout sequencing is mentioned, notes that all clusters must be on the same channel for it to work",
+      "passed": false,
+      "reason": "While the response acknowledges all clusters are on Regular release channel, it doesn't explicitly state this requirement for rollout sequencing to work"
+    },
+    {
+      "expectation": "When presenting maintenance windows as an alternative, explicitly notes that windows do NOT guarantee ordering \u2014 upgrades fire based on version availability per region, not environment order. A prod window may fire before dev.",
+      "passed": false,
+      "reason": "Response doesn't present maintenance windows as an alternative approach or explain the limitation that windows don't guarantee environment ordering"
+    },
+    {
+      "expectation": "Mentions using two different channels with minor version controls (e.g., dev=Regular, prod=Stable with 'no minor' exclusion) as a simpler alternative to rollout sequencing",
+      "passed": false,
+      "reason": "Response doesn't mention using different release channels or version exclusion policies as an alternative strategy"
+    }
+  ]
+}

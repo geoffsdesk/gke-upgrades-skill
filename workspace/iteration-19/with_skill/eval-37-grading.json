@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Proposes a phased approach: control plane first, then CPU pools, then T4 dev, then inference (A100), then training (H100) last",
+      "passed": true,
+      "reason": "The response clearly outlines a phased approach with Phase 1 (T4 dev + CPU subset), Phase 2 (CPU services), Phase 3 (A100 inference), and Phase 4 (H100 training). Control plane upgrades are explicitly mentioned before node pool upgrades in each phase."
+    },
+    {
+      "expectation": "Control plane can be upgraded independently without affecting running workloads",
+      "passed": true,
+      "reason": "The response explicitly states control plane upgrades first in multiple phases (e.g., 'Control plane upgrade (inference keeps serving)') and shows commands for upgrading masters independently with '--master' flag."
+    },
+    {
+      "expectation": "CPU service pools upgraded first as lowest risk \u2014 use standard surge settings (maxSurge=2-3)",
+      "passed": false,
+      "reason": "While CPU pools are upgraded early, the response uses maxSurge=40 for production services and maxSurge=10 for the subset, which are much higher than the expected standard surge settings of 2-3."
+    },
+    {
+      "expectation": "T4 dev pool upgraded next \u2014 dev workloads are tolerant of interruption",
+      "passed": true,
+      "reason": "The response upgrades T4 dev pools in Phase 1 and explicitly notes they are 'restart-tolerant' and uses 'aggressive surge for dev workloads' with maxSurge=25."
+    },
+    {
+      "expectation": "A100 inference pool upgraded with careful surge settings (maxSurge=1) and PDBs to maintain serving capacity",
+      "passed": false,
+      "reason": "While the response includes PDBs for inference services and discusses maintaining serving capacity, it uses blue-green deployment strategy rather than the expected maxSurge=1 approach. The alternative drain-first approach uses maxSurge=0."
+    },
+    {
+      "expectation": "H100 training pool upgraded last, during a scheduled gap between training runs \u2014 with cordon-and-wait or maxSurge=0/maxUnavailable=1",
+      "passed": true,
+      "reason": "H100 training pools are upgraded in Phase 4 (last), with coordination during planned gaps between training campaigns. Option B shows maxSurge=0/maxUnavailable=1 for rolling upgrades."
+    },
+    {
+      "expectation": "Notes the 20-node parallelism limit \u2014 at 5,000 nodes, the full upgrade will take weeks and must span multiple maintenance windows",
+      "passed": true,
+      "reason": "The response mentions '20-node parallelism limit means H100 takes days if rolling' and shows a timeline spanning 4 weeks across multiple phases, acknowledging the time constraints."
+    },
+    {
+      "expectation": "Mentions GPU driver compatibility testing in staging before each GPU pool upgrade",
+      "passed": true,
+      "reason": "The response includes extensive staging validation requirements, specifically mentioning 'CUDA/driver compatibility for GPU workloads' and 'Deploy a staging cluster with GKE 1.32 and test representative training workload on H100-equivalent hardware' and 'Inference serving pipeline on A100-equivalent hardware.'"
+    },
+    {
+      "expectation": "Addresses GPUDirect/RDMA networking validation after upgrading the H100 pool",
+      "passed": true,
+      "reason": "The response explicitly mentions 'GPUDirect-TCPX/RDMA functionality if used' in staging validation, 'Test RDMA functionality in staging' in risk mitigation, and 'GPUDirect-TCPX performance maintained' in Phase 4 success criteria."
+    }
+  ]
+}

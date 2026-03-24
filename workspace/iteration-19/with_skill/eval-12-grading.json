@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Addresses Istio control plane version compatibility with the target Kubernetes version",
+      "passed": true,
+      "reason": "Response explicitly states 'Istio has specific GKE version support matrices' and provides specific compatibility guidance (Istio 1.18+ supports K8s 1.31-1.32, older versions may not)"
+    },
+    {
+      "expectation": "Recommends checking the Istio-Kubernetes version compatibility matrix before upgrading GKE",
+      "passed": true,
+      "reason": "Response includes specific commands to check Istio version compatibility and explicitly mentions checking Istio release notes for GKE 1.32 support before proceeding"
+    },
+    {
+      "expectation": "Advises upgrading Istio first if the current Istio version doesn't support the target Kubernetes version",
+      "passed": true,
+      "reason": "Response clearly states 'If your Istio version is older than 1.18, you MUST upgrade Istio first' and provides a 3-step process for upgrading Istio before GKE"
+    },
+    {
+      "expectation": "Explains that sidecar injection happens via mutating webhook and may cause issues during node drain/recreation",
+      "passed": true,
+      "reason": "Response specifically addresses webhook compatibility issues, mentions 'admission webhook rejected the request' errors, and provides commands to check and fix mutating webhook configurations"
+    },
+    {
+      "expectation": "Mentions that new pods on upgraded nodes will get sidecar injected \u2014 verify the sidecar version matches",
+      "passed": true,
+      "reason": "Response includes validation commands to verify sidecar injection works and shows how to check that pods have both 'app' and 'istio-proxy' containers after upgrade"
+    },
+    {
+      "expectation": "Recommends monitoring Istio proxy version consistency across the mesh after upgrade",
+      "passed": true,
+      "reason": "Response includes monitoring commands for proxy status and Envoy configuration sync, and mentions watching for 'Service discovery converged' in the validation checklist"
+    },
+    {
+      "expectation": "Includes commands to check Istio version and proxy sync status (istioctl or kubectl)",
+      "passed": true,
+      "reason": "Response provides specific kubectl commands to check Istio version and uses 'pilot-discovery proxy-status' and 'pilot-agent request GET /config_dump' commands for proxy sync status"
+    },
+    {
+      "expectation": "Warns about potential traffic disruption if Istio control plane and sidecar versions are mismatched",
+      "passed": true,
+      "reason": "Response warns about mTLS certificate errors, 503 errors between services, and specifically states the importance of ensuring compatibility before upgrading to avoid 'widespread service failures'"
+    }
+  ]
+}

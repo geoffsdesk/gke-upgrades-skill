@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "First step: check the operation status to understand why it failed (gcloud container operations list)",
+      "passed": true,
+      "reason": "Response includes 'gcloud container operations list --cluster CLUSTER_NAME --zone ZONE --filter=\"operationType=UPGRADE_NODES\" --limit=5' as the first diagnostic command"
+    },
+    {
+      "expectation": "Recommends checking events and logs for the specific failure reason",
+      "passed": true,
+      "reason": "Response includes checking events with 'kubectl get events -A --field-selector reason=FailedScheduling --sort-by='.lastTimestamp'' and other diagnostic commands"
+    },
+    {
+      "expectation": "Explains that the cluster is in a mixed-version state (8 nodes at 1.32, 12 at 1.31) which is within skew policy",
+      "passed": true,
+      "reason": "Response clearly states 'mixed-version state with 8 nodes at 1.32 and 12 nodes at the previous version' and notes it's 'valid and functional'"
+    },
+    {
+      "expectation": "Notes that the mixed state is functional but not ideal \u2014 workloads can run on both versions",
+      "passed": true,
+      "reason": "Response explicitly states the cluster is 'Functional' and 'workloads continue running normally' while acknowledging action is needed"
+    },
+    {
+      "expectation": "Provides options: retry the upgrade after fixing the root cause, or rollback the 8 upgraded nodes",
+      "passed": true,
+      "reason": "Response provides two clear options: 'Option A: Resume Upgrade (Recommended)' and 'Option B: Rollback (Only if unfixable issue)'"
+    },
+    {
+      "expectation": "Explains that retrying is usually better than rollback (rolling back means creating a new pool at old version)",
+      "passed": true,
+      "reason": "Response recommends Option A (resume) and explains rollback involves creating a new pool at previous version with detailed commands"
+    },
+    {
+      "expectation": "Addresses the remaining 2 node pools: they can still be upgraded once the failed pool issue is resolved",
+      "passed": true,
+      "reason": "Response includes 'Step 3: Complete the Fleet Upgrade' section with commands to upgrade the remaining pools after resolving the main pool issue"
+    },
+    {
+      "expectation": "Includes commands to diagnose the failure (operation details, node status, pod events)",
+      "passed": true,
+      "reason": "Response provides comprehensive diagnostic commands including operation details, pod status, PDB checks, resource constraints, and node versions"
+    }
+  ]
+}

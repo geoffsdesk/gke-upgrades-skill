@@ -1,0 +1,59 @@
+{
+  "assertions": [
+    {
+      "expectation": "Proposes a phased rollout: dev first, then staging, then prod",
+      "passed": true,
+      "reason": "Clear phased approach with Phase 1 (Dev), Phase 2 (Staging), Phase 3 (Production) in sequential order"
+    },
+    {
+      "expectation": "Includes soak time between environment phases (e.g., 24-48 hours for dev, 1 week for staging before prod)",
+      "passed": true,
+      "reason": "Specifies 3-5 days soak time for dev, 5-7 days for staging, and 3-5 days between production clusters"
+    },
+    {
+      "expectation": "Defines go/no-go criteria between phases (error rates, latency, pod health)",
+      "passed": true,
+      "reason": "Provides detailed validation checklists including workload health, API compatibility, performance regression testing, error rates, latency, and pod health checks"
+    },
+    {
+      "expectation": "Recommends sequential control plane upgrades (1.32\u21921.33) with skip-level node pool upgrades where possible",
+      "passed": true,
+      "reason": "Shows control plane upgrades first followed by node pool upgrades, and mentions upgrading to 1.33.x-gke.latest for both components"
+    },
+    {
+      "expectation": "Suggests not upgrading all prod clusters simultaneously \u2014 do one or two first as canary",
+      "passed": true,
+      "reason": "Explicitly shows production clusters upgraded one at a time with 'Week 3: Prod Cluster 1' followed by 'Week 4: Prod Clusters 2-4' with soak periods between"
+    },
+    {
+      "expectation": "Includes rollback triggers and criteria for halting the rollout",
+      "passed": true,
+      "reason": "Provides detailed rollback strategy section with specific criteria and commands for both control plane and node pool rollback scenarios"
+    },
+    {
+      "expectation": "Provides a timeline or schedule estimate for the full rollout",
+      "passed": true,
+      "reason": "Includes detailed timeline table and summary showing 4-5 weeks total duration with specific week-by-week breakdown"
+    },
+    {
+      "expectation": "Mentions maintenance window coordination across clusters",
+      "passed": true,
+      "reason": "Includes specific section on 'Maintenance Windows & Controls' with gcloud commands for configuring weekend maintenance windows across clusters"
+    },
+    {
+      "expectation": "If rollout sequencing is mentioned, notes that all clusters must be on the same channel for it to work",
+      "passed": true,
+      "reason": "States 'Since all environments are on the same Regular channel, we'll use manual minor version control' acknowledging the same-channel requirement"
+    },
+    {
+      "expectation": "When presenting maintenance windows as an alternative, explicitly notes that windows do NOT guarantee ordering \u2014 upgrades fire based on version availability per region, not environment order. A prod window may fire before dev.",
+      "passed": false,
+      "reason": "While maintenance windows are mentioned for configuration, the response doesn't explicitly warn that maintenance windows don't guarantee upgrade ordering or that prod might upgrade before dev"
+    },
+    {
+      "expectation": "Mentions using two different channels with minor version controls (e.g., dev=Regular, prod=Stable with 'no minor' exclusion) as a simpler alternative to rollout sequencing",
+      "passed": false,
+      "reason": "Does not mention using different channels as an alternative approach - focuses only on single Regular channel with minor version exclusions"
+    }
+  ]
+}

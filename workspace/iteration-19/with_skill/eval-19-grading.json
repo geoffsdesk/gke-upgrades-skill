@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all requested notification types: auto-upgrade scheduled (minor version auto-upgrade, security patch auto-upgrade), new version available, end-of-life/deprecation (EoS warnings), and security patches"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response assigns clear urgency levels with security patches in CRITICAL (0-7 days), new version available in MEDIUM (1-3 months), and creates a proper hierarchy from CRITICAL to LOW"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response explicitly states EoS warnings require action with specific timelines: immediate action for 7-day warnings, and 2-4 weeks planning for 30+ day warnings, with clear upgrade planning requirements"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response specifies actions for auto-upgrade scheduled notifications including 'Review breaking changes, test in dev/staging' and provides specific command examples for readiness checks"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response categorizes security patch auto-upgrades as CRITICAL with 24-72 hour timeline and mentions 'Review if maintenance exclusion is needed for business-critical periods', implying expedited handling"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response correctly categorizes 'New Version Available' as MEDIUM priority with 1-3 months timeline and specifies action as 'Review release notes, plan testing timeline' - clearly for planning purposes"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "Response explicitly recommends 'Set up Cloud Monitoring alerts for cluster upgrade events in addition to email notifications' in the Best Practices section"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": true,
+      "reason": "Response mentions 'Review release notes' as an action item for new version available notifications and planning timeline"
+    }
+  ]
+}

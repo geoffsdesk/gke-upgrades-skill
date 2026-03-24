@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Response clearly states 'Nodes can't be more than 2 minor versions behind the control plane' and identifies this as GKE's maximum supported skew policy"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (nodes must be within 2 minor versions of control plane)",
+      "passed": true,
+      "reason": "Response explicitly identifies this as a 'critical version skew violation' and states the node pool is '3 minor versions behind the control plane (1.28 vs 1.31), which exceeds GKE's maximum supported skew of 2 minor versions'"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Response warns about 'Some API calls from 1.28 nodes may fail or behave unexpectedly' and mentions 'Potential stability issues', covering API compatibility and stability concerns"
+    },
+    {
+      "expectation": "Recommends skip-level (N+2) node pool upgrades within supported version skew to reduce time and disruption. For the N+3 gap (1.28 with 1.31 CP), recommends multiple sequential skip-level upgrades within supported skew (e.g., 1.28\u21921.30 then 1.30\u21921.31) or creating a new node pool at the target version and migrating workloads. Never recommends an unsupported skip-level upgrade.",
+      "passed": true,
+      "reason": "Response recommends Option 1 with skip-level upgrades: '1.28 \u2192 1.30 (skip 1.29, still within N+2 limit)' then '1.30 \u2192 1.31', staying within supported skew. Also provides Option 2 for creating a new node pool. No unsupported upgrades recommended."
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Response provides specific gcloud commands for both upgrade paths: 'gcloud container node-pools upgrade' commands for sequential upgrades and 'gcloud container node-pools create' for new pool creation"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": false,
+      "reason": "Response does not mention surge settings (maxSurge, maxUnavailable) at all, despite the risky state requiring conservative upgrade parameters"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": false,
+      "reason": "Response does not specifically advise monitoring between version bumps, though it does provide pre-upgrade checks"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": true,
+      "reason": "Response explicitly recommends 'Move to a release channel with controlled auto-upgrades' and provides gcloud commands for setting maintenance windows to prevent future issues"
+    }
+  ]
+}
