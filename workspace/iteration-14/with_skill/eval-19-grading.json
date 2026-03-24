@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all notification types with dedicated sections for auto-upgrade scheduled, new version available, end-of-life warnings, security patches, and additionally covers deprecated API usage"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response uses clear urgency indicators: deprecated API = \ud83d\udea8 URGENT, EoS warnings = \ud83d\udea8 PLAN, security patches = \u26a0\ufe0f EVALUATE with CVSS-based priority, new version = \u26a0\ufe0f EVALUATE (lowest action priority), auto-upgrade = \u2705 MONITOR"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response explicitly states 'Action required: Plan upgrade before EoS date' and provides detailed timeline guidance with specific actions for different time windows (90+ days, 30-60 days, <30 days)"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": false,
+      "reason": "While the response covers when to act on auto-upgrade notifications (code freeze, timing adjustments), it does not mention executing a pre-upgrade checklist as a standard procedure"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response clearly states critical CVEs require upgrade within 7 days, high CVEs within 30 days, and provides accelerated patching commands for faster security patch rollout"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response marks new version notifications as \u26a0\ufe0f EVALUATE with 'Default action: Wait for auto-upgrade (recommended)' and positions them for planning rather than immediate action"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "Response includes a dedicated 'Cloud Monitoring Alert Policies' section recommending creating separate alert policies for different notification types, though it doesn't specifically mention Pub/Sub"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": true,
+      "reason": "Response references checking 'release notes' when evaluating new version notifications to understand critical features/fixes"
+    }
+  ]
+}

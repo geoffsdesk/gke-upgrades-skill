@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends Stable or Extended release channel to minimize upgrade frequency",
+      "passed": false,
+      "reason": "Response recommends REGULAR channel instead of STABLE or EXTENDED, stating STABLE is 'too slow for security updates'"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
+      "passed": true,
+      "reason": "Configuration shows maintenanceExclusions with scope 'NO_UPGRADES' to block upgrades during training periods"
+    },
+    {
+      "expectation": "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
+      "passed": true,
+      "reason": "Shows dailyMaintenanceWindow configuration with startTime '02:00' for predictable maintenance timing"
+    },
+    {
+      "expectation": "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
+      "passed": true,
+      "reason": "Shows multi-node pool architecture with dedicated 'h100-training-primary' pool for training and separate 'system-pool' for infrastructure"
+    },
+    {
+      "expectation": "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
+      "passed": true,
+      "reason": "Explicitly sets 'autoUpgrade: false' on training node pools and provides detailed manual upgrade process script"
+    },
+    {
+      "expectation": "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
+      "passed": true,
+      "reason": "Shows checkpoint configuration with CHECKPOINT_INTERVAL environment variable and checkpoint storage volume mounts"
+    },
+    {
+      "expectation": "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
+      "passed": false,
+      "reason": "Does not mention GPU driver version testing or staging validation before production upgrades"
+    },
+    {
+      "expectation": "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading",
+      "passed": false,
+      "reason": "Does not mention GPUDirect/RDMA networking compatibility requirements or version constraints"
+    }
+  ]
+}

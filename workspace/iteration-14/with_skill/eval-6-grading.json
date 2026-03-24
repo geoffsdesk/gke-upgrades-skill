@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the difference between Rapid and Stable channels \u2014 including that Rapid has no SLA for upgrade stability while Stable carries a full SLA, and clearly distinguishes minor version vs patch version differences between the channels",
+      "passed": true,
+      "reason": "Response clearly explains that Rapid has no SLA for upgrade stability while Stable has full SLA coverage, and provides detailed comparison table showing version arrival timing and upgrade frequency differences"
+    },
+    {
+      "expectation": "Notes that channel changes don't trigger an immediate upgrade or downgrade",
+      "passed": true,
+      "reason": "Response explicitly states that after migration the cluster will be 'frozen at 1.32 until Stable reaches that version' and explains no auto-upgrades occur until channel catches up"
+    },
+    {
+      "expectation": "Warns that if 1.30 isn't yet available on Stable, the cluster may not receive patches until Stable catches up",
+      "passed": false,
+      "reason": "Response discusses 1.32 availability but the expectation specifically mentions 1.30. However, the principle is correctly explained - cluster won't receive upgrades until Stable catches up to current version"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "Response provides the exact command: 'gcloud container clusters update YOUR_CLUSTER_NAME --zone YOUR_ZONE --release-channel stable'"
+    },
+    {
+      "expectation": "Recommends checking version availability on Stable before switching (gcloud container get-server-config)",
+      "passed": true,
+      "reason": "Response provides multiple variations of the get-server-config command to check version availability in Stable channel before migration"
+    },
+    {
+      "expectation": "Discusses the impact on auto-upgrade timing going forward",
+      "passed": true,
+      "reason": "Response explains that upgrades will arrive 2-4 weeks later for patches and 2-6 weeks later for minor versions compared to Rapid channel"
+    },
+    {
+      "expectation": "Mentions that the Extended channel is an option if they need even slower cadence (with cost implications)",
+      "passed": false,
+      "reason": "Response does not mention the Extended channel as an option or discuss its cost implications"
+    },
+    {
+      "expectation": "Advises coordinating the change during a maintenance window",
+      "passed": false,
+      "reason": "While the response discusses maintenance windows for future upgrades, it does not specifically advise coordinating the channel change itself during a maintenance window"
+    }
+  ]
+}

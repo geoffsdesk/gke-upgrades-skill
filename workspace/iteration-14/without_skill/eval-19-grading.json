@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all four notification types throughout the triage matrix and playbook sections"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response assigns security patches to CRITICAL (highest), and available version updates to MEDIUM/LOW priority levels with clear timeline guidance"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response explicitly addresses EOL warnings with specific timelines (< 30 days = CRITICAL, 30-90 days = HIGH) and requires planning upgrade timeline"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response provides specific playbook section for auto-upgrade notifications with verification steps and includes pre-upgrade testing requirements"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response categorizes security patches as CRITICAL with 24-48 hour timeline and mentions scheduling immediate maintenance windows"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response correctly categorizes 'Available minor version updates' as MEDIUM priority with 30-day timeline for planning, and 'Available patch version updates' as LOW/informational"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": false,
+      "reason": "Response does not mention Pub/Sub or Cloud Monitoring alerts - only provides email filtering, Slack integration, and manual scripts"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": true,
+      "reason": "Response explicitly mentions 'Review release notes' as an action item in the HIGH priority section"
+    }
+  ]
+}

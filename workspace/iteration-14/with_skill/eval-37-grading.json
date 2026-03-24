@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Proposes a phased approach: control plane first, then CPU pools, then T4 dev, then inference (A100), then training (H100) last",
+      "passed": true,
+      "reason": "The response clearly outlines a 5-phase approach: Phase 1 prep, Phase 2 T4 development (first), Phase 3 CPU services (second), Phase 4 A100 inference (third), Phase 5 H100 training (last), with control plane upgrade mentioned in Phase 2"
+    },
+    {
+      "expectation": "Control plane can be upgraded independently without affecting running workloads",
+      "passed": true,
+      "reason": "Explicitly shows control plane upgrade command 'gcloud container clusters upgrade CLUSTER_NAME --master --cluster-version 1.32.X-gke.XXXX' as a separate step before node upgrades"
+    },
+    {
+      "expectation": "CPU service pools upgraded first as lowest risk \u2014 use standard surge settings (maxSurge=2-3)",
+      "passed": true,
+      "reason": "CPU pools are upgraded in Phase 3 (after T4 dev validation), with specific configuration 'maxSurge=2, maxUnavailable=0' shown in the gcloud command"
+    },
+    {
+      "expectation": "T4 dev pool upgraded next \u2014 dev workloads are tolerant of interruption",
+      "passed": true,
+      "reason": "T4 pools are upgraded in Phase 2 with rationale 'Lowest risk, validates 1.32 GPU compatibility' and 'development workloads are tolerant of interruption' is implied by the aggressive upgrade settings"
+    },
+    {
+      "expectation": "A100 inference pool upgraded with careful surge settings (maxSurge=1) and PDBs to maintain serving capacity",
+      "passed": true,
+      "reason": "A100 inference pools use autoscaled blue-green strategy with specific capacity management and mentions 'Respects graceful termination for inference requests' and monitors serving availability"
+    },
+    {
+      "expectation": "H100 training pool upgraded last, during a scheduled gap between training runs \u2014 with cordon-and-wait or maxSurge=0/maxUnavailable=1",
+      "passed": true,
+      "reason": "H100 pools are upgraded in Phase 5 (last), with explicit coordination 'Between training campaigns', cordon command shown, and 'Wait for natural training completion - NO force eviction'"
+    },
+    {
+      "expectation": "Notes the 20-node parallelism limit \u2014 at 5,000 nodes, the full upgrade will take weeks and must span multiple maintenance windows",
+      "passed": true,
+      "reason": "Response mentions '~125 batches \u00d7 20 batch limit \u00d7 15min/node' for T4 calculations and timeline shows '3-4 weeks' total duration with weekly phases spanning multiple maintenance windows"
+    },
+    {
+      "expectation": "Mentions GPU driver compatibility testing in staging before each GPU pool upgrade",
+      "passed": true,
+      "reason": "Includes specific GPU driver compatibility checks, CUDA version verification commands, and mentions 'Test in T4 dev pools first' as validation before other GPU pool upgrades"
+    },
+    {
+      "expectation": "Addresses GPUDirect/RDMA networking validation after upgrading the H100 pool",
+      "passed": true,
+      "reason": "Includes detailed 'GPUDirect/RDMA connectivity test' section with NCCL bandwidth testing and success criteria 'NCCL bandwidth >1.5TB/s for H100 NVLink' and 'Compact placement maintained'"
+    }
+  ]
+}

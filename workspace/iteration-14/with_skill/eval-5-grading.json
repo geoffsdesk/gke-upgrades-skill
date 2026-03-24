@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Response clearly states 'Nodes can be at most 2 minor versions behind control plane' and explains the 2-minor-version skew limit"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (nodes must be within 2 minor versions of control plane)",
+      "passed": true,
+      "reason": "Response explicitly states 'your node pool is 3 minor versions behind the control plane (1.28 vs 1.31), which exceeds Kubernetes' supported 2-minor-version skew limit' and marks it as unsupported"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Response warns of 'API compatibility issues, scheduler conflicts, and kubelet communication problems' covering the key compatibility concerns"
+    },
+    {
+      "expectation": "Recommends skip-level (N+2) node pool upgrades within supported version skew to reduce time and disruption. For the N+3 gap (1.28 with 1.31 CP), recommends multiple sequential skip-level upgrades within supported skew (e.g., 1.28\u21921.30 then 1.30\u21921.31) or creating a new node pool at the target version and migrating workloads. Never recommends an unsupported skip-level upgrade.",
+      "passed": true,
+      "reason": "Response correctly recommends sequential skip-level upgrades (1.28\u21921.30 then 1.30\u21921.31) and provides node pool replacement as alternative. Explicitly states 'you cannot do a direct skip-level upgrade from 1.28\u21921.31'"
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Response provides specific gcloud container node-pools upgrade commands for both sequential upgrade approach and node pool replacement approach"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": true,
+      "reason": "Response includes specific gcloud command to 'Configure surge settings' with '--max-surge-upgrade 1 --max-unavailable-upgrade 0' in the pre-flight checks section"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": false,
+      "reason": "While response mentions checking workload health and deprecated API usage in pre-flight checks, it doesn't specifically advise monitoring between each version bump during the upgrade process"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": true,
+      "reason": "Response recommends 'Use release channels (Regular or Stable) with appropriate maintenance windows' and enabling auto-upgrades for future prevention"
+    }
+  ]
+}

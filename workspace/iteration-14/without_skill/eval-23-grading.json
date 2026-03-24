@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies Service A (minAvailable=100%) as a guaranteed upgrade blocker \u2014 no disruptions allowed at all",
+      "passed": true,
+      "reason": "Response correctly identifies Service A with minAvailable=100% as blocking all upgrades with clear explanation that no pods can be drained"
+    },
+    {
+      "expectation": "Identifies Service B (maxUnavailable=0) as also blocking upgrades \u2014 same effect as 100% minAvailable",
+      "passed": true,
+      "reason": "Response identifies Service B with maxUnavailable=0 as blocking upgrades and explicitly states it has identical effect to Service A"
+    },
+    {
+      "expectation": "States Service C (minAvailable=2 with 3 replicas) is safe \u2014 allows 1 pod disruption at a time",
+      "passed": false,
+      "reason": "Response categorizes Service C as 'RISKY CONFIGURATION' rather than safe, warning about slow upgrades and potential issues"
+    },
+    {
+      "expectation": "States Service D (maxUnavailable=1 with 5 replicas) is safe \u2014 allows 1 pod down at a time",
+      "passed": true,
+      "reason": "Response correctly identifies Service D as 'SAFE CONFIGURATION' and states it's well-configured for upgrades"
+    },
+    {
+      "expectation": "Recommends fixing Service A: change to minAvailable=N-1 or maxUnavailable=1",
+      "passed": true,
+      "reason": "Provides specific recommendations for Service A including percentage-based (75%) and count-based (maxUnavailable=1) alternatives"
+    },
+    {
+      "expectation": "Recommends fixing Service B: change to maxUnavailable=1",
+      "passed": true,
+      "reason": "Groups Service B with Service A in recommended fixes section and suggests maxUnavailable=1 as an option"
+    },
+    {
+      "expectation": "Explains that GKE respects PDBs for up to 1 hour during surge upgrades, then may force-drain",
+      "passed": false,
+      "reason": "Response does not mention GKE-specific behavior regarding PDB timeout or force-drain mechanisms"
+    },
+    {
+      "expectation": "Provides kubectl patch commands to fix the problematic PDBs",
+      "passed": false,
+      "reason": "Response shows YAML configuration examples but does not provide actual kubectl patch commands to fix the PDBs"
+    },
+    {
+      "expectation": "Recommends testing PDB changes in a non-production environment first",
+      "passed": false,
+      "reason": "Response suggests testing with kubectl drain --dry-run but does not specifically recommend testing changes in non-production environments first"
+    }
+  ]
+}

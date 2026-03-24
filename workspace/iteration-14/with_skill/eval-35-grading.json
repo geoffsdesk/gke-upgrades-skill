@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends Stable or Extended release channel to minimize upgrade frequency",
+      "passed": false,
+      "reason": "The response explicitly recommends Regular channel instead of Stable or Extended, stating 'Use Regular channel for your production training cluster' and explaining why not to use Stable or Extended channels."
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
+      "passed": true,
+      "reason": "The response includes specific gcloud commands with '--add-maintenance-exclusion-scope no_minor_or_node_upgrades' and explains that this 'allows critical control plane security patches while preventing any node disruption during your training campaign.'"
+    },
+    {
+      "expectation": "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
+      "passed": true,
+      "reason": "The response sets a specific narrow maintenance window on Sunday mornings (06:00-10:00Z weekly) with the gcloud command specifying 'FREQ=WEEKLY;BYDAY=SU' and notes it should be 'during training gaps (early Sunday morning)'."
+    },
+    {
+      "expectation": "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
+      "passed": true,
+      "reason": "The response creates dedicated node pools - 'h100-training-pool' with specific GPU configurations and labels, and separately mentions 'preprocessing-spot' pool for non-critical workloads, clearly separating training from other workloads."
+    },
+    {
+      "expectation": "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
+      "passed": true,
+      "reason": "The response explicitly sets '--enable-autoupgrade=false' for the H100 training node pool and includes a 'Post-Training Upgrade Process' section detailing manual upgrade procedures during maintenance windows."
+    },
+    {
+      "expectation": "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
+      "passed": true,
+      "reason": "The response includes specific checkpoint configuration with 'terminationGracePeriodSeconds: 86400 # 24 hours for checkpointing', creates a dedicated checkpoint storage PVC, and mentions 'Extended terminationGracePeriodSeconds (24h) for checkpointing' in the summary."
+    },
+    {
+      "expectation": "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
+      "passed": true,
+      "reason": "The response includes GPU driver validation steps in the operational runbook ('Check GPU driver version compatibility') and explicitly states in the post-training upgrade process to 'Test upgrade in staging first' and 'Validate GPU drivers and RDMA after staging upgrade'."
+    },
+    {
+      "expectation": "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading",
+      "passed": true,
+      "reason": "The response mentions GPUDirect-TCPX support requirements with a specific cluster version ('--cluster-version 1.31.3-gke.1146000 # Ensure GPUDirect-TCPX support') and includes RDMA connectivity validation commands in the operational procedures."
+    }
+  ]
+}

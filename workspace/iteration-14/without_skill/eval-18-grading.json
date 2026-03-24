@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Configures a recurring maintenance window for weekends only",
+      "passed": true,
+      "reason": "The Terraform configuration includes recurring_window blocks with recurrence = \"FREQ=WEEKLY;BYDAY=SA\" for Saturday maintenance windows"
+    },
+    {
+      "expectation": "Provides the gcloud command with --maintenance-window-start/end and --maintenance-window-recurrence for weekly weekend schedule",
+      "passed": true,
+      "reason": "The bash script includes update_maintenance_window function with gcloud commands using --maintenance-window-start and --maintenance-window-end parameters"
+    },
+    {
+      "expectation": "Sets up maintenance exclusions for quarterly code freezes (up to 30 days each)",
+      "passed": true,
+      "reason": "The Terraform configuration includes four quarterly code freeze exclusions (Q1-Q4), each configured for exactly 30-day periods"
+    },
+    {
+      "expectation": "Sets up a maintenance exclusion for the November audit period",
+      "passed": true,
+      "reason": "Multiple November audit exclusions are configured, including 'annual-audit' and 'sox-audit-prep' covering the November audit period"
+    },
+    {
+      "expectation": "Notes the 30-day maximum for maintenance exclusions and how to handle longer freezes",
+      "passed": false,
+      "reason": "The response does not mention the 30-day maximum limitation for maintenance exclusions or explain how to handle longer freeze periods"
+    },
+    {
+      "expectation": "Explains that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
+      "passed": false,
+      "reason": "The response does not explain the distinction between manual and auto-upgrades regarding maintenance window enforcement"
+    },
+    {
+      "expectation": "Recommends combining maintenance windows with Stable or Extended channel for maximum upgrade control",
+      "passed": true,
+      "reason": "The configuration shows release_channel with 'REGULAR' and 'STABLE' channels, with comments indicating STABLE is more conservative for production"
+    },
+    {
+      "expectation": "Provides gcloud commands for each exclusion (--add-maintenance-exclusion-name/start-time/end-time)",
+      "passed": true,
+      "reason": "The bash script includes add_emergency_exclusion function with gcloud commands using --add-maintenance-exclusion-name, --add-maintenance-exclusion-start, and --add-maintenance-exclusion-end parameters"
+    },
+    {
+      "expectation": "Warns about the risk of falling too far behind on versions during long exclusion periods",
+      "passed": false,
+      "reason": "The response does not warn about the risks of falling behind on versions during extended exclusion periods"
+    }
+  ]
+}

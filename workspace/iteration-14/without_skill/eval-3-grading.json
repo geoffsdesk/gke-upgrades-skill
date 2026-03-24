@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies PDB as the most likely/common cause of stuck upgrades",
+      "passed": true,
+      "reason": "Response explicitly states 'The most common causes are PodDisruptionBudgets (PDBs)' and later emphasizes 'Check PDBs first - this is the #1 cause'"
+    },
+    {
+      "expectation": "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
+      "passed": true,
+      "reason": "Response includes 'kubectl get pdb --all-namespaces' and 'kubectl describe pdb --all-namespaces' commands"
+    },
+    {
+      "expectation": "Provides commands to identify which pods are blocking the drain",
+      "passed": true,
+      "reason": "Response includes 'kubectl get pods --all-namespaces --field-selector=spec.nodeName=[STUCK_NODE_NAME]' and other pod identification commands"
+    },
+    {
+      "expectation": "Includes resource constraint diagnosis (capacity issues, pending pods)",
+      "passed": false,
+      "reason": "Response does not mention checking for capacity issues, resource constraints, or pending pods as a potential cause of stuck upgrades"
+    },
+    {
+      "expectation": "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+      "passed": true,
+      "reason": "Response includes 'kubectl patch pdb [PDB_NAME] -n [NAMESPACE] --type merge -p '{\"spec\":{\"minAvailable\":1}}' and kubectl delete pdb commands"
+    },
+    {
+      "expectation": "Mentions that GKE has a PDB timeout (up to 1 hour) after which it may force-drain, and that GKE sends notifications when eviction is blocked by PDB",
+      "passed": false,
+      "reason": "Response does not mention GKE's PDB timeout behavior or automatic notifications when eviction is blocked by PDB"
+    },
+    {
+      "expectation": "Includes guidance on surge upgrade settings as a potential fix",
+      "passed": false,
+      "reason": "Response does not mention surge upgrade settings or node pool upgrade strategies as a potential solution"
+    },
+    {
+      "expectation": "Mentions webhook issues as a possible cause",
+      "passed": false,
+      "reason": "Response does not mention admission webhooks or validating/mutating webhooks as a potential cause of stuck upgrades"
+    },
+    {
+      "expectation": "Includes validation steps to confirm the fix is working",
+      "passed": true,
+      "reason": "Response includes 'Monitor the upgrade progress' and provides commands to check upgrade status and operations"
+    },
+    {
+      "expectation": "Mentions GKE disruption-event notifications (POD_PDB_VIOLATION) that alert when eviction is blocked by PDB, available via Cloud Logging or Pub/Sub",
+      "passed": false,
+      "reason": "Response does not mention specific GKE disruption-event notifications, POD_PDB_VIOLATION events, or Cloud Logging/Pub/Sub monitoring capabilities"
+    }
+  ]
+}

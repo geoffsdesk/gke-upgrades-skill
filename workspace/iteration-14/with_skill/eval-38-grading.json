@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Clearly states that GKE auto-upgrades clusters automatically as the default and recommended model \u2014 this is what differentiates GKE from self-managed Kubernetes",
+      "passed": true,
+      "reason": "Response explicitly states 'GKE will handle upgrades automatically' and 'this is the primary value proposition of managed Kubernetes' with clear recommendation to 'rely on this auto-upgrade model rather than manual upgrades'"
+    },
+    {
+      "expectation": "Recommends configuring maintenance windows to control WHEN auto-upgrades happen (e.g., weekends, off-peak hours)",
+      "passed": true,
+      "reason": "Response includes detailed maintenance window configuration with specific gcloud commands for setting recurring windows during off-peak hours, including Sunday 2-6 AM example"
+    },
+    {
+      "expectation": "Recommends maintenance exclusions to control WHAT auto-upgrades happen (e.g., 'no minor or node upgrades' to block disruptive changes while allowing security patches)",
+      "passed": true,
+      "reason": "Response provides specific maintenance exclusion commands and explains blocking upgrades during critical periods, though it shows 'no_upgrades' scope rather than granular control between security patches vs minor upgrades"
+    },
+    {
+      "expectation": "Does NOT recommend disabling auto-upgrades or switching to a purely manual upgrade cadence as the first option",
+      "passed": true,
+      "reason": "Response clearly recommends auto-upgrades as the primary approach and only mentions manual upgrades as 'exception cases' for specific scenarios"
+    },
+    {
+      "expectation": "Explains that manual upgrades are useful for specific scenarios (emergency patches, accelerating the schedule) but are the exception, not the rule",
+      "passed": true,
+      "reason": "Response has a dedicated section 'When to Use Manual Upgrades (Exception Cases)' listing emergency patching, accelerating schedule, and testing scenarios as specific exceptions"
+    },
+    {
+      "expectation": "Recommends enrolling in scheduled upgrade notifications (72h advance) for visibility into upcoming auto-upgrades",
+      "passed": false,
+      "reason": "Response does not mention scheduled upgrade notifications or 72-hour advance visibility features"
+    },
+    {
+      "expectation": "Suggests checking the GKE release schedule for longer-range planning (~1 month best-case for new minors)",
+      "passed": false,
+      "reason": "Response does not mention checking GKE release schedule or provide timeline information for longer-range planning"
+    },
+    {
+      "expectation": "Mentions release channel selection as the primary lever for upgrade cadence (Stable = slower, Regular = balanced)",
+      "passed": true,
+      "reason": "Response explains Regular channel characteristics (~2 weeks after Rapid) and describes it as 'good balance of stability and recency for production', implying channel selection affects upgrade cadence"
+    }
+  ]
+}
