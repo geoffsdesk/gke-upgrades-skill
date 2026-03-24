@@ -1,0 +1,19 @@
+{
+  "eval_id": 24,
+  "mode": "with_skill",
+  "iteration": 17,
+  "prompt": "Our company has 8 GKE Standard clusters on the legacy 'No channel' (static version) configuration. We keep hitting issues with forced upgrades and lack of control. Our platform team wants to understand: what are we missing by staying on 'No channel', and what's the migration path to release channels? We're currently at 1.31.",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-24T05:01:17.359932+00:00",
+  "input_tokens": 19303,
+  "output_tokens": 2340,
+  "time_seconds": 46.09,
+  "skill_files": [
+    "skill/SKILL.md",
+    "skill/evals/evals.json",
+    "skill/references/checklists.md",
+    "skill/references/runbook-template.md",
+    "skill/references/troubleshooting.md"
+  ]
+}

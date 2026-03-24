@@ -1,0 +1,19 @@
+{
+  "eval_id": 29,
+  "mode": "with_skill",
+  "iteration": 17,
+  "prompt": "We need to set up maintenance exclusions for our GKE clusters to handle our company's schedule: a quarterly code freeze in June, our busiest period during Black Friday/Cyber Monday in November, and we never want minor version upgrades to happen without our explicit approval. Give us the exact configuration.",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-24T05:06:44.048582+00:00",
+  "input_tokens": 19290,
+  "output_tokens": 1618,
+  "time_seconds": 24.42,
+  "skill_files": [
+    "skill/SKILL.md",
+    "skill/evals/evals.json",
+    "skill/references/checklists.md",
+    "skill/references/runbook-template.md",
+    "skill/references/troubleshooting.md"
+  ]
+}

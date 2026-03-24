@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Checks for deprecated API usage that may have changed behavior in 1.30",
+      "passed": true,
+      "reason": "Response includes specific commands to check for deprecated API calls with kubectl get --raw /metrics | grep deprecated and mentions checking GKE deprecation insights"
+    },
+    {
+      "expectation": "Recommends checking admission webhooks \u2014 they may be rejecting or slowing down requests on the new version",
+      "passed": true,
+      "reason": "Response dedicates a specific section to admission webhook compatibility with commands to check webhook configurations and events, plus immediate mitigation steps"
+    },
+    {
+      "expectation": "Advises checking if resource requests/limits need adjusting for any system components that changed",
+      "passed": true,
+      "reason": "Response includes kubectl top pods -n kube-system to check system component resource usage and mentions that components like coredns may have different resource requirements in 1.32"
+    },
+    {
+      "expectation": "Suggests examining kube-system pods for any that are crashlooping or restarting",
+      "passed": true,
+      "reason": "Response includes specific commands: kubectl get pods -n kube-system and explicitly mentions looking for 'crashlooping or restarting system components'"
+    },
+    {
+      "expectation": "Includes commands to check API server metrics and latency (kubectl get --raw /metrics)",
+      "passed": true,
+      "reason": "Response includes kubectl get --raw /metrics commands for both deprecated API calls and API server request duration metrics"
+    },
+    {
+      "expectation": "Recommends checking if NetworkPolicy or service mesh components need updating for the new version",
+      "passed": true,
+      "reason": "Response includes a dedicated section 'Service Mesh / Network-Specific Checks' with commands to check Istio/ASM control plane compatibility and proxy injection issues"
+    },
+    {
+      "expectation": "Advises reviewing pod events for scheduling delays or readiness probe failures",
+      "passed": true,
+      "reason": "Response includes multiple commands to check events: kubectl get events in kube-system and across all namespaces, though it doesn't explicitly mention scheduling delays or readiness probe failures"
+    },
+    {
+      "expectation": "Mentions checking if HPA or VPA are behaving differently on the new version",
+      "passed": true,
+      "reason": "Response includes a dedicated section on HPA/VPA behavioral changes with commands to check HPA status and scaling decisions, mentioning that K8s 1.32 may have changed HPA algorithm defaults"
+    }
+  ]
+}

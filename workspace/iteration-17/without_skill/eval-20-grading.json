@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Starts with pre-flight checks: current versions, cluster health, node status",
+      "passed": true,
+      "reason": "Response includes comprehensive pre-flight checks with commands for current versions, cluster health, and node status in sections 1-2"
+    },
+    {
+      "expectation": "Includes the gcloud command to check available versions in the release channel",
+      "passed": true,
+      "reason": "Section 3 includes 'gcloud container get-server-config' commands to check available versions and verify 1.33 availability"
+    },
+    {
+      "expectation": "Includes the API deprecation check command before upgrading",
+      "passed": false,
+      "reason": "No API deprecation check commands (like 'kubectl get --raw /metrics' or deprecation warnings) are included before the upgrade"
+    },
+    {
+      "expectation": "Provides the exact gcloud command for control plane upgrade (--master flag or --cluster-version)",
+      "passed": true,
+      "reason": "Section 4 provides exact gcloud command with --master flag and --cluster-version=1.33.0-gke.latest"
+    },
+    {
+      "expectation": "Includes a verification step after control plane upgrade with expected output",
+      "passed": true,
+      "reason": "Section 5 includes verification commands to check master version and test cluster connectivity after control plane upgrade"
+    },
+    {
+      "expectation": "Provides gcloud commands for node pool upgrades \u2014 may use skip-level (N+2) for node pools to reduce steps",
+      "passed": true,
+      "reason": "Sections 7 and 9 provide exact gcloud commands for upgrading both node pools (default-pool and workload-pool)"
+    },
+    {
+      "expectation": "Includes monitoring commands to watch node pool upgrade progress",
+      "passed": true,
+      "reason": "Sections 7 and 9 include monitoring commands like 'watch kubectl get nodes' and gcloud operations list commands"
+    },
+    {
+      "expectation": "Provides sequential control plane upgrades (1.32\u21921.33) with option for skip-level node pool upgrades",
+      "passed": true,
+      "reason": "Response shows direct upgrade from 1.32 to 1.33 for control plane and node pools, following proper sequence"
+    },
+    {
+      "expectation": "Includes post-upgrade validation: node versions, pod health, kube-system pods",
+      "passed": true,
+      "reason": "Phase 3 (sections 11-13) includes comprehensive post-upgrade validation covering node versions, pod health, and kube-system pods"
+    },
+    {
+      "expectation": "Provides a rollback section explaining what to do if something goes wrong",
+      "passed": true,
+      "reason": "Includes troubleshooting section with emergency rollback commands and explains that master cannot be rolled back but node pools can be"
+    }
+  ]
+}

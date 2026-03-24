@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all four notification types in the priority matrix: End of Support (EoS) Warning, Security Patch Available, Auto-upgrade Scheduled, and New Version Available"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": false,
+      "reason": "Security patches are assigned MEDIUM priority (\ud83d\udfe1), not highest. End of Support warnings and Deprecated API usage are assigned HIGH priority (\ud83d\udd34), making them higher than security patches"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response clearly states EoS warnings are HIGH priority requiring 'Plan upgrade immediately' with 30-60 day timeline, and provides specific action items including planning upgrades before support ends"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response provides detailed decision matrix and actions for auto-upgrade scheduled notifications, including options to allow, defer, or accelerate, which constitutes a pre-upgrade checklist approach"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response specifically addresses expedited upgrades for security patches based on CVE severity (CRITICAL within 7 days, HIGH within 14 days) and mentions accelerated patching option"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response categorizes 'New Version Available' as LOW priority (\ud83d\udfe2) with 'No deadline' and explicitly states 'No immediate action required' while recommending filing in planning backlog"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "Response includes specific section on 'Proactive Monitoring Setup' with detailed gcloud commands for creating Pub/Sub topics and configuring Cloud Monitoring alerting for cluster events"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": true,
+      "reason": "Response mentions reviewing GKE release notes for CVE details and includes gcloud command to get server config, and recommends reviewing release notes for new features/changes"
+    }
+  ]
+}

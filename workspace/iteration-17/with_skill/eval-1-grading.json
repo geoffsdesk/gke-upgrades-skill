@@ -1,0 +1,59 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends sequential control plane upgrades (1.32\u21921.33) while using skip-level (N+2) for node pool upgrades where possible to reduce disruption",
+      "passed": false,
+      "reason": "The response correctly recommends sequential control plane upgrade (1.32\u21921.33) but incorrectly states that node pools can 'skip-level upgrade 1.32\u21921.33' - this is not a skip-level upgrade as it's only a single minor version jump, not N+2"
+    },
+    {
+      "expectation": "Specifies control plane upgrades before node pool upgrades",
+      "passed": true,
+      "reason": "The response clearly specifies that upgrades proceed 'control plane first, then node pools' and shows this in the runbook with Step 1 being control plane upgrade before Step 3 node pool upgrades"
+    },
+    {
+      "expectation": "Provides different node pool upgrade ordering with rationale for the sequence",
+      "passed": true,
+      "reason": "The response provides specific upgrade order 'General \u2192 GPU \u2192 Postgres (least to most sensitive)' with clear rationale for sequencing from least to most sensitive workloads"
+    },
+    {
+      "expectation": "Includes specific surge upgrade settings (maxSurge/maxUnavailable) for each pool with justification for the chosen values (e.g., explaining why maxSurge is set higher for parallelism)",
+      "passed": true,
+      "reason": "The response provides specific surge settings for each pool: General-purpose (maxSurge=5%/1, maxUnavailable=0), Postgres (maxSurge=1, maxUnavailable=0), GPU (maxSurge=0, maxUnavailable=1) with clear justifications for each choice"
+    },
+    {
+      "expectation": "Addresses Postgres-specific concerns (PDB, backup, operator compatibility, PV reclaim)",
+      "passed": true,
+      "reason": "The response addresses all Postgres concerns: mentions PDBs for StatefulSets, backup completion, operator compatibility with K8s 1.33, and PV reclaim policy = Retain"
+    },
+    {
+      "expectation": "Addresses GPU-specific concerns (driver compatibility, maxUnavailable as primary lever since surge capacity is typically unavailable)",
+      "passed": true,
+      "reason": "The response addresses GPU driver compatibility with 1.33, explains maxUnavailable=1 as the primary lever for GPU pools, and notes that GPU reservations typically have no surge capacity"
+    },
+    {
+      "expectation": "Includes actual gcloud commands for the upgrade steps",
+      "passed": true,
+      "reason": "The response includes specific gcloud commands for control plane upgrade, node pool surge configuration, and sequential node pool upgrades with actual command syntax"
+    },
+    {
+      "expectation": "Provides a pre-upgrade checklist",
+      "passed": true,
+      "reason": "The response includes a comprehensive pre-upgrade checklist with items like version availability verification, deprecated API checks, operator compatibility, PDB configuration, and backup completion"
+    },
+    {
+      "expectation": "Provides a post-upgrade checklist with validation commands",
+      "passed": true,
+      "reason": "The response includes post-upgrade validation steps with specific kubectl and gcloud commands to verify node versions, pod status, StatefulSets health, and deployments health"
+    },
+    {
+      "expectation": "Includes rollback procedure or guidance (noting CP patch downgrades are customer-doable, minor downgrades require GKE support)",
+      "passed": true,
+      "reason": "The response includes rollback guidance noting that control plane minor version rollback requires contacting GKE support, and provides specific commands for node pool rollback by creating new pools"
+    },
+    {
+      "expectation": "Mentions GKE's 2-step control plane minor upgrade where step 1 is rollbackable (step 2 commits and is not rollbackable), or mentions that node pools support downgrade",
+      "passed": true,
+      "reason": "The response mentions 'Two-step upgrade available for 1.33+ with configurable soak period' and notes that node pools can be rolled back, addressing the 2-step upgrade capability"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends upgrading the L4 inference pool and A100 pool separately with different strategies",
+      "passed": true,
+      "reason": "Response clearly recommends separate upgrade strategies: L4 pool upgraded first with autoscaled blue-green (inference-only), then A100 pool with coordinated blue-green to protect fine-tuning jobs"
+    },
+    {
+      "expectation": "For L4 inference pool: recommends surge upgrade with maxSurge=1 or 2 to maintain capacity during rolling replacement",
+      "passed": false,
+      "reason": "Response recommends autoscaled blue-green strategy for L4 pool, not surge upgrade with maxSurge parameters. Does not mention maxSurge=1 or 2 at all"
+    },
+    {
+      "expectation": "Addresses GPU driver version compatibility \u2014 auto-installed drivers must be compatible with inference framework (TensorRT, vLLM, etc.)",
+      "passed": true,
+      "reason": "Response addresses driver compatibility with specific checks for GPU driver version, CUDA compatibility, and mentions TensorRT/Triton framework compatibility verification"
+    },
+    {
+      "expectation": "For A100 fine-tuning pool: recommends scheduling the upgrade during a gap between fine-tuning jobs",
+      "passed": true,
+      "reason": "Response includes Step 3a to check for running fine-tuning jobs and wait for jobs <2h remaining to complete before upgrading the A100 pool"
+    },
+    {
+      "expectation": "Notes that GPU VMs do not support live migration \u2014 inference pods will restart during node upgrade, causing brief latency spikes",
+      "passed": false,
+      "reason": "Response does not mention that GPU VMs do not support live migration or that inference pods will restart causing latency spikes"
+    },
+    {
+      "expectation": "Recommends PDBs on inference deployments to ensure enough replicas stay available during the rolling upgrade",
+      "passed": true,
+      "reason": "Response includes specific PDB configurations with minAvailable percentages (70% for L4, 50% for A100) to maintain serving capacity during upgrades"
+    },
+    {
+      "expectation": "Addresses auto-scaler interaction \u2014 new nodes created by auto-scaler during upgrade will be at the old version until their pool upgrade completes",
+      "passed": false,
+      "reason": "Response does not address the issue of auto-scaler creating nodes at the old version during upgrade process"
+    },
+    {
+      "expectation": "Recommends testing driver + CUDA compatibility in staging before production upgrade",
+      "passed": false,
+      "reason": "Response mentions driver compatibility verification in pre-upgrade checklist but does not specifically recommend testing in staging environment before production upgrade"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends Stable or Extended release channel to minimize upgrade frequency",
+      "passed": false,
+      "reason": "The response recommends the Regular channel, not Stable or Extended. It explicitly advises against Stable channel, stating it can delay critical GPU driver updates."
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
+      "passed": true,
+      "reason": "The maintenance policy configuration includes exclusions with 'scope: NO_UPGRADES' to block upgrades during training periods, and the strategy allows control plane updates while protecting nodes."
+    },
+    {
+      "expectation": "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
+      "passed": true,
+      "reason": "Configures a specific dailyMaintenanceWindow with startTime: '09:00' and duration: '4h' to provide predictable timing for maintenance activities."
+    },
+    {
+      "expectation": "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
+      "passed": true,
+      "reason": "Creates separate node pools: 'h100-training-primary' for GPU workloads with dedicated taints and 'system-pool' for system workloads, clearly isolating training from other workloads."
+    },
+    {
+      "expectation": "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
+      "passed": true,
+      "reason": "Explicitly sets 'autoUpgrade: false' on the H100 training node pool and provides manual upgrade commands, emphasizing upgrading during planned downtime."
+    },
+    {
+      "expectation": "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
+      "passed": true,
+      "reason": "Includes checkpointing configuration with 'python save_checkpoint.py' in the preStop lifecycle hook and recommends 'Checkpoint Frequently: Implement robust checkpointing every few hours'."
+    },
+    {
+      "expectation": "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
+      "passed": true,
+      "reason": "Recommends 'Monitor GPU Drivers: Pin GPU driver versions once stable for your workload' and 'Test Upgrade Process: Practice upgrades on a staging cluster first'."
+    },
+    {
+      "expectation": "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading",
+      "passed": false,
+      "reason": "The response does not mention GPUDirect or RDMA networking compatibility requirements with GKE versions."
+    }
+  ]
+}

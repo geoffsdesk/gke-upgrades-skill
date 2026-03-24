@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Proposes a phased approach: control plane first, then CPU pools, then T4 dev, then inference (A100), then training (H100) last",
+      "passed": false,
+      "reason": "The plan does control plane LAST (Phase 5), not first. The order is: CPU services, T4 dev, A100 inference, H100 training, then control plane - which contradicts the expected control plane first approach."
+    },
+    {
+      "expectation": "Control plane can be upgraded independently without affecting running workloads",
+      "passed": true,
+      "reason": "Phase 5 shows control plane upgrade with gcloud container clusters upgrade --master command and mentions doing it during lowest usage window, indicating understanding that it can be done independently."
+    },
+    {
+      "expectation": "CPU service pools upgraded first as lowest risk \u2014 use standard surge settings (maxSurge=2-3)",
+      "passed": false,
+      "reason": "CPU pools are upgraded first, but the plan uses kubectl drain commands and batch upgrades of 200 nodes rather than mentioning maxSurge settings for node pool upgrades."
+    },
+    {
+      "expectation": "T4 dev pool upgraded next \u2014 dev workloads are tolerant of interruption",
+      "passed": true,
+      "reason": "Phase 2 targets T4 nodes and explicitly states 'Development workloads are interruptible' and mentions they are lower risk for learning."
+    },
+    {
+      "expectation": "A100 inference pool upgraded with careful surge settings (maxSurge=1) and PDBs to maintain serving capacity",
+      "passed": false,
+      "reason": "A100 upgrade uses blue-green deployment with new node pools rather than in-place upgrades with surge settings. No specific mention of maxSurge=1 or PodDisruptionBudgets."
+    },
+    {
+      "expectation": "H100 training pool upgraded last, during a scheduled gap between training runs \u2014 with cordon-and-wait or maxSurge=0/maxUnavailable=1",
+      "passed": true,
+      "reason": "H100 nodes are upgraded last in Phase 4, uses cordon-and-wait approach ('kubectl cordon $node' and waiting for job completion), and coordinates with training schedules."
+    },
+    {
+      "expectation": "Notes the 20-node parallelism limit \u2014 at 5,000 nodes, the full upgrade will take weeks and must span multiple maintenance windows",
+      "passed": false,
+      "reason": "The plan mentions a 15-day timeline but does not specifically reference the 20-node parallelism limit for GKE upgrades or explain how this constraint affects the timeline."
+    },
+    {
+      "expectation": "Mentions GPU driver compatibility testing in staging before each GPU pool upgrade",
+      "passed": false,
+      "reason": "While the plan mentions 'Validate GPU drivers (NVIDIA 535+)' and 'Test CUDA compatibility' in Phase 2, it does not specifically mention staging environment testing before each GPU pool upgrade."
+    },
+    {
+      "expectation": "Addresses GPUDirect/RDMA networking validation after upgrading the H100 pool",
+      "passed": false,
+      "reason": "The plan does not mention GPUDirect or RDMA networking validation specifically for the H100 pool upgrade, which is critical for high-performance training workloads."
+    }
+  ]
+}
