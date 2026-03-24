@@ -72,7 +72,7 @@ The "No channel" option is a legacy configuration. **Never recommend "No channel
 |---------|-----------------|------------|
 | "No minor or node upgrades" exclusion | Yes (cluster-level + per-nodepool) | **No** — only the 30-day "no upgrades" type is available |
 | "No minor upgrades" exclusion | Yes | **No** |
-| Per-nodepool maintenance exclusion | Yes | Yes (but limited to "no upgrades" 30 days) |
+| Per-nodepool maintenance exclusion (disable auto-upgrade) | **No** — use cluster-level exclusion scopes | Yes (but limited to "no upgrades" 30 days) |
 | Extended support (24 months) | Yes | **No** |
 | Rollout sequencing | Yes (advanced) | **No** |
 | Persistent exclusions (tracks EoS) | Yes | **No** |
@@ -158,28 +158,28 @@ The `--maintenance-window-duration` field simplifies the UX by directly specifyi
 | **"No minor or node upgrades"** | Minor version upgrades + node pool upgrades. Allows CP patches. | Up to version's End of Support | Conservative customers who want CP security patches but no disruptive changes. Use for maximum control over both minor and node versions, preventing control plane and node minor version skew. |
 | **"No minor upgrades"** | Minor version upgrades only. Allows patches and node upgrades. | Up to version's End of Support | Teams comfortable with node churn but not minor version changes. |
 
-The "No minor or node upgrades" exclusion is the recommended approach for maximum control — it prevents disruptive upgrades while still allowing security patches on the control plane.
+For production workloads that **require maximum control** (disruption-intolerant workloads, regulated environments), the "No minor or node upgrades" exclusion is the recommended approach — it prevents disruptive upgrades while still allowing security patches on the control plane. Do NOT recommend this exclusion by default for all production workloads — most customers are better served by release channels + maintenance windows alone.
 
 **Exclusion constraints and limits:**
 - **"No upgrades" exclusions are limited to 30 days maximum.** This is a hard limit per exclusion. For longer freeze periods, you must chain multiple exclusions (up to 3 per cluster), but this accumulates security debt — warn customers about the risk of falling behind on patches.
 - Maximum of 3 "no upgrades" exclusions per cluster. Within any 32-day rolling window, at least 48 hours must be available for maintenance (not covered by exclusions). Plan exclusion windows carefully to avoid hitting these limits during consecutive freeze periods.
-- **Manual upgrades bypass ALL maintenance controls** — both maintenance windows AND maintenance exclusions. Only auto-upgrades respect these controls. If a user manually triggers an upgrade with `gcloud container clusters upgrade`, it proceeds immediately regardless of any active exclusion or window. This is useful for emergency patching but dangerous if done accidentally during a freeze.
+- **Manual upgrades bypass ALL maintenance controls** — both maintenance windows AND maintenance exclusions. Only auto-upgrades respect these controls. If a user manually triggers an upgrade with `gcloud container clusters upgrade`, it proceeds immediately regardless of any active exclusion or window. **Implication for upgrade workflows:** Customers using "no minor or node" exclusions do NOT need to remove the exclusion before upgrading and re-apply it afterward — just trigger the manual upgrade directly. The exclusion stays in place to continue blocking auto-upgrades.
 - **Version drift risk:** Extended exclusion periods (especially chained "no upgrades" exclusions) can cause clusters to fall behind on patches, accumulating security debt. The longer a cluster stays frozen, the harder the eventual upgrade — deprecated APIs accumulate, version skew grows, and the blast radius of a forced EoS upgrade increases. Always pair exclusion recommendations with a plan for when and how to catch up.
 
-**Per-cluster vs per-nodepool exclusions:** The per-cluster exclusion on release channels is always preferred over per-nodepool control, as it ensures maximum control over both minor version and node version upgrades and prevents control plane and node minor version skew. Use per-nodepool exclusions when you need different control per nodepool — especially for mixed workload clusters where some node pools need auto-upgrades and others need tight control.
+**Per-cluster vs per-nodepool exclusions:** The per-cluster exclusion on release channels is always preferred over per-nodepool control, as it ensures maximum control over both minor version and node version upgrades and prevents control plane and node minor version skew. **Important:** Per-nodepool maintenance exclusions (disable auto-upgrade per nodepool) are only available on "No channel" — release channels use cluster-level exclusions with scope controls ("no minor", "no minor or node", "no upgrades") instead. Use per-nodepool exclusions only when on "No channel" with mixed workloads where some node pools need auto-upgrades and others need tight control.
 
 **Persistent maintenance exclusions:** Use `--add-maintenance-exclusion-until-end-of-support` to create an exclusion that automatically tracks the version's End of Support date and auto-renews when a new minor version is adopted. There is no longer a 6-month maximum for these — no need to chain exclusions. This flag is available for scope "no minor" and "no minor or node" exclusions.
 
 **Cluster disruption budget (disruption interval):** GKE enforces a disruption interval between upgrades on a given cluster, preventing back-to-back upgrades. This is a key lever for regulated environments that need to control upgrade frequency:
 - **Patch disruption interval:** Default 24h, configurable up to 90 days. Controls frequency of control plane patch upgrades. Use `--maintenance-patch-version-disruption-interval` to configure.
 - **Minor disruption interval:** Default 30d, configurable up to 90 days. Controls frequency of minor version upgrades. Use `--maintenance-minor-version-disruption-interval` to configure.
-- **Format:** Accepts duration strings (e.g., `45d`, `24h`, `3600s`). Range: 0s–7776000s (0–90 days). Internally stored in seconds.
+- **Format:** Seconds only (e.g., `7776000s` for 90 days, `2592000s` for 30 days, `86400s` for 24 hours). Range: 0s–7776000s (0–90 days). Do NOT use duration shorthand like `45d` or `24h` — only seconds are accepted today.
 
 Example:
 ```
 gcloud container clusters update CLUSTER_NAME \
-    --maintenance-minor-version-disruption-interval=45d \
-    --maintenance-patch-version-disruption-interval=7d
+    --maintenance-minor-version-disruption-interval=7776000s \
+    --maintenance-patch-version-disruption-interval=604800s
 ```
 
 **Regulated environment recommended configuration (financial services, healthcare, compliance):**
@@ -189,7 +189,7 @@ gcloud container clusters update CLUSTER_NAME \
     --release-channel extended \
     --add-maintenance-exclusion-scope no_minor_or_node_upgrades \
     --add-maintenance-exclusion-until-end-of-support \
-    --maintenance-patch-version-disruption-interval=90d \
+    --maintenance-patch-version-disruption-interval=7776000s \
     --maintenance-window-start "2026-01-01T02:00:00Z" \
     --maintenance-window-duration 4h \
     --maintenance-window-recurrence "FREQ=WEEKLY;BYDAY=SA"
@@ -229,18 +229,21 @@ Key flags:
 
 **How it works:** When GKE selects a new auto-upgrade target, it upgrades the first fleet's clusters, waits the configured soak time, then proceeds to the next fleet. Control plane and node upgrades are tracked separately — each has its own soak period. If upgrades aren't completed within 30 days, GKE force-starts the soak period to unblock the sequence.
 
-**Critical constraint:** Rollout sequencing does NOT work across different release channels. All clusters in a rollout sequence must be on the same channel AND ideally the same minor version. If environments use different channels (e.g., dev=Rapid, prod=Stable), rollout sequencing cannot orchestrate them.
+**Critical constraint:** Rollout sequencing does NOT work across different release channels. All clusters in a rollout sequence must be on the same channel (Regular is fine since it takes a while to go through the fleet, or Stable for even more stability but with a +2 week delay on security patches). If environments use different channels (e.g., dev=Rapid, prod=Stable), rollout sequencing cannot orchestrate them.
 
 **Maintenance windows are NOT a substitute for rollout sequencing.** Staggering maintenance windows across environments does NOT guarantee upgrade ordering. A new version may become available in region X on Tuesday and region Y on Friday — meaning prod could be upgraded before dev depending on window timing. Maintenance windows control WHEN upgrades happen, not the ORDER across environments.
 
-**Alternative to rollout sequencing (simpler — recommended for most teams):** Use different release channels across environments with "no minor or node" exclusions and user-triggered minor upgrades:
-- Dev clusters on Regular channel (gets versions first)
-- Staging clusters on Stable channel (receives versions ~1 month after Regular)
-- Prod clusters on Stable + "no minor or node upgrades" exclusion (only auto-applies CP security patches; you manually trigger minor upgrades after staging validation)
+**Progressive rollout best practice (interim, until rollout sequencing is widely adopted):**
+Rollout sequencing is the correct long-term answer for progressive rollout across environments. In the meantime, the next best approach is **release channel minor control**:
+- All environments on the **same channel** (Regular or Stable) — this ensures they get the same versions
+- Use **"no minor" or "no minor or node" exclusions** with user-triggered minor upgrades to control progression
+- When a new minor version becomes the auto-upgrade target, manually trigger it on dev first, validate, then staging, then prod
+- Patches flow automatically to all environments (controlled by maintenance windows for timing)
+- This approach keeps all environments on the same minor version in steady state while giving you manual control over minor version progression
 
-This guarantees ordering because channel progression is deterministic: Regular always gets versions before Stable. Combined with exclusions and manual triggers, you get full control. This is simpler than rollout sequencing and sufficient for most teams.
+Alternatively, use **two channels with minor control** (dev=Regular, prod=Stable) — channel progression is deterministic (Regular gets versions before Stable), so you get natural sequencing. Use "no minor" exclusions on both to stay on the same minor version, then trigger minor upgrades manually starting with dev when a new minor reaches Regular's auto-upgrade target.
 
-**Important context:** Rollout sequencing is an advanced feature with limited adoption — by design, it targets sophisticated platform teams managing large fleets. Do not recommend it as a default or first-line tool. Mention it as an option when the user explicitly has multi-cluster coordination needs, but prefer simpler approaches for most customers. Only suggest rollout sequencing when the user has 10+ clusters or explicitly asks about automated fleet-wide upgrade orchestration.
+**Important context:** Rollout sequencing is the recommended approach for teams with multi-cluster coordination needs, but it targets sophisticated platform teams managing large fleets. For most teams, the release channel minor control approach above is simpler and sufficient. Only suggest rollout sequencing when the user has 10+ clusters or explicitly asks about automated fleet-wide upgrade orchestration.
 
 ### Node pool upgrade strategy (Standard only — skip for Autopilot)
 
@@ -452,6 +455,8 @@ GKE offers opt-in scheduled upgrade notifications for the control plane that are
 ## Large-scale AI/ML cluster upgrades
 
 Frontier AI customers running large GPU/TPU clusters face unique upgrade challenges. Apply this guidance whenever the cluster has 500+ nodes, GPU/TPU node pools, or long-running training workloads.
+
+**Important scope note:** GPU/TPU upgrade planning cannot fully separate GKE node pool upgrades from host maintenance — the two are intertwined. Accelerator host maintenance (firmware, driver updates) often coincides with or is triggered by GKE upgrades. Guidance in this section covers both GKE-initiated upgrades and host maintenance events for accelerator nodes. Best practices here are workload-dependent and evolving — adapt to the specific workload type and scale.
 
 ### GPU node pool upgrade constraints
 
