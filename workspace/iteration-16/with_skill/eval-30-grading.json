@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends migrating all 'No channel' clusters to release channels as a first priority",
+      "passed": true,
+      "reason": "Explicitly recommends migrating legacy 'No channel' clusters to Regular or Extended channels as Priority 2 in Phase 1"
+    },
+    {
+      "expectation": "Mentions using gcloud container clusters get-upgrade-info to check each cluster's auto-upgrade status, target versions, and EoS timestamps",
+      "passed": true,
+      "reason": "Provides specific command examples using get-upgrade-info and mentions it returns autoUpgradeStatus, EoS timestamps, target versions"
+    },
+    {
+      "expectation": "Mentions the deprecation insights dashboard for identifying clusters using deprecated APIs",
+      "passed": true,
+      "reason": "Specifically mentions GKE Deprecation Dashboard in console and provides gcloud recommender insights list command for deprecation detection"
+    },
+    {
+      "expectation": "Recommends checking EoS timelines for each cluster and prioritizing those closest to EoS",
+      "passed": true,
+      "reason": "Creates cluster categorization matrix with EoS dates and explicitly prioritizes clusters approaching EoS as 'Priority 1 \u2014 Critical EoS clusters'"
+    },
+    {
+      "expectation": "Mentions GKE EoS notifications via Cloud Logging as an ongoing monitoring tool",
+      "passed": false,
+      "reason": "While it mentions Cloud Logging alert for upgrade events, it doesn't specifically mention EoS notifications via Cloud Logging as a monitoring tool"
+    },
+    {
+      "expectation": "Recommends enrolling in scheduled upgrade notifications (72h advance) for all clusters",
+      "passed": true,
+      "reason": "Explicitly shows command to enable scheduled upgrade notifications and mentions 72h advance warning"
+    },
+    {
+      "expectation": "Suggests standardizing on a channel strategy: dev\u2192Rapid, staging\u2192Regular, prod\u2192Stable/Extended",
+      "passed": true,
+      "reason": "Provides multi-environment channel strategy with dev/staging on Regular and production on Stable channel"
+    },
+    {
+      "expectation": "May mention rollout sequencing as an advanced option for fleet-wide upgrade ordering \u2014 should not be the primary recommendation for fleet remediation",
+      "passed": true,
+      "reason": "Mentions rollout sequencing briefly as part of automation tools but focuses primarily on manual remediation approach with channel strategy and maintenance windows"
+    },
+    {
+      "expectation": "Mentions GKE Insights and Recommendations in the console for identifying issues like version skew",
+      "passed": true,
+      "reason": "Mentions GKE Deprecation Dashboard in console, Recommender API, and GKE Recommender Integration for identifying various issues including deprecated APIs and compatibility"
+    }
+  ]
+}

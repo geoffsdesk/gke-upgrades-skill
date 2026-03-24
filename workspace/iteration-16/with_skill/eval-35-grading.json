@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends Stable or Extended release channel to minimize upgrade frequency",
+      "passed": true,
+      "reason": "Response explicitly recommends Stable release channel and provides detailed justification: 'slowest upgrade cadence with maximum validation' and 'best balance of security patches + stability for production training'"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
+      "passed": true,
+      "reason": "Response explicitly uses '--add-maintenance-exclusion-scope no_minor_or_node_upgrades' in cluster configuration and explains that 'control plane gets security patches automatically' while 'node pools are protected from all upgrades'"
+    },
+    {
+      "expectation": "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
+      "passed": true,
+      "reason": "Response configures a specific narrow maintenance window with '--maintenance-window-recurrence \"FREQ=WEEKLY;BYDAY=SA\"' (Saturdays only) and a 4-hour window from 6-10 AM"
+    },
+    {
+      "expectation": "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
+      "passed": true,
+      "reason": "Response provides a detailed multi-pool strategy with separate pools: 'training-h100' for training workloads, 'inference-a100' for serving, and 'system-cpu' for infrastructure, each with different configurations"
+    },
+    {
+      "expectation": "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
+      "passed": true,
+      "reason": "Response explicitly sets '--enable-autoupgrade=false' for the training pool and includes procedures for 'Planned Upgrade Windows (Between Training Campaigns)' with manual upgrade commands"
+    },
+    {
+      "expectation": "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
+      "passed": true,
+      "reason": "Response includes 'terminationGracePeriodSeconds: 3600 # 1 hour for checkpoint save' in the StatefulSet configuration, directly addressing checkpointing for job resumption"
+    },
+    {
+      "expectation": "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
+      "passed": true,
+      "reason": "Response includes a 'GPU Driver Compatibility Verification' section with commands to check version mappings and explicitly states 'Test target version in staging cluster first' and 'Verify CUDA compatibility'"
+    },
+    {
+      "expectation": "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading",
+      "passed": false,
+      "reason": "Response does not mention GPUDirect, RDMA networking, or their specific GKE version compatibility requirements"
+    }
+  ]
+}

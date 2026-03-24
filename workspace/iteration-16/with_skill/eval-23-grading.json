@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies Service A (minAvailable=100%) as a guaranteed upgrade blocker \u2014 no disruptions allowed at all",
+      "passed": true,
+      "reason": "Response clearly identifies Service A as HIGH RISK and states it 'completely blocks any pod eviction' and 'GKE cannot drain nodes at all'"
+    },
+    {
+      "expectation": "Identifies Service B (maxUnavailable=0) as also blocking upgrades \u2014 same effect as 100% minAvailable",
+      "passed": true,
+      "reason": "Response marks Service B as HIGH RISK with 'Identical issue - zero disruptions allowed' and 'will block drain completely'"
+    },
+    {
+      "expectation": "States Service C (minAvailable=2 with 3 replicas) is safe \u2014 allows 1 pod disruption at a time",
+      "passed": true,
+      "reason": "Response correctly states Service C 'Allows 1 disruption (3-2=1) - this is actually safe' and marks it as low risk"
+    },
+    {
+      "expectation": "States Service D (maxUnavailable=1 with 5 replicas) is safe \u2014 allows 1 pod down at a time",
+      "passed": true,
+      "reason": "Response marks Service D as SAFE with 'Perfect configuration - allows exactly 1 disruption' and calls it 'ideal for rolling upgrades'"
+    },
+    {
+      "expectation": "Recommends fixing Service A: change to minAvailable=N-1 or maxUnavailable=1",
+      "passed": true,
+      "reason": "Response provides specific fix for Service A: 'maxUnavailable: 1' or 'maxUnavailable: \"10%\"' with kubectl patch command"
+    },
+    {
+      "expectation": "Recommends fixing Service B: change to maxUnavailable=1",
+      "passed": true,
+      "reason": "Response explicitly recommends 'maxUnavailable: 1' for Service B and provides kubectl patch command"
+    },
+    {
+      "expectation": "Explains that GKE respects PDBs for up to 1 hour during surge upgrades, then may force-drain",
+      "passed": true,
+      "reason": "Response states 'GKE respects PDBs for 1 hour, then force-evicts' and mentions 'PDB violations trigger force-eviction after 1 hour'"
+    },
+    {
+      "expectation": "Provides kubectl patch commands to fix the problematic PDBs",
+      "passed": true,
+      "reason": "Response provides specific kubectl patch commands for both Service A and Service B with exact syntax"
+    },
+    {
+      "expectation": "Recommends testing PDB changes in a non-production environment first",
+      "passed": false,
+      "reason": "Response does not mention testing changes in non-production or staging environments before applying to production"
+    }
+  ]
+}

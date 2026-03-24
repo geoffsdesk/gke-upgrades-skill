@@ -1,0 +1,59 @@
+{
+  "assertions": [
+    {
+      "expectation": "Proposes a phased rollout: dev first, then staging, then prod",
+      "passed": true,
+      "reason": "The response clearly outlines a three-phase approach: Phase 1 (Development), Phase 2 (Staging), Phase 3 (Production) in that order"
+    },
+    {
+      "expectation": "Includes soak time between environment phases (e.g., 24-48 hours for dev, 1 week for staging before prod)",
+      "passed": true,
+      "reason": "Response specifies 1 week soak time after dev before staging, and 1+ weeks after staging before production"
+    },
+    {
+      "expectation": "Defines go/no-go criteria between phases (error rates, latency, pod health)",
+      "passed": true,
+      "reason": "Includes pre-upgrade checklists with validation requirements like 'Dev environment stable for 1 week', 'Staging stable for 1+ weeks', and health check metrics including pod health, response times, and error rates"
+    },
+    {
+      "expectation": "Recommends sequential control plane upgrades (1.32\u21921.33) with skip-level node pool upgrades where possible",
+      "passed": true,
+      "reason": "Shows control plane upgrade first followed by node pool upgrades, and demonstrates blue-green node pool strategy for staging which enables skip-level upgrades"
+    },
+    {
+      "expectation": "Suggests not upgrading all prod clusters simultaneously \u2014 do one or two first as canary",
+      "passed": true,
+      "reason": "Production schedule shows 'one cluster at a time with 48-72h intervals' and staggered approach across weeks 3-4"
+    },
+    {
+      "expectation": "Includes rollback triggers and criteria for halting the rollout",
+      "passed": true,
+      "reason": "Includes a dedicated rollback strategy section with specific commands and mentions 'If issues occur' scenarios"
+    },
+    {
+      "expectation": "Provides a timeline or schedule estimate for the full rollout",
+      "passed": true,
+      "reason": "Provides detailed timeline: Week 1 (dev), Week 2 (staging), Week 3-4 (production) with specific day-by-day scheduling"
+    },
+    {
+      "expectation": "Mentions maintenance window coordination across clusters",
+      "passed": true,
+      "reason": "Includes maintenance window configuration commands and specifies different windows for each environment (dev: weekdays 2-6AM, staging: weekends 1-5AM, prod: weekends 2-4AM)"
+    },
+    {
+      "expectation": "If rollout sequencing is mentioned, notes that all clusters must be on the same channel for it to work",
+      "passed": false,
+      "reason": "While the response mentions all clusters are on Regular channel, it doesn't explicitly state that same channel requirement is necessary for rollout sequencing to work"
+    },
+    {
+      "expectation": "When presenting maintenance windows as an alternative, explicitly notes that windows do NOT guarantee ordering \u2014 upgrades fire based on version availability per region, not environment order. A prod window may fire before dev.",
+      "passed": false,
+      "reason": "The response presents maintenance windows but does not warn about the lack of ordering guarantees or that prod windows may fire before dev"
+    },
+    {
+      "expectation": "Mentions using two different channels with minor version controls (e.g., dev=Regular, prod=Stable with 'no minor' exclusion) as a simpler alternative to rollout sequencing",
+      "passed": false,
+      "reason": "The response does not mention using different release channels as an alternative strategy for controlling upgrade timing"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all required notification types in the matrix table and decision tree, including auto-upgrade scheduled, new version available, end-of-life/EoS warnings, and security patches"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response assigns proper urgency levels with security patches as 'High' priority, end-of-life as 'Critical', auto-upgrade as 'Medium', and new version available as 'Low'"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response explicitly marks EoS warnings as 'Critical' with 'Mandatory' action required and provides specific commands and timelines (30-60 days) for immediate planning"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response provides detailed checklist for auto-upgrade notifications including checking timing conflicts, verifying maintenance windows, and applying exclusions if needed"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response specifies security patches need deployment within 7-14 days and mentions 'consider accelerated patches for critical CVEs', indicating expedited handling"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response categorizes new version available as 'Low' priority, 'Informational' with 'No deadline' and states 'No immediate action required' with use for roadmap updates"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "Response provides specific commands for setting up Cloud Monitoring notification channels and alerting policies, plus Cloud Logging filters for different notification types"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": false,
+      "reason": "Response does not mention GKE release notes as a source for understanding version changes - focuses on notification handling but lacks this specific reference"
+    }
+  ]
+}

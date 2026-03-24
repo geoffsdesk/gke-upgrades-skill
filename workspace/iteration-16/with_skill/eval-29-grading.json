@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Uses 'no upgrades' exclusion (30-day max) for the BFCM period \u2014 blocks everything including patches",
+      "passed": true,
+      "reason": "Response uses `--add-maintenance-exclusion-scope no_upgrades` for the BFCM period (Nov 15 - Dec 5) and explicitly states it blocks ALL upgrades including patches"
+    },
+    {
+      "expectation": "Uses 'no upgrades' exclusion for the June code freeze period",
+      "passed": true,
+      "reason": "Response uses `--add-maintenance-exclusion-scope no_upgrades` for the June period and explicitly describes it as blocking ALL upgrades"
+    },
+    {
+      "expectation": "For permanent minor version control: uses 'no minor upgrades' (scope 'no_minor') if they only want to block minor versions, or 'no minor or node upgrades' (scope 'no_minor_or_node') if they also want to stop node upgrades. May recommend persistent exclusion with --add-maintenance-exclusion-until-end-of-support which auto-tracks EoS date",
+      "passed": true,
+      "reason": "Response uses `--add-maintenance-exclusion-scope no_minor_upgrades` and `--add-maintenance-exclusion-until-end-of-support` for persistent minor version control, which auto-tracks End of Support dates"
+    },
+    {
+      "expectation": "Notes the 30-day maximum for 'no upgrades' exclusions vs up-to-EoS for 'no minor or node upgrades'",
+      "passed": true,
+      "reason": "Response mentions 30-day 'no upgrades' exclusion for June code freeze and explains the persistent exclusion automatically tracks End of Support dates"
+    },
+    {
+      "expectation": "Provides specific gcloud commands with --add-maintenance-exclusion-scope flags for each exclusion type",
+      "passed": true,
+      "reason": "Response provides complete gcloud commands with proper `--add-maintenance-exclusion-scope` flags: `no_minor_upgrades` for persistent control and `no_upgrades` for June and BFCM periods"
+    },
+    {
+      "expectation": "Notes that you can have a maximum of three 'no upgrades' exclusions, and they must allow 48h of maintenance in any 32-day window",
+      "passed": true,
+      "reason": "Response explicitly states 'Maximum 3 \"no_upgrades\" exclusions per cluster' and 'Within any 32-day rolling window, at least 48 hours must be available for maintenance'"
+    },
+    {
+      "expectation": "Mentions that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
+      "passed": true,
+      "reason": "Response clearly states 'These exclusions only block AUTO-upgrades' and 'You can still manually trigger upgrades anytime with gcloud container clusters upgrade'"
+    },
+    {
+      "expectation": "Warns about the risk of falling too far behind on versions during extended exclusion periods",
+      "passed": false,
+      "reason": "Response does not explicitly warn about the risk of falling too far behind on versions during extended exclusion periods, though it does mention End of Support dates"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that spot VMs can be preempted at any time, which interacts with the upgrade drain process",
+      "passed": true,
+      "reason": "Response clearly explains that spot instances can be preempted during upgrade process and creates 'double jeopardy' with rolling upgrade disruptions"
+    },
+    {
+      "expectation": "Notes that spot node pools may already have workloads designed for interruption (good for upgrades)",
+      "passed": false,
+      "reason": "Response doesn't explicitly mention that workloads on spot instances are already designed for interruption, which makes upgrades easier"
+    },
+    {
+      "expectation": "Recommends higher maxSurge for spot pools since the workloads should already be fault-tolerant",
+      "passed": true,
+      "reason": "Response shows increasing max-surge-upgrade to 2 in the gcloud command example for spot pools"
+    },
+    {
+      "expectation": "Advises setting maxUnavailable >0 for spot pools since workloads are already preemption-tolerant",
+      "passed": false,
+      "reason": "Response actually shows --max-unavailable-upgrade=0, which is the opposite of what the expectation requires"
+    },
+    {
+      "expectation": "Mentions that spot VM availability may affect surge node creation (not guaranteed to get spot instances)",
+      "passed": true,
+      "reason": "Response mentions checking spot instance availability in zones and monitoring spot pricing trends as considerations"
+    },
+    {
+      "expectation": "Recommends having PDBs even for spot workloads to ensure orderly drain during upgrade",
+      "passed": true,
+      "reason": "Response provides a specific PodDisruptionBudget YAML example and emphasizes ensuring PDBs as part of workload resilience preparation"
+    },
+    {
+      "expectation": "Provides the gcloud command for configuring surge settings on the spot pool",
+      "passed": true,
+      "reason": "Response provides specific gcloud container node-pools update command with max-surge-upgrade and max-unavailable-upgrade parameters"
+    },
+    {
+      "expectation": "Suggests upgrading spot pools before on-demand pools since they're lower risk",
+      "passed": false,
+      "reason": "Response doesn't specifically recommend upgrading spot pools before on-demand pools or mention that spot pools are lower risk"
+    }
+  ]
+}

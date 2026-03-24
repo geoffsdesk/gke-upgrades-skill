@@ -1,0 +1,59 @@
+{
+  "assertions": [
+    {
+      "expectation": "Distinguishes between dev (Rapid) and prod (Stable) clusters in the checklists",
+      "passed": true,
+      "reason": "Response clearly identifies dev clusters on Rapid channel and prod clusters on Stable channel throughout, with specific sections addressing dev environment validation first"
+    },
+    {
+      "expectation": "Recognizes Autopilot limitations (no node management, no SSH, mandatory resource requests)",
+      "passed": true,
+      "reason": "Response mentions mandatory resource requests multiple times, notes Google manages infrastructure layer, and includes checks for resource request requirements"
+    },
+    {
+      "expectation": "Includes API deprecation checks with kubectl commands",
+      "passed": true,
+      "reason": "Response includes specific kubectl commands for checking deprecated API usage and mentions GKE deprecation insights dashboard"
+    },
+    {
+      "expectation": "Mentions mandatory resource requests as an Autopilot-specific concern",
+      "passed": true,
+      "reason": "Response explicitly states 'All containers have resource requests (mandatory in Autopilot)' and includes specific commands to check for this"
+    },
+    {
+      "expectation": "Pre-upgrade checklist includes workload readiness items (PDBs, bare pods, graceful shutdown)",
+      "passed": true,
+      "reason": "Response includes checks for PDBs, bare pods with kubectl command, and terminationGracePeriodSeconds for graceful shutdown"
+    },
+    {
+      "expectation": "Post-upgrade checklist includes version verification commands",
+      "passed": true,
+      "reason": "Response includes specific gcloud command to verify control plane version and mentions verifying nodes upgraded automatically"
+    },
+    {
+      "expectation": "Post-upgrade checklist includes workload health validation",
+      "passed": true,
+      "reason": "Response has extensive workload health checks including deployments, pods, StatefulSets, DaemonSets, and application validation"
+    },
+    {
+      "expectation": "Recommends testing on dev clusters before prod auto-upgrade",
+      "passed": true,
+      "reason": "Response explicitly mentions dev clusters should upgrade first via Rapid channel and recommends using them as canary environment"
+    },
+    {
+      "expectation": "Mentions that checking the GKE release schedule gives ~1 month best-case advance notice for new minor upgrades, beyond the 72h notification",
+      "passed": false,
+      "reason": "Response mentions 72h advance warning but does not discuss the GKE release schedule providing ~1 month advance notice for planning"
+    },
+    {
+      "expectation": "Includes monitoring/observability validation items",
+      "passed": true,
+      "reason": "Response includes extensive observability sections with monitoring dashboards, metrics collection, error rates, and API latency checks"
+    },
+    {
+      "expectation": "Does NOT proactively recommend node-level maintenance exclusions for Autopilot unless the customer explicitly asks for node upgrade control",
+      "passed": true,
+      "reason": "Response mentions maintenance exclusions only at the cluster level for timing control, not node-level exclusions, which is appropriate for Autopilot"
+    }
+  ]
+}

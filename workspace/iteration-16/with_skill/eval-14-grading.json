@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Checks for deprecated API usage that may have changed behavior in 1.30",
+      "passed": false,
+      "reason": "Response mentions checking deprecated APIs but refers to 1.31\u21921.32 upgrade and behavioral changes, not specifically 1.30"
+    },
+    {
+      "expectation": "Recommends checking admission webhooks \u2014 they may be rejecting or slowing down requests on the new version",
+      "passed": true,
+      "reason": "Includes dedicated section on admission webhook compatibility issues with specific commands and troubleshooting steps"
+    },
+    {
+      "expectation": "Advises checking if resource requests/limits need adjusting for any system components that changed",
+      "passed": true,
+      "reason": "Addresses resource pressure and mentions new versions may have different resource requirements for system components"
+    },
+    {
+      "expectation": "Suggests examining kube-system pods for any that are crashlooping or restarting",
+      "passed": true,
+      "reason": "Includes specific commands to check kube-system pods health and status"
+    },
+    {
+      "expectation": "Includes commands to check API server metrics and latency (kubectl get --raw /metrics)",
+      "passed": true,
+      "reason": "Provides kubectl get --raw /metrics commands for checking deprecated API calls and webhook duration"
+    },
+    {
+      "expectation": "Recommends checking if NetworkPolicy or service mesh components need updating for the new version",
+      "passed": true,
+      "reason": "Includes service mesh check section with Istio/ASM verification commands and mentions upgrading service mesh operators"
+    },
+    {
+      "expectation": "Advises reviewing pod events for scheduling delays or readiness probe failures",
+      "passed": true,
+      "reason": "Includes multiple kubectl get events commands to check for various types of events and issues"
+    },
+    {
+      "expectation": "Mentions checking if HPA or VPA are behaving differently on the new version",
+      "passed": true,
+      "reason": "Dedicated section on HPA/VPA behavioral changes with specific commands and mentions changed scaling behavior in 1.32"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the difference between Rapid and Stable channels \u2014 including that Rapid has no SLA for upgrade stability while Stable carries a full SLA, and clearly distinguishes minor version vs patch version differences between the channels",
+      "passed": true,
+      "reason": "The response clearly explains that Rapid has no upgrade stability SLA while Stable carries full SLAs, and details the timing differences (Rapid gets versions ~2 weeks after upstream vs Stable ~6-8 weeks after upstream). It also mentions that patches follow the same cadence as minor versions."
+    },
+    {
+      "expectation": "Notes that channel changes don't trigger an immediate upgrade or downgrade",
+      "passed": true,
+      "reason": "Explicitly states 'This operation: Does NOT trigger an immediate upgrade' and 'Only changes the channel subscription' with 'Zero downtime'."
+    },
+    {
+      "expectation": "Warns that if 1.30 isn't yet available on Stable, the cluster may not receive patches until Stable catches up",
+      "passed": false,
+      "reason": "The response warns about 1.32 not being available on Stable (which is the current version mentioned in the prompt), but the expectation specifically asks about 1.30. However, the response does warn about the general concept of being 'ahead of channel' and temporary upgrade freeze scenarios."
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "Provides the exact command: 'gcloud container clusters update CLUSTER_NAME --zone ZONE --release-channel stable'"
+    },
+    {
+      "expectation": "Recommends checking version availability on Stable before switching (gcloud container get-server-config)",
+      "passed": true,
+      "reason": "Provides the specific command 'gcloud container get-server-config --zone YOUR_ZONE --format=\"yaml(channels)\"' and emphasizes checking if 1.32 is available in Stable as a 'Critical Question'."
+    },
+    {
+      "expectation": "Discusses the impact on auto-upgrade timing going forward",
+      "passed": true,
+      "reason": "Extensively covers auto-upgrade timing changes, including detailed comparison table showing upgrade frequency changes from ~weekly to ~monthly, and timeline expectations section."
+    },
+    {
+      "expectation": "Mentions that the Extended channel is an option if they need even slower cadence (with cost implications)",
+      "passed": false,
+      "reason": "The response does not mention the Extended channel as an alternative option for even slower cadence, nor discusses any associated cost implications."
+    },
+    {
+      "expectation": "Advises coordinating the change during a maintenance window",
+      "passed": true,
+      "reason": "Recommends scheduling 'the 5-minute migration during a low-impact window' and shows how to check and configure maintenance windows/exclusions."
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends Stable or Extended release channel to minimize upgrade frequency",
+      "passed": false,
+      "reason": "Response recommends REGULAR channel instead of STABLE or EXTENDED, which provides more frequent updates rather than minimizing upgrade frequency"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
+      "passed": false,
+      "reason": "Response shows maintenance exclusions but uses 'NO_UPGRADES' scope which blocks all upgrades, not specifically 'no minor or node upgrades' exclusion that would allow security patches"
+    },
+    {
+      "expectation": "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
+      "passed": true,
+      "reason": "Response configures maintenance window on Sundays from 9 AM to 5 PM UTC, providing a narrow weekend-only window for predictable timing"
+    },
+    {
+      "expectation": "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
+      "passed": true,
+      "reason": "Response clearly separates training workloads into 'h100-training-pool' and inference workloads into 'inference-pool', with dedicated node pools for each workload type"
+    },
+    {
+      "expectation": "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
+      "passed": true,
+      "reason": "Response explicitly sets 'auto_upgrade = false' for training node pools and includes manual upgrade procedures in the operational scripts"
+    },
+    {
+      "expectation": "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
+      "passed": true,
+      "reason": "Response includes checkpoint configuration with CHECKPOINT_INTERVAL environment variable set to 3600 seconds and persistent volume claims for checkpoint storage"
+    },
+    {
+      "expectation": "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
+      "passed": false,
+      "reason": "Response mentions GPU driver configuration with 'INSTALLATION_DISABLED' but does not discuss driver version testing or staging validation before production deployment"
+    },
+    {
+      "expectation": "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading",
+      "passed": false,
+      "reason": "Response does not mention GPUDirect, RDMA networking requirements, or version compatibility considerations for these networking features"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's autoscaled blue-green node pool upgrade strategy as the primary approach for batch workloads \u2014 configured with --enable-autoscaling and --autoscaled-rollout-policy flags (NOT surge parameters). Supports wait-for-drain time, longer graceful termination, and PDB upgrade timeout to let jobs complete",
+      "passed": false,
+      "reason": "The response does not mention autoscaled blue-green node pool upgrades, --enable-autoscaling, or --autoscaled-rollout-policy flags. It focuses on manual node pool creation and draining instead of GKE's specific autoscaled upgrade features."
+    },
+    {
+      "expectation": "Explains that GKE respects terminationGracePeriodSeconds during pod eviction, but surge upgrades have a max eviction timeout",
+      "passed": false,
+      "reason": "The response does not explain terminationGracePeriodSeconds behavior or mention surge upgrade eviction timeout limitations."
+    },
+    {
+      "expectation": "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour \u2014 far less than 8-16 hour jobs",
+      "passed": false,
+      "reason": "The response does not mention GKE's 1-hour default eviction timeout or how this relates to the 8-16 hour job duration problem."
+    },
+    {
+      "expectation": "Recommends pausing new batch job submissions before starting the upgrade",
+      "passed": false,
+      "reason": "The response does not explicitly recommend pausing new batch job submissions before upgrades, though it mentions scheduling during low-activity periods."
+    },
+    {
+      "expectation": "Advises waiting for in-flight jobs to complete naturally before upgrading their node pool",
+      "passed": true,
+      "reason": "The response includes a script to monitor running jobs and explicitly states to wait for jobs to complete before proceeding with upgrades."
+    },
+    {
+      "expectation": "Suggests using node affinity or taints to isolate batch workloads on a dedicated node pool",
+      "passed": true,
+      "reason": "Strategy 2 demonstrates creating dedicated node pools with taints and node selectors specifically for isolating batch workloads from regular workloads."
+    },
+    {
+      "expectation": "Recommends upgrading non-batch node pools first while batch jobs complete on the old pool",
+      "passed": false,
+      "reason": "While the response shows separate node pools, it doesn't explicitly recommend the strategy of upgrading non-batch pools first while batch jobs continue on old pools."
+    },
+    {
+      "expectation": "Does NOT recommend 'No channel' or '--enable-autoupgrade=false' (deprecated) \u2014 uses release channels with maintenance exclusions instead",
+      "passed": false,
+      "reason": "The response actually recommends using '--no-enable-autoupgrade' to pause auto-upgrades, which goes against this expectation. It doesn't mention maintenance exclusions with release channels."
+    }
+  ]
+}
