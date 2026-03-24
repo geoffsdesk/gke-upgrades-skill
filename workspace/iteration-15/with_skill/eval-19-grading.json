@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes notifications into specific types including auto-upgrade scheduled (72h notice), new version available (minor/patch), end-of-life warnings (30/7 days), and security patches (Critical CVE)"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response uses clear urgency hierarchy: URGENT (includes security patches/CVEs), HIGH PRIORITY, MEDIUM PRIORITY (includes new versions available), and INFORMATIONAL (lowest priority)"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response explicitly lists EoS warnings as URGENT priority and provides specific action playbooks with manual upgrade commands and maintenance exclusion options"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response provides detailed pre-upgrade checklist including commands to check deprecated APIs, PDBs, and bare pods when auto-upgrade is scheduled"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response categorizes security advisories with critical CVEs as URGENT with 24-48 hour timeline and mentions planning emergency upgrades"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response places 'New Minor Version Available' in MEDIUM PRIORITY with 1-2 month timeline for planning, and 'Patch Version Available' as INFORMATIONAL with no immediate action needed"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "Response includes specific commands for setting up Pub/Sub notifications and provides Cloud Logging queries for monitoring auto-upgrade events"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": false,
+      "reason": "Response does not mention GKE release notes as a source for understanding version changes - focuses on notification triage but lacks this reference"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Clearly states 'Nodes can be up to 2 minor versions behind the control plane' and explains the compatibility rules"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (nodes must be within 2 minor versions of control plane)",
+      "passed": true,
+      "reason": "Explicitly states 'Your setup: Control plane 1.31, nodes 1.28 = 3 minor versions behind \u274c' and identifies this as a violation"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Lists specific issues: pod scheduling failures, API compatibility issues, unpredictable cluster behavior, and mentions potential workload disruption during upgrades"
+    },
+    {
+      "expectation": "Recommends skip-level (N+2) node pool upgrades within supported version skew to reduce time and disruption. For the N+3 gap (1.28 with 1.31 CP), recommends multiple sequential skip-level upgrades within supported skew (e.g., 1.28\u21921.30 then 1.30\u21921.31) or creating a new node pool at the target version and migrating workloads. Never recommends an unsupported skip-level upgrade.",
+      "passed": false,
+      "reason": "Does not recommend skip-level upgrades within supported skew. Instead recommends incremental single-version upgrades (1.28\u21921.29\u21921.30\u21921.31). Does not mention creating a new node pool as an alternative strategy."
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Provides detailed gcloud commands for upgrading node pools through each version step with proper syntax and parameters"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": false,
+      "reason": "Mentions surge settings in general terms ('Use --max-surge and --max-unavailable for controlled rollouts') but does not specify conservative values like maxSurge=1, maxUnavailable=0"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": true,
+      "reason": "Includes monitoring commands, advises to 'Watch for pod disruptions' and 'Monitor during upgrade', and mentions waiting for completion between steps"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": false,
+      "reason": "Mentions maintenance windows but does not specifically mention release channel enrollment as a prevention strategy. Only covers auto-upgrade, maintenance windows, and monitoring"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "eval_id": 2,
+  "mode": "with_skill",
+  "iteration": 15,
+  "prompt": "I manage 4 Autopilot clusters -- 2 in dev on Rapid channel and 2 in prod on Stable. We've been getting notifications that our prod clusters will auto-upgrade from 1.31 to 1.32 next month. Can you give me pre and post upgrade checklists tailored to our setup?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-24T00:28:56.668021+00:00",
+  "input_tokens": 17198,
+  "output_tokens": 1676,
+  "time_seconds": 32.36,
+  "skill_files": [
+    "skill/SKILL.md",
+    "skill/evals/evals.json",
+    "skill/references/checklists.md",
+    "skill/references/runbook-template.md",
+    "skill/references/troubleshooting.md"
+  ]
+}

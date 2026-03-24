@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "First step: check the operation status to understand why it failed (gcloud container operations list)",
+      "passed": true,
+      "reason": "Response includes 'gcloud container operations list --filter=\"name:upgrade\" --limit=5' command to check operation details"
+    },
+    {
+      "expectation": "Recommends checking events and logs for the specific failure reason",
+      "passed": false,
+      "reason": "While it shows checking operation details, it doesn't explicitly mention checking events or logs for the specific failure reason"
+    },
+    {
+      "expectation": "Explains that the cluster is in a mixed-version state (8 nodes at 1.32, 12 at 1.31) which is within skew policy",
+      "passed": true,
+      "reason": "Response explicitly mentions 'You currently have a mixed environment (1.32 control plane, mix of 1.31/1.32 nodes). This is supported but should be temporary.'"
+    },
+    {
+      "expectation": "Notes that the mixed state is functional but not ideal \u2014 workloads can run on both versions",
+      "passed": true,
+      "reason": "Response states the mixed environment 'is supported but should be temporary' and provides monitoring commands for workload health"
+    },
+    {
+      "expectation": "Provides options: retry the upgrade after fixing the root cause, or rollback the 8 upgraded nodes",
+      "passed": false,
+      "reason": "Response provides retry option and manual node replacement, but doesn't mention rollback of the 8 upgraded nodes as an option"
+    },
+    {
+      "expectation": "Explains that retrying is usually better than rollback (rolling back means creating a new pool at old version)",
+      "passed": false,
+      "reason": "Response recommends resuming the upgrade but doesn't explain why it's better than rollback or mention that rollback involves creating a new pool"
+    },
+    {
+      "expectation": "Addresses the remaining 2 node pools: they can still be upgraded once the failed pool issue is resolved",
+      "passed": true,
+      "reason": "Response includes 'Order of Operations' section stating to complete main workload pool first, then upgrade the other two node pools"
+    },
+    {
+      "expectation": "Includes commands to diagnose the failure (operation details, node status, pod events)",
+      "passed": true,
+      "reason": "Response includes multiple diagnostic commands: gcloud operations list, kubectl get nodes, kubectl get pods with failed status, and monitoring commands"
+    }
+  ]
+}

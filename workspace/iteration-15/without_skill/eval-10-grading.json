@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that spot VMs can be preempted at any time, which interacts with the upgrade drain process",
+      "passed": true,
+      "reason": "Response mentions spot interruptions and preemptions throughout, showing awareness of how they interact with upgrades"
+    },
+    {
+      "expectation": "Notes that spot node pools may already have workloads designed for interruption (good for upgrades)",
+      "passed": true,
+      "reason": "Response discusses workloads that 'can handle spot interruptions' and shows taints/tolerations for spot-tolerant workloads"
+    },
+    {
+      "expectation": "Recommends higher maxSurge for spot pools since the workloads should already be fault-tolerant",
+      "passed": false,
+      "reason": "Response shows maxSurge=1 and maxUnavailable=0, which is conservative rather than higher surge for fault-tolerant workloads"
+    },
+    {
+      "expectation": "Advises setting maxUnavailable >0 for spot pools since workloads are already preemption-tolerant",
+      "passed": false,
+      "reason": "Response sets maxUnavailable=0, contradicting the expectation to use >0 for preemption-tolerant workloads"
+    },
+    {
+      "expectation": "Mentions that spot VM availability may affect surge node creation (not guaranteed to get spot instances)",
+      "passed": true,
+      "reason": "Response includes checking spot instance availability and acknowledges availability concerns"
+    },
+    {
+      "expectation": "Recommends having PDBs even for spot workloads to ensure orderly drain during upgrade",
+      "passed": true,
+      "reason": "Response includes PodDisruptionBudget configuration and emphasizes reviewing disruption budgets"
+    },
+    {
+      "expectation": "Provides the gcloud command for configuring surge settings on the spot pool",
+      "passed": true,
+      "reason": "Response provides the exact gcloud command with max-surge-upgrade and max-unavailable-upgrade parameters"
+    },
+    {
+      "expectation": "Suggests upgrading spot pools before on-demand pools since they're lower risk",
+      "passed": false,
+      "reason": "Response suggests upgrading on-demand nodes first, then spot pools, which is opposite to the expectation"
+    }
+  ]
+}

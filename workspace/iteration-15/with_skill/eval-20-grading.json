@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Starts with pre-flight checks: current versions, cluster health, node status",
+      "passed": true,
+      "reason": "Phase 1 includes comprehensive pre-flight checks with commands to verify current state, check cluster health with kubectl get nodes, check pod status, and verify resource usage"
+    },
+    {
+      "expectation": "Includes the gcloud command to check available versions in the release channel",
+      "passed": true,
+      "reason": "Step 1.2 includes the exact command 'gcloud container get-server-config --zone us-west1-b --format=\"yaml(channels.REGULAR.validVersions)\"' to check available versions in the Regular channel"
+    },
+    {
+      "expectation": "Includes the API deprecation check command before upgrading",
+      "passed": true,
+      "reason": "Step 1.3 includes the specific command 'kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated' to check for deprecated APIs with clear instructions to stop if any output is found"
+    },
+    {
+      "expectation": "Provides the exact gcloud command for control plane upgrade (--master flag or --cluster-version)",
+      "passed": true,
+      "reason": "Phase 3.1 provides the exact command 'gcloud container clusters upgrade CLUSTER_NAME --zone us-west1-b --master --cluster-version 1.33.x-gke.xxxx' using the --master flag"
+    },
+    {
+      "expectation": "Includes a verification step after control plane upgrade with expected output",
+      "passed": true,
+      "reason": "Phase 3.3 includes verification commands to confirm control plane is at 1.33, test API access with kubectl get nodes, and check system pods health with specific expected outcomes"
+    },
+    {
+      "expectation": "Provides gcloud commands for node pool upgrades \u2014 may use skip-level (N+2) for node pools to reduce steps",
+      "passed": true,
+      "reason": "Phase 4 provides exact gcloud commands for upgrading both node pools: 'gcloud container node-pools upgrade default-pool --cluster CLUSTER_NAME --zone us-west1-b --cluster-version 1.33.x-gke.xxxx' with direct upgrade to 1.33"
+    },
+    {
+      "expectation": "Includes monitoring commands to watch node pool upgrade progress",
+      "passed": true,
+      "reason": "Steps 4.2 and 4.5 include monitoring commands like 'watch kubectl get nodes -o wide' and commands to check pod status during upgrades"
+    },
+    {
+      "expectation": "Provides sequential control plane upgrades (1.32\u21921.33) with option for skip-level node pool upgrades",
+      "passed": true,
+      "reason": "The runbook shows a direct 1.32\u21921.33 upgrade for control plane and allows node pools to upgrade directly to 1.33 (skip-level from 1.32), which is valid in GKE"
+    },
+    {
+      "expectation": "Includes post-upgrade validation: node versions, pod health, kube-system pods",
+      "passed": true,
+      "reason": "Phase 5 includes comprehensive validation with commands to check all component versions, node status, pod health across all namespaces, and application health checks"
+    },
+    {
+      "expectation": "Provides a rollback section explaining what to do if something goes wrong",
+      "passed": true,
+      "reason": "The runbook includes a dedicated 'Rollback Plan' section explaining that control plane cannot be downgraded but provides specific commands for rolling back node pools by creating new pools at the old version"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Configures a recurring maintenance window for weekends only",
+      "passed": true,
+      "reason": "The Terraform configuration includes daily_maintenance_window with start_time at 03:00, and the shell script sets recurrence with FREQ=WEEKLY;BYDAY=SA,SU for weekends"
+    },
+    {
+      "expectation": "Provides the gcloud command with --maintenance-window-start/end and --maintenance-window-recurrence for weekly weekend schedule",
+      "passed": true,
+      "reason": "The shell script includes gcloud container clusters update with --maintenance-window-start, --maintenance-window-end, and --maintenance-window-recurrence flags"
+    },
+    {
+      "expectation": "Sets up maintenance exclusions for quarterly code freezes (up to 30 days each)",
+      "passed": true,
+      "reason": "The configuration includes quarterly freeze periods (Q1-Q4) with start and end dates, though the periods are 16-17 days which is within the 30-day limit"
+    },
+    {
+      "expectation": "Sets up a maintenance exclusion for the November audit period",
+      "passed": true,
+      "reason": "Both Terraform and shell script configurations include a November audit exclusion covering the entire month"
+    },
+    {
+      "expectation": "Notes the 30-day maximum for maintenance exclusions and how to handle longer freezes",
+      "passed": false,
+      "reason": "The response does not mention the 30-day maximum limit for maintenance exclusions or provide guidance on handling longer freeze periods"
+    },
+    {
+      "expectation": "Explains that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
+      "passed": false,
+      "reason": "The response does not explain the distinction between manual and automatic upgrades regarding maintenance window enforcement"
+    },
+    {
+      "expectation": "Recommends combining maintenance windows with Stable or Extended channel for maximum upgrade control",
+      "passed": true,
+      "reason": "The Terraform configuration includes release_channel settings with STABLE for production and REGULAR for other environments"
+    },
+    {
+      "expectation": "Provides gcloud commands for each exclusion (--add-maintenance-exclusion-name/start-time/end-time)",
+      "passed": true,
+      "reason": "The shell script includes multiple gcloud commands with --add-maintenance-exclusion-name, --add-maintenance-exclusion-start, and --add-maintenance-exclusion-end flags"
+    },
+    {
+      "expectation": "Warns about the risk of falling too far behind on versions during long exclusion periods",
+      "passed": false,
+      "reason": "The response does not mention the risks of falling behind on Kubernetes versions during extended exclusion periods"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that surge upgrades require extra compute capacity (maxSurge creates NEW nodes before draining old ones)",
+      "passed": true,
+      "reason": "Response clearly explains the surge upgrade mechanism: 'Create surge node \u2192 drain old node \u2192 delete old node (needs extra quota)' and identifies this as the cause of the quota constraint"
+    },
+    {
+      "expectation": "Recommends setting maxUnavailable >0 instead of relying on maxSurge (drains first, then creates \u2014 uses less quota)",
+      "passed": true,
+      "reason": "Response explicitly recommends drain-first strategy with 'max-unavailable-upgrade 1' and explains it as 'Drain old node \u2192 create replacement node \u2192 delete old node (zero extra quota)'"
+    },
+    {
+      "expectation": "Warns that maxUnavailable >0 means reduced capacity during upgrade \u2014 some pods won't have nodes",
+      "passed": true,
+      "reason": "Response explicitly states the trade-off: 'You'll have temporary capacity loss (1 node at a time)' and mentions this as a consideration"
+    },
+    {
+      "expectation": "Suggests temporarily scaling down non-critical deployments to free up quota for surge nodes",
+      "passed": true,
+      "reason": "Response provides detailed Option 2 with specific kubectl scale commands to scale down non-critical workloads and mentions combining this with drain-first approach"
+    },
+    {
+      "expectation": "Mentions that reducing maxSurge to 1 minimizes extra quota needed (slower but fits within constraints)",
+      "passed": false,
+      "reason": "Response sets maxSurge to 0 (not 1) and doesn't discuss the option of using maxSurge=1 as a middle ground that would require minimal extra quota"
+    },
+    {
+      "expectation": "Provides the gcloud command to update surge settings (maxSurge=0, maxUnavailable=1 for zero-extra-capacity mode)",
+      "passed": true,
+      "reason": "Response provides the exact gcloud command: 'gcloud container node-pools update' with '--max-surge-upgrade 0' and '--max-unavailable-upgrade 1'"
+    },
+    {
+      "expectation": "Recommends doing the upgrade in off-peak hours when fewer pods are running",
+      "passed": false,
+      "reason": "Response does not mention timing the upgrade during off-peak hours as a strategy to minimize impact"
+    },
+    {
+      "expectation": "Mentions requesting a temporary quota increase as a faster alternative to a permanent increase",
+      "passed": false,
+      "reason": "Response does not mention requesting a temporary quota increase as an alternative option, only acknowledges the week-long wait for approval mentioned in the prompt"
+    }
+  ]
+}

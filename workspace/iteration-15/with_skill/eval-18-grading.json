@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Configures a recurring maintenance window for weekends only",
+      "passed": true,
+      "reason": "The response includes gcloud commands that set maintenance windows from Saturday 2 AM to Sunday 6 AM UTC with weekly recurrence on Saturday"
+    },
+    {
+      "expectation": "Provides the gcloud command with --maintenance-window-start/end and --maintenance-window-recurrence for weekly weekend schedule",
+      "passed": true,
+      "reason": "The response provides the exact gcloud command with --maintenance-window-start, --maintenance-window-end, and --maintenance-window-recurrence flags with 'FREQ=WEEKLY;BYDAY=SA'"
+    },
+    {
+      "expectation": "Sets up maintenance exclusions for quarterly code freezes (up to 30 days each)",
+      "passed": true,
+      "reason": "The response provides gcloud commands to add quarterly code freeze exclusions with 15-16 day periods (Q1 example shows March 15-31)"
+    },
+    {
+      "expectation": "Sets up a maintenance exclusion for the November audit period",
+      "passed": true,
+      "reason": "The response includes a specific gcloud command for November audit exclusion covering the entire month (November 1-30)"
+    },
+    {
+      "expectation": "Notes the 30-day maximum for maintenance exclusions and how to handle longer freezes",
+      "passed": true,
+      "reason": "The response explicitly states 'No upgrades exclusions have a 30-day maximum and can only be used 3 times per cluster annually' and recommends using 'no_minor_or_node_upgrades' scope for longer periods"
+    },
+    {
+      "expectation": "Explains that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
+      "passed": false,
+      "reason": "While the response mentions manual upgrades in the emergency override section, it does not explicitly explain that manual upgrades bypass maintenance windows and only auto-upgrades respect them"
+    },
+    {
+      "expectation": "Recommends combining maintenance windows with Stable or Extended channel for maximum upgrade control",
+      "passed": true,
+      "reason": "The response includes a section recommending the Stable channel with gcloud command and explains benefits like maximum stability testing and predictable upgrade timing"
+    },
+    {
+      "expectation": "Provides gcloud commands for each exclusion (--add-maintenance-exclusion-name/start-time/end-time)",
+      "passed": true,
+      "reason": "The response provides complete gcloud commands with --add-maintenance-exclusion-name, --add-maintenance-exclusion-start-time, and --add-maintenance-exclusion-end-time flags for both code freezes and audit exclusions"
+    },
+    {
+      "expectation": "Warns about the risk of falling too far behind on versions during long exclusion periods",
+      "passed": false,
+      "reason": "While the response mentions EoS (End of Support) and provides monitoring commands, it does not explicitly warn about the risk of falling too far behind on versions during long exclusion periods"
+    }
+  ]
+}

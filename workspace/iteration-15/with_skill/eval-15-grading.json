@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "First step: check the operation status to understand why it failed (gcloud container operations list)",
+      "passed": true,
+      "reason": "Response includes 'gcloud container operations list --cluster CLUSTER_NAME --zone ZONE --filter=\"operationType=UPGRADE_NODES\"' as part of the current state assessment"
+    },
+    {
+      "expectation": "Recommends checking events and logs for the specific failure reason",
+      "passed": true,
+      "reason": "Response includes checking events with 'kubectl get events -A --field-selector reason=FailedScheduling' and provides diagnostic commands for various failure scenarios"
+    },
+    {
+      "expectation": "Explains that the cluster is in a mixed-version state (8 nodes at 1.32, 12 at 1.31) which is within skew policy",
+      "passed": true,
+      "reason": "Response explicitly states '8/20 nodes at 1.32, 12 at the previous version' and confirms 'GKE supports version skew within 2 minor versions'"
+    },
+    {
+      "expectation": "Notes that the mixed state is functional but not ideal \u2014 workloads can run on both versions",
+      "passed": true,
+      "reason": "Response states 'This is a valid operational state' and 'your cluster will continue running normally' and 'Workloads continue running on both old and new nodes'"
+    },
+    {
+      "expectation": "Provides options: retry the upgrade after fixing the root cause, or rollback the 8 upgraded nodes",
+      "passed": true,
+      "reason": "Response provides both options: 'Recommended Approach: Fix and Retry' and 'Alternative: Rollback (Only if unfixable)' with detailed steps for both"
+    },
+    {
+      "expectation": "Explains that retrying is usually better than rollback (rolling back means creating a new pool at old version)",
+      "passed": true,
+      "reason": "Response explicitly states 'This is usually the best path forward - simpler than rollback' and 'Fix-and-retry is usually faster than rollback', and shows rollback involves creating new pool"
+    },
+    {
+      "expectation": "Addresses the remaining 2 node pools: they can still be upgraded once the failed pool issue is resolved",
+      "passed": true,
+      "reason": "Response includes 'Step 4: Complete Remaining Pools' with specific commands to upgrade the other two node pools after the main pool completes"
+    },
+    {
+      "expectation": "Includes commands to diagnose the failure (operation details, node status, pod events)",
+      "passed": true,
+      "reason": "Response includes comprehensive diagnostic commands: operation list, node status check, pod status check, PDB checks, resource constraint checks, and bare pod detection"
+    }
+  ]
+}
