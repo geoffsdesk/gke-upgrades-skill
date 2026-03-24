@@ -119,9 +119,12 @@ When asked to plan an upgrade, produce a structured document covering:
 - Review GKE release notes for breaking changes between current and target versions
 
 ### Upgrade path
-- **Control plane:** Recommend sequential minor version upgrades (e.g., 1.31→1.32→1.33). GKE now supports a 2-step control plane minor upgrade where step 1 is rollbackable (step 2 is not). Control plane must be upgraded before node pools — this is the required order.
+- **Control plane:** Recommend sequential minor version upgrades (e.g., 1.31→1.32→1.33). Control plane must be upgraded before node pools — this is the required order.
+  - **Two-step control plane minor upgrade (Preview):** GKE supports a rollback-safe two-step process for manual minor upgrades (1.33+). Step 1 ("binary upgrade") upgrades the binary but emulates the previous minor version's API behavior — you can test the new binary while keeping old API compatibility. During a configurable soak period (6h–7d), you can roll back to the previous minor version if issues arise. Step 2 ("emulated version upgrade") enables the new minor version's features and APIs — after this step, rollback is NOT possible. Use `gcloud beta container clusters upgrade --control-plane-soak-duration` to configure soak time. This is the recommended approach for cautious production minor upgrades.
+  - **One-step upgrade:** Standard direct upgrade to a later version. No rollback to previous minor version after completion (patch downgrades within the same minor are still possible).
 - **Node pools:** Support skip-level (N+2) upgrades within supported version skew. Always recommend skip-level upgrades within the 2-version skew limit to reduce total upgrade time. For pools that are 3+ versions behind (N+3), do multiple sequential skip-level upgrades within supported skew (e.g., 1.28→1.30, then 1.30→1.32) — never attempt an unsupported skip-level upgrade. Alternative for severely skewed pools: create a new node pool at the target version and migrate workloads. Best practice: keep nodes on the same minor version as the control plane in steady state; version skew should only occur during upgrade operations.
-- **Rollback:** Control plane patch downgrades can be done by the customer. Control plane minor version downgrades require GKE support involvement. Node pools can be re-created at a different version.
+- **Version skew constraints:** Nodes can't be more than 2 minor versions behind the control plane. Nodes can't run a version newer than the control plane. Nodes can't run a minor version that has reached end of support. These are hard constraints enforced by GKE.
+- **Rollback:** Control plane patch downgrades can be done by the customer (set a maintenance exclusion first to prevent GKE from auto-upgrading back). Control plane minor version downgrades are only possible during a two-step upgrade's soak period, or require GKE support involvement. Node pools can be rolled back during an in-progress upgrade, or downgraded after completion by specifying an earlier version.
 - For multi-cluster: define rollout sequence with soak time between groups
 
 ### Maintenance windows and exclusions
@@ -147,6 +150,11 @@ The `--maintenance-window-duration` field simplifies the UX by directly specifyi
 
 The "No minor or node upgrades" exclusion is the recommended approach for maximum control — it prevents disruptive upgrades while still allowing security patches on the control plane.
 
+**Exclusion constraints and limits:**
+- Maximum of 3 "no upgrades" exclusions per cluster. Within any 32-day rolling window, at least 48 hours must be available for maintenance (not covered by exclusions). Plan exclusion windows carefully to avoid hitting these limits during consecutive freeze periods.
+- **Manual upgrades bypass maintenance exclusions.** Only auto-upgrades respect exclusions. If a user manually triggers an upgrade with `gcloud container clusters upgrade`, it proceeds immediately regardless of any active exclusion.
+- **Version drift risk:** Extended exclusion periods (especially chained "no upgrades" exclusions) can cause clusters to fall behind on patches, accumulating security debt. Warn customers about this trade-off — exclusions provide control but carry the risk of running unpatched versions. Always pair exclusion recommendations with a plan for when and how to catch up.
+
 **Per-cluster vs per-nodepool exclusions:** The per-cluster exclusion on release channels is always preferred over per-nodepool control, as it ensures maximum control over both minor version and node version upgrades and prevents control plane and node minor version skew. Use per-nodepool exclusions when you need different control per nodepool — especially for mixed workload clusters where some node pools need auto-upgrades and others need tight control.
 
 **Persistent maintenance exclusions:** Use `--add-maintenance-exclusion-until-end-of-support` to create an exclusion that automatically tracks the version's End of Support date and auto-renews when a new minor version is adopted. There is no longer a 6-month maximum for these — no need to chain exclusions. This flag is available for scope "no minor" and "no minor or node" exclusions.
@@ -171,7 +179,11 @@ gcloud container clusters update CLUSTER_NAME \
 
 ### Rollout sequencing (multi-cluster) — advanced feature
 
-GKE rollout sequencing allows customers to define the order in which clusters are upgraded, with configurable soak time between stages. This ensures upgrades progress through environments (dev → staging → prod) with validation gaps.
+GKE rollout sequencing allows customers to define the order in which clusters are upgraded, with configurable soak time between stages. This ensures upgrades progress through environments (dev → staging → prod) with validation gaps. Built on the concept of fleets — logical groupings of GKE clusters mapped to environments.
+
+**Two versions available:**
+- **Fleet-based rollout sequencing (GA):** Linear sequence of up to 5 fleets. Recommended for most production use cases. Uses lightweight fleet memberships (no full fleet management overhead).
+- **Rollout sequencing with custom stages (Preview):** More granular control — define stages within a fleet using label selectors to target cluster subsets (e.g., canary production clusters before full production rollout).
 
 **Configuration:**
 ```
@@ -184,7 +196,9 @@ Key flags:
 - `--default-upgrade-soaking`: Bake time after a stage completes (e.g., `7d` for 7 days, `2h` for 2 hours). Max 30 days.
 - Custom stages (Preview): Use `RolloutSequence` and `Rollout` API objects with label selectors to target subsets of clusters within a fleet
 
-**Critical constraint:** Rollout sequencing does NOT work across different release channels. All clusters in a rollout sequence must be on the same channel. If environments use different channels (e.g., dev=Rapid, prod=Stable), rollout sequencing cannot orchestrate them.
+**How it works:** When GKE selects a new auto-upgrade target, it upgrades the first fleet's clusters, waits the configured soak time, then proceeds to the next fleet. Control plane and node upgrades are tracked separately — each has its own soak period. If upgrades aren't completed within 30 days, GKE force-starts the soak period to unblock the sequence.
+
+**Critical constraint:** Rollout sequencing does NOT work across different release channels. All clusters in a rollout sequence must be on the same channel AND ideally the same minor version. If environments use different channels (e.g., dev=Rapid, prod=Stable), rollout sequencing cannot orchestrate them.
 
 **Maintenance windows are NOT a substitute for rollout sequencing.** Staggering maintenance windows across environments does NOT guarantee upgrade ordering. A new version may become available in region X on Tuesday and region Y on Friday — meaning prod could be upgraded before dev depending on window timing. Maintenance windows control timing and spread, not sequence order.
 
@@ -232,6 +246,23 @@ GKE supports three upgrade strategies. Use the strategy selection criteria below
 - **Large clusters**: Use percentage-based `maxSurge` (e.g., 5% of pool size, capped at batch concurrency limit of 20, increasing to 100). Note: GKE's maximum upgrade parallelism is ~20 nodes simultaneously regardless of `maxSurge` setting.
 
 **2. Blue-green upgrade:** GKE's native blue-green strategy minimizes risk by keeping the old nodes (blue pool) available while new nodes with the updated version are provisioned (green pool). The blue pool is cordoned and workloads are gradually drained to the green pool, with a soaking period to validate before cutover. Rollback is fast — uncordon the blue pool. Requires enough quota to temporarily double the node pool size. Recommend for mission-critical applications, stateful applications sensitive to node changes, environments with strict testing/validation requirements, and applications where a quick rollback path is essential.
+
+**Blue-green configuration commands:**
+```
+gcloud container node-pools update POOL_NAME \
+    --cluster CLUSTER_NAME \
+    --strategy=BLUE_GREEN \
+    --node-pool-soak-duration=3600s \
+    --standard-rollout-policy=batch-node-count=1,batch-soak-duration=10s
+```
+
+Key parameters:
+- `--node-pool-soak-duration`: Total soak time after all batches drain (default 1h, max 7d). Use to validate workload health before deleting blue pool.
+- `--standard-rollout-policy`: Controls batch drain. `batch-node-count` (absolute) or `batch-percent` (0-1 decimal) sets batch size. `batch-soak-duration` sets wait between batches.
+
+**Blue-green phases:** Create green pool → Cordon blue pool → Drain blue pool (in batches) → Soak node pool → Delete blue pool. You can cancel/resume/rollback at any phase except Delete. During soak, you can `complete-upgrade` to skip remaining soak time. Important: the Delete phase does NOT respect PDBs — it force-deletes remaining pods with terminationGracePeriodSeconds capped at 60 minutes.
+
+**Blue-green continues past maintenance windows.** Once started, blue-green upgrades continue until completion even if a maintenance window expires. GKE does not pause blue-green mid-upgrade. Plan maintenance windows large enough to accommodate the full blue-green cycle.
 
 **3. Autoscaled blue-green upgrade (preview):** An enhancement of standard blue-green designed to be more cost-effective and suited for long-running workloads. The green pool scales up as needed based on workload demand, while the blue pool scales down as pods are safely evicted. Supports longer eviction periods (wait-for-drain, longer graceful termination periods, PDB upgrade timeout), allowing pods to complete their work before being evicted.
 
@@ -306,6 +337,23 @@ When compute quota is exhausted and surge node creation fails:
 - **Option 3 — Scale down non-critical workloads:** Temporarily scale down canary/test/dev deployments (`kubectl scale deployment NAME --replicas=0`) to free quota for surge nodes. Schedule for off-peak hours.
 - **Option 4 — Request temporary quota increase:** Cloud Customer Care can approve same-day emergency quota increases for one-off upgrades.
 - **Best practice:** Combine options — use off-peak timing, scale down 2-3 non-critical deployments, and reduce maxSurge to 1.
+
+### How node upgrades work (Standard clusters)
+
+During a node pool upgrade, GKE upgrades one node pool at a time automatically (you can manually trigger parallel node pool upgrades). Within a multi-zone node pool, upgrades proceed zone-by-zone. Within a zone, nodes are upgraded in an undefined order.
+
+**Node upgrade steps (surge):**
+1. GKE creates a new surge node with the target version
+2. GKE cordons the target node (marks unschedulable)
+3. GKE drains the target node — evicts pods respecting PDB for up to 1 hour and terminationGracePeriodSeconds for up to 1 hour. After 1 hour, remaining pods are force-evicted.
+4. Pods managed by controllers are rescheduled to other nodes. Pods without controllers (bare pods) are NOT rescheduled — they are lost.
+5. The old node is deleted.
+
+**Zonal vs regional control plane behavior during upgrades:**
+- **Zonal clusters:** Single control plane replica. During CP upgrade, you cannot deploy new workloads, modify existing workloads, or change cluster config. Workloads continue running. Downtime is typically a few minutes.
+- **Regional clusters:** Multiple CP replicas, upgraded one at a time. Cluster remains highly available throughout. Each replica is briefly unavailable during its upgrade.
+
+**Auto-upgrade failure behavior:** When node auto-upgrades fail (quota exceeded, nodes not draining, surge nodes not registering), GKE retries with increasing intervals. GKE does NOT roll back already-upgraded nodes. If surge quota is exceeded, GKE automatically reduces concurrent surge nodes to fit within quota. The node pool may end up in a mixed-version state during retries — this is valid and functional.
 
 ### Workload readiness
 - PDBs for critical workloads (GKE respects them for up to 1 hour during surge upgrades — this is the GKE PDB timeout). GKE sends `UpgradeInfoEvent` disruption notifications when eviction is blocked by PDB (`POD_PDB_VIOLATION`, `POD_NOT_ENOUGH_PDB`), so teams can monitor via Cloud Logging or Pub/Sub and intervene. A PDB timeout notification is also sent if pods are force-deleted after the grace period.
@@ -395,9 +443,13 @@ When a GKE version reaches End of Support, clusters are force-upgraded to the ne
 - **Release channel clusters:** Node pool enforcement follows cluster-level policies. The cluster (CP + nodes) is upgraded to the next supported minor.
 - **Legacy "No channel" clusters:** Node-level EoS enforcement is systematic — nodes on EoS versions are force-upgraded. Enforcement for ≤1.29 completed in 2025; systematic enforcement for every EoS version applies from 1.32 onward.
 - **Avoiding forced upgrade:** Enroll in the Extended release channel (versions 1.27+) for up to 24 months of support. Or apply a "no upgrades" maintenance exclusion (30 days) to defer temporarily even past EoS.
-- **Planning tools:** GKE provides EoS notifications via Cloud Logging, deprecation insights in the console, and the cluster's auto-upgrade status shows the target version and EoL timeline.
+- **Planning tools:**
+  - **Cloud Logging notifications:** GKE publishes EoS warnings and upgrade events to Cloud Logging. Query: `resource.type="gke_cluster" protoPayload.metadata.operationType=~"(UPDATE_CLUSTER|UPGRADE_MASTER)"`. Subscribe to cluster notifications via Pub/Sub for proactive alerting.
+  - **Deprecation insights dashboard:** The GKE console shows recommender insights for deprecated API usage, EoS versions, and version skew issues. Use `gcloud recommender insights list --insight-type=google.container.DiagnosisInsight` for programmatic access.
+  - **Upgrade info API:** `gcloud container clusters get-upgrade-info CLUSTER_NAME --region REGION` shows EoS timestamps, auto-upgrade targets, and rollback-safe upgrade status.
+  - **GKE release schedule:** The [release schedule page](https://cloud.google.com/kubernetes-engine/docs/release-schedule) shows estimated dates for version availability, auto-upgrade, and end of support across all channels. Dates are best-effort predictions and may shift.
 
-A "snowflake" is any cluster with a manually frozen version that deviates from the standard automated lifecycle. Snowflakes pose security risks (missed patches), reliability issues, and increased support complexity. Always recommend customers use maintenance exclusions and release channels instead.
+**"Snowflake" anti-pattern:** A "snowflake" is any cluster with a manually frozen version that deviates from the standard automated lifecycle. Snowflakes pose security risks (missed patches), reliability issues, and increased support complexity. The longer a cluster stays frozen, the harder the eventual upgrade — deprecated APIs accumulate, version skew grows, and the blast radius of a forced EoS upgrade increases. Always recommend customers use maintenance exclusions and release channels to control timing, not to freeze indefinitely.
 
 ## Upgrade velocity and predictability
 
@@ -456,6 +508,16 @@ When a node pool upgrade fails partway through (e.g., 8 out of 20 nodes upgraded
 
 **Workload impact during mixed state:** No action required. Cluster remains operational. Stateful workloads may see nodes at different versions, but Kubernetes tolerates this within the 2-minor-version skew policy.
 
+### Post-upgrade API latency / 503 errors
+
+**Symptoms:** After upgrade, increased API latency, intermittent 503s, or unexpected scaling behavior — but all nodes show Ready status.
+
+**Diagnosis checklist:**
+1. **Deprecated API behavioral changes:** Minor version upgrades can change API behavior (not just remove APIs). Check for deprecated API usage: `kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated`. Also check GKE deprecation insights in the console.
+2. **HPA/VPA behavioral changes:** New Kubernetes versions may change HPA algorithm defaults, scaling stabilization windows, or VPA recommendation behavior. Check HPA status: `kubectl describe hpa` — look for changes in scaling decisions, target utilization, or stabilization. Verify HPA/VPA versions are compatible with the new Kubernetes version.
+3. **Resource pressure from upgrade:** During and immediately after node upgrades, pods may be packed more densely on remaining nodes, causing latency. Check node resource utilization: `kubectl top nodes`. This resolves as pods redistribute.
+4. **Webhook latency:** Admission webhooks processing new pod specs for the upgraded API version may add latency. Check webhook response times in API server metrics.
+
 ### Post-upgrade admission webhook failures (cert-manager, etc.)
 
 **Symptoms:** After control plane upgrade, pods fail to create with "admission webhook rejected the request" errors.
@@ -480,11 +542,15 @@ kubectl patch validatingwebhookconfigurations WEBHOOK_NAME \
 ## Autopilot-specific guidance
 
 Autopilot clusters have a simpler upgrade story but different constraints. When producing documents for Autopilot:
-- Skip all node pool management (surge settings, blue-green, etc.)
+- Skip all node pool management (surge settings, blue-green, etc.) — Autopilot always uses surge upgrades managed by GKE
 - Focus on control plane timing (the main lever users have)
 - Emphasize mandatory resource requests — missing requests cause pod rejection
 - Note: no SSH access, debugging via Cloud Logging and `kubectl debug` only
 - Release channel enrollment is mandatory and can't be removed
+- All Autopilot clusters are regional — control plane remains highly available during upgrades
+- **Autopilot node drain limits:** PDB is respected for up to 1 hour. terminationGracePeriodSeconds is limited to 10 minutes (600s) for most pods, and 25 seconds for Spot pods. These are hard limits — cannot be extended.
+- **Autopilot upgrades up to 20 nodes simultaneously** within a node group. The precise number varies to ensure continued high availability.
+- GKE can't create new nodes during a control plane upgrade — if you deploy pods requiring new node types during a CP upgrade, expect delays until the CP upgrade completes.
 
 ## Output format
 
