@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": true,
+      "reason": "Response explicitly states 'Atomic recreation: Each TPU slice (your 4x 256-chip slices) is recreated entirely in a single step \u2014 not rolling'"
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": true,
+      "reason": "Response clearly states 'Cascading restart: A maintenance event on ANY slice in your multislice environment triggers restart of ALL 4 slices simultaneously'"
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "Response explicitly mentions 'All pods restart: Every pod across all slices restarts at the same time' and 'Your TPU multislice training job will experience complete interruption'"
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": true,
+      "reason": "Response states 'Capacity dependency: If insufficient TPU v5e resources exist during recreation, slices block until hardware becomes available (potentially extended downtime)' and mentions 'potentially hours if TPU capacity is constrained'"
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "Response includes 'Checkpoint your model state IMMEDIATELY' as first critical action and 'T-24h: Save checkpoint, verify integrity' in timeline"
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "Response mentions 'Ensure your training framework (JAX/Flax, PyTorch/XLA) has robust checkpoint/resume' and provides specific resume procedures"
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": true,
+      "reason": "Response provides specific gcloud command for maintenance exclusions with 'Set maintenance exclusion to control timing (if you need to delay)' and notes 'Max 30 days deferral'"
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": false,
+      "reason": "Response discusses maintenance exclusions to defer events but does not mention maintenance windows to schedule when the event occurs during planned breaks"
+    }
+  ]
+}

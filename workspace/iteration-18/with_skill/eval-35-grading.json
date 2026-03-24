@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends Stable or Extended release channel to minimize upgrade frequency",
+      "passed": true,
+      "reason": "Explicitly recommends Extended release channel with detailed explanation of 24-month support period and manual control over minor upgrades"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
+      "passed": true,
+      "reason": "Shows specific gcloud command with --add-maintenance-exclusion-scope no_minor_or_node_upgrades and explains it allows control plane security patches but blocks disruptive upgrades"
+    },
+    {
+      "expectation": "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
+      "passed": true,
+      "reason": "Configures maintenance window for Saturday 2-6 AM with specific gcloud command and 4-hour duration"
+    },
+    {
+      "expectation": "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
+      "passed": true,
+      "reason": "Creates separate node pools: h100-training for GPU workloads and system-workloads for non-GPU workloads, with detailed architecture explanation"
+    },
+    {
+      "expectation": "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
+      "passed": true,
+      "reason": "Shows applying no_upgrades exclusion specifically to the H100 training pool and provides operational runbook for manual upgrade management between training campaigns"
+    },
+    {
+      "expectation": "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
+      "passed": true,
+      "reason": "Includes YAML example with extended terminationGracePeriodSeconds for checkpointing and shows kubectl checkpoint commands in the operational runbook"
+    },
+    {
+      "expectation": "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
+      "passed": true,
+      "reason": "Provides specific section on GPU Driver Compatibility with commands to create staging node pool and test CUDA compatibility before upgrades"
+    },
+    {
+      "expectation": "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading",
+      "passed": true,
+      "reason": "Includes section on Compact Placement for RDMA with commands to maintain RDMA topology after upgrades and mentions RDMA preservation in the summary"
+    }
+  ]
+}

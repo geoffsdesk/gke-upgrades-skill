@@ -1,0 +1,19 @@
+{
+  "eval_id": 16,
+  "mode": "with_skill",
+  "iteration": 18,
+  "prompt": "We upgraded our control plane from 1.31 to 1.32 and now some of our workloads are failing with admission webhook errors. The webhook is from a third-party operator (cert-manager). Pods can't be created. How do we fix this urgently?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-24T14:07:14.894986+00:00",
+  "input_tokens": 20570,
+  "output_tokens": 849,
+  "time_seconds": 17.58,
+  "skill_files": [
+    "skill/SKILL.md",
+    "skill/evals/evals.json",
+    "skill/references/checklists.md",
+    "skill/references/runbook-template.md",
+    "skill/references/troubleshooting.md"
+  ]
+}

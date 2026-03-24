@@ -1,0 +1,19 @@
+{
+  "eval_id": 18,
+  "mode": "with_skill",
+  "iteration": 18,
+  "prompt": "We're in a regulated environment (financial services, SOX compliance) and need to set up maintenance windows and exclusions for our 3 GKE Standard clusters. We have quarterly code freezes, an annual audit in November, and want auto-upgrades to only happen on weekends. Can you configure this?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-24T14:08:27.669418+00:00",
+  "input_tokens": 20575,
+  "output_tokens": 2145,
+  "time_seconds": 33.07,
+  "skill_files": [
+    "skill/SKILL.md",
+    "skill/evals/evals.json",
+    "skill/references/checklists.md",
+    "skill/references/runbook-template.md",
+    "skill/references/troubleshooting.md"
+  ]
+}

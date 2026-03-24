@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's native node pool upgrade strategies rather than the manual create/cordon/drain/delete workflow described",
+      "passed": true,
+      "reason": "Response explicitly states 'No, manual blue-green is NOT the recommended approach here' and recommends native GKE upgrade strategies throughout"
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends surge upgrade with maxSurge=0 and maxUnavailable set as the primary lever (since no surge capacity is available)",
+      "passed": true,
+      "reason": "Response specifically recommends 'maxSurge=0' for fixed reservations and shows maxUnavailable=2 as the control mechanism with exact gcloud commands"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as a native alternative that handles cordon and migration automatically",
+      "passed": true,
+      "reason": "Response includes a section on 'Autoscaled Blue-Green' with specific gcloud commands for autoscaled rollout policy with blue-green settings"
+    },
+    {
+      "expectation": "Explains that native strategies are the supported path and handle edge cases (PDB respect, drain timeouts, progress tracking) that manual workflows miss",
+      "passed": true,
+      "reason": "Response explicitly lists benefits like 'respects PDBs, handles failures gracefully' and problems with manual approach including 'PDB complications' and 'No automatic retry'"
+    },
+    {
+      "expectation": "Only suggests manual blue-green as a last resort if native strategies don't meet a specific requirement",
+      "passed": false,
+      "reason": "Response does not suggest manual blue-green as even a last resort option - it completely discourages manual approach without acknowledging scenarios where it might be necessary"
+    },
+    {
+      "expectation": "Addresses GPU driver compatibility \u2014 need to verify target version's auto-installed driver is compatible",
+      "passed": true,
+      "reason": "Response has a dedicated section 'Pre-Upgrade GPU-Specific Checks' that specifically mentions 'GKE 1.31\u21921.32 will likely change the GPU driver version' and provides commands to test GPU driver changes"
+    },
+    {
+      "expectation": "Recommends scheduling the upgrade during a gap in GPU workloads to minimize impact",
+      "passed": true,
+      "reason": "Response includes maintenance window configuration commands and mentions 'avoid business hours' and has specific guidance for 'multi-day training jobs' with exclusion periods"
+    },
+    {
+      "expectation": "Provides gcloud commands for the recommended native approach",
+      "passed": true,
+      "reason": "Response provides multiple complete gcloud command examples for node pool updates, upgrades, maintenance windows, and testing approaches"
+    }
+  ]
+}

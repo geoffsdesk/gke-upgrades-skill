@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes notifications into Security Patch, Scheduled Auto-Upgrade, End of Support (EoS), Version Availability, Deprecated API, and Maintenance Window types with specific keywords and examples"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response uses clear urgency levels: red (IMMEDIATE ACTION) for security patches, yellow (SCHEDULE ACTION) for scheduled upgrades, and green (INFORMATIONAL) for version availability notifications"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response specifically addresses EoS enforcement warnings as requiring immediate action within 2-4 weeks, with commands to check timelines and apply deferrals, plus detailed response playbooks for EoS situations"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": false,
+      "reason": "While the response mentions scheduled auto-upgrade notifications and provides commands to defer them, it does not specifically mention triggering a pre-upgrade checklist execution - only timing verification and deferral options"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response explicitly states security patches require immediate action within 24-48 hours and provides a specific security patch response playbook that can be executed outside normal windows"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response clearly categorizes version availability notifications as INFORMATIONAL with 'acknowledge, plan for future' instructions and states 'no immediate action required'"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "Response includes Cloud Monitoring alert setup with specific gcloud commands for monitoring GKE version approaching EoS, though it doesn't specifically mention Pub/Sub, it does cover monitoring alerts comprehensively"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": false,
+      "reason": "Response mentions the GKE release schedule for proactive planning but does not specifically reference GKE release notes as a source for understanding version changes"
+    }
+  ]
+}

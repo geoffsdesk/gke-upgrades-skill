@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends increasing maxSurge for CPU pools (e.g., 10-20) to parallelize node replacements, with justification for the value",
+      "passed": true,
+      "reason": "Response recommends maxSurge: 10 for node pools and later suggests 8-10 for CPU pools, providing YAML configuration and explaining it increases parallelization"
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends increasing maxUnavailable (not maxSurge) as the primary lever since surge capacity is typically unavailable",
+      "passed": false,
+      "reason": "Response does not distinguish GPU pool upgrade strategy from CPU pools regarding maxUnavailable vs maxSurge, and doesn't explain that fixed reservations limit surge capacity"
+    },
+    {
+      "expectation": "Advises checking and requesting increased compute quota before the upgrade for CPU pools",
+      "passed": false,
+      "reason": "Response mentions 'reserved instances for temporary surge capacity' but does not specifically advise checking or requesting increased compute quota"
+    },
+    {
+      "expectation": "Suggests staggering node pool upgrades or running non-conflicting pools in parallel",
+      "passed": true,
+      "reason": "Response includes 'Parallel Pool Upgrades' section with bash commands to upgrade multiple pools simultaneously using --async flag"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as an option for GPU pools",
+      "passed": false,
+      "reason": "Response mentions blue/green strategy with manual temporary node pools but does not specifically mention GKE's auto-scale blue-green upgrade feature for GPU pools"
+    },
+    {
+      "expectation": "Recommends expanding the maintenance window or splitting across multiple weekends",
+      "passed": false,
+      "reason": "Response focuses on technical solutions to fit within the 8-hour window but does not suggest expanding the maintenance window or splitting across multiple weekends"
+    },
+    {
+      "expectation": "Provides the gcloud command for updating surge settings on each pool",
+      "passed": false,
+      "reason": "Response shows YAML configuration for surge settings but does not provide the specific gcloud command to update surge settings on existing node pools"
+    },
+    {
+      "expectation": "Includes monitoring commands to track upgrade progress in real-time",
+      "passed": true,
+      "reason": "Response includes a monitoring script with gcloud container operations list command to track upgrade progress in real-time"
+    }
+  ]
+}
