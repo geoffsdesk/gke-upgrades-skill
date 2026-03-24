@@ -1,4 +1,4 @@
-I'll help you set up maintenance exclusions for your GKE clusters to handle your specific requirements. Here's the exact configuration:
+Here's the exact GKE maintenance exclusion configuration for your requirements:
 
 ## 1. Terraform Configuration
 
@@ -6,78 +6,54 @@ I'll help you set up maintenance exclusions for your GKE clusters to handle your
 resource "google_container_cluster" "primary" {
   name     = "your-cluster-name"
   location = "us-central1"
-
-  # Disable automatic minor version upgrades
+  
+  # Disable automatic upgrades for control plane and nodes
   release_channel {
-    channel = "REGULAR"  # or "RAPID", "STABLE"
+    channel = "REGULAR"  # or "STABLE"/"RAPID" based on your preference
   }
-
-  # Maintenance policy with exclusions
+  
+  # Control plane maintenance policy
   maintenance_policy {
-    # Recurring maintenance window (when maintenance CAN happen)
+    # Quarterly code freeze in June
     recurring_window {
-      start_time = "2024-01-07T09:00:00Z"  # Sunday 9 AM UTC
-      end_time   = "2024-01-07T17:00:00Z"  # Sunday 5 PM UTC
-      recurrence = "FREQ=WEEKLY;BYDAY=SU"
+      start_time = "2024-06-01T00:00:00Z"
+      end_time   = "2024-06-30T23:59:59Z"
+      recurrence = "FREQ=YEARLY;BYMONTH=6"
     }
-
-    # June code freeze exclusion (entire month)
-    maintenance_exclusion {
-      exclusion_name = "june-code-freeze"
-      start_time     = "2024-06-01T00:00:00Z"
-      end_time       = "2024-07-01T00:00:00Z"
-      exclusion_options {
-        scope = "ALL_UPGRADES"
-      }
+    
+    # Black Friday/Cyber Monday exclusion (Nov 20-30)
+    recurring_window {
+      start_time = "2024-11-20T00:00:00Z"
+      end_time   = "2024-11-30T23:59:59Z"
+      recurrence = "FREQ=YEARLY;BYMONTH=11;BYMONTHDAY=20,21,22,23,24,25,26,27,28,29,30"
     }
-
-    # Black Friday/Cyber Monday exclusion
-    maintenance_exclusion {
-      exclusion_name = "black-friday-cyber-monday"
-      start_time     = "2024-11-22T00:00:00Z"  # Week before Black Friday
-      end_time       = "2024-12-03T00:00:00Z"  # Week after Cyber Monday
-      exclusion_options {
-        scope = "ALL_UPGRADES"
-      }
-    }
-
-    # Continuous exclusion for minor version upgrades
-    maintenance_exclusion {
-      exclusion_name = "no-minor-version-upgrades"
-      start_time     = "2024-01-01T00:00:00Z"
-      end_time       = "2025-12-31T23:59:59Z"
-      exclusion_options {
-        scope = "MINOR_AND_PATCH"
-      }
+    
+    # Daily maintenance window (outside exclusions)
+    daily_maintenance_window {
+      start_time = "03:00"  # 3 AM in cluster's timezone
     }
   }
-
-  # Disable automatic upgrades
-  cluster_autoscaling {
-    auto_provisioning_defaults {
-      upgrade_settings {
-        strategy        = "SURGE"
-        max_surge       = 1
-        max_unavailable = 0
-      }
-    }
+  
+  # Disable automatic node upgrades
+  node_config {
+    # Node configuration
   }
+}
 
-  # Node pool configuration
-  node_pool {
-    name       = "default-pool"
-    node_count = 1
-
-    management {
-      auto_repair  = true
-      auto_upgrade = false  # Disable automatic node upgrades
-    }
-
-    upgrade_settings {
-      strategy        = "SURGE"
-      max_surge       = 1
-      max_unavailable = 0
-    }
+resource "google_container_node_pool" "primary_nodes" {
+  cluster  = google_container_cluster.primary.name
+  location = "us-central1"
+  
+  # Disable automatic upgrades and repairs during exclusions
+  management {
+    auto_upgrade = false  # Prevents minor version upgrades
+    auto_repair  = true   # Keep auto-repair enabled for stability
+  }
+  
+  upgrade_settings {
+    strategy      = "SURGE"
+    max_surge     = 1
+    max_unavailable = 0
   }
 }
 ```
@@ -85,153 +61,130 @@ resource "google_container_cluster" "primary" {
 ## 2. gcloud CLI Configuration
 
 ```bash
-# Create the cluster with maintenance policy
-gcloud container clusters create your-cluster-name \
-    --zone=us-central1-a \
-    --release-channel=regular \
-    --enable-autorepair \
-    --no-enable-autoupgrade \
-    --maintenance-window-start="2024-01-07T09:00:00Z" \
-    --maintenance-window-end="2024-01-07T17:00:00Z" \
-    --maintenance-window-recurrence="FREQ=WEEKLY;BYDAY=SU"
-
-# Add June code freeze exclusion
+# Set maintenance exclusions for June code freeze
 gcloud container clusters update your-cluster-name \
-    --zone=us-central1-a \
-    --add-maintenance-exclusion-name="june-code-freeze" \
-    --add-maintenance-exclusion-start="2024-06-01T00:00:00Z" \
-    --add-maintenance-exclusion-end="2024-07-01T00:00:00Z" \
-    --add-maintenance-exclusion-scope="ALL_UPGRADES"
+  --location=us-central1 \
+  --add-maintenance-exclusion-name=june-code-freeze \
+  --add-maintenance-exclusion-start=2024-06-01T00:00:00Z \
+  --add-maintenance-exclusion-end=2024-06-30T23:59:59Z
 
-# Add Black Friday/Cyber Monday exclusion
+# Set maintenance exclusion for Black Friday/Cyber Monday
 gcloud container clusters update your-cluster-name \
-    --zone=us-central1-a \
-    --add-maintenance-exclusion-name="black-friday-cyber-monday" \
-    --add-maintenance-exclusion-start="2024-11-22T00:00:00Z" \
-    --add-maintenance-exclusion-end="2024-12-03T00:00:00Z" \
-    --add-maintenance-exclusion-scope="ALL_UPGRADES"
+  --location=us-central1 \
+  --add-maintenance-exclusion-name=black-friday-cyber-monday \
+  --add-maintenance-exclusion-start=2024-11-20T00:00:00Z \
+  --add-maintenance-exclusion-end=2024-11-30T23:59:59Z
 
-# Add continuous minor version upgrade exclusion
+# Disable automatic node upgrades
+gcloud container node-pools update default-pool \
+  --cluster=your-cluster-name \
+  --location=us-central1 \
+  --no-enable-autoupgrade
+
+# Set daily maintenance window
 gcloud container clusters update your-cluster-name \
-    --zone=us-central1-a \
-    --add-maintenance-exclusion-name="no-minor-version-upgrades" \
-    --add-maintenance-exclusion-start="2024-01-01T00:00:00Z" \
-    --add-maintenance-exclusion-end="2025-12-31T23:59:59Z" \
-    --add-maintenance-exclusion-scope="MINOR_AND_PATCH"
+  --location=us-central1 \
+  --maintenance-window-start=2024-01-01T03:00:00Z \
+  --maintenance-window-end=2024-01-01T07:00:00Z \
+  --maintenance-window-recurrence="FREQ=DAILY"
 ```
 
-## 3. YAML Configuration for kubectl
+## 3. YAML Configuration (for GitOps)
 
 ```yaml
-# maintenance-policy.yaml
-apiVersion: v1
-kind: ConfigMap
+apiVersion: container.cnrm.cloud.google.com/v1beta1
+kind: ContainerCluster
 metadata:
-  name: maintenance-exclusions-config
-  namespace: kube-system
-data:
-  policy.yaml: |
-    maintenancePolicy:
-      recurringWindow:
-        startTime: "2024-01-07T09:00:00Z"
-        endTime: "2024-01-07T17:00:00Z"
-        recurrence: "FREQ=WEEKLY;BYDAY=SU"
-      maintenanceExclusions:
-        - exclusionName: "june-code-freeze"
-          startTime: "2024-06-01T00:00:00Z"
-          endTime: "2024-07-01T00:00:00Z"
-          exclusionOptions:
-            scope: "ALL_UPGRADES"
-        - exclusionName: "black-friday-cyber-monday"
-          startTime: "2024-11-22T00:00:00Z"
-          endTime: "2024-12-03T00:00:00Z"
-          exclusionOptions:
-            scope: "ALL_UPGRADES"
-        - exclusionName: "no-minor-version-upgrades"
-          startTime: "2024-01-01T00:00:00Z"
-          endTime: "2025-12-31T23:59:59Z"
-          exclusionOptions:
-            scope: "MINOR_AND_PATCH"
+  name: your-cluster-name
+  namespace: your-project-id
+spec:
+  location: us-central1
+  releaseChannel:
+    channel: REGULAR
+  maintenancePolicy:
+    recurringWindow:
+      - startTime: "2024-06-01T00:00:00Z"
+        endTime: "2024-06-30T23:59:59Z"
+        recurrence: "FREQ=YEARLY;BYMONTH=6"
+      - startTime: "2024-11-20T00:00:00Z"
+        endTime: "2024-11-30T23:59:59Z"
+        recurrence: "FREQ=YEARLY;BYMONTH=11;BYMONTHDAY=20,21,22,23,24,25,26,27,28,29,30"
+    dailyMaintenanceWindow:
+      startTime: "03:00"
+---
+apiVersion: container.cnrm.cloud.google.com/v1beta1
+kind: ContainerNodePool
+metadata:
+  name: primary-nodes
+  namespace: your-project-id
+spec:
+  clusterRef:
+    name: your-cluster-name
+  location: us-central1
+  management:
+    autoUpgrade: false
+    autoRepair: true
+  upgradeSettings:
+    strategy: SURGE
+    maxSurge: 1
+    maxUnavailable: 0
 ```
 
-## 4. Automation Script for Annual Updates
+## 4. Additional Recommendations
 
+### Manual Upgrade Script
 ```bash
 #!/bin/bash
-# update-maintenance-exclusions.sh
+# manual-upgrade.sh - For controlled upgrades outside exclusion periods
 
 CLUSTER_NAME="your-cluster-name"
-ZONE="us-central1-a"
-CURRENT_YEAR=$(date +%Y)
-NEXT_YEAR=$((CURRENT_YEAR + 1))
+LOCATION="us-central1"
 
-echo "Updating maintenance exclusions for $CURRENT_YEAR..."
+# Check available versions
+echo "Available master versions:"
+gcloud container get-server-config --location=$LOCATION --format="value(validMasterVersions)"
 
-# Remove old exclusions
-gcloud container clusters update $CLUSTER_NAME \
-    --zone=$ZONE \
-    --remove-maintenance-exclusion="june-code-freeze" || true
+# Upgrade master (only when you approve)
+echo "Current master version:"
+gcloud container clusters describe $CLUSTER_NAME --location=$LOCATION --format="value(currentMasterVersion)"
 
-gcloud container clusters update $CLUSTER_NAME \
-    --zone=$ZONE \
-    --remove-maintenance-exclusion="black-friday-cyber-monday" || true
+# Uncomment to upgrade master
+# gcloud container clusters upgrade $CLUSTER_NAME --location=$LOCATION --master --cluster-version=1.28.3-gke.1286000
 
-gcloud container clusters update $CLUSTER_NAME \
-    --zone=$ZONE \
-    --remove-maintenance-exclusion="no-minor-version-upgrades" || true
+# Upgrade nodes (only when you approve)
+echo "Current node versions:"
+gcloud container node-pools list --cluster=$CLUSTER_NAME --location=$LOCATION --format="table(name,version)"
 
-# Add new exclusions for current year
-gcloud container clusters update $CLUSTER_NAME \
-    --zone=$ZONE \
-    --add-maintenance-exclusion-name="june-code-freeze" \
-    --add-maintenance-exclusion-start="${CURRENT_YEAR}-06-01T00:00:00Z" \
-    --add-maintenance-exclusion-end="${CURRENT_YEAR}-07-01T00:00:00Z" \
-    --add-maintenance-exclusion-scope="ALL_UPGRADES"
-
-gcloud container clusters update $CLUSTER_NAME \
-    --zone=$ZONE \
-    --add-maintenance-exclusion-name="black-friday-cyber-monday" \
-    --add-maintenance-exclusion-start="${CURRENT_YEAR}-11-22T00:00:00Z" \
-    --add-maintenance-exclusion-end="${CURRENT_YEAR}-12-03T00:00:00Z" \
-    --add-maintenance-exclusion-scope="ALL_UPGRADES"
-
-gcloud container clusters update $CLUSTER_NAME \
-    --zone=$ZONE \
-    --add-maintenance-exclusion-name="no-minor-version-upgrades" \
-    --add-maintenance-exclusion-start="${CURRENT_YEAR}-01-01T00:00:00Z" \
-    --add-maintenance-exclusion-end="${NEXT_YEAR}-12-31T23:59:59Z" \
-    --add-maintenance-exclusion-scope="MINOR_AND_PATCH"
-
-echo "Maintenance exclusions updated successfully!"
+# Uncomment to upgrade specific node pool
+# gcloud container clusters upgrade $CLUSTER_NAME --location=$LOCATION --node-pool=default-pool
 ```
 
-## 5. Verification Commands
-
+### Monitoring Script
 ```bash
-# Check current maintenance policy
-gcloud container clusters describe your-cluster-name \
-    --zone=us-central1-a \
-    --format="yaml(maintenancePolicy)"
+#!/bin/bash
+# check-maintenance-schedule.sh - Monitor upcoming maintenance
 
-# List all maintenance exclusions
-gcloud container clusters describe your-cluster-name \
-    --zone=us-central1-a \
-    --format="table(maintenancePolicy.maintenanceExclusions[].exclusionName,
-                     maintenancePolicy.maintenanceExclusions[].startTime,
-                     maintenancePolicy.maintenanceExclusions[].endTime,
-                     maintenancePolicy.maintenanceExclusions[].exclusionOptions.scope)"
+CLUSTER_NAME="your-cluster-name"
+LOCATION="us-central1"
+
+# Check maintenance exclusions
+gcloud container clusters describe $CLUSTER_NAME \
+  --location=$LOCATION \
+  --format="table(maintenancePolicy.window.recurringWindow.window.startTime,maintenancePolicy.window.recurringWindow.window.endTime)"
+
+# Check for pending upgrades
+gcloud container clusters describe $CLUSTER_NAME \
+  --location=$LOCATION \
+  --format="value(currentMasterVersion,currentNodeVersion)"
 ```
 
-## Key Points:
+## Key Configuration Points:
 
-1. **Maintenance Window**: Set to Sundays 9 AM - 5 PM UTC (adjust timezone as needed)
-2. **June Exclusion**: Blocks ALL upgrades for the entire month
-3. **Black Friday Exclusion**: Covers approximately 2 weeks around Black Friday/Cyber Monday
-4. **Minor Version Control**: Prevents automatic minor version upgrades year-round
-5. **Node Pool Settings**: Disabled auto-upgrade on node pools for full control
+1. **June Code Freeze**: Complete maintenance exclusion for entire month
+2. **Black Friday/Cyber Monday**: Exclusion from Nov 20-30 annually
+3. **No Auto Minor Upgrades**: `auto_upgrade = false` prevents automatic version upgrades
+4. **Manual Control**: All upgrades require explicit approval and execution
+5. **Auto-repair Enabled**: Keeps nodes healthy while preventing version changes
+6. **Maintenance Window**: 3-7 AM daily window for security patches (outside exclusions)
 
-Remember to:
-- Adjust the timezone in the maintenance window to match your business hours
-- Update the exclusion dates annually
-- Test the configuration in a development cluster first
-- Set up monitoring for available security patches during exclusion periods
+This configuration ensures maintenance only happens when you explicitly allow it, while maintaining cluster security and stability.

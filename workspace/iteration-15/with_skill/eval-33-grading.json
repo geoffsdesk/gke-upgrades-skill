@@ -3,42 +3,42 @@
     {
       "expectation": "Recommends upgrading the L4 inference pool and A100 pool separately with different strategies",
       "passed": true,
-      "reason": "Response clearly recommends sequential upgrades with Phase 2 for L4 pool and Phase 3 for A100 pool, with different timing considerations for each"
+      "reason": "Response clearly separates strategies: L4 pool uses autoscaled blue-green upgrade while A100 pool uses coordinated manual upgrade with different approaches and timing"
     },
     {
       "expectation": "For L4 inference pool: recommends surge upgrade with maxSurge=1 or 2 to maintain capacity during rolling replacement",
       "passed": false,
-      "reason": "Response recommends autoscaled blue-green upgrade for L4 pool, not surge upgrade with maxSurge settings"
+      "reason": "Response recommends blue-green strategy for L4 pool, not surge upgrade. Blue-green is mentioned as an alternative to surge, but surge with maxSurge=1 or 2 is not recommended"
     },
     {
       "expectation": "Addresses GPU driver version compatibility \u2014 auto-installed drivers must be compatible with inference framework (TensorRT, vLLM, etc.)",
       "passed": true,
-      "reason": "Response addresses GPU driver compatibility, mentioning CUDA version changes and ML framework compatibility checks in pre-upgrade checklist and monitoring sections"
+      "reason": "Response includes GPU driver compatibility check section, mentions NVIDIA driver versions, and recommends testing compatibility in staging cluster first"
     },
     {
       "expectation": "For A100 fine-tuning pool: recommends scheduling the upgrade during a gap between fine-tuning jobs",
       "passed": true,
-      "reason": "Response explicitly states 'Start only during a gap between fine-tuning jobs' and includes commands to verify no active fine-tuning jobs before upgrade"
+      "reason": "Response explicitly recommends waiting for fine-tuning jobs to complete before upgrading A100 pool and includes monitoring commands to check job completion status"
     },
     {
       "expectation": "Notes that GPU VMs do not support live migration \u2014 inference pods will restart during node upgrade, causing brief latency spikes",
-      "passed": false,
-      "reason": "Response does not explicitly mention that GPU VMs don't support live migration or that inference pods will restart causing latency spikes"
+      "passed": true,
+      "reason": "Response mentions inference pods may see brief connection resets during drain and accounts for cold start latency on new nodes, addressing the restart impact"
     },
     {
       "expectation": "Recommends PDBs on inference deployments to ensure enough replicas stay available during the rolling upgrade",
       "passed": true,
-      "reason": "Response includes PDBs in the pre-upgrade checklist: 'PDBs configured for inference workloads (allow some disruption but prevent mass eviction)'"
+      "reason": "Response includes verification of PDBs for inference services in the workload readiness section with specific kubectl command to check existing PDBs"
     },
     {
       "expectation": "Addresses auto-scaler interaction \u2014 new nodes created by auto-scaler during upgrade will be at the old version until their pool upgrade completes",
       "passed": false,
-      "reason": "Response mentions auto-scaler configuration but does not specifically address that new nodes created during upgrade will be at old version until pool upgrade completes"
+      "reason": "While response mentions autoscaler configuration and monitoring HPA behavior, it does not specifically address the issue of new nodes being created at old version during upgrade"
     },
     {
       "expectation": "Recommends testing driver + CUDA compatibility in staging before production upgrade",
       "passed": true,
-      "reason": "Response explicitly recommends 'Test in staging first - verify CUDA version changes don't break your ML pipelines' and includes staging compatibility checks in the checklist"
+      "reason": "Response explicitly recommends testing target version compatibility in staging cluster first and mentions checking CUDA version compatibility with training frameworks"
     }
   ]
 }

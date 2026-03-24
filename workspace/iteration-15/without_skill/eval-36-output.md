@@ -1,48 +1,39 @@
-Here are your options to upgrade without additional GPU quota:
+Here are your options to upgrade the 64 A3-mega node pool without needing additional GPU quota:
 
-## Immediate Solutions
-
-**1. Reduce Surge Settings**
+## Option 1: Reduce Surge Settings (Recommended)
 ```bash
-# Set surge to 0 to do rolling replacement without extra nodes
-gcloud container node-pools update [POOL_NAME] \
-  --cluster=[CLUSTER_NAME] \
-  --zone=[ZONE] \
+# Set max surge to 0 to use rolling replacement instead
+gcloud container node-pools update POOL_NAME \
+  --cluster=CLUSTER_NAME \
+  --zone=ZONE \
   --max-surge=0 \
   --max-unavailable=1
 ```
-This does one-at-a-time replacement but requires no additional quota.
+This forces a rolling replacement strategy where nodes are drained and replaced one at a time instead of creating surge nodes first.
 
-**2. Blue/Green with Existing Quota**
-- Temporarily scale down your pool (e.g., 64→32 nodes)
-- Use freed quota to create surge capacity
-- Upgrade, then scale back up
-
-## Workload Management Approaches
-
-**3. Drain and Replace Strategy**
+## Option 2: Manual Cordoning and Replacement
 ```bash
-# For each node:
-kubectl drain [NODE_NAME] --ignore-daemonsets --delete-emptydir-data
-# Let GKE replace the drained node
+# Cordon and drain nodes manually in batches
+kubectl cordon NODE_NAME
+kubectl drain NODE_NAME --ignore-daemonsets --delete-emptydir-data
+# Delete the node from the pool
+gcloud compute instances delete NODE_NAME --zone=ZONE
+```
+The node pool will automatically replace the deleted node with the new version.
+
+## Option 3: Blue-Green Deployment
+1. Create a new node pool with the desired configuration and fewer nodes initially
+2. Migrate workloads gradually using taints/tolerations or node selectors
+3. Scale up the new pool as you scale down the old one
+4. Delete the old pool once migration is complete
+
+## Option 4: Adjust Maintenance Window Strategy
+```bash
+# Configure maintenance policy to use minimal disruption
+gcloud container clusters update CLUSTER_NAME \
+  --zone=ZONE \
+  --maintenance-policy-resource-version=VERSION \
+  --daily-maintenance-window-start-time=HH:MM
 ```
 
-**4. Scheduled Maintenance Window**
-- Plan upgrade during low-usage period
-- Temporarily reduce replica counts
-- Use freed nodes' quota for surge capacity
-
-## Alternative Technical Solutions
-
-**5. Multi-Zone Approach** (if applicable)
-- Check H100 availability in other zones in your region
-- Migrate some workloads temporarily to free up quota
-
-**6. Staged Pool Upgrade**
-- Split the 64-node pool into smaller pools
-- Upgrade each pool separately with lower surge requirements
-
-## Recommended Approach
-Start with option #1 (max-surge=0) as it's the safest immediate solution. The upgrade will take longer but won't fail due to capacity constraints.
-
-Would you like me to elaborate on any of these approaches or help you implement the surge setting changes?
+**Recommendation**: Start with Option 1 (max-surge=0) as it requires no additional quota and maintains your workloads with minimal disruption. The upgrade will take longer but will complete successfully within your existing capacity.

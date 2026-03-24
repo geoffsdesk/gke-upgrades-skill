@@ -1,310 +1,187 @@
-This is a challenging scenario that requires careful planning. Here's a comprehensive approach to upgrade your GKE cluster while preserving your long-running training workloads:
+This is a challenging scenario that requires careful planning. Here's a comprehensive strategy to upgrade your GKE cluster without disrupting your training runs:
 
-## Pre-Upgrade Assessment
+## Recommended Approach: Blue-Green Node Pool Strategy
 
-First, verify your current setup:
+### Phase 1: Pre-Upgrade Preparation
 
-```bash
-# Check current cluster version and node pool details
-kubectl get nodes -o wide
-gcloud container clusters describe YOUR_CLUSTER_NAME --zone=YOUR_ZONE
-
-# Verify GPUDirect-TCPXO connectivity
-kubectl exec -it YOUR_TRAINING_POD -- nvidia-smi topo -m
+1. **Enable Cluster Maintenance Windows**
+```yaml
+# maintenance-policy.yaml
+maintenancePolicy:
+  window:
+    dailyMaintenanceWindow:
+      startTime: "02:00"  # Adjust to your preferred window
+    maintenanceExclusions:
+      training-exclusion:
+        startTime: "2024-01-15T00:00:00Z"
+        endTime: "2024-02-05T23:59:59Z"  # Cover your training period
 ```
 
-## Strategy 1: Blue-Green Cluster Migration (Recommended)
+2. **Document Current Configuration**
+```bash
+# Save current cluster config
+gcloud container clusters describe CLUSTER_NAME \
+  --zone=ZONE --format=export > cluster-backup.yaml
 
-### 1. Create New Cluster with GKE 1.32
+# Save node pool configs
+gcloud container node-pools describe NODE_POOL_NAME \
+  --cluster=CLUSTER_NAME --zone=ZONE --format=export > nodepool-backup.yaml
+```
+
+### Phase 2: Control Plane Upgrade (Safe for Running Workloads)
 
 ```bash
-# Create new cluster with identical configuration
-gcloud container clusters create training-cluster-v132 \
-  --zone=YOUR_ZONE \
-  --machine-type=a3-megagpu-8g \
-  --num-nodes=64 \
-  --node-locations=YOUR_ZONES \
+# Upgrade control plane only (doesn't affect running pods)
+gcloud container clusters upgrade CLUSTER_NAME \
+  --master \
   --cluster-version=1.32.x \
-  --enable-ip-alias \
+  --zone=ZONE \
+  --quiet
+```
+
+**Note**: Control plane upgrades don't affect running workloads or GPUDirect-TCPXO connections.
+
+### Phase 3: Node Pool Strategy Options
+
+#### Option A: Gradual Node Pool Upgrade (Recommended)
+
+1. **Create new node pool with 1.32**
+```bash
+gcloud container node-pools create gpu-nodes-v132 \
+  --cluster=CLUSTER_NAME \
+  --zone=ZONE \
+  --machine-type=a3-megagpu-8g \
+  --accelerator=type=nvidia-h100-mega-80gb,count=8 \
+  --num-nodes=0 \
   --enable-autoscaling \
-  --enable-autorepair=false \
-  --enable-autoupgrade=false \
-  --network=YOUR_NETWORK \
-  --subnetwork=YOUR_SUBNET \
-  --enable-gvnic \
-  --placement-type=COMPACT \
-  --max-pods-per-node=8
-```
-
-### 2. Configure Node Pools for GPU Training
-
-```bash
-# Create GPU node pool with specific configurations
-gcloud container node-pools create gpu-training-pool \
-  --cluster=training-cluster-v132 \
-  --machine-type=a3-megagpu-8g \
-  --accelerator=type=nvidia-h100-80gb,count=8 \
-  --enable-autoscaling=false \
-  --num-nodes=64 \
-  --node-taints=nvidia.com/gpu=present:NoSchedule \
-  --node-labels=workload-type=gpu-training \
-  --placement-type=COMPACT \
-  --zone=YOUR_ZONE
-```
-
-### 3. Implement Checkpointing Strategy
-
-```yaml
-# Enhanced training job with frequent checkpointing
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: llm-training-migration
-spec:
-  template:
-    spec:
-      containers:
-      - name: training
-        image: your-training-image
-        env:
-        - name: CHECKPOINT_INTERVAL
-          value: "300" # 5 minutes for migration
-        - name: CHECKPOINT_PATH
-          value: "/shared-storage/checkpoints"
-        - name: RESUME_FROM_CHECKPOINT
-          value: "true"
-        volumeMounts:
-        - name: checkpoint-storage
-          mountPath: /shared-storage
-        - name: shared-memory
-          mountPath: /dev/shm
-        resources:
-          limits:
-            nvidia.com/gpu: 8
-      volumes:
-      - name: checkpoint-storage
-        persistentVolumeClaim:
-          claimName: training-checkpoints
-      - name: shared-memory
-        emptyDir:
-          medium: Memory
-          sizeLimit: 200Gi
-      nodeSelector:
-        workload-type: gpu-training
-      tolerations:
-      - key: nvidia.com/gpu
-        operator: Exists
-        effect: NoSchedule
-```
-
-## Strategy 2: Rolling Node Pool Upgrade (Higher Risk)
-
-If blue-green isn't feasible due to resource constraints:
-
-### 1. Disable Cluster Auto-upgrade
-
-```bash
-gcloud container clusters update YOUR_CLUSTER_NAME \
-  --no-enable-autoupgrade \
-  --zone=YOUR_ZONE
-```
-
-### 2. Create New Node Pool with 1.32
-
-```bash
-# Create new node pool alongside existing one
-gcloud container node-pools create gpu-pool-v132 \
-  --cluster=YOUR_CLUSTER_NAME \
+  --max-nodes=64 \
+  --min-nodes=0 \
   --node-version=1.32.x \
-  --machine-type=a3-megagpu-8g \
-  --num-nodes=32 \
-  --zone=YOUR_ZONE
+  --enable-gvnic \
+  --enable-ip-alias \
+  --network-performance-configs=total-egress-bandwidth-tier=TIER_1 \
+  --placement-policy-type=COMPACT \
+  --reservation-affinity=none \
+  --node-taints=nvidia.com/gpu=present:NoSchedule \
+  --node-labels=gpu-generation=h100,pool-version=v132
 ```
 
-### 3. Gradual Migration Script
+2. **Wait for current training to complete** - This is the safest approach
 
+3. **Migrate workloads during scheduled maintenance**
+
+#### Option B: Live Migration (High Risk - Not Recommended for 2-3 Week Runs)
+
+If you absolutely must upgrade during training:
+
+1. **Use Node Pool Surge Upgrade**
 ```bash
-#!/bin/bash
-# gradual-migration.sh
-
-CLUSTER_NAME="your-cluster"
-OLD_POOL="gpu-pool-v131"
-NEW_POOL="gpu-pool-v132"
-ZONE="your-zone"
-
-# Function to check training job health
-check_training_health() {
-    kubectl get jobs llm-training -o jsonpath='{.status.active}' | grep -q "1"
-    return $?
-}
-
-# Function to migrate nodes gradually
-migrate_nodes() {
-    local batch_size=4
-    local old_nodes=$(kubectl get nodes -l nodepool=$OLD_POOL -o name)
-    
-    for node_batch in $(echo $old_nodes | xargs -n $batch_size); do
-        echo "Migrating batch: $node_batch"
-        
-        # Cordon old nodes
-        echo $node_batch | xargs kubectl cordon
-        
-        # Wait for training to reach checkpoint
-        sleep 600
-        
-        if ! check_training_health; then
-            echo "Training unhealthy, rolling back"
-            echo $node_batch | xargs kubectl uncordon
-            exit 1
-        fi
-        
-        # Drain nodes
-        echo $node_batch | xargs -I {} kubectl drain {} --ignore-daemonsets --delete-emptydir-data --force
-        
-        # Wait for pods to reschedule
-        sleep 300
-        
-        if ! check_training_health; then
-            echo "Migration failed, manual intervention required"
-            exit 1
-        fi
-        
-        echo "Batch migrated successfully"
-        sleep 60
-    done
-}
-
-migrate_nodes
+gcloud container node-pools update EXISTING_POOL \
+  --cluster=CLUSTER_NAME \
+  --zone=ZONE \
+  --max-surge-upgrade=1 \
+  --max-unavailable-upgrade=0 \
+  --node-version=1.32.x
 ```
 
-## GPUDirect-TCPXO Preservation
+⚠️ **Warning**: This will still cause disruption to your training run.
 
-### 1. Verify Network Configuration
+### Phase 4: Preserve GPUDirect-TCPXO Configuration
+
+Ensure your DaemonSet/configuration is maintained:
 
 ```yaml
-# DaemonSet to validate GPU interconnect
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: gpu-interconnect-test
+  name: tcpxo-daemon
 spec:
-  selector:
-    matchLabels:
-      name: gpu-interconnect-test
   template:
-    metadata:
-      labels:
-        name: gpu-interconnect-test
     spec:
       hostNetwork: true
       containers:
-      - name: test-container
-        image: nvcr.io/nvidia/pytorch:23.10-py3
-        command: ["/bin/bash", "-c", "sleep infinity"]
+      - name: tcpxo-init
+        image: gcr.io/gke-release/nvidia-driver-installer:fixed
         securityContext:
           privileged: true
+        env:
+        - name: NVIDIA_DRIVER_CAPABILITIES
+          value: "compute,utility,compat32"
         volumeMounts:
+        - name: dev
+          mountPath: /dev
         - name: nvidia-install-dir-host
           mountPath: /usr/local/nvidia
-        resources:
-          limits:
-            nvidia.com/gpu: 1
-      volumes:
-      - name: nvidia-install-dir-host
-        hostPath:
-          path: /home/kubernetes/bin/nvidia
       nodeSelector:
-        workload-type: gpu-training
+        cloud.google.com/gke-accelerator: nvidia-h100-mega-80gb
 ```
 
-### 2. Network Validation Script
-
-```bash
-#!/bin/bash
-# validate-gpu-network.sh
-
-echo "Validating GPUDirect-TCPXO connectivity..."
-
-# Test inter-node GPU communication
-kubectl exec -it gpu-interconnect-test-xxxxx -- bash -c "
-nvidia-smi topo -m
-echo 'Testing GPU-to-GPU bandwidth...'
-/usr/local/cuda/samples/1_Utilities/bandwidthTest/bandwidthTest --device=all
-"
-
-# Verify NCCL can detect topology
-kubectl exec -it YOUR_TRAINING_POD -- python -c "
-import torch
-import torch.distributed as dist
-print(f'NCCL available: {torch.distributed.is_nccl_available()}')
-print(f'GPU count: {torch.cuda.device_count()}')
-"
-```
-
-## Monitoring and Rollback Plan
-
-### 1. Enhanced Monitoring
+### Phase 5: Training Job Configuration for Resilience
 
 ```yaml
-apiVersion: v1
-kind: ConfigMap
+apiVersion: batch/v1
+kind: Job
 metadata:
-  name: training-monitor
-data:
-  monitor.py: |
-    import subprocess
-    import time
-    import json
-    
-    def check_training_metrics():
-        # Monitor loss convergence
-        # Check GPU utilization
-        # Validate checkpoint integrity
-        pass
-    
-    def alert_if_degraded():
-        # Send alerts if training degrades
-        pass
-    
-    while True:
-        check_training_metrics()
-        time.sleep(30)
+  name: llm-training
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        pool-version: v131  # Pin to current nodes during training
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: cloud.google.com/gke-accelerator
+                operator: In
+                values: ["nvidia-h100-mega-80gb"]
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Equal
+        value: present
+        effect: NoSchedule
 ```
 
-### 2. Automated Rollback
+## Safest Timeline Strategy
+
+### Immediate Actions:
+1. Set maintenance exclusion windows
+2. Upgrade control plane to 1.32
+3. Create new 1.32 node pool (scaled to 0)
+4. Validate new node pool with small test jobs
+
+### After Current Training Completes:
+1. Scale up new node pool
+2. Start new training on 1.32 nodes
+3. Drain and delete old node pool
+
+### Emergency Upgrade Path (If Security Critical):
+1. Implement checkpoint saving every few hours
+2. Use surge upgrade with max-surge=8, max-unavailable=0
+3. Accept 10-30 minute interruption for node cycling
+4. Resume from latest checkpoint
+
+## Monitoring During Upgrade
 
 ```bash
-#!/bin/bash
-# emergency-rollback.sh
+# Monitor node readiness
+kubectl get nodes -l pool-version=v132 -w
 
-BACKUP_CLUSTER="training-cluster-v131"
-NEW_CLUSTER="training-cluster-v132"
+# Check GPU device plugin
+kubectl get daemonset nvidia-gpu-device-plugin -n kube-system
 
-echo "Initiating emergency rollback..."
-
-# Switch kubectl context
-kubectl config use-context $BACKUP_CLUSTER
-
-# Restore from latest checkpoint
-kubectl apply -f training-job-rollback.yaml
-
-# Monitor restoration
-kubectl logs -f job/llm-training-restore
+# Verify GPUDirect status
+kubectl exec -it <training-pod> -- nvidia-smi nvlink -s
 ```
 
-## Best Practices for This Upgrade
+## Key Recommendations:
 
-1. **Test in Staging**: Replicate your exact setup in a smaller staging environment first
-2. **Checkpoint Frequently**: Reduce checkpoint intervals during migration
-3. **Monitor Continuously**: Set up alerts for GPU utilization drops or communication failures
-4. **Plan for Rollback**: Keep the old cluster running until new cluster is validated
-5. **Coordinate Team**: Ensure 24/7 coverage during migration window
+1. **Wait for training completion** - This is the safest approach for mission-critical 2-3 week runs
+2. **Control plane upgrade is safe** - Do this immediately
+3. **Test new node pool thoroughly** before migration
+4. **Implement robust checkpointing** for future runs
+5. **Consider shorter training cycles** (1-2 days) with checkpointing for easier maintenance
 
-## Timeline Recommendation
-
-- **Week 1**: Set up new cluster, validate configuration
-- **Week 2**: Test migration with smaller workloads
-- **Week 3**: Execute migration during your training job's natural checkpoint
-- **Week 4**: Validate and cleanup old resources
-
-This approach minimizes risk while preserving your critical GPU interconnect performance. The blue-green strategy is safest but requires double resources temporarily.
+The control plane upgrade to 1.32 can be done immediately without risk. For the node upgrade, I strongly recommend waiting for your current training run to complete unless there's a critical security vulnerability that requires immediate patching.

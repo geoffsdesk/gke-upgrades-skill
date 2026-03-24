@@ -3,52 +3,52 @@
     {
       "expectation": "Warns that GPU VMs do not support live migration \u2014 every upgrade forces pod restart, which kills training",
       "passed": false,
-      "reason": "The response does not explicitly warn about the lack of live migration support for GPU VMs or that upgrades force pod restarts that kill training"
+      "reason": "The response mentions that upgrades will cause disruption but doesn't explicitly warn that GPU VMs don't support live migration or explain that every upgrade forces pod restart"
     },
     {
       "expectation": "Recommends waiting for the current training run to complete or reach a checkpoint before upgrading the GPU node pool",
       "passed": true,
-      "reason": "The response includes checkpoint strategies and mentions 'Wait for training to reach checkpoint' in the migration script"
+      "reason": "The response explicitly states 'Wait for current training to complete - This is the safest approach' and recommends waiting for training completion in the key recommendations"
     },
     {
       "expectation": "Suggests the cordon-and-wait pattern: cordon GPU nodes, let training finish naturally, then upgrade the empty pool",
-      "passed": true,
-      "reason": "The gradual migration script explicitly shows cordoning nodes and includes the cordon-and-wait pattern"
+      "passed": false,
+      "reason": "The response doesn't mention cordoning nodes or the specific cordon-and-wait pattern, instead focusing on creating new node pools"
     },
     {
       "expectation": "Addresses GPU driver version coupling \u2014 GKE auto-installs drivers matching the target version, which may change CUDA versions and break framework compatibility",
       "passed": false,
-      "reason": "The response does not address GPU driver version coupling or potential CUDA version changes that could break framework compatibility"
+      "reason": "The response doesn't address GPU driver version coupling or the potential for CUDA version changes to break framework compatibility"
     },
     {
       "expectation": "Recommends testing the target GKE version in a staging cluster first to verify driver + CUDA + framework compatibility",
-      "passed": true,
-      "reason": "The best practices section states 'Test in Staging: Replicate your exact setup in a smaller staging environment first'"
+      "passed": false,
+      "reason": "The response mentions validating the new node pool with small test jobs but doesn't specifically recommend testing in a staging cluster for driver/CUDA/framework compatibility"
     },
     {
       "expectation": "Addresses GPUDirect-TCPXO version requirements \u2014 verify the target GKE version supports the networking stack",
-      "passed": true,
-      "reason": "The response includes GPUDirect-TCPXO preservation section with network validation and connectivity testing"
+      "passed": false,
+      "reason": "While the response includes GPUDirect-TCPXO configuration examples, it doesn't address version requirements or verifying target GKE version support for the networking stack"
     },
     {
       "expectation": "Notes that surge upgrades need extra H100 nodes which are scarce \u2014 recommends maxSurge=0/maxUnavailable=1 (maxUnavailable is the primary lever for GPU pools with fixed reservations), or GKE's auto-scale blue-green strategy if surge quota is unavailable",
       "passed": false,
-      "reason": "The response does not mention maxSurge/maxUnavailable parameters or address H100 node scarcity issues during surge upgrades"
+      "reason": "The response mentions surge upgrade settings but doesn't address H100 scarcity or recommend maxSurge=0/maxUnavailable=1, instead suggesting maxSurge=1/maxUnavailable=0"
     },
     {
       "expectation": "Recommends upgrading the control plane first (can be done independently without affecting running training)",
-      "passed": false,
-      "reason": "The response does not mention upgrading the control plane independently or that it can be done without affecting running training"
+      "passed": true,
+      "reason": "The response explicitly recommends upgrading the control plane first and states that 'Control plane upgrades don't affect running workloads or GPUDirect-TCPXO connections'"
     },
     {
       "expectation": "Mentions maintenance exclusions ('no minor or node upgrades') to protect against auto-upgrades during active training campaigns",
       "passed": true,
-      "reason": "The response includes disabling auto-upgrade with '--no-enable-autoupgrade' and '--enable-autoupgrade=false' flags"
+      "reason": "The response includes maintenance exclusions configuration to cover the training period and mentions setting maintenance exclusion windows in the timeline"
     },
     {
       "expectation": "Addresses compact placement \u2014 verify that replacement nodes land in the same placement group to preserve RDMA topology",
-      "passed": true,
-      "reason": "The response includes '--placement-type=COMPACT' in the node pool creation commands to preserve placement topology"
+      "passed": false,
+      "reason": "While the response includes '--placement-policy-type=COMPACT' in the node pool creation, it doesn't address verifying replacement nodes land in the same placement group to preserve RDMA topology"
     }
   ]
 }

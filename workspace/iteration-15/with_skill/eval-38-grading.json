@@ -3,27 +3,27 @@
     {
       "expectation": "Clearly states that GKE auto-upgrades clusters automatically as the default and recommended model \u2014 this is what differentiates GKE from self-managed Kubernetes",
       "passed": true,
-      "reason": "Response explicitly states 'GKE auto-upgrades are the recommended approach' and mentions this is 'the primary value proposition that differentiates GKE from self-managed Kubernetes'"
+      "reason": "Response explicitly states 'you should rely on GKE's automated upgrades' and calls this 'GKE's primary value proposition and the recommended approach'"
     },
     {
       "expectation": "Recommends configuring maintenance windows to control WHEN auto-upgrades happen (e.g., weekends, off-peak hours)",
       "passed": true,
-      "reason": "Provides specific gcloud command to set maintenance windows during off-peak hours with example showing Saturday schedule"
+      "reason": "Response includes specific gcloud commands for setting maintenance windows during off-peak hours and provides examples with Saturday windows"
     },
     {
       "expectation": "Recommends maintenance exclusions to control WHAT auto-upgrades happen (e.g., 'no minor or node upgrades' to block disruptive changes while allowing security patches)",
       "passed": true,
-      "reason": "Provides detailed explanation and gcloud command for 'no_minor_or_node_upgrades' exclusion that blocks disruptive changes while allowing security patches"
+      "reason": "Response provides specific commands for maintenance exclusions with 'no_minor_or_node_upgrades' scope and explains how this allows security patches while blocking disruptive upgrades"
     },
     {
       "expectation": "Does NOT recommend disabling auto-upgrades or switching to a purely manual upgrade cadence as the first option",
       "passed": true,
-      "reason": "Response advocates for auto-upgrades and explicitly warns against disabling them, stating 'Never disable auto-upgrades entirely'"
+      "reason": "Response explicitly recommends auto-upgrades as primary approach and states 'Manual upgrades should be the exception, not the rule'"
     },
     {
       "expectation": "Explains that manual upgrades are useful for specific scenarios (emergency patches, accelerating the schedule) but are the exception, not the rule",
       "passed": true,
-      "reason": "Response has a dedicated section 'When You DO Want Manual Upgrades' explaining manual upgrades are for planned maintenance windows with exclusions in place, positioning them as the exception"
+      "reason": "Response has a dedicated section 'When to Use Manual Upgrades' listing specific scenarios like emergency patching and accelerating ahead, emphasizing these are exceptions"
     },
     {
       "expectation": "Recommends enrolling in scheduled upgrade notifications (72h advance) for visibility into upcoming auto-upgrades",
@@ -33,12 +33,12 @@
     {
       "expectation": "Suggests checking the GKE release schedule for longer-range planning (~1 month best-case for new minors)",
       "passed": false,
-      "reason": "Response does not mention checking GKE release schedules or provide timeline information for planning purposes"
+      "reason": "Response does not mention checking the GKE release schedule or provide any timeline information for longer-range planning"
     },
     {
       "expectation": "Mentions release channel selection as the primary lever for upgrade cadence (Stable = slower, Regular = balanced)",
       "passed": false,
-      "reason": "While response mentions they're on Regular channel, it does not explain release channel selection as a lever for upgrade cadence or compare Stable vs Regular speeds"
+      "reason": "While response mentions the clusters are on Regular channel, it does not explain release channels as the primary lever for upgrade cadence or compare Stable vs Regular timing"
     }
   ]
 }

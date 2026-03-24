@@ -3,42 +3,42 @@
     {
       "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
       "passed": true,
-      "reason": "Response explicitly states 'Atomic Recreation: Each TPU slice (256 chips) gets recreated entirely in a single step. There's no rolling upgrade \u2014 all 256 chips restart simultaneously per slice.'"
+      "reason": "Response explicitly states 'All slices restart simultaneously' and 'No rolling updates - Unlike standard node pools, there's no gradual node-by-node replacement' and 'atomic recreation behavior'"
     },
     {
       "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
       "passed": true,
-      "reason": "Response clearly states 'Since you have 4 interconnected slices, a maintenance event on ANY single slice triggers restart of ALL 4 slices. This is due to the tight coupling in multislice environments.'"
+      "reason": "Response clearly states 'Cascading restart trigger - A maintenance event on ANY slice triggers restart of ALL slices in the multislice environment'"
     },
     {
       "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
       "passed": true,
-      "reason": "Response explains that training job will experience 'complete restart' and that the job 'spans all slices and can't survive partial failure', clearly indicating interruption."
+      "reason": "Response states 'Complete job termination - Your LLM training job will be forcibly terminated when the slices are recreated' and 'All training pods will be terminated immediately'"
     },
     {
       "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
-      "passed": true,
-      "reason": "Response states 'During recreation, if insufficient TPU v5e resources exist in your zone, the slice will block until hardware becomes available' and mentions 'If capacity is constrained, it could be hours.'"
+      "passed": false,
+      "reason": "Response mentions downtime expectations (15-35 minutes) but doesn't specifically address the scenario of insufficient TPU resources causing extended blocking during recreation"
     },
     {
       "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
       "passed": true,
-      "reason": "Response recommends 'Save checkpoint manually during a natural stopping point' as part of the controlled restart strategy and emphasizes checkpoint verification."
+      "reason": "Response includes 'Checkpoint save scheduled 30 minutes before maintenance window' in checklist and provides specific pre-maintenance checkpoint commands"
     },
     {
       "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
       "passed": true,
-      "reason": "Response includes 'Restart training from checkpoint' section and mentions 'Launch training job pointing to latest checkpoint' with validation steps for smooth resume."
+      "reason": "Response includes 'Review training script for graceful restart behavior' in checklist and provides detailed checkpoint restore code examples with 'initialize_or_restore()' function"
     },
     {
       "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
       "passed": true,
-      "reason": "Response provides specific gcloud commands for maintenance exclusions and mentions 'Use multiple 30-day exclusions to defer maintenance until your training campaign completes.'"
+      "reason": "Response includes a section on 'Maintenance Exclusion Strategy' with specific gcloud commands, though it notes limited effectiveness for TPU infrastructure maintenance"
     },
     {
       "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
       "passed": false,
-      "reason": "While the response mentions maintenance exclusions to defer events and controlled restart timing, it does not specifically discuss using maintenance windows to schedule when the event occurs during planned breaks."
+      "reason": "Response mentions maintenance windows in the checklist ('Maintenance notification received with specific timing') but doesn't explain how to configure or use maintenance windows to schedule the event during planned breaks"
     }
   ]
 }

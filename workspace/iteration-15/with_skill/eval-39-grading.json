@@ -3,42 +3,42 @@
     {
       "expectation": "Recommends GKE's native node pool upgrade strategies rather than the manual create/cordon/drain/delete workflow described",
       "passed": true,
-      "reason": "Response explicitly states manual blue-green is not recommended and advocates for GKE's native upgrade strategies with specific commands"
+      "reason": "Response explicitly states 'No, that's not the optimal approach' and recommends GKE's native surge upgrade with specific gcloud commands instead of manual workflow"
     },
     {
       "expectation": "For GPU pools with fixed reservations: recommends surge upgrade with maxSurge=0 and maxUnavailable set as the primary lever (since no surge capacity is available)",
       "passed": true,
-      "reason": "Response specifically recommends maxSurge=0 and maxUnavailable=2 configuration for GPU pools with fixed reservations, explaining the capacity constraints"
+      "reason": "Response specifically recommends maxSurge=0 and maxUnavailable=4 configuration, explaining that maxSurge=0 respects fixed reservations while maxUnavailable provides the upgrade lever"
     },
     {
       "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as a native alternative that handles cordon and migration automatically",
-      "passed": false,
-      "reason": "Response does not mention auto-scale blue-green upgrade strategy as a native alternative - only discusses surge upgrades"
+      "passed": true,
+      "reason": "Response mentions autoscaled blue-green as an alternative with AUTOSCALED_BLUE_GREEN strategy and explains it scales down old pool as new scales up automatically"
     },
     {
       "expectation": "Explains that native strategies are the supported path and handle edge cases (PDB respect, drain timeouts, progress tracking) that manual workflows miss",
       "passed": true,
-      "reason": "Response explains native strategies are fully supported and mentions PDB protection, though doesn't explicitly detail all edge cases like drain timeouts and progress tracking"
+      "reason": "Response explains that native strategies handle cordon/drain/delete logic automatically and notes manual approaches have 'more failure points' and are 'unsupported workflow' that GKE support can't help with"
     },
     {
       "expectation": "Only suggests manual blue-green as a last resort if native strategies don't meet a specific requirement",
       "passed": true,
-      "reason": "Response clearly recommends against manual blue-green approach and positions it as inferior to native strategies"
+      "reason": "Response states manual blue-green 'should be your last resort' and recommends native approaches first, only mentioning manual approach in the context of why it's suboptimal"
     },
     {
       "expectation": "Addresses GPU driver compatibility \u2014 need to verify target version's auto-installed driver is compatible",
       "passed": true,
-      "reason": "Response includes a section on driver compatibility check with specific mention of CUDA version changes in GKE 1.32"
+      "reason": "Response includes GPU driver compatibility warning: 'GKE 1.32 will install newer GPU drivers - test in staging first' and mentions 1.31\u21921.32 may change CUDA version"
     },
     {
       "expectation": "Recommends scheduling the upgrade during a gap in GPU workloads to minimize impact",
       "passed": true,
-      "reason": "Response mentions maintenance exclusions for timing control and specifically suggests timing upgrades between training campaigns"
+      "reason": "Response specifically mentions 'If running multi-day training jobs, use maintenance exclusions and upgrade during scheduled gaps' for training workloads"
     },
     {
       "expectation": "Provides gcloud commands for the recommended native approach",
       "passed": true,
-      "reason": "Response provides specific gcloud commands for configuring and executing the native surge upgrade approach"
+      "reason": "Response provides specific gcloud commands for both the surge upgrade strategy and autoscaled blue-green alternative, including exact parameter configurations"
     }
   ]
 }

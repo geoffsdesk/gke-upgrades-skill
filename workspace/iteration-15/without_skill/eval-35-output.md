@@ -1,142 +1,204 @@
-Here's a comprehensive strategy to minimize disruption for your H100-based foundation model training while maintaining security:
+Here's a comprehensive GKE configuration strategy for stable foundation model training with H100 GPUs:
 
-## Release Channel & Maintenance Strategy
+## Cluster Configuration
 
-### Release Channel Configuration
 ```yaml
-# Use Regular channel - balances stability with security updates
-releaseChannel:
-  channel: REGULAR
-```
-
-**Rationale**: Regular channel provides:
-- 2-4 week delay after Rapid channel
-- More stable than Rapid, more current than Stable
-- Critical security patches still arrive promptly
-- Predictable update cadence for planning
-
-### Maintenance Window Configuration
-```yaml
-maintenancePolicy:
-  window:
-    recurringWindow:
-      window:
-        startTime: "2024-01-07T06:00:00Z"  # Sunday 6 AM UTC
-        endTime: "2024-01-07T10:00:00Z"    # Sunday 10 AM UTC
-      recurrence: "FREQ=WEEKLY;BYDAY=SU"
-  maintenanceExclusions:
-    - name: "training-sprint-1"
-      startTime: "2024-02-01T00:00:00Z"
-      endTime: "2024-03-15T00:00:00Z"
-      scope: NO_UPGRADES
+apiVersion: container.googleapis.com/v1
+kind: Cluster
+metadata:
+  name: h100-training-cluster
+spec:
+  # Use Static GKE version - critical for training stability
+  initialClusterVersion: "1.28.3-gke.1203001"  # Pin to specific patch
+  
+  # Release channel: None (manual upgrades only)
+  releaseChannel:
+    channel: UNSPECIFIED
+  
+  # Maintenance policy - tightly controlled windows
+  maintenancePolicy:
+    window:
+      recurringWindow:
+        window:
+          startTime: "2024-01-07T06:00:00Z"  # Sunday 6 AM UTC
+          endTime: "2024-01-07T10:00:00Z"    # 4-hour window
+        recurrence: "FREQ=WEEKLY;BYDAY=SU"
+    
+    # Maintenance exclusions for planned training periods
+    maintenanceExclusions:
+      training-period-q1:
+        startTime: "2024-01-15T00:00:00Z"
+        endTime: "2024-03-15T23:59:59Z"
+        scope: NO_UPGRADES
+  
+  # Network configuration
+  networkConfig:
+    network: "projects/PROJECT_ID/global/networks/training-vpc"
+    subnetwork: "projects/PROJECT_ID/regions/us-central1/subnetworks/h100-subnet"
+    enableIntraNodeVisibility: true
+  
+  # Security and monitoring
+  networkPolicy:
+    enabled: true
+  
+  monitoringService: "monitoring.googleapis.com/kubernetes"
+  loggingService: "logging.googleapis.com/kubernetes"
+  
+  # Workload Identity for secure pod authentication
+  workloadIdentityConfig:
+    workloadPool: "PROJECT_ID.svc.id.goog"
 ```
 
 ## Node Pool Strategy
 
-### Multi-Tier Node Pool Architecture
+### Primary Training Node Pool (H100s)
 ```yaml
-# 1. GPU Training Nodes - Ultra Stable
-- name: "h100-training-pool"
-  nodeConfig:
-    machineType: "a3-highgpu-8g"  # 8x H100 GPUs
-    accelerators:
+apiVersion: container.googleapis.com/v1
+kind: NodePool
+metadata:
+  name: h100-training-primary
+spec:
+  cluster: h100-training-cluster
+  
+  # Static node version - no auto-upgrades
+  version: "1.28.3-gke.1203001"
+  
+  # Manual upgrade strategy
+  management:
+    autoUpgrade: false
+    autoRepair: true  # Keep repair for hardware issues
+  
+  # Node configuration
+  config:
+    machineType: "a3-highgpu-8g"  # 8x H100 80GB
+    
+    # GPU configuration
+    guestAccelerator:
     - type: "nvidia-h100-80gb"
       count: 8
-    diskSizeGb: 500
+      gpuDriverInstallationConfig:
+        gpuDriverVersion: "LATEST"  # Or pin to specific driver
+    
+    # Disk configuration for checkpoints
+    diskSizeGb: 200
     diskType: "pd-ssd"
-    imageType: "COS_CONTAINERD"
+    
+    # Additional local NVMe for fast I/O
+    localSsdCount: 4
+    
+    # Taints to ensure only ML workloads schedule here
+    taints:
+    - key: "training.ai/h100"
+      value: "true"
+      effect: "NO_SCHEDULE"
+    
     labels:
       workload-type: "training"
       gpu-type: "h100"
-  management:
-    autoUpgrade: false  # Manual control
-    autoRepair: true    # Keep repair for hardware issues
-  upgradeSettings:
-    strategy: "BLUE_GREEN"
-    maxSurge: 1
-    maxUnavailable: 0
+      node-pool: "primary"
+    
+    # Metadata for monitoring
+    metadata:
+      disable-legacy-endpoints: "true"
+    
+    # Security
+    serviceAccount: "h100-training-sa@PROJECT_ID.iam.gserviceaccount.com"
+    oauthScopes:
+    - "https://www.googleapis.com/auth/cloud-platform"
+    
+    shieldedInstanceConfig:
+      enableSecureBoot: true
+      enableIntegrityMonitoring: true
+  
+  # Scaling configuration
+  initialNodeCount: 4
+  autoscaling:
+    enabled: true
+    minNodeCount: 2
+    maxNodeCount: 16
+    
+  # Placement policy for optimal interconnect
+  placementPolicy:
+    type: "COMPACT"  # Keep nodes close for better GPU-to-GPU communication
+```
 
-# 2. System/Monitoring Nodes - Auto-managed
-- name: "system-pool"
-  nodeConfig:
-    machineType: "n2-standard-4"
-    diskSizeGb: 100
-    imageType: "COS_CONTAINERD"
+### Backup Training Node Pool
+```yaml
+apiVersion: container.googleapis.com/v1
+kind: NodePool
+metadata:
+  name: h100-training-backup
+spec:
+  cluster: h100-training-cluster
+  
+  # Identical config to primary but separate pool
+  version: "1.28.3-gke.1203001"
+  
+  management:
+    autoUpgrade: false
+    autoRepair: true
+  
+  config:
+    machineType: "a3-highgpu-8g"
+    guestAccelerator:
+    - type: "nvidia-h100-80gb"
+      count: 8
+    
+    taints:
+    - key: "training.ai/h100-backup"
+      value: "true" 
+      effect: "NO_SCHEDULE"
+    
     labels:
-      workload-type: "system"
-  management:
-    autoUpgrade: true
-    autoRepair: true
-  upgradeSettings:
-    strategy: "SURGE"
-    maxSurge: 2
-    maxUnavailable: 0
-
-# 3. Flexible Workload Pool
-- name: "general-compute-pool"
-  nodeConfig:
-    machineType: "n2-standard-8"
-    diskSizeGb: 200
-    imageType: "COS_CONTAINERD"
-  management:
-    autoUpgrade: true
-    autoRepair: true
+      workload-type: "training"
+      gpu-type: "h100"
+      node-pool: "backup"
+  
+  # Start with 0 nodes, scale when needed
+  initialNodeCount: 0
   autoscaling:
     enabled: true
     minNodeCount: 0
-    maxNodeCount: 10
+    maxNodeCount: 8
 ```
 
-## Cluster Configuration
-
-### Core Cluster Settings
+### System Node Pool
 ```yaml
-cluster:
-  name: "foundation-training-cluster"
-  location: "us-central1-a"  # Single zone for H100 availability
-  
-  # Network configuration for high-throughput training
-  network: "projects/PROJECT_ID/global/networks/training-vpc"
-  subnetwork: "projects/PROJECT_ID/regions/us-central1/subnetworks/training-subnet"
-  
-  # Enhanced security without disruption
-  workloadIdentityConfig:
-    workloadPool: "PROJECT_ID.svc.id.goog"
-  
-  # Disable auto-upgrade for control plane initially
-  releaseChannel:
-    channel: REGULAR
-  
-  # Enhanced monitoring
-  monitoringConfig:
-    enableComponents:
-    - "SYSTEM_COMPONENTS"
-    - "WORKLOADS"
-    - "APISERVER"
-    - "CONTROLLER_MANAGER"
-    - "SCHEDULER"
-```
-
-## Training Job Protection Strategy
-
-### 1. Node Taints and Tolerations
-```yaml
-# Taint training nodes to prevent system workloads
-apiVersion: v1
-kind: Node
+apiVersion: container.googleapis.com/v1
+kind: NodePool
 metadata:
-  name: training-node
+  name: system-pool
 spec:
-  taints:
-  - key: "nvidia.com/gpu"
-    value: "h100"
-    effect: "NoSchedule"
-  - key: "training-dedicated"
-    value: "true"
-    effect: "NoSchedule"
+  cluster: h100-training-cluster
+  
+  # Can use a more recent version for system components
+  version: "1.28.5-gke.1217001"
+  
+  management:
+    autoUpgrade: false  # Still manual for consistency
+    autoRepair: true
+  
+  config:
+    machineType: "e2-standard-4"
+    
+    labels:
+      workload-type: "system"
+    
+    # Taint to prevent training workloads
+    taints:
+    - key: "system-only"
+      value: "true"
+      effect: "NO_SCHEDULE"
+  
+  initialNodeCount: 3
+  autoscaling:
+    enabled: true
+    minNodeCount: 3
+    maxNodeCount: 6
 ```
 
-### 2. Training Job Configuration
+## Critical Training Job Configuration
+
 ```yaml
 apiVersion: batch/v1
 kind: Job
@@ -145,58 +207,71 @@ metadata:
 spec:
   template:
     spec:
+      # Use backup pool as fallback
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: node-pool
+                operator: In
+                values: ["primary"]
+          - weight: 50
+            preference:
+              matchExpressions:
+              - key: node-pool
+                operator: In
+                values: ["backup"]
+      
+      # Tolerate training taints
       tolerations:
-      - key: "nvidia.com/gpu"
-        operator: "Equal"
-        value: "h100"
-        effect: "NoSchedule"
-      - key: "training-dedicated"
+      - key: "training.ai/h100"
         operator: "Equal"
         value: "true"
-        effect: "NoSchedule"
+        effect: "NO_SCHEDULE"
+      - key: "training.ai/h100-backup"
+        operator: "Equal"
+        value: "true"
+        effect: "NO_SCHEDULE"
       
-      nodeSelector:
-        workload-type: "training"
-        gpu-type: "h100"
-      
-      # Prevent eviction
-      priorityClassName: "training-critical"
+      # Critical for training stability
+      restartPolicy: Never
       
       containers:
       - name: training
         resources:
-          limits:
-            nvidia.com/gpu: 8
           requests:
             nvidia.com/gpu: 8
-        
-        # Graceful shutdown handling
-        lifecycle:
-          preStop:
-            exec:
-              command:
-              - /bin/bash
-              - -c
-              - |
-                # Save checkpoint before shutdown
-                kill -TERM $(pgrep -f training_script)
-                sleep 30
+          limits:
+            nvidia.com/gpu: 8
 ```
 
-### 3. Priority Class for Training Workloads
-```yaml
-apiVersion: scheduling.k8s.io/v1
-kind: PriorityClass
-metadata:
-  name: training-critical
-value: 1000000
-globalDefault: false
-description: "Critical priority for training workloads"
+## Operational Strategy
+
+### 1. **Upgrade Windows**
+```bash
+# Set maintenance exclusions before training
+gcloud container clusters update h100-training-cluster \
+  --add-maintenance-exclusion-name="training-run-march" \
+  --add-maintenance-exclusion-start="2024-03-01T00:00:00Z" \
+  --add-maintenance-exclusion-end="2024-03-31T23:59:59Z" \
+  --add-maintenance-exclusion-scope="NO_UPGRADES"
 ```
 
-## Monitoring and Alerting
+### 2. **Emergency Node Pool Switching**
+```bash
+# Cordon primary pool if issues arise
+kubectl cordon -l node-pool=primary
 
-### Training Job Monitoring
+# Scale backup pool
+gcloud container node-pools resize h100-training-backup \
+  --cluster=h100-training-cluster \
+  --num-nodes=4 \
+  --zone=us-central1-a
+```
+
+### 3. **Monitoring Setup**
 ```yaml
 apiVersion: v1
 kind: ConfigMap
@@ -205,106 +280,34 @@ metadata:
 data:
   alerts.yaml: |
     groups:
-    - name: training.rules
+    - name: training-stability
       rules:
-      - alert: TrainingJobDown
-        expr: kube_job_status_active{job_name=~"foundation-model-.*"} == 0
-        for: 5m
+      - alert: NodeUpgrade
+        expr: increase(kube_node_info[5m]) > 0
         labels:
           severity: critical
         annotations:
-          summary: "Training job {{ $labels.job_name }} is not running"
+          summary: "Node upgrade detected during training"
       
-      - alert: GPUUtilizationLow
-        expr: DCGM_FI_DEV_GPU_UTIL < 80
-        for: 10m
+      - alert: GPUNodeDown
+        expr: kube_node_status_condition{condition="Ready",status="false"} 
+              and on(node) kube_node_labels{label_gpu_type="h100"}
         labels:
-          severity: warning
-        annotations:
-          summary: "GPU utilization below 80% on {{ $labels.instance }}"
-      
-      - alert: NodeUpgradeScheduled
-        expr: increase(kube_node_status_condition{condition="Ready",status="Unknown"}[5m]) > 0
-        labels:
-          severity: warning
-        annotations:
-          summary: "Node {{ $labels.node }} may be upgrading"
+          severity: critical
 ```
 
-## Operational Procedures
+### 4. **Security Updates Strategy**
+- **Node OS**: Use Container-Optimized OS with automatic security updates enabled
+- **Kubernetes**: Manual upgrades only during planned maintenance windows
+- **Applications**: Update training images independently of infrastructure
 
-### 1. Pre-Training Checklist
-```bash
-#!/bin/bash
-# pre_training_check.sh
+## Key Protection Strategies
 
-# Verify maintenance exclusions are set
-gcloud container clusters describe foundation-training-cluster \
-  --zone=us-central1-a \
-  --format="value(maintenancePolicy.window.maintenanceExclusions)"
+1. **No Release Channel**: Complete manual control over upgrades
+2. **Dual Node Pools**: Seamless failover capability
+3. **Maintenance Exclusions**: Block upgrades during training periods
+4. **Version Pinning**: Consistent environment across all nodes
+5. **Placement Policies**: Optimize for GPU interconnect performance
+6. **Comprehensive Monitoring**: Early warning for any infrastructure changes
 
-# Check node upgrade settings
-kubectl get nodes -l workload-type=training -o custom-columns=NAME:.metadata.name,AUTO_UPGRADE:.spec.unschedulable
-
-# Verify resource quotas
-kubectl describe resourcequota -n training-namespace
-```
-
-### 2. Safe Upgrade Procedure
-```bash
-#!/bin/bash
-# safe_upgrade.sh
-
-# 1. Drain one training node at a time
-kubectl drain $NODE_NAME --ignore-daemonsets --delete-emptydir-data --force
-
-# 2. Upgrade single node
-gcloud container clusters upgrade foundation-training-cluster \
-  --node-pool=h100-training-pool \
-  --zone=us-central1-a \
-  --quiet
-
-# 3. Verify node health before continuing
-kubectl wait --for=condition=Ready node/$NODE_NAME --timeout=600s
-
-# 4. Uncordon node
-kubectl uncordon $NODE_NAME
-```
-
-### 3. Emergency Procedures
-```bash
-# Emergency maintenance exclusion
-gcloud container clusters update foundation-training-cluster \
-  --zone=us-central1-a \
-  --add-maintenance-exclusion-end="2024-04-01T00:00:00Z" \
-  --add-maintenance-exclusion-name="emergency-exclusion" \
-  --add-maintenance-exclusion-start="2024-03-01T00:00:00Z"
-
-# Disable auto-repair if needed
-gcloud container node-pools update h100-training-pool \
-  --cluster=foundation-training-cluster \
-  --zone=us-central1-a \
-  --no-enable-autorepair
-```
-
-## Security Considerations
-
-### 1. Keep Security Updates Flowing
-```yaml
-# Use Binary Authorization for container security
-binaryAuthorization:
-  enabled: true
-  evaluationMode: PROJECT_SINGLETON_POLICY_ENFORCE
-
-# Enable network policies
-networkPolicy:
-  enabled: true
-  provider: CALICO
-```
-
-### 2. Separate Critical from Non-Critical
-- System components (monitoring, logging) on auto-upgrading pools
-- Training workloads on manually managed pools
-- Regular security scanning of training images
-
-This configuration provides maximum protection for long-running training jobs while maintaining security through regular updates of non-critical components and controlled upgrades of training infrastructure.
+This configuration provides maximum stability while maintaining security through controlled, planned updates.

@@ -2,43 +2,43 @@
   "assertions": [
     {
       "expectation": "Recommends combining release channels with maintenance exclusions as the approach for maximum control",
-      "passed": true,
-      "reason": "Response shows release_channel configuration with REGULAR channel and maintenance_exclusion blocks for holiday freezes, demonstrating the combination approach"
+      "passed": false,
+      "reason": "The response mentions release channels and maintenance windows but does not specifically recommend maintenance exclusions as the key approach for maximum control"
     },
     {
       "expectation": "Recommends 'no minor or node upgrades' exclusion to prevent disruptive changes while allowing control plane security patches. May also mention persistent exclusions with --add-maintenance-exclusion-until-end-of-support (no longer a 6-month max, auto-tracks EoS)",
       "passed": false,
-      "reason": "Response only shows NO_UPGRADES exclusion scope for holiday periods, but doesn't specifically recommend 'no minor or node upgrades' exclusion type or mention --add-maintenance-exclusion-until-end-of-support"
+      "reason": "The response does not mention maintenance exclusions or the --add-maintenance-exclusion-until-end-of-support command. It focuses on disabling auto-upgrade instead"
     },
     {
       "expectation": "Recommends maintenance windows to control WHEN patches are applied (e.g., weekend windows only)",
       "passed": true,
-      "reason": "Response includes daily_maintenance_window configuration with start_time setting and mentions adjusting to maintenance window timing"
+      "reason": "The response explicitly recommends maintenance windows with Sunday scheduling and provides both gcloud and Terraform configurations for setting maintenance windows"
     },
     {
       "expectation": "Mentions the cluster disruption budget (disruption interval) to control upgrade frequency \u2014 patch interval default 7d (max 90d), minor interval default 30d (max 90d)",
       "passed": false,
-      "reason": "Response does not mention cluster disruption budget, disruption interval, or patch/minor interval configurations"
+      "reason": "The response does not mention cluster disruption budget or disruption intervals for controlling upgrade frequency"
     },
     {
       "expectation": "Suggests Stable or Extended channel for production clusters in regulated environments. Extended channel provides maximum flexibility around EoS enforcement (additional cost only during extended period)",
       "passed": false,
-      "reason": "Response recommends REGULAR channel instead of Stable or Extended, and doesn't mention Extended channel benefits or costs"
+      "reason": "The response recommends REGULAR channel, not Stable or Extended channel. It does not mention Extended channel at all"
     },
     {
       "expectation": "Notes that disabling control plane patches entirely is not recommended due to security risks \u2014 monthly patches at minimum",
       "passed": false,
-      "reason": "Response doesn't explicitly state that disabling control plane patches entirely is not recommended or mention minimum patching frequency"
+      "reason": "While the response emphasizes security, it does not explicitly state that disabling control plane patches entirely is not recommended or mention monthly patches as a minimum"
     },
     {
       "expectation": "May mention rollout sequencing as an advanced option for controlling upgrade order across multiple clusters, and/or the cluster disruption budget for controlling CP patch frequency",
       "passed": false,
-      "reason": "Response doesn't mention rollout sequencing for multiple clusters or cluster disruption budget for controlling control plane patch frequency"
+      "reason": "The response does not mention rollout sequencing or cluster disruption budget concepts"
     },
     {
       "expectation": "Provides gcloud commands for configuring the recommended exclusion type and maintenance window",
       "passed": false,
-      "reason": "Response shows Terraform configuration but doesn't provide specific gcloud commands for configuring maintenance exclusions and windows"
+      "reason": "The response provides gcloud commands for maintenance windows but does not provide commands for configuring maintenance exclusions, which is the key recommendation expected"
     }
   ]
 }

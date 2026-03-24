@@ -1,117 +1,212 @@
-## TPU Multislice Maintenance Impact
+# TPU Multislice Maintenance Impact & Preparation Guide
 
-Your training job will experience a **complete restart** — this is fundamentally different from CPU/GPU maintenance. Here's what actually happens:
+## What Will Actually Happen During Maintenance
 
-### What Will Happen During Maintenance
+**Critical difference from standard GKE:** TPU multislice environments have **atomic recreation behavior** that's fundamentally different from regular node upgrades.
 
-**Atomic Recreation:** Each TPU slice (256 chips) gets recreated entirely in a single step. There's no rolling upgrade — all 256 chips restart simultaneously per slice.
+### TPU Multislice Maintenance Behavior:
+1. **All slices restart simultaneously** - Your entire 4-slice, 1024-chip training environment will be recreated as a single atomic operation
+2. **No rolling updates** - Unlike standard node pools, there's no gradual node-by-node replacement
+3. **Cascading restart trigger** - A maintenance event on ANY slice triggers restart of ALL slices in the multislice environment
+4. **Complete job termination** - Your LLM training job will be forcibly terminated when the slices are recreated
 
-**Cascading Restart:** Since you have 4 interconnected slices, a maintenance event on **ANY single slice triggers restart of ALL 4 slices**. This is due to the tight coupling in multislice environments — the training job spans all slices and can't survive partial failure.
+### Timeline Expectations:
+- **Slice recreation time:** 10-20 minutes for TPU v5e slices to become available
+- **Job restart overhead:** Additional 5-15 minutes for your training framework to reinitialize
+- **Total downtime:** Expect 15-35 minutes of complete training halt
 
-**Capacity Risk:** During recreation, if insufficient TPU v5e resources exist in your zone, the slice will block until hardware becomes available. With 4x256 chips (1024 total), this represents significant capacity that needs to be available simultaneously.
+## Pre-Maintenance Checklist
 
-**Timeline:** Expect 10-30 minutes of downtime per maintenance event, assuming capacity is available. If capacity is constrained, it could be hours.
+```
+TPU Multislice Maintenance Preparation
+- [ ] Cluster: ___ | TPU slices: 4x v5e-256 | Training framework: ___
 
-## Pre-Maintenance Preparation
+Critical Actions
+- [ ] Enable checkpointing if not already configured
+- [ ] Verify latest checkpoint integrity and accessibility
+- [ ] Document current training step/epoch for restart verification
+- [ ] Test checkpoint restore process in dev environment
+- [ ] Confirm sufficient persistent storage quota for checkpoints
+- [ ] Review training script for graceful restart behavior
 
-### 1. Checkpoint Strategy (Critical)
-```bash
-# Verify your training job has robust checkpointing enabled
-# Ensure checkpoints are saved to persistent storage (GCS/persistent disks)
-# NOT to local TPU storage which will be destroyed
+Maintenance Window Planning
+- [ ] Maintenance notification received with specific timing
+- [ ] Checkpoint save scheduled 30 minutes before maintenance window
+- [ ] Team availability confirmed during maintenance window
+- [ ] Downstream consumers (evaluation, serving) notified of potential delay
 
-# Example checkpoint verification
-gsutil ls gs://YOUR_CHECKPOINT_BUCKET/
-# Confirm recent checkpoints exist and are complete
+Risk Mitigation
+- [ ] Backup checkpoint stored in separate region/zone
+- [ ] Training data pipeline verified accessible after restart
+- [ ] Multi-host initialization scripts tested
+- [ ] TPU topology verification commands prepared
+- [ ] Monitoring/alerting configured for post-maintenance validation
 ```
 
-### 2. Maintenance Exclusion (Buy Time)
+## Preparation Commands
+
+### Pre-Maintenance Checkpoint
 ```bash
-# Apply "no upgrades" exclusion for immediate protection (up to 30 days)
+# Force immediate checkpoint save (adapt to your framework)
+# JAX/Flax example:
+kubectl exec -it training-pod-0 -- python -c "
+import checkpoint_utils
+checkpoint_utils.save_checkpoint('/persistent-disk/checkpoints/', 
+                                 step=current_step, 
+                                 force=True)
+"
+
+# Verify checkpoint integrity
+kubectl exec -it training-pod-0 -- ls -la /persistent-disk/checkpoints/
+kubectl exec -it training-pod-0 -- python -c "
+import checkpoint_utils
+checkpoint_utils.verify_checkpoint('/persistent-disk/checkpoints/step_XXXX')
+"
+```
+
+### Pre-Maintenance State Capture
+```bash
+# Document current training state
+kubectl get pods -l app=llm-training -o wide
+kubectl exec training-pod-0 -- cat /tmp/training_metrics.log | tail -n 50
+
+# Capture TPU topology (for post-maintenance verification)
+kubectl exec training-pod-0 -- python -c "
+import jax
+print('TPU topology:', jax.devices())
+print('Process count:', jax.process_count())
+print('Local device count:', jax.local_device_count())
+"
+```
+
+## During Maintenance
+
+### Expected Behavior:
+- All training pods will be **terminated immediately** when TPU slices are recreated
+- **No graceful shutdown** - TPU maintenance doesn't respect `terminationGracePeriodSeconds`
+- Your job manager (if using GKE batch jobs) should detect the failure and restart
+
+### Monitoring Commands:
+```bash
+# Watch slice recreation
+watch 'kubectl get nodes -l cloud.google.com/gke-accelerator=tpu-v5litepod-256'
+
+# Monitor pod restart
+watch 'kubectl get pods -l app=llm-training'
+
+# Check TPU resource allocation
+kubectl describe node NODE_NAME | grep -A 10 "Allocated resources"
+```
+
+## Post-Maintenance Validation
+
+### Critical Checks:
+```bash
+# Verify all TPU slices are healthy
+kubectl get nodes -l cloud.google.com/gke-accelerator=tpu-v5litepod-256
+kubectl describe nodes | grep -E "(Ready|tpu-v5)"
+
+# Confirm training pods restarted successfully
+kubectl get pods -l app=llm-training -o wide
+
+# Validate TPU topology matches pre-maintenance
+kubectl exec training-pod-0 -- python -c "
+import jax
+print('Post-maintenance TPU count:', len(jax.devices()))
+print('Expected: 1024 TPU chips across 4 slices')
+assert len(jax.devices()) == 1024, 'TPU count mismatch!'
+"
+
+# Verify checkpoint restore
+kubectl logs training-pod-0 | grep -i "checkpoint\|restore\|step"
+
+# Confirm training resumed from correct step
+kubectl exec training-pod-0 -- cat /tmp/current_step.txt
+```
+
+## Training Framework Configuration
+
+### JAX/Flax Checkpoint Strategy:
+```python
+# Ensure frequent checkpointing before maintenance
+checkpoint_config = {
+    'save_interval_steps': 100,  # More frequent during maintenance periods
+    'max_to_keep': 5,
+    'async_save': True,  # Don't block training
+    'save_on_preemption': True
+}
+
+# Robust restart logic
+def initialize_or_restore():
+    if checkpoint_exists():
+        step, state = restore_checkpoint()
+        logger.info(f"Resumed training from step {step}")
+        return step, state
+    else:
+        logger.info("Starting fresh training")
+        return 0, initialize_fresh_state()
+```
+
+### Multi-Host Coordination:
+```python
+# Critical: Ensure all hosts coordinate during restart
+import jax
+jax.distributed.initialize()  # Must happen before any TPU operations
+
+# Verify topology after restart
+expected_chips = 1024
+actual_chips = len(jax.devices())
+assert actual_chips == expected_chips, f"TPU topology mismatch: {actual_chips} != {expected_chips}"
+```
+
+## Maintenance Exclusion Strategy (Limited Effectiveness)
+
+**Important:** Maintenance exclusions have **limited effectiveness** for TPU infrastructure maintenance. Google may need to perform critical TPU infrastructure updates regardless of exclusions.
+
+```bash
+# Apply maintenance exclusion (may not prevent all TPU maintenance)
 gcloud container clusters update CLUSTER_NAME \
   --zone ZONE \
-  --add-maintenance-exclusion-name "training-freeze-$(date +%Y%m%d)" \
-  --add-maintenance-exclusion-start-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
-  --add-maintenance-exclusion-end-time $(date -u -d '+30 days' +%Y-%m-%dT%H:%M:%SZ) \
+  --add-maintenance-exclusion-name "llm-training-campaign" \
+  --add-maintenance-exclusion-start-time $(date -Iseconds) \
+  --add-maintenance-exclusion-end-time $(date -d '+14 days' -Iseconds) \
   --add-maintenance-exclusion-scope no_upgrades
 ```
 
-This blocks ALL maintenance for 30 days, even past End of Support. Use this time to plan a controlled checkpoint-and-restart.
+## Recovery Runbook
 
-### 3. Training Job Protection
-```bash
-# Set very high PDB to prevent accidental eviction
-kubectl patch pdb YOUR_TRAINING_PDB \
-  -p '{"spec":{"minAvailable":"100%"}}'
-
-# But understand: maintenance events bypass PDB protection
-# This only protects against other disruptions
-```
-
-## Recommended Maintenance Strategy
-
-### Option A: Controlled Restart (Recommended)
-1. **Save checkpoint manually** during a natural stopping point
-2. **Scale training job to zero** before maintenance window
-3. **Allow maintenance to proceed** (remove exclusion)
-4. **Restart training from checkpoint** after maintenance completes
+If training doesn't resume automatically:
 
 ```bash
-# Scale down training workload
-kubectl scale deployment YOUR_TRAINING_DEPLOYMENT --replicas=0
+# 1. Check node health
+kubectl get nodes -l cloud.google.com/gke-accelerator=tpu-v5litepod-256
 
-# Wait for clean shutdown and final checkpoint
-# Remove maintenance exclusion to allow upgrade
-gcloud container clusters update CLUSTER_NAME \
-  --zone ZONE \
-  --remove-maintenance-exclusion-name "training-freeze-$(date +%Y%m%d)"
+# 2. If nodes are NotReady, check events
+kubectl get events --field-selector reason=NodeNotReady
+
+# 3. Restart training deployment
+kubectl rollout restart deployment llm-training
+
+# 4. If pods are stuck pending
+kubectl describe pod training-pod-0 | grep -A 10 Events
+
+# 5. Check TPU quota/allocation
+gcloud compute tpus list --zone ZONE
+
+# 6. Emergency: Scale down and up to force reallocation
+kubectl scale deployment llm-training --replicas=0
+sleep 30
+kubectl scale deployment llm-training --replicas=1
 ```
 
-### Option B: Extended Exclusion Chain
-Use multiple 30-day exclusions to defer maintenance until your training campaign completes. **Risk:** Accumulates security patches and may hit GKE's exclusion limits.
+## Key Differences from Standard GKE Maintenance
 
-## Post-Maintenance Recovery
+| Standard Node Maintenance | TPU Multislice Maintenance |
+|---------------------------|----------------------------|
+| Rolling replacement | Atomic recreation of all slices |
+| Respects PDBs (1 hour) | No graceful termination |
+| Surge capacity available | No surge - complete replacement |
+| Per-node timing | All-at-once timing |
+| Maintenance exclusions effective | Limited exclusion effectiveness |
 
-### 1. Verify TPU Slice Health
-```bash
-# Check all nodes are Ready
-kubectl get nodes -l accelerator=tpu
-
-# Verify TPU topology is intact
-kubectl describe nodes -l accelerator=tpu | grep "topology.gke.io"
-
-# Confirm all 4 slices are available
-kubectl get pods -l workload=training -o wide
-```
-
-### 2. Restart Training from Checkpoint
-```bash
-# Launch training job pointing to latest checkpoint
-kubectl apply -f training-job-manifest.yaml
-
-# Monitor startup - multislice initialization takes several minutes
-kubectl logs -f deployment/YOUR_TRAINING_DEPLOYMENT
-```
-
-### 3. Validate Training Resume
-- Verify loss curve continues smoothly from checkpoint
-- Check that all 1024 chips are participating (no degraded performance)
-- Monitor for any topology/interconnect issues
-
-## Key Differences from CPU/GPU Maintenance
-
-| Aspect | CPU/GPU Clusters | TPU Multislice |
-|--------|-----------------|----------------|
-| **Upgrade type** | Rolling node-by-node | Atomic slice recreation |
-| **Job survival** | Can survive with PDBs | Always restarts |
-| **Capacity impact** | Gradual | All-or-nothing |
-| **Recovery time** | Seconds to minutes | 10-30+ minutes |
-
-## Planning for Future Maintenance
-
-1. **Dedicated TPU node pools** with maintenance exclusions during active campaigns
-2. **Checkpoint frequency** aligned with expected maintenance windows (weekly/bi-weekly)
-3. **Capacity reservations** to guarantee post-maintenance recovery
-4. **Multi-region backup strategy** for mission-critical training (though cross-region checkpointing adds complexity)
-
-The bottom line: TPU multislice maintenance is a **planned restart**, not a rolling upgrade. Your job will restart from the last checkpoint — ensure that checkpoint is recent and the restart process is tested.
+**Bottom line:** Plan for a **complete restart** of your training job, not a gradual migration. Your checkpoint strategy is your primary defense against lost progress.

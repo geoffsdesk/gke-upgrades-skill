@@ -3,42 +3,42 @@
     {
       "expectation": "Recommends Stable or Extended release channel to minimize upgrade frequency",
       "passed": false,
-      "reason": "The response recommends Regular channel instead, stating that Stable is 'too slow' and Extended 'would delay security fixes too long'"
+      "reason": "The response recommends Regular channel instead of Stable or Extended, explicitly arguing against both Stable and Extended channels"
     },
     {
       "expectation": "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
       "passed": true,
-      "reason": "Explicitly recommends and provides commands for 'no_minor_or_node_upgrades' exclusion as the 'main protection' that 'allows security patches on control plane while blocking all node disruptions'"
+      "reason": "The response explicitly shows adding maintenance exclusion with 'no_minor_or_node_upgrades' scope for the training pool while allowing control plane upgrades"
     },
     {
       "expectation": "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
       "passed": true,
-      "reason": "Configures maintenance window for Sundays 6-10 AM UTC with specific gcloud commands and FREQ=WEEKLY;BYDAY=SU recurrence"
+      "reason": "The response configures a weekend maintenance window (Saturday 22:00-02:00) for control plane upgrades with weekly recurrence"
     },
     {
       "expectation": "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
       "passed": true,
-      "reason": "Creates dedicated 'h100-training' node pool specifically for training workloads with placement policies and node selectors to isolate GPU training"
+      "reason": "The response creates separate node pools: 'h100-training' for GPU workloads and 'infrastructure' for monitoring/logging/operators"
     },
     {
       "expectation": "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
       "passed": true,
-      "reason": "Sets '--enable-autoupgrade=false' on GPU node pool and provides detailed manual upgrade process with steps to remove/restore maintenance exclusions during training gaps"
+      "reason": "The response applies maintenance exclusions to disable auto-upgrades on training pools and provides detailed manual upgrade workflow during training gaps"
     },
     {
       "expectation": "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
       "passed": true,
-      "reason": "Provides specific checkpointing configuration with 30-minute intervals, graceful shutdown settings, and checkpoint path configuration in the training ConfigMap"
+      "reason": "The response mentions configuring training job checkpointing every 6-12 hours and includes extended termination grace period (16 hours) for checkpoint saving"
     },
     {
       "expectation": "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
-      "passed": false,
-      "reason": "Does not mention GPU driver version testing or staging validation requirements for GPU pools"
+      "passed": true,
+      "reason": "The response includes GPU driver compatibility verification in the upgrade workflow and mentions testing GPU driver compatibility with target versions in staging"
     },
     {
       "expectation": "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading",
       "passed": false,
-      "reason": "Does not mention GPUDirect, RDMA networking, or their version compatibility requirements"
+      "reason": "The response does not mention GPUDirect/RDMA networking or their specific GKE version compatibility requirements"
     }
   ]
 }
