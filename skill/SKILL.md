@@ -333,10 +333,20 @@ For clusters running 8+ hour batch jobs, standard surge upgrade will force-evict
 
 When compute quota is exhausted and surge node creation fails:
 - **Option 1 — Drain-first:** `maxSurge=0, maxUnavailable=1`. No extra quota needed (drains before creating). Temporary capacity loss but no surge quota required.
-- **Option 2 — Reduce maxSurge:** `maxSurge=1, maxUnavailable=0`. Slower but fits within constrained quotas.
+- **Option 2 — Reduce maxSurge:** `maxSurge=1, maxUnavailable=0`. Creates only 1 surge node at a time. Slower but fits within minimal extra quota — good middle ground between speed and quota.
 - **Option 3 — Scale down non-critical workloads:** Temporarily scale down canary/test/dev deployments (`kubectl scale deployment NAME --replicas=0`) to free quota for surge nodes. Schedule for off-peak hours.
-- **Option 4 — Request temporary quota increase:** Cloud Customer Care can approve same-day emergency quota increases for one-off upgrades.
-- **Best practice:** Combine options — use off-peak timing, scale down 2-3 non-critical deployments, and reduce maxSurge to 1.
+- **Option 4 — Request temporary quota increase:** Cloud Customer Care can approve same-day emergency quota increases for one-off upgrades. Faster than permanent quota change processes.
+- **Best practice:** Combine options — use off-peak timing (nights/weekends when fewer pods run and more capacity is available), scale down 2-3 non-critical deployments, and reduce maxSurge to 1.
+
+**maxSurge tuning guide:**
+
+| Scenario | Setting | Trade-off |
+|----------|---------|-----------|
+| Quota exhausted, must upgrade soon | `maxSurge=1, maxUnavailable=0` | 1 surge node at a time — slower but minimal quota |
+| Quota exhausted, upgrade not urgent | `maxSurge=0, maxUnavailable=1` | Drain-first — zero extra quota, temporary capacity loss |
+| Pods landing on wrong nodes ("musical chairs") | Reduce `maxSurge` to 1 | High maxSurge drains many nodes before upgraded nodes exist — scheduler scatters pods. maxSurge=1 ensures upgraded nodes are available before next batch |
+| GPU pool, fixed reservation | `maxSurge=0, maxUnavailable=1-4` | No surge capacity exists; maxUnavailable is the only lever |
+| Stateless, cost-sensitive | `maxSurge=5%` of pool, `maxUnavailable=0` | Scales with pool size, brief surge cost |
 
 ### How node upgrades work (Standard clusters)
 
@@ -359,9 +369,33 @@ During a node pool upgrade, GKE upgrades one node pool at a time automatically (
 - PDBs for critical workloads (GKE respects them for up to 1 hour during surge upgrades — this is the GKE PDB timeout). GKE sends `UpgradeInfoEvent` disruption notifications when eviction is blocked by PDB (`POD_PDB_VIOLATION`, `POD_NOT_ENOUGH_PDB`), so teams can monitor via Cloud Logging or Pub/Sub and intervene. A PDB timeout notification is also sent if pods are force-deleted after the grace period.
 - No bare pods (won't be rescheduled)
 - Adequate `terminationGracePeriodSeconds` for graceful shutdown
-- Stateful: verify PV reclaim policies and backup status
+- Stateful: verify PV reclaim policy is `Retain` (not `Delete`) as a safety measure: `kubectl get pv -o custom-columns=NAME:.metadata.name,RECLAIM:.spec.persistentVolumeReclaimPolicy`. Back up data before upgrade.
 - GPU: confirm driver compatibility with target node image — GKE auto-installs drivers matching the target version, which may change the CUDA version
 - Autopilot: all containers must have resource requests
+
+### Stateful workload PDB guidance
+
+For databases and distributed systems, configure PDBs BEFORE upgrading to protect quorum and data consistency:
+
+**Database-specific PDB settings:**
+- **Elasticsearch (3-master):** `minAvailable: 2` on master StatefulSet — allows 1 master to drain while quorum of 2 remains. Apply separately to data and coordinator pools.
+- **MySQL/Postgres (replicated):** `minAvailable: 1` or `minAvailable: 50%` — prevents multiple replicas draining simultaneously
+- **MongoDB replica sets:** `minAvailable: 2` — protects replica set quorum
+- **Cassandra/ScyllaDB:** `minAvailable: 2` per datacenter node pool
+- **Redis Cluster:** `minAvailable: 1` per shard
+
+**PDB timeout and notification monitoring:**
+- During surge upgrades, GKE respects PDBs for up to 1 hour, then force-evicts
+- Monitor PDB violations in Cloud Logging: `resource.type="gke_cluster" jsonPayload.reason="EvictionBlocked"` or via Cloud Pub/Sub cluster event subscriptions
+- GKE disruption event types: `POD_PDB_VIOLATION` (eviction blocked), `POD_NOT_ENOUGH_PDB` (insufficient replicas), PDB timeout (force-eviction after 1 hour)
+
+**StatefulSet rollout monitoring:**
+```
+kubectl rollout status statefulset/STATEFULSET_NAME -n NAMESPACE --watch
+kubectl get pods -l app=LABEL -n NAMESPACE -o wide --sort-by='.status.startTime'
+```
+
+**Stateful upgrade order:** For multi-tier stateful systems (e.g., Elasticsearch masters + data + coordinators), upgrade coordinator/stateless nodes first, then data nodes, then masters last. Use `maxSurge=1, maxUnavailable=0` for all stateful pools — conservative, one-at-a-time replacement preserves data.
 
 ### Nodepool upgrade concurrency (preview, available April 2026)
 GKE is adding nodepool upgrade concurrency for auto-upgrades to speed up fleet-wide upgrades. Multiple node pools within a cluster can now be upgraded concurrently during auto-upgrades, rather than sequentially. This significantly reduces the total upgrade time for clusters with many node pools.
@@ -459,7 +493,9 @@ Help customers understand when upgrades will happen:
 - **Progressive rollout:** New releases roll out across all regions over 4-5 business days. The [GKE release schedule](https://cloud.google.com/kubernetes-engine/docs/release-schedule) shows "best case" dates — upgrades won't happen before those dates but may happen later.
 - **Factors affecting timing:** Progressive rollout across regions, maintenance windows/exclusions, disruption intervals between upgrades, internal freezes (e.g., BFCM), and technical pauses. For large fleets using rollout sequencing, soak times between stages also affect timing.
 - **Predicting upgrades:** Check the cluster's auto-upgrade status for the current target version. Configure maintenance windows for predictable timing. For large, sophisticated fleets, rollout sequencing can add multi-cluster ordering.
-- **Scheduled upgrade notifications:** GKE offers opt-in control plane scheduled upgrade notifications (preview March 2026), sent 72 hours before an auto-upgrade via Cloud Logging. Node pool scheduled upgrade notifications will follow. Additionally, customers can check the GKE release schedule to determine that the best-case scenario for a new minor upgrade arriving in their channel is approximately 1 month — this gives longer advance planning time than the 72h notification alone.
+- **Release channel selection IS the primary cadence lever:** Stable = slowest upgrade cadence (longest validation), Regular = balanced, Rapid = fastest. When customers ask "how do I control upgrade speed," channel selection is the first answer. Pair with maintenance windows for timing control and exclusions for scope control.
+- **Scheduled upgrade notifications:** GKE offers opt-in control plane scheduled upgrade notifications (preview March 2026), sent 72 hours before an auto-upgrade via Cloud Logging. Enable with: `gcloud container clusters update CLUSTER_NAME --send-scheduled-upgrade-notifications`. This gives teams advance warning to prepare, run health checks, or apply temporary exclusions. Node pool notifications follow in a later release.
+- **GKE release schedule for longer-range planning:** The [release schedule](https://cloud.google.com/kubernetes-engine/docs/release-schedule) shows best-case estimates for when new versions arrive in each channel. For minor versions, expect ~1 month from availability in Rapid to availability in Regular — use this for longer-range planning beyond the 72h notification window.
 - **Upgrade info API:** Use `gcloud container clusters get-upgrade-info CLUSTER_NAME --region REGION` to check the cluster's auto-upgrade status, target versions (minor and patch), and EoS timestamps programmatically.
 
 Refer customers to [upgrade assist common scenarios](https://cloud.google.com/kubernetes-engine/docs/how-to/upgrade-assist#common-upgrades-scenarios) for additional guidance.
@@ -484,11 +520,12 @@ See [references/runbook-template.md](references/runbook-template.md) for the sta
 
 When a user reports a stuck or failing upgrade, walk through diagnosis systematically. See [references/troubleshooting.md](references/troubleshooting.md) for the full diagnostic flowchart and fix procedures. The most common causes, in order:
 
-1. PDB blocking drain → check `kubectl get pdb -A`, relax temporarily
-2. Resource constraints → pods pending, no room to reschedule → increase `maxSurge` or switch to `maxSurge=0, maxUnavailable=1` (drain-first). Scale down non-critical workloads to free quota. Schedule upgrades off-peak.
+1. PDB blocking drain → check `kubectl get pdb -A`, relax temporarily. Monitor GKE disruption event notifications (`POD_PDB_VIOLATION`) in Cloud Logging or Pub/Sub.
+2. Resource constraints → pods pending, no room to reschedule → reduce `maxSurge` to 1 (slower but fits constrained quota), or switch to `maxSurge=0, maxUnavailable=1` (drain-first, zero extra quota). Scale down non-critical workloads to free quota. Schedule upgrades during off-peak hours when fewer pods are running.
 3. Bare pods → can't be rescheduled, must delete
-4. Admission webhooks → rejecting pod creation → check webhook configs
+4. Admission webhooks → rejecting pod creation OR blocking node drain → check webhook configs: `kubectl get validatingwebhookconfigurations` and `kubectl get mutatingwebhookconfigurations`. Webhooks can silently block drain by rejecting pod recreation on new nodes.
 5. PVC attachment issues → volumes can't migrate → check PV status
+6. Taints/tolerations mismatch → pods evicted from draining nodes land on nodes also about to be drained ("musical chairs") → reduce `maxSurge` to 1 so upgraded nodes are available before the next batch drains. Check for node taints that prevent scheduling on upgraded nodes: `kubectl describe nodes | grep Taints`
 
 ### Partial node pool upgrade failure — recovery
 
@@ -513,10 +550,12 @@ When a node pool upgrade fails partway through (e.g., 8 out of 20 nodes upgraded
 **Symptoms:** After upgrade, increased API latency, intermittent 503s, or unexpected scaling behavior — but all nodes show Ready status.
 
 **Diagnosis checklist:**
-1. **Deprecated API behavioral changes:** Minor version upgrades can change API behavior (not just remove APIs). Check for deprecated API usage: `kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated`. Also check GKE deprecation insights in the console.
+1. **Deprecated API behavioral changes:** Minor version upgrades can change API behavior (not just remove APIs). Check for deprecated API usage: `kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated`. Also check GKE deprecation insights in the console (Insights tab → "Deprecations and Issues").
 2. **HPA/VPA behavioral changes:** New Kubernetes versions may change HPA algorithm defaults, scaling stabilization windows, or VPA recommendation behavior. Check HPA status: `kubectl describe hpa` — look for changes in scaling decisions, target utilization, or stabilization. Verify HPA/VPA versions are compatible with the new Kubernetes version.
-3. **Resource pressure from upgrade:** During and immediately after node upgrades, pods may be packed more densely on remaining nodes, causing latency. Check node resource utilization: `kubectl top nodes`. This resolves as pods redistribute.
-4. **Webhook latency:** Admission webhooks processing new pod specs for the upgraded API version may add latency. Check webhook response times in API server metrics.
+3. **System component health (kube-system):** Check for crashlooping or restarting control plane components: `kubectl get pods -n kube-system` and `kubectl get events -n kube-system --sort-by='.lastTimestamp' | tail -20`. Common culprits: coredns, metrics-server, konnectivity-agent. New versions may change system component resource requirements — check with `kubectl top pods -n kube-system`.
+4. **Resource pressure from upgrade:** During and immediately after node upgrades, pods may be packed more densely on remaining nodes, causing latency. Check node resource utilization: `kubectl top nodes` and `kubectl describe nodes | grep -A5 "Allocated resources"`. This resolves as pods redistribute.
+5. **Webhook latency and compatibility:** Admission webhooks may add latency or fail on the new API version. Check: `kubectl get events -A --field-selector type=Warning | grep webhook`. For service mesh (Istio/ASM), verify control plane version supports the new Kubernetes version.
+6. **NetworkPolicy and service mesh compatibility:** Service mesh control planes may need updates for the new API version. Check: `kubectl get mutatingwebhookconfigurations | grep istio`. NetworkPolicy semantics can change between Kubernetes versions — test in dev before assuming production policies work unchanged.
 
 ### Post-upgrade admission webhook failures (cert-manager, etc.)
 
