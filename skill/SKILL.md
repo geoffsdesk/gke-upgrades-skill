@@ -52,6 +52,9 @@ Establish these five things early. If the user provides them upfront, skip strai
 **Version availability warnings when migrating channels:**
 - If your current version is not yet available in the target channel, your cluster will be "ahead of channel" and will NOT receive auto-upgrades to newer versions until the current version becomes available in the target channel.
 - Example: Moving from Rapid (at 1.32) to Stable when 1.32 is not yet in Stable will freeze your cluster at 1.32 until Stable's version reaches 1.32, then you resume normal auto-upgrades from that point. You'll still receive patches, but not minor upgrades.
+- **Before migrating:** Check which versions are available in the target channel using the [GKE release schedule](https://cloud.google.com/kubernetes-engine/docs/release-schedule). If your current version isn't available, you may need to downgrade first or wait.
+- **Coordinate channel changes during a maintenance window** to avoid unexpected auto-upgrades immediately after the switch. Apply a temporary "no upgrades" exclusion before changing channels, then remove it once you've verified the new channel's auto-upgrade behavior.
+- **Extended channel as production alternative:** For production environments needing the slowest upgrade cadence, consider Extended channel — it provides up to 24 months of support and does NOT auto-upgrade minor versions (except at end of extended support). Only patches are auto-applied. This gives maximum control over when minor upgrades happen.
 
 **Version promotion path:** New releases follow a promotion path: Rapid (Available → Default → Auto-upgrade target) → Regular → Stable → Extended. Release cadence includes an element of channel promotion — versions must prove stable in Rapid before reaching Regular, and Regular before Stable. GKE targets approximately one new release per week.
 
@@ -93,7 +96,7 @@ Distinguish these three concepts — they are NOT the same:
 - **Default**: The version used for new cluster creation. Typically the same as the auto-upgrade target, but there can be differences — especially when new minor versions are being introduced (separate promotion stage). Many users assume "default" equals "what my cluster upgrades to" — this is true in most cases but there is a specific distinction during new minor version introduction.
 - **Auto-upgrade target**: The version GKE will actually upgrade existing clusters to automatically. This is what matters for planning. Can differ from the default, especially during new minor version rollouts.
 
-The auto-upgrade target depends on the cluster's constraints (maintenance windows, maintenance exclusions). For example, a cluster with a "no minor" exclusion will have its auto-upgrade target set to the latest patch of its current minor, not the next minor. Note: for a given release channel, different clusters can have different auto-upgrade targets if they have different policies (e.g., a cluster on minor 1.34 with a "no minor" exclusion has a different target than a cluster on the same channel without that exclusion). The auto-upgrade target is cluster-specific.
+The auto-upgrade target depends on the cluster's constraints (maintenance windows, maintenance exclusions). For example, a cluster with a **"no minor" exclusion** will have its auto-upgrade target set to the **latest patch of its current minor only** — not the next minor version. This is how teams lock to patch-only upgrades: the exclusion changes the auto-upgrade target from "latest minor+patch" to "latest patch within current minor." Note: for a given release channel, different clusters can have different auto-upgrade targets if they have different policies (e.g., a cluster on minor 1.34 with a "no minor" exclusion has a different target than a cluster on the same channel without that exclusion). The auto-upgrade target is cluster-specific.
 
 **Upgrade info API:** Use `gcloud container clusters get-upgrade-info CLUSTER_NAME --region REGION` to check auto-upgrade status, EoS timestamps, and target versions. Example output includes `autoUpgradeStatus`, `endOfExtendedSupportTimestamp`, `endOfStandardSupportTimestamp`, `minorTargetVersion`, and `patchTargetVersion`. Also see the [GKE release schedule](https://cloud.google.com/kubernetes-engine/docs/release-schedule) for earliest known auto-upgrade dates (~2 weeks prior).
 
@@ -129,6 +132,13 @@ When asked to plan an upgrade, produce a structured document covering:
 
 ### Maintenance windows and exclusions
 
+GKE provides two distinct upgrade control mechanisms — understand the difference:
+- **Maintenance windows** control **WHEN** upgrades happen (time-of-day, day-of-week). They schedule upgrades during acceptable periods.
+- **Maintenance exclusions** control **WHAT** upgrades happen (block patches, minor versions, or all upgrades). They prevent specific upgrade types entirely.
+- **Disruption intervals** control **HOW OFTEN** upgrades happen (minimum gap between consecutive upgrades).
+
+Use these together: windows for timing, exclusions for scope, intervals for frequency. When a customer says "I want to control upgrades," clarify which dimension they mean.
+
 **Maintenance windows:** Set recurring windows aligned with off-peak hours. Auto-upgrades respect them; manual upgrades bypass them. For ultimate predictability (the upgrade will happen at THIS time during THIS window), customers can initiate the upgrade themselves instead of waiting for auto-upgrade.
 
 New gcloud syntax for maintenance windows (effective April 2026):
@@ -151,9 +161,10 @@ The `--maintenance-window-duration` field simplifies the UX by directly specifyi
 The "No minor or node upgrades" exclusion is the recommended approach for maximum control — it prevents disruptive upgrades while still allowing security patches on the control plane.
 
 **Exclusion constraints and limits:**
+- **"No upgrades" exclusions are limited to 30 days maximum.** This is a hard limit per exclusion. For longer freeze periods, you must chain multiple exclusions (up to 3 per cluster), but this accumulates security debt — warn customers about the risk of falling behind on patches.
 - Maximum of 3 "no upgrades" exclusions per cluster. Within any 32-day rolling window, at least 48 hours must be available for maintenance (not covered by exclusions). Plan exclusion windows carefully to avoid hitting these limits during consecutive freeze periods.
-- **Manual upgrades bypass maintenance exclusions.** Only auto-upgrades respect exclusions. If a user manually triggers an upgrade with `gcloud container clusters upgrade`, it proceeds immediately regardless of any active exclusion.
-- **Version drift risk:** Extended exclusion periods (especially chained "no upgrades" exclusions) can cause clusters to fall behind on patches, accumulating security debt. Warn customers about this trade-off — exclusions provide control but carry the risk of running unpatched versions. Always pair exclusion recommendations with a plan for when and how to catch up.
+- **Manual upgrades bypass ALL maintenance controls** — both maintenance windows AND maintenance exclusions. Only auto-upgrades respect these controls. If a user manually triggers an upgrade with `gcloud container clusters upgrade`, it proceeds immediately regardless of any active exclusion or window. This is useful for emergency patching but dangerous if done accidentally during a freeze.
+- **Version drift risk:** Extended exclusion periods (especially chained "no upgrades" exclusions) can cause clusters to fall behind on patches, accumulating security debt. The longer a cluster stays frozen, the harder the eventual upgrade — deprecated APIs accumulate, version skew grows, and the blast radius of a forced EoS upgrade increases. Always pair exclusion recommendations with a plan for when and how to catch up.
 
 **Per-cluster vs per-nodepool exclusions:** The per-cluster exclusion on release channels is always preferred over per-nodepool control, as it ensures maximum control over both minor version and node version upgrades and prevents control plane and node minor version skew. Use per-nodepool exclusions when you need different control per nodepool — especially for mixed workload clusters where some node pools need auto-upgrades and others need tight control.
 
@@ -188,6 +199,12 @@ This gives: Extended support (24 months, cost only during extended period), auto
 **Control plane patch controls (new):** Customers who need tight control over control plane patches can now benefit from:
 - GKE keeps control plane patches for 90 days after the patch is removed from a release channel (Stable & Regular), enabling upgrade/downgrade flexibility
 - GKE supports a control plane upgrade recurrence interval (for both patch & minor) to control how often the control plane is disrupted
+
+**Deferring an upcoming auto-upgrade:** If a customer learns about an upcoming auto-upgrade (via scheduled notification or release schedule) and wants to defer it:
+1. Apply a "no upgrades" exclusion for the desired deferral period (up to 30 days): `gcloud container clusters update CLUSTER --add-maintenance-exclusion-name="defer-upgrade" --add-maintenance-exclusion-start=START --add-maintenance-exclusion-end=END --add-maintenance-exclusion-scope=no_upgrades`
+2. OR adjust the maintenance window to a different time slot if the goal is just timing, not deferral
+3. OR use disruption intervals to enforce a minimum gap between upgrades
+Remember: "no upgrades" is limited to 30 days. For longer deferral of minor versions, use "no minor or node upgrades" (no time limit, tracks EoS). For permanent patch-only mode, use persistent "no minor or node" exclusion with `--add-maintenance-exclusion-until-end-of-support`.
 
 **Accelerated patch auto-upgrades:** For customers needing faster patch compliance (e.g., FedRAMP), use `--patch-update=accelerated` to opt into faster patch rollouts.
 
@@ -441,13 +458,16 @@ Frontier AI customers running large GPU/TPU clusters face unique upgrade challen
 - **GPU VMs do not support live migration.** Every upgrade requires pod restart — there is no graceful in-place update.
 - **Surge capacity scarcity:** Surge upgrades need temporary extra GPU nodes (A100, H100, H200). These machines are in high demand and often unavailable. If surge nodes can't be provisioned, the upgrade stalls. If the customer has limited capacity with a reservation, assume there is NO capacity for blue-green (which requires 2x resources). Follow GPU-specific surge guidance instead.
 - **Strategy selection for GPU pools:**
-  - **Default (most common):** `maxSurge=0, maxUnavailable=1` — most GPU customers have fixed reservations with no surge capacity. The `maxUnavailable` parameter is the PRIMARY and ONLY effective lever for GPU pools with fixed reservations. This drains first, no extra GPUs needed, but causes a capacity dip. To speed up upgrades on large pools, increase `maxUnavailable` (e.g., 2, 3, 4) only if workloads can tolerate temporary capacity loss. Example: 64-node pool at maxUnavailable=1 with ~20-node parallelism ceiling takes ~3.2 batches per cycle — plan upgrade duration accordingly (hours to days for large pools).
+  - **Default for fixed reservations:** `maxSurge=0, maxUnavailable=1` — most GPU customers have fixed reservations with no surge capacity. The `maxUnavailable` parameter is the PRIMARY and ONLY effective lever for GPU pools with fixed reservations. This drains first, no extra GPUs needed, but causes a capacity dip. To speed up upgrades on large pools, increase `maxUnavailable` (e.g., 2, 3, 4) only if workloads can tolerate temporary capacity loss. Example: 64-node pool at maxUnavailable=1 with ~20-node parallelism ceiling takes ~3.2 batches per cycle — plan upgrade duration accordingly (hours to days for large pools).
   - **Important:** Do NOT use maxSurge for GPU pools with fixed reservations — surge nodes will fail to provision if surge capacity doesn't exist. maxSurge=0 is required when surge capacity is unavailable.
   - If GPU surge quota IS confirmed available: surge with `maxSurge=1, maxUnavailable=0` (safest, no capacity dip)
   - **Reservation headroom check:** Before attempting a GPU upgrade, verify if your GPU reservation has any available headroom beyond current utilization. Query: `gcloud compute reservations describe RESERVATION_NAME --zone ZONE`.
-  - For large GPU **inference** pools needing fast upgrades: use GKE's autoscaled blue-green upgrade strategy (cordons the old pool, auto-scales replacement — but needs capacity for replacement nodes). For **training** workloads: use custom upgrade strategy with parallel host maintenance instead — see 'AI Host Maintenance' section below.
-- **GPU driver version coupling:** GKE automatically installs the GPU driver matching the target GKE version. This can change CUDA versions silently. Always test the target GKE version in a staging cluster to verify driver + CUDA + framework compatibility before production.
+  - **Recommended for GPU inference pools:** Use GKE's **autoscaled blue-green upgrade strategy** — it cordons the old pool and auto-scales replacement nodes, avoiding the inference latency spikes caused by surge drain-and-restart. GPU VMs do not support live migration, so every surge upgrade causes pod restarts and inference downtime. Autoscaled blue-green keeps the old pool serving while the new pool warms up. Requires capacity for replacement nodes.
+  - **For GPU training workloads:** Use custom upgrade strategy with parallel host maintenance — see 'AI Host Maintenance' section below.
+  - **GPUDirect/RDMA version compatibility:** Before upgrading GPU pools using GPUDirect-TCPX or RDMA networking, verify the target GKE version supports these features (see "Networking-sensitive upgrades" section). Test in staging to confirm RDMA topology and network config survive the upgrade.
+- **GPU driver version coupling:** GKE automatically installs the GPU driver matching the target GKE version. This can change CUDA versions silently. **Always test the target GKE version + driver combination in a staging cluster before production deployment.** Create a staging node pool with the target version, deploy representative inference/training workloads, and validate model loading, CUDA calls, and throughput before proceeding with production. This staging validation is a hard prerequisite — never skip it for GPU pools.
 - **Reservation interaction:** GPU reservations guarantee capacity but surge upgrades consume reservation slots. Verify reservation has headroom for surge, or use `maxUnavailable` mode instead.
+- **Cluster autoscaler interaction during GPU upgrades:** During node pool upgrades, the cluster autoscaler may create NEW nodes at the OLD version if it scales up to meet demand. This creates a mixed-version state and slows upgrade convergence. Mitigate by: (1) pausing autoscaler during the upgrade window (`--enable-autoprovisioning=false` or setting min=max on the pool), or (2) accepting mixed-version state and letting the upgrade process catch up.
 
 ### GKE AI Host Maintenance (accelerator nodes)
 
@@ -527,7 +547,13 @@ Help customers understand when upgrades will happen:
 - **GKE release schedule for longer-range planning:** The [release schedule](https://cloud.google.com/kubernetes-engine/docs/release-schedule) shows best-case estimates for when new versions arrive in each channel. For minor versions, expect ~1 month from availability in Rapid to availability in Regular — use this for longer-range planning beyond the 72h notification window.
 - **Upgrade info API:** Use `gcloud container clusters get-upgrade-info CLUSTER_NAME --region REGION` to check the cluster's auto-upgrade status, target versions (minor and patch), and EoS timestamps programmatically.
 
-Refer customers to [upgrade assist common scenarios](https://cloud.google.com/kubernetes-engine/docs/how-to/upgrade-assist#common-upgrades-scenarios) for additional guidance.
+**Always recommend these planning resources:**
+- **GKE release schedule:** [release schedule page](https://cloud.google.com/kubernetes-engine/docs/release-schedule) — shows version availability, auto-upgrade dates, and EoS dates per channel. Essential for longer-range planning beyond the 72h notification window.
+- **GKE release notes:** [release notes](https://cloud.google.com/kubernetes-engine/docs/release-notes) — breaking changes, deprecations, new features per version. Check between current and target versions.
+- **Upgrade info API:** `gcloud container clusters get-upgrade-info` — programmatic access to auto-upgrade targets, EoS dates, rollback-safe status.
+- **Upgrade assist scenarios:** [common scenarios](https://cloud.google.com/kubernetes-engine/docs/how-to/upgrade-assist#common-upgrades-scenarios) — additional guidance for specific upgrade situations.
+
+**Warn about snowflaking in every upgrade plan:** Any cluster with a manually frozen version that deviates from the standard automated lifecycle is a "snowflake." Snowflakes pose security risks (missed patches), reliability issues, and compounding upgrade difficulty. If a customer is freezing versions or avoiding auto-upgrades, always warn about this anti-pattern and recommend returning to automated lifecycle management with appropriate controls (channels + exclusions + windows) instead of manual freezing.
 
 ## Checklists
 
