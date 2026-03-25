@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends increasing maxSurge for CPU pools (e.g., 10-20) to parallelize node replacements, with justification for the value",
+      "passed": true,
+      "reason": "Response recommends maxSurge: 50 for CPU pools with justification about being 'more aggressive if quota allows' and later suggests specific gcloud commands with maxSurge=50"
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends increasing maxUnavailable (not maxSurge) as the primary lever since surge capacity is typically unavailable",
+      "passed": true,
+      "reason": "Response correctly recommends more conservative maxSurge: 10 and maxUnavailable: 10% for GPU pools, acknowledging cost constraints and later shows maxUnavailable=1 for GPU pools"
+    },
+    {
+      "expectation": "Advises checking and requesting increased compute quota before the upgrade for CPU pools",
+      "passed": false,
+      "reason": "While the response mentions 'if your quota allows' in the maxSurge recommendation, it does not explicitly advise checking or requesting increased compute quota beforehand"
+    },
+    {
+      "expectation": "Suggests staggering node pool upgrades or running non-conflicting pools in parallel",
+      "passed": true,
+      "reason": "Response provides both parallel upgrade commands using --async and a staged upgrade approach separating CPU and GPU pools by weeks"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as an option for GPU pools",
+      "passed": false,
+      "reason": "Response mentions blue-green strategy but presents it as a manual process creating new pools and draining old ones, not GKE's auto-scale blue-green upgrade feature"
+    },
+    {
+      "expectation": "Recommends expanding the maintenance window or splitting across multiple weekends",
+      "passed": true,
+      "reason": "Response includes a 'Staged Upgrade Approach' section that explicitly suggests splitting upgrades across multiple weeks (Week 1: CPU pools, Week 2: GPU pools)"
+    },
+    {
+      "expectation": "Provides the gcloud command for updating surge settings on each pool",
+      "passed": true,
+      "reason": "Response provides gcloud container node-pools update commands with --max-surge and --max-unavailable parameters for updating surge settings"
+    },
+    {
+      "expectation": "Includes monitoring commands to track upgrade progress in real-time",
+      "passed": true,
+      "reason": "Response includes gcloud container operations list commands for monitoring and provides a bash script for continuous monitoring of upgrade progress"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Uses 'no upgrades' exclusion (30-day max) for the BFCM period \u2014 blocks everything including patches",
+      "passed": true,
+      "reason": "Response correctly uses 'no_upgrades' scope for BFCM period and mentions it blocks ALL upgrades including patches"
+    },
+    {
+      "expectation": "Uses 'no upgrades' exclusion for the June code freeze period",
+      "passed": true,
+      "reason": "Response correctly uses 'no_upgrades' scope for June code freeze with proper gcloud command"
+    },
+    {
+      "expectation": "For permanent minor version control: uses 'no minor upgrades' (scope 'no_minor') if they only want to block minor versions, or 'no minor or node upgrades' (scope 'no_minor_or_node') if they also want to stop node upgrades. May recommend persistent exclusion with --add-maintenance-exclusion-until-end-of-support which auto-tracks EoS date",
+      "passed": true,
+      "reason": "Response uses 'no_minor_or_node_upgrades' scope and includes --add-maintenance-exclusion-until-end-of-support flag for persistent exclusion"
+    },
+    {
+      "expectation": "Notes the 30-day maximum for 'no upgrades' exclusions vs up-to-EoS for 'no minor or node upgrades'",
+      "passed": true,
+      "reason": "Response explicitly mentions 30-day maximum for 'no upgrades' exclusions and explains the differences in duration limits with a comparison table"
+    },
+    {
+      "expectation": "Provides specific gcloud commands with --add-maintenance-exclusion-scope flags for each exclusion type",
+      "passed": true,
+      "reason": "Response provides complete gcloud commands with proper --add-maintenance-exclusion-scope flags for all three scenarios"
+    },
+    {
+      "expectation": "Notes that you can have a maximum of three 'no upgrades' exclusions, and they must allow 48h of maintenance in any 32-day window",
+      "passed": true,
+      "reason": "Response explicitly states 'Maximum 3 no upgrades exclusions per cluster' and '48 hours must be available for maintenance' within 32-day period"
+    },
+    {
+      "expectation": "Mentions that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
+      "passed": true,
+      "reason": "Response clearly states 'Manual upgrades bypass ALL maintenance exclusions - the exclusions only control auto-upgrades'"
+    },
+    {
+      "expectation": "Warns about the risk of falling too far behind on versions during extended exclusion periods",
+      "passed": true,
+      "reason": "Response warns about accumulating 'security debt' during exclusion periods and recommends planning catch-up patches afterward"
+    }
+  ]
+}

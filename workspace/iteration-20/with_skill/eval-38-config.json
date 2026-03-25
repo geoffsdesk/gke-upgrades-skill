@@ -1,0 +1,19 @@
+{
+  "eval_id": 38,
+  "mode": "with_skill",
+  "iteration": 20,
+  "prompt": "We just set up 3 new GKE Standard clusters on the Regular channel for our production environment. We want to make sure upgrades are handled properly going forward. Should we manually upgrade our clusters on a schedule, or does GKE handle this automatically? What's the recommended approach?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-25T00:32:47.548042+00:00",
+  "input_tokens": 20984,
+  "output_tokens": 647,
+  "time_seconds": 15.2,
+  "skill_files": [
+    "skill/SKILL.md",
+    "skill/evals/evals.json",
+    "skill/references/checklists.md",
+    "skill/references/runbook-template.md",
+    "skill/references/troubleshooting.md"
+  ]
+}

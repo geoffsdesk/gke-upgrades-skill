@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies Service A (minAvailable=100%) as a guaranteed upgrade blocker \u2014 no disruptions allowed at all",
+      "passed": true,
+      "reason": "Response correctly identifies Service A as CRITICAL risk and states it 'BLOCKS ALL UPGRADES' because 100% minAvailable makes it impossible to drain nodes"
+    },
+    {
+      "expectation": "Identifies Service B (maxUnavailable=0) as also blocking upgrades \u2014 same effect as 100% minAvailable",
+      "passed": true,
+      "reason": "Response correctly identifies Service B as CRITICAL risk, states it 'BLOCKS ALL UPGRADES' and explains it's 'identical to 100% minAvailable'"
+    },
+    {
+      "expectation": "States Service C (minAvailable=2 with 3 replicas) is safe \u2014 allows 1 pod disruption at a time",
+      "passed": false,
+      "reason": "Response actually identifies Service C as HIGH RISK and 'LIKELY TO BLOCK', not safe. It explains the risk of 2 pods on same node causing drain failures"
+    },
+    {
+      "expectation": "States Service D (maxUnavailable=1 with 5 replicas) is safe \u2014 allows 1 pod down at a time",
+      "passed": true,
+      "reason": "Response correctly identifies Service D as SAFE with green checkmark and states 'No issues expected' and 'Perfect: Allows 1 pod disruption while keeping 4 running'"
+    },
+    {
+      "expectation": "Recommends fixing Service A: change to minAvailable=N-1 or maxUnavailable=1",
+      "passed": true,
+      "reason": "Response provides specific fix for Service A: 'maxUnavailable: 1' or 'minAvailable: N-1' with code examples"
+    },
+    {
+      "expectation": "Recommends fixing Service B: change to maxUnavailable=1",
+      "passed": true,
+      "reason": "Response provides specific fix for Service B: 'maxUnavailable: 1' with code example"
+    },
+    {
+      "expectation": "Explains that GKE respects PDBs for up to 1 hour during surge upgrades, then may force-drain",
+      "passed": true,
+      "reason": "Response states 'GKE will respect your PDBs for up to 1 hour during node drain, then force-evict if necessary'"
+    },
+    {
+      "expectation": "Provides kubectl patch commands to fix the problematic PDBs",
+      "passed": false,
+      "reason": "Response provides YAML configuration examples but does not provide kubectl patch commands to apply the fixes"
+    },
+    {
+      "expectation": "Recommends testing PDB changes in a non-production environment first",
+      "passed": true,
+      "reason": "Response includes testing recommendations with 'kubectl drain --dry-run' simulation and 'Test the changes' in the action plan"
+    }
+  ]
+}

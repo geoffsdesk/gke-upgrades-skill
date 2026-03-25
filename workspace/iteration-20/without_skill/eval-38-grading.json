@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Clearly states that GKE auto-upgrades clusters automatically as the default and recommended model \u2014 this is what differentiates GKE from self-managed Kubernetes",
+      "passed": true,
+      "reason": "Response explicitly states 'GKE handles upgrades automatically' and 'this is actually the recommended approach for production environments', clearly differentiating from self-managed approaches"
+    },
+    {
+      "expectation": "Recommends configuring maintenance windows to control WHEN auto-upgrades happen (e.g., weekends, off-peak hours)",
+      "passed": true,
+      "reason": "Provides specific gcloud commands for setting maintenance windows and recommends configuring them 'during low-traffic periods' with examples showing weekend and off-peak timing"
+    },
+    {
+      "expectation": "Recommends maintenance exclusions to control WHAT auto-upgrades happen (e.g., 'no minor or node upgrades' to block disruptive changes while allowing security patches)",
+      "passed": false,
+      "reason": "Response does not mention maintenance exclusions at all - no discussion of blocking specific types of upgrades while allowing others"
+    },
+    {
+      "expectation": "Does NOT recommend disabling auto-upgrades or switching to a purely manual upgrade cadence as the first option",
+      "passed": true,
+      "reason": "Response clearly recommends auto-upgrades as the primary approach and only suggests considering manual upgrades for specific exceptional scenarios"
+    },
+    {
+      "expectation": "Explains that manual upgrades are useful for specific scenarios (emergency patches, accelerating the schedule) but are the exception, not the rule",
+      "passed": false,
+      "reason": "While it mentions when to consider manual upgrades, it doesn't specifically mention emergency patches or accelerating schedules - focuses on compliance and testing requirements instead"
+    },
+    {
+      "expectation": "Recommends enrolling in scheduled upgrade notifications (72h advance) for visibility into upcoming auto-upgrades",
+      "passed": false,
+      "reason": "Shows how to enable notification config but doesn't specifically mention 72-hour advance notifications or emphasize their importance for visibility"
+    },
+    {
+      "expectation": "Suggests checking the GKE release schedule for longer-range planning (~1 month best-case for new minors)",
+      "passed": false,
+      "reason": "Response does not mention checking GKE release schedules or provide any guidance on longer-range planning timelines"
+    },
+    {
+      "expectation": "Mentions release channel selection as the primary lever for upgrade cadence (Stable = slower, Regular = balanced)",
+      "passed": false,
+      "reason": "While it mentions the Regular channel briefly at the end, it doesn't explain release channels as the primary lever for controlling upgrade cadence or compare different channel options"
+    }
+  ]
+}

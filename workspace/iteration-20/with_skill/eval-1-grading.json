@@ -1,0 +1,59 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends sequential control plane upgrades (1.32\u21921.33) while using skip-level (N+2) for node pool upgrades where possible to reduce disruption",
+      "passed": false,
+      "reason": "The response correctly recommends sequential control plane upgrade (1.32\u21921.33) but does not suggest skip-level (N+2) node pool upgrades. All node pools are upgraded to 1.33, not using skip-level strategy."
+    },
+    {
+      "expectation": "Specifies control plane upgrades before node pool upgrades",
+      "passed": true,
+      "reason": "Phase 1 explicitly shows control plane upgrade first with 'gcloud container clusters upgrade --master' command, followed by Phase 2 for node pool upgrades."
+    },
+    {
+      "expectation": "Provides different node pool upgrade ordering with rationale for the sequence",
+      "passed": true,
+      "reason": "Clearly specifies upgrade order: general-purpose pool first (lowest risk), GPU pool second, high-memory pool (Postgres) last. Each has detailed rationale explaining why this sequence minimizes risk."
+    },
+    {
+      "expectation": "Includes specific surge upgrade settings (maxSurge/maxUnavailable) for each pool with justification for the chosen values (e.g., explaining why maxSurge is set higher for parallelism)",
+      "passed": true,
+      "reason": "Provides specific surge settings for each pool with detailed justification: general-purpose (maxSurge=2, maxUnavailable=0 for speed), GPU (maxSurge=0, maxUnavailable=1 due to fixed reservations), high-memory (maxSurge=1, maxUnavailable=0 for database safety)."
+    },
+    {
+      "expectation": "Addresses Postgres-specific concerns (PDB, backup, operator compatibility, PV reclaim)",
+      "passed": true,
+      "reason": "Extensively covers Postgres concerns including PDB configuration (minAvailable: 1), operator compatibility verification, application-level backups, PV reclaim policies set to Retain, and monitoring StatefulSets during upgrade."
+    },
+    {
+      "expectation": "Addresses GPU-specific concerns (driver compatibility, maxUnavailable as primary lever since surge capacity is typically unavailable)",
+      "passed": true,
+      "reason": "Thoroughly addresses GPU concerns: explains maxUnavailable=1 as primary lever due to fixed GPU reservations, emphasizes driver compatibility verification with GKE 1.33, mentions CUDA version compatibility, and includes staging validation requirements."
+    },
+    {
+      "expectation": "Includes actual gcloud commands for the upgrade steps",
+      "passed": true,
+      "reason": "Provides specific gcloud commands throughout including surge configuration, control plane upgrade, node pool upgrades, maintenance window configuration, and validation commands."
+    },
+    {
+      "expectation": "Provides a pre-upgrade checklist",
+      "passed": true,
+      "reason": "Includes comprehensive pre-upgrade checklist covering compatibility, workload readiness, infrastructure, and ops readiness with specific checkboxes and verification steps."
+    },
+    {
+      "expectation": "Provides a post-upgrade checklist with validation commands",
+      "passed": true,
+      "reason": "Contains detailed post-upgrade validation section with specific kubectl and gcloud commands to verify cluster versions, workload health, ML inference endpoints, and Postgres connectivity."
+    },
+    {
+      "expectation": "Includes rollback procedure or guidance (noting CP patch downgrades are customer-doable, minor downgrades require GKE support)",
+      "passed": true,
+      "reason": "Includes rollback section noting that control plane minor version rollback requires GKE support, node pools can be rolled back by creating new pools at 1.32, and advises contacting GKE support for rollback guidance."
+    },
+    {
+      "expectation": "Mentions GKE's 2-step control plane minor upgrade where step 1 is rollbackable (step 2 commits and is not rollbackable), or mentions that node pools support downgrade",
+      "passed": true,
+      "reason": "The rollback section mentions that node pools can be rolled back by creating new pools at 1.32 and migrating workloads, indicating node pools support downgrade capability."
+    }
+  ]
+}

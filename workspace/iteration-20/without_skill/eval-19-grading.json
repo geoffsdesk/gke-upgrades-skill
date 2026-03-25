@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all four notification types in the triage matrix: security patches, auto-upgrades scheduled, end-of-life warnings, and new version available notifications"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response assigns security patches to URGENT (highest priority) and new version available to MEDIUM priority, with clear urgency hierarchy using color coding and timelines"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response explicitly states EOL warnings require immediate upgrade scheduling and notes the risk that 'Cluster becomes unsupported', with different urgency based on timeline"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response includes specific pre-upgrade validation checklist for auto-upgrade notifications, including staging testing, compatibility validation, and rollback preparation"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response categorizes security patches as URGENT requiring 'emergency maintenance window' and 'Apply within days, not weeks', clearly indicating expedited timeline outside normal windows"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response categorizes 'Available Version Updates' as MEDIUM priority with 2-4 week timeline, focusing on planning and evaluation rather than immediate action"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": false,
+      "reason": "Response does not mention Pub/Sub or Cloud Monitoring alerts for GKE upgrade events; it only covers email filtering and a basic monitoring dashboard script"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": false,
+      "reason": "Response mentions 'Review breaking changes documentation' in checklist but does not specifically reference GKE release notes as the source for understanding version changes"
+    }
+  ]
+}

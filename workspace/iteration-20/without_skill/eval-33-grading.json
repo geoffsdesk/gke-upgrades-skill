@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends upgrading the L4 inference pool and A100 pool separately with different strategies",
+      "passed": true,
+      "reason": "Response clearly separates Phase 2 for L4 pool and Phase 3 for A100 pool with distinct strategies - L4 pool focuses on gradual draining during low traffic, A100 pool coordinates with fine-tuning job completion"
+    },
+    {
+      "expectation": "For L4 inference pool: recommends surge upgrade with maxSurge=1 or 2 to maintain capacity during rolling replacement",
+      "passed": false,
+      "reason": "Response does not mention maxSurge parameter or surge upgrade strategy. Instead, it recommends creating a new node pool and manually draining old nodes, which is a different approach"
+    },
+    {
+      "expectation": "Addresses GPU driver version compatibility \u2014 auto-installed drivers must be compatible with inference framework (TensorRT, vLLM, etc.)",
+      "passed": false,
+      "reason": "Response does not mention GPU driver compatibility, TensorRT, vLLM, or any inference framework compatibility concerns"
+    },
+    {
+      "expectation": "For A100 fine-tuning pool: recommends scheduling the upgrade during a gap between fine-tuning jobs",
+      "passed": true,
+      "reason": "Response explicitly states 'Wait for fine-tuning jobs to complete or coordinate timing' and provides a script to check for safe upgrade windows between jobs"
+    },
+    {
+      "expectation": "Notes that GPU VMs do not support live migration \u2014 inference pods will restart during node upgrade, causing brief latency spikes",
+      "passed": false,
+      "reason": "Response does not mention that GPU VMs cannot be live migrated or that pods will restart during node upgrades causing latency spikes"
+    },
+    {
+      "expectation": "Recommends PDBs on inference deployments to ensure enough replicas stay available during the rolling upgrade",
+      "passed": true,
+      "reason": "Response includes specific PodDisruptionBudget configuration for inference workloads with 'minAvailable: 80%' to maintain availability during upgrades"
+    },
+    {
+      "expectation": "Addresses auto-scaler interaction \u2014 new nodes created by auto-scaler during upgrade will be at the old version until their pool upgrade completes",
+      "passed": false,
+      "reason": "Response does not address the interaction between auto-scaler and upgrade process, specifically that new nodes will be created at the old version during upgrades"
+    },
+    {
+      "expectation": "Recommends testing driver + CUDA compatibility in staging before production upgrade",
+      "passed": false,
+      "reason": "While response mentions creating a staging cluster and testing workloads, it does not specifically address testing GPU driver and CUDA compatibility"
+    }
+  ]
+}

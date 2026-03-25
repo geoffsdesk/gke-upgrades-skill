@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Response explicitly states 'GKE supports nodes up to 2 minor versions behind the control plane' and identifies this as the skew limit"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (nodes must be within 2 minor versions of control plane)",
+      "passed": true,
+      "reason": "Response clearly identifies this as 'unsupported version skew' and states nodes are '3 versions behind \u2014 unsupported'"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Response lists specific risks including 'API compatibility issues between 1.28 nodes and 1.31 control plane' and 'Workload instability'"
+    },
+    {
+      "expectation": "Recommends skip-level (N+2) node pool upgrades within supported version skew to reduce time and disruption. For the N+3 gap (1.28 with 1.31 CP), recommends multiple sequential skip-level upgrades within supported skew (e.g., 1.28\u21921.30 then 1.30\u21921.31) or creating a new node pool at the target version and migrating workloads. Never recommends an unsupported skip-level upgrade.",
+      "passed": true,
+      "reason": "Response provides exactly the expected approach: 'Path A: Skip-level upgrades (recommended) 1. 1.28 \u2192 1.30 (N+2 skip-level) 2. 1.30 \u2192 1.31 (N+1)' and offers 'Path B: Create new node pool (alternative)' with migration steps"
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Response includes specific gcloud commands for both upgrade approaches, including 'gcloud container node-pools upgrade' commands with proper parameters"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": true,
+      "reason": "Response includes command to 'Configure conservative surge settings' with '--max-surge-upgrade 1' and '--max-unavailable-upgrade 0'"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": true,
+      "reason": "Response includes 'Wait for completion, then verify kubectl get nodes -o wide' between upgrade steps and mentions checking for deprecated APIs"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": true,
+      "reason": "Response includes prevention section with 'Ensure cluster is on a release channel for consistent upgrades' and discusses maintenance exclusions management"
+    }
+  ]
+}

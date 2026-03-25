@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Response clearly states 'Nodes can be at most 2 minor versions behind the control plane' and explains the supported version skew policy"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (nodes must be within 2 minor versions of control plane)",
+      "passed": true,
+      "reason": "Response explicitly identifies that 'your control plane is 3 minor versions ahead of your node pool (1.31 vs 1.28)' and states 'This violates Kubernetes' supported version skew policy'"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Response lists specific issues including 'API compatibility issues, Pod scheduling failures, Network policy problems, Security vulnerabilities, Unpredictable cluster behavior'"
+    },
+    {
+      "expectation": "Recommends skip-level (N+2) node pool upgrades within supported version skew to reduce time and disruption. For the N+3 gap (1.28 with 1.31 CP), recommends multiple sequential skip-level upgrades within supported skew (e.g., 1.28\u21921.30 then 1.30\u21921.31) or creating a new node pool at the target version and migrating workloads. Never recommends an unsupported skip-level upgrade.",
+      "passed": true,
+      "reason": "Response provides sequential upgrades (1.28\u21921.29\u21921.30\u21921.31) and also offers creating a new node pool option. Does not recommend unsupported skip-level upgrades, though it goes through each minor version rather than using supported skip-level upgrades"
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Response provides specific gcloud container node-pools upgrade commands with proper syntax and parameters for each upgrade step"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": false,
+      "reason": "Response does not mention surge settings, maxSurge, or maxUnavailable parameters in the upgrade commands"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": false,
+      "reason": "Response mentions 'Wait for completion' between upgrades but does not specifically advise close monitoring for issues between version bumps"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": true,
+      "reason": "Response includes prevention steps with maintenance windows configuration, though it mentions auto-upgrade rather than specifically release channel enrollment"
+    }
+  ]
+}

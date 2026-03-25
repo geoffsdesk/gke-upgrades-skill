@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that 'No channel' is a legacy configuration that lacks granular maintenance exclusion types",
+      "passed": true,
+      "reason": "The response explicitly states 'No channel' is a 'legacy approach that lacks modern GKE upgrade control features' and shows a comparison table highlighting the lack of granular exclusion types like 'No minor or node upgrades' and 'No minor upgrades' exclusions."
+    },
+    {
+      "expectation": "Mentions that 'No channel' does not support 'no minor or node upgrades' exclusion scope \u2014 only the 30-day 'no upgrades' type, AND per-nodepool maintenance exclusion is also limited",
+      "passed": true,
+      "reason": "The response clearly states in the comparison table that 'No channel' has '\u274c No' for 'No minor or node upgrades exclusion' and explicitly mentions 'only the 30-day \"no upgrades\" type is available' and that per-nodepool exclusions are limited."
+    },
+    {
+      "expectation": "Notes that Extended support (24 months) is only available on release channels, not 'No channel'",
+      "passed": true,
+      "reason": "The comparison table clearly shows Extended support (24 months) has '\u2705 Yes' for Release Channels and '\u274c No' for No Channel, and later mentions 'Up to 24 months of support' as a benefit of Extended channel."
+    },
+    {
+      "expectation": "Notes that rollout sequencing (an advanced feature) is not available on 'No channel'",
+      "passed": true,
+      "reason": "The comparison table shows 'Rollout sequencing' has '\u2705 Yes (advanced)' for Release Channels and '\u274c No' for No Channel, and the response mentions rollout sequencing as a missing feature."
+    },
+    {
+      "expectation": "Recommends Regular or Stable channel as the closest migration target (legacy behavior matches Stable for minors, Regular for patches)",
+      "passed": false,
+      "reason": "While the response recommends Regular channel extensively and mentions it as the target configuration, it does not mention Stable channel as an option or explain how legacy behavior matches these channels (Stable for minors, Regular for patches)."
+    },
+    {
+      "expectation": "Mentions Extended channel as a migration path for customers who want maximum flexibility around EoS enforcement",
+      "passed": true,
+      "reason": "The response includes a dedicated section 'Alternative: Extended Channel for Maximum Control' and specifically states it provides 'maximum flexibility around EoS enforcement' and is the 'Best migration path for teams coming from No channel'."
+    },
+    {
+      "expectation": "Warns about exclusion translation: when moving from 'No channel' to release channels, some exclusions don't translate 1:1 and may be ignored \u2014 only 'no_upgrades' type translates between the two. Recommends adding a temporary 'no upgrades' exclusion during the transition",
+      "passed": true,
+      "reason": "The response includes both warnings: under 'Migration Timeline & Risks' it states 'Only \"no_upgrades\" exclusions translate between \"No channel\" and release channels \u2014 other exclusion types may be ignored' and Step 1 of migration includes adding a temporary 'no_upgrades' exclusion during migration."
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "Multiple gcloud commands are provided, including the specific command to change release channel: 'gcloud container clusters update CLUSTER_NAME --zone ZONE --release-channel regular' in Step 3 of the migration steps."
+    },
+    {
+      "expectation": "References the comparison table at cloud.google.com/kubernetes-engine/docs/concepts/release-channels",
+      "passed": false,
+      "reason": "While the response includes a comparison table showing differences between Release Channels and No Channel, it does not reference or link to the official documentation at cloud.google.com/kubernetes-engine/docs/concepts/release-channels."
+    }
+  ]
+}

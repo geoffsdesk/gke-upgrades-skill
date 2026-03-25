@@ -1,0 +1,19 @@
+{
+  "eval_id": 9,
+  "mode": "with_skill",
+  "iteration": 20,
+  "prompt": "We have a large Standard cluster with 600 nodes across 4 node pools \u2014 2 CPU pools and 2 GPU pools (A100 with fixed reservations). Upgrades are taking over 24 hours to complete and our maintenance window is only 8 hours on weekends. How can we speed up the node pool upgrades?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-25T00:10:49.558137+00:00",
+  "input_tokens": 20999,
+  "output_tokens": 1556,
+  "time_seconds": 31.17,
+  "skill_files": [
+    "skill/SKILL.md",
+    "skill/evals/evals.json",
+    "skill/references/checklists.md",
+    "skill/references/runbook-template.md",
+    "skill/references/troubleshooting.md"
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Warns that GPU VMs do not support live migration \u2014 every upgrade forces pod restart, which kills training",
+      "passed": true,
+      "reason": "Response explicitly states that training workloads will be killed during node upgrades and emphasizes the need for custom approach due to 'Training jobs run 2-3 weeks \u2014 far exceeding any GKE eviction timeout'"
+    },
+    {
+      "expectation": "Recommends waiting for the current training run to complete or reach a checkpoint before upgrading the GPU node pool",
+      "passed": true,
+      "reason": "Response clearly states 'Wait for natural training completion' and 'Checkpoint before Phase 2: Ensure training has current checkpoint before starting node upgrades'"
+    },
+    {
+      "expectation": "Suggests the cordon-and-wait pattern: cordon GPU nodes, let training finish naturally, then upgrade the empty pool",
+      "passed": true,
+      "reason": "Response provides specific commands for cordoning nodes and waiting for training completion: 'kubectl get nodes -l node.kubernetes.io/instance-type=a3-megagpu-8g -o name | xargs -I {} kubectl cordon {}'"
+    },
+    {
+      "expectation": "Addresses GPU driver version coupling \u2014 GKE auto-installs drivers matching the target version, which may change CUDA versions and break framework compatibility",
+      "passed": true,
+      "reason": "Response mentions 'Verify target GKE 1.32 + driver compatibility in staging' and 'CUDA compatibility with new driver version' in the validation section"
+    },
+    {
+      "expectation": "Recommends testing the target GKE version in a staging cluster first to verify driver + CUDA + framework compatibility",
+      "passed": true,
+      "reason": "Response includes detailed staging validation steps: 'Create small staging pool with target version' and 'Deploy representative training workload to validate: - CUDA compatibility with new driver version'"
+    },
+    {
+      "expectation": "Addresses GPUDirect-TCPXO version requirements \u2014 verify the target GKE version supports the networking stack",
+      "passed": true,
+      "reason": "Response specifically mentions verifying 'GPUDirect-TCPXO compatibility with 1.32' and includes validation of 'GPUDirect-TCPXO networking stack' in staging tests"
+    },
+    {
+      "expectation": "Notes that surge upgrades need extra H100 nodes which are scarce \u2014 recommends maxSurge=0/maxUnavailable=1 (maxUnavailable is the primary lever for GPU pools with fixed reservations), or GKE's auto-scale blue-green strategy if surge quota is unavailable",
+      "passed": false,
+      "reason": "While response mentions surge upgrade limitations and resource constraints, it does not provide specific maxSurge=0/maxUnavailable=1 configuration recommendations or discuss maxUnavailable as the primary lever for GPU pools"
+    },
+    {
+      "expectation": "Recommends upgrading the control plane first (can be done independently without affecting running training)",
+      "passed": true,
+      "reason": "Response clearly structures Phase 1 as control plane upgrade with explicit statement: 'Control plane upgrade on regional clusters maintains API availability. Training workloads continue unaffected.'"
+    },
+    {
+      "expectation": "Mentions maintenance exclusions ('no minor or node upgrades') to protect against auto-upgrades during active training campaigns",
+      "passed": true,
+      "reason": "Response provides detailed maintenance exclusion commands: '--add-maintenance-exclusion-scope no_minor_or_node_upgrades' and includes emergency extension procedures"
+    },
+    {
+      "expectation": "Addresses compact placement \u2014 verify that replacement nodes land in the same placement group to preserve RDMA topology",
+      "passed": true,
+      "reason": "Response explicitly mentions 'Compact placement policy: Verify replacement nodes land in same placement group' and includes validation commands for checking placement and RDMA topology"
+    }
+  ]
+}

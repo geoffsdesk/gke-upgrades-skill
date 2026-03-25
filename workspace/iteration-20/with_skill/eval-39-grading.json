@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's native node pool upgrade strategies rather than the manual create/cordon/drain/delete workflow described",
+      "passed": true,
+      "reason": "The response explicitly states the manual blue-green approach is 'not the recommended first option' and recommends GKE's native upgrade strategies instead, with detailed explanations of why they're better."
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends surge upgrade with maxSurge=0 and maxUnavailable set as the primary lever (since no surge capacity is available)",
+      "passed": true,
+      "reason": "The response specifically recommends 'maxSurge=0, maxUnavailable=4' configuration and explains that maxUnavailable is the 'PRIMARY lever for GPU pools with fixed reservations' due to no surge capacity being available."
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as a native alternative that handles cordon and migration automatically",
+      "passed": true,
+      "reason": "The response includes a section on 'Autoscaled Blue-Green' as an alternative that 'cordons the old pool and auto-scales replacement nodes' and handles the process automatically."
+    },
+    {
+      "expectation": "Explains that native strategies are the supported path and handle edge cases (PDB respect, drain timeouts, progress tracking) that manual workflows miss",
+      "passed": true,
+      "reason": "The response explains that native strategies are 'the supported path' and specifically mentions handling PDBs, graceful termination periods, built-in retry logic, and automatic cordon/drain/migration that manual workflows would miss."
+    },
+    {
+      "expectation": "Only suggests manual blue-green as a last resort if native strategies don't meet a specific requirement",
+      "passed": true,
+      "reason": "The response has a 'When Manual Blue-Green Makes Sense' section that only recommends it for very specific edge cases and even then suggests trying 'autoscaled blue-green first'."
+    },
+    {
+      "expectation": "Addresses GPU driver compatibility \u2014 need to verify target version's auto-installed driver is compatible",
+      "passed": true,
+      "reason": "The response has a detailed 'GPU Driver Compatibility Test' section that explains creating a test node pool and validates that GKE auto-installs GPU drivers that can change CUDA versions, with the warning 'Never skip this step'."
+    },
+    {
+      "expectation": "Recommends scheduling the upgrade during a gap in GPU workloads to minimize impact",
+      "passed": false,
+      "reason": "While the response discusses capacity reduction during drain-first upgrades and mentions inference latency considerations, it does not explicitly recommend scheduling the upgrade during a gap in GPU workloads."
+    },
+    {
+      "expectation": "Provides gcloud commands for the recommended native approach",
+      "passed": true,
+      "reason": "The response provides specific gcloud commands for configuring upgrade strategy, starting the upgrade, and includes a complete upgrade runbook with all necessary commands."
+    }
+  ]
+}
