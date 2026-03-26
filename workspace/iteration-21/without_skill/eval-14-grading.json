@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Checks for deprecated API usage that may have changed behavior in 1.30",
+      "passed": false,
+      "reason": "The response mentions checking for deprecated flags in API server configuration but does not specifically address deprecated API usage or behavior changes from version 1.30"
+    },
+    {
+      "expectation": "Recommends checking admission webhooks \u2014 they may be rejecting or slowing down requests on the new version",
+      "passed": false,
+      "reason": "The response does not mention admission webhooks at all, which could be a significant cause of API latency and 503 errors after an upgrade"
+    },
+    {
+      "expectation": "Advises checking if resource requests/limits need adjusting for any system components that changed",
+      "passed": true,
+      "reason": "The response specifically mentions that 'Kubernetes 1.32 has increased resource requirements' and includes commands to check API server resource usage and node resource allocations"
+    },
+    {
+      "expectation": "Suggests examining kube-system pods for any that are crashlooping or restarting",
+      "passed": true,
+      "reason": "The response includes specific commands to 'Check all control plane pods' and 'Look for any crashlooping or pending pods' with kubectl commands to identify such issues"
+    },
+    {
+      "expectation": "Includes commands to check API server metrics and latency (kubectl get --raw /metrics)",
+      "passed": true,
+      "reason": "The response includes multiple commands using 'kubectl get --raw /metrics' to check API server metrics and also mentions monitoring API request metrics"
+    },
+    {
+      "expectation": "Recommends checking if NetworkPolicy or service mesh components need updating for the new version",
+      "passed": false,
+      "reason": "While the response mentions checking NetworkPolicies to ensure they aren't blocking API server communication, it does not address service mesh components or whether these need updating for the new version"
+    },
+    {
+      "expectation": "Advises reviewing pod events for scheduling delays or readiness probe failures",
+      "passed": false,
+      "reason": "The response mentions checking events in general contexts (etcd events, service account events) but does not specifically advise reviewing pod events for scheduling delays or readiness probe failures"
+    },
+    {
+      "expectation": "Mentions checking if HPA or VPA are behaving differently on the new version",
+      "passed": false,
+      "reason": "The response does not mention HPA (Horizontal Pod Autoscaler) or VPA (Vertical Pod Autoscaler) and their potential behavioral changes in the new version"
+    }
+  ]
+}

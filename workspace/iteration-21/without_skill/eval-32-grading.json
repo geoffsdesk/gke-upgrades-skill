@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that GKE's maximum upgrade parallelism is approximately 20 nodes simultaneously, regardless of maxSurge setting",
+      "passed": false,
+      "reason": "The response suggests increasing maxSurge settings for faster upgrades but does not mention GKE's ~20 node parallelism limit or that maxSurge doesn't override this constraint"
+    },
+    {
+      "expectation": "Calculates that at 20-node parallelism, upgrading 3,000 nodes requires ~150 batches \u2014 far more than an 8-hour window allows",
+      "passed": false,
+      "reason": "No mathematical calculation is provided showing the batch count or time requirements based on GKE's parallelism limitations"
+    },
+    {
+      "expectation": "Recommends splitting upgrades across multiple maintenance windows (weekends) rather than attempting all at once",
+      "passed": true,
+      "reason": "The response recommends extending to a full weekend window and staggering upgrades by priority across separate windows"
+    },
+    {
+      "expectation": "Suggests upgrading CPU pools and GPU pools separately, prioritizing CPU pools first as they're less disruptive",
+      "passed": true,
+      "reason": "The response explicitly recommends upgrading critical CPU pools first in separate windows, with GPU pools in subsequent windows"
+    },
+    {
+      "expectation": "Recommends upgrading GPU pools during scheduled gaps between training/inference workloads",
+      "passed": false,
+      "reason": "While it mentions GPU pools are 'typically less critical for base services,' it doesn't specifically address scheduling around training/inference workload gaps"
+    },
+    {
+      "expectation": "Suggests expanding the maintenance window or using multiple consecutive windows for large pool upgrades",
+      "passed": true,
+      "reason": "The response shows extending maintenance window to cover full weekend (Saturday 2am to Sunday 10am) and suggests multiple windows for different pool types"
+    },
+    {
+      "expectation": "Mentions that cluster autoscaler can only scale one node pool at a time \u2014 this interacts with upgrade scheduling",
+      "passed": false,
+      "reason": "No mention of cluster autoscaler limitations or how they interact with upgrade scheduling"
+    },
+    {
+      "expectation": "Addresses the 15,000 node standard limit and notes GKE 1.31+ supports up to 65,000 for AI workloads",
+      "passed": false,
+      "reason": "No mention of GKE node limits or the increased limits available for AI workloads in newer versions"
+    }
+  ]
+}

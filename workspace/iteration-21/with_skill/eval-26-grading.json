@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that clusters on Regular channel will be force-upgraded to the next minor version (1.31) when 1.30 hits EoS",
+      "passed": true,
+      "reason": "Clearly states 'Automatic force-upgrade to 1.31 (next supported minor version)' for Regular channel clusters with details about control plane and node pool upgrades"
+    },
+    {
+      "expectation": "Explains that clusters on Extended channel get up to 24 months of support, so 1.30 EoS is significantly later \u2014 they have more time",
+      "passed": true,
+      "reason": "Explicitly states 'NO automatic force-upgrade at 1.30 EoS' and 'Remains at 1.30 until end of extended support (up to 24 months total)' for Extended channel clusters"
+    },
+    {
+      "expectation": "Explains that legacy 'No channel' clusters: control plane EoS minor versions are auto-upgraded to next supported minor, AND EoS node pools are force-upgraded even when 'no auto-upgrade' is configured",
+      "passed": true,
+      "reason": "States 'Control plane: Force-upgraded to 1.31 at EoS' and 'Node pools: Force-upgraded even if auto-upgrade is disabled per-nodepool' for No channel clusters"
+    },
+    {
+      "expectation": "Mentions that a 'no upgrades' maintenance exclusion (30 days) can temporarily defer even EoS force-upgrades",
+      "passed": true,
+      "reason": "Provides specific command example for maintenance exclusion with 'no_upgrades' scope and mentions '30 days max' limitation multiple times"
+    },
+    {
+      "expectation": "Recommends proactive upgrade planning rather than waiting for EoS enforcement",
+      "passed": true,
+      "reason": "Provides multiple proactive options including manual upgrade commands and states 'Manual upgrade ahead of EoS (for control)' and includes comprehensive pre-upgrade checklist"
+    },
+    {
+      "expectation": "Mentions GKE EoS notifications via Cloud Logging as a planning tool",
+      "passed": true,
+      "reason": "Includes Cloud Logging query example and mentions 'Enable scheduled upgrade notifications (72h advance warning)' in the monitoring section"
+    },
+    {
+      "expectation": "Mentions the deprecation insights dashboard for checking API compatibility before the forced upgrade",
+      "passed": false,
+      "reason": "Only mentions checking deprecated API usage with kubectl metrics command, but does not specifically mention the deprecation insights dashboard as a planning tool"
+    },
+    {
+      "expectation": "Warns that 'snowflaking' (manually freezing versions) should be avoided \u2014 it creates security and reliability risks",
+      "passed": false,
+      "reason": "While the response recommends upgrades and mentions security patches, it does not explicitly warn against 'snowflaking' or manually freezing versions, nor does it mention the security and reliability risks of this practice"
+    }
+  ]
+}

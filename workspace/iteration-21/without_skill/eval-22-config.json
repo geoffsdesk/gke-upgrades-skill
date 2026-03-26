@@ -1,0 +1,12 @@
+{
+  "eval_id": 22,
+  "mode": "without_skill",
+  "iteration": 21,
+  "prompt": "During our node pool upgrade, we see that pods are getting evicted from nodes being drained, but they're landing on nodes that are ALSO about to be drained. It's like a game of musical chairs. The pods keep getting shuffled around instead of landing on already-upgraded nodes. What's happening and how do we fix it?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-26T00:46:33.471908+00:00",
+  "input_tokens": 78,
+  "output_tokens": 1578,
+  "time_seconds": 24.62
+}

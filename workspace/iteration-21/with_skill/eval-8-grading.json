@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the key difference: surge upgrades nodes in-place with rolling replacement, blue-green creates an entirely new pool",
+      "passed": true,
+      "reason": "Response clearly explains that surge drains nodes (in-place replacement) while blue-green creates new nodes and preserves old ones during transition"
+    },
+    {
+      "expectation": "Recommends blue-green for this scenario due to local SSDs (data can't migrate between nodes)",
+      "passed": true,
+      "reason": "Explicitly recommends blue-green and clearly states that local SSD data cannot survive node replacement, making blue-green the clear choice"
+    },
+    {
+      "expectation": "Explains that local SSD data is lost when a node is drained during surge upgrade",
+      "passed": true,
+      "reason": "Clearly states 'Surge drains nodes, destroying local SSD data' and 'Cassandra data stored on local SSDs cannot survive node replacement'"
+    },
+    {
+      "expectation": "Recommends GKE's autoscaled blue-green upgrade strategy configured with --enable-autoscaling and --autoscaled-rollout-policy (NOT surge parameters like maxSurge/maxUnavailable which don't apply to blue-green), or describes the blue-green process if manual workflow is needed",
+      "passed": false,
+      "reason": "Uses incorrect parameters: shows --standard-rollout-policy instead of --autoscaled-rollout-policy and doesn't include --enable-autoscaling. The standard rollout policy is for surge upgrades, not blue-green"
+    },
+    {
+      "expectation": "Addresses Cassandra-specific concerns: need to decommission from the ring before draining, rebuild on new nodes",
+      "passed": true,
+      "reason": "Extensively covers Cassandra decommissioning with 'nodetool decommission' commands and discusses ring rebalancing and rebuild process on new nodes"
+    },
+    {
+      "expectation": "Provides gcloud commands for creating the new node pool with matching configuration",
+      "passed": true,
+      "reason": "Provides gcloud commands for both updating existing pool for blue-green and creating new node pool manually with proper machine-type and local-ssd-count parameters"
+    },
+    {
+      "expectation": "Includes kubectl commands for cordoning and draining",
+      "passed": false,
+      "reason": "Does not include explicit kubectl cordon or drain commands. Only shows nodetool decommission commands for Cassandra-level operations"
+    },
+    {
+      "expectation": "Mentions PDB configuration to protect the Cassandra quorum during migration",
+      "passed": true,
+      "reason": "Includes complete PDB YAML configuration with minAvailable: 8 to protect quorum and explains the rationale for maintaining 8 out of 9 nodes"
+    }
+  ]
+}

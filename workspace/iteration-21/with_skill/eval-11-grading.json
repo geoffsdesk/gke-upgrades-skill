@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends upgrading the control plane first before any node pools",
+      "passed": true,
+      "reason": "Phase 1 explicitly states control plane upgrade first with command 'gcloud container clusters upgrade YOUR_CLUSTER --master' before proceeding to node pools"
+    },
+    {
+      "expectation": "Provides a specific node pool upgrade order with rationale (coordinating\u2192data\u2192master, or similar logical sequence)",
+      "passed": true,
+      "reason": "Clearly specifies upgrade order: coordinators first (lowest risk), then data nodes (critical), then masters last (most critical), with detailed rationale for each"
+    },
+    {
+      "expectation": "Addresses PV safety: regional pd-ssd volumes can reattach to nodes in other zones, which is good for upgrades",
+      "passed": true,
+      "reason": "Explicitly mentions 'Regional pd-ssd PVs (good - survives node changes)' in cluster overview, confirming storage safety during upgrades"
+    },
+    {
+      "expectation": "Recommends setting PDB for Elasticsearch master nodes to ensure quorum (minAvailable=2 for 3-master setup)",
+      "passed": true,
+      "reason": "Provides detailed PDB YAML configuration with 'minAvailable: 2' for masters, explicitly noting 'allow 1 master down, keep quorum of 2'"
+    },
+    {
+      "expectation": "Recommends maxSurge=1, maxUnavailable=0 for all ES node pools (conservative, data-safe)",
+      "passed": true,
+      "reason": "Explicitly sets maxSurge=1 and maxUnavailable=0 for all node pools (coordinator, data, and master) with rationale for conservative approach"
+    },
+    {
+      "expectation": "Advises verifying Elasticsearch cluster health (green status) between each node pool upgrade",
+      "passed": true,
+      "reason": "Multiple health checks with 'curl -X GET localhost:9200/_cluster/health?pretty' after each phase, explicitly checking for GREEN status"
+    },
+    {
+      "expectation": "Mentions checking PV reclaim policy is set to Retain (not Delete) as a safety measure",
+      "passed": true,
+      "reason": "Pre-upgrade checklist includes specific command to check PV reclaim policies: 'kubectl get pv -o custom-columns=NAME:.metadata.name,RECLAIM:.spec.persistentVolumeReclaimPolicy | grep -v Retain'"
+    },
+    {
+      "expectation": "Includes kubectl commands for checking StatefulSet rollout status",
+      "passed": false,
+      "reason": "While it includes commands for monitoring nodes and pods during upgrade, it doesn't specifically include kubectl rollout status commands for StatefulSets"
+    },
+    {
+      "expectation": "Recommends taking an Elasticsearch snapshot backup before starting",
+      "passed": true,
+      "reason": "Pre-upgrade checklist includes detailed snapshot backup procedure with GCS repository setup and snapshot creation commands"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that surge upgrades require extra compute capacity (maxSurge creates NEW nodes before draining old ones)",
+      "passed": true,
+      "reason": "Response explains that surge nodes can't be created due to quota constraints and describes drain-first strategy as creating no extra nodes"
+    },
+    {
+      "expectation": "Recommends setting maxUnavailable >0 instead of relying on maxSurge (drains first, then creates \u2014 uses less quota)",
+      "passed": true,
+      "reason": "Explicitly recommends Option 1 with maxUnavailable=1 and maxSurge=0 as the drain-first strategy"
+    },
+    {
+      "expectation": "Warns that maxUnavailable >0 means reduced capacity during upgrade \u2014 some pods won't have nodes",
+      "passed": true,
+      "reason": "States 'Temporary capacity loss (one node at a time is unavailable)' and 'capacity dip is brief' as trade-offs"
+    },
+    {
+      "expectation": "Suggests temporarily scaling down non-critical deployments to free up quota for surge nodes",
+      "passed": true,
+      "reason": "Option 3 provides specific kubectl scale commands to scale down dev/test and canary deployments"
+    },
+    {
+      "expectation": "Mentions that reducing maxSurge to 1 minimizes extra quota needed (slower but fits within constraints)",
+      "passed": true,
+      "reason": "Option 2 shows maxSurge=1 and explains 'creates only 1 surge node at a time \u2014 much slower but fits minimal extra quota'"
+    },
+    {
+      "expectation": "Provides the gcloud command to update surge settings (maxSurge=0, maxUnavailable=1 for zero-extra-capacity mode)",
+      "passed": true,
+      "reason": "Provides exact gcloud command with --max-surge-upgrade 0 and --max-unavailable-upgrade 1"
+    },
+    {
+      "expectation": "Recommends doing the upgrade in off-peak hours when fewer pods are running",
+      "passed": true,
+      "reason": "Option 4 specifically mentions scheduling during off-peak hours (nights/weekends) when autoscaler has scaled down"
+    },
+    {
+      "expectation": "Mentions requesting a temporary quota increase as a faster alternative to a permanent increase",
+      "passed": false,
+      "reason": "Does not suggest requesting a temporary quota increase - only provides workarounds for the existing quota constraint"
+    }
+  ]
+}

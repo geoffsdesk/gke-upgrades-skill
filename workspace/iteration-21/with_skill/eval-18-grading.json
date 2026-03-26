@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Configures a recurring maintenance window for weekends only",
+      "passed": true,
+      "reason": "Configures Saturday maintenance window with --maintenance-window-start '2024-01-06T02:00:00Z' and --maintenance-window-recurrence 'FREQ=WEEKLY;BYDAY=SA'"
+    },
+    {
+      "expectation": "Provides the gcloud command with --maintenance-window-start/end and --maintenance-window-recurrence for weekly weekend schedule",
+      "passed": true,
+      "reason": "Shows gcloud command with --maintenance-window-start, --maintenance-window-duration 4h, and --maintenance-window-recurrence 'FREQ=WEEKLY;BYDAY=SA'"
+    },
+    {
+      "expectation": "Sets up maintenance exclusions for quarterly code freezes (up to 30 days each)",
+      "passed": true,
+      "reason": "Provides four quarterly exclusions (Q1-Q4) each with approximately 15-17 day periods using no_upgrades scope"
+    },
+    {
+      "expectation": "Sets up a maintenance exclusion for the November audit period",
+      "passed": true,
+      "reason": "Configures November audit exclusion from 2024-11-01 to 2024-12-01 with no_upgrades scope"
+    },
+    {
+      "expectation": "Notes the 30-day maximum for maintenance exclusions and how to handle longer freezes",
+      "passed": true,
+      "reason": "Shows chaining multiple exclusions for extended audit period with Part 1 and Part 2, mentions 48h gap requirement in 32-day window"
+    },
+    {
+      "expectation": "Explains that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
+      "passed": false,
+      "reason": "While it shows manual upgrade commands, it doesn't explicitly explain that manual upgrades bypass maintenance windows"
+    },
+    {
+      "expectation": "Recommends combining maintenance windows with Stable or Extended channel for maximum upgrade control",
+      "passed": true,
+      "reason": "Recommends Extended release channel and explains it provides 24-month support with manual minor upgrade control"
+    },
+    {
+      "expectation": "Provides gcloud commands for each exclusion (--add-maintenance-exclusion-name/start-time/end-time)",
+      "passed": true,
+      "reason": "All exclusion commands include --add-maintenance-exclusion-name, --add-maintenance-exclusion-start-time, and --add-maintenance-exclusion-end-time parameters"
+    },
+    {
+      "expectation": "Warns about the risk of falling too far behind on versions during long exclusion periods",
+      "passed": true,
+      "reason": "Mentions tracking version drift, deprecation insights, and notes that persistent exclusion tracks EoS dates to avoid forced upgrades"
+    }
+  ]
+}

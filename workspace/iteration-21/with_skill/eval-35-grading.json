@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends Stable or Extended release channel to minimize upgrade frequency",
+      "passed": true,
+      "reason": "Response specifically recommends Extended release channel with detailed explanation of benefits including 'Up to 24 months support' and 'No automatic minor version upgrades'"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
+      "passed": true,
+      "reason": "Response explicitly recommends 'no_minor_or_node_upgrades' exclusion with clear explanation that 'Control plane patches flow automatically for security' while 'Blocks all disruptive upgrades'"
+    },
+    {
+      "expectation": "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
+      "passed": true,
+      "reason": "Response configures maintenance window for Sunday 2-6 AM with specific command flags and notes 'low-traffic period'"
+    },
+    {
+      "expectation": "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
+      "passed": true,
+      "reason": "Response creates separate 'h100-training-pool' for training workloads with dedicated GPU configuration, separate from the main cluster nodes"
+    },
+    {
+      "expectation": "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
+      "passed": true,
+      "reason": "Response shows maintenance exclusions that block automatic upgrades and includes operational pattern with 'Post-Training Maintenance' phase for manual upgrades during training gaps"
+    },
+    {
+      "expectation": "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
+      "passed": true,
+      "reason": "Response includes extended termination grace period 'time for checkpoint save' and mentions 'Test checkpoint/restore functionality' in the operational checklist"
+    },
+    {
+      "expectation": "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
+      "passed": false,
+      "reason": "While the response mentions updating training images and validation, it does not specifically address GPU driver version testing or staging validation before production upgrades"
+    },
+    {
+      "expectation": "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading",
+      "passed": false,
+      "reason": "Response only briefly mentions 'GPUDirect-TCPX if using' in validation checklist but does not address strict GKE version requirements or compatibility verification"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's native node pool upgrade strategies rather than the manual create/cordon/drain/delete workflow described",
+      "passed": true,
+      "reason": "Response clearly recommends GKE's native upgrade strategies as the better approach and explains why they're superior to the manual workflow"
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends surge upgrade with maxSurge=0 and maxUnavailable set as the primary lever (since no surge capacity is available)",
+      "passed": true,
+      "reason": "Explicitly recommends maxSurge=0 and maxUnavailable=4 configuration with clear explanation that maxSurge=0 is because of fixed reservations with no surge capacity"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as a native alternative that handles cordon and migration automatically",
+      "passed": true,
+      "reason": "Provides AUTOSCALED_BLUE_GREEN strategy as an alternative with specific gcloud commands showing how it handles the process automatically"
+    },
+    {
+      "expectation": "Explains that native strategies are the supported path and handle edge cases (PDB respect, drain timeouts, progress tracking) that manual workflows miss",
+      "passed": true,
+      "reason": "Details multiple edge cases native strategies handle: PDB protection, automatic retry, native monitoring, and proper cordon/drain/delete sequence"
+    },
+    {
+      "expectation": "Only suggests manual blue-green as a last resort if native strategies don't meet a specific requirement",
+      "passed": true,
+      "reason": "Final recommendation clearly states to start with native surge upgrade and only consider manual approaches if hitting specific issues that native strategies can't handle"
+    },
+    {
+      "expectation": "Addresses GPU driver compatibility \u2014 need to verify target version's auto-installed driver is compatible",
+      "passed": true,
+      "reason": "Specifically mentions verifying driver compatibility and provides gcloud command to create test pool for testing GKE 1.32 GPU drivers"
+    },
+    {
+      "expectation": "Recommends scheduling the upgrade during a gap in GPU workloads to minimize impact",
+      "passed": false,
+      "reason": "Does not mention scheduling during workload gaps or timing considerations to minimize GPU workload impact"
+    },
+    {
+      "expectation": "Provides gcloud commands for the recommended native approach",
+      "passed": true,
+      "reason": "Provides multiple specific gcloud commands for configuring and executing the native surge upgrade approach, plus commands for alternatives and testing"
+    }
+  ]
+}
