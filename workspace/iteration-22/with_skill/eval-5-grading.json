@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Clearly explains the 2-version limit policy and identifies this as a 'critical version skew violation' with 3 minor versions behind violating the 2-version limit"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (nodes must be within 2 minor versions of control plane)",
+      "passed": true,
+      "reason": "Explicitly states the skew is '3 minor versions behind (violates the 2-version limit)' and calls it an 'unsupported configuration'"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Lists specific issues including kubelet communication failures with API server, pod scheduling issues, unpredictable workload behavior, and potential data plane outages"
+    },
+    {
+      "expectation": "Recommends skip-level (N+2) node pool upgrades within supported version skew to reduce time and disruption. For the N+3 gap (1.28 with 1.31 CP), recommends multiple sequential skip-level upgrades within supported skew (e.g., 1.28\u21921.30 then 1.30\u21921.31) or creating a new node pool at the target version and migrating workloads. Never recommends an unsupported skip-level upgrade.",
+      "passed": false,
+      "reason": "The response incorrectly recommends a direct 1.28\u21921.31 upgrade as 'Option A', claiming it's supported within the 2-version skew limit. This is actually an N+3 unsupported skip-level upgrade. The correct approach would be 1.28\u21921.30 then 1.30\u21921.31 as sequential N+2 upgrades."
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Provides detailed gcloud commands for all upgrade options including surge settings configuration and upgrade commands with proper syntax"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": true,
+      "reason": "Explicitly recommends conservative surge settings with maxSurge=1 and maxUnavailable=0 and provides the gcloud command to configure these settings"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": true,
+      "reason": "Provides a detailed monitoring section with specific kubectl and gcloud commands to watch node versions, monitor pods, and check upgrade operation status"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": true,
+      "reason": "Provides detailed prevention strategy including release channel enrollment and maintenance window configuration with specific gcloud commands"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all notification types with sections for 'Scheduled Auto-Upgrade Notifications', 'Version Availability Notifications', 'End of Support (EoS) Warnings', and 'Critical Security Patches'"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response assigns urgency levels with security patches and EoS warnings as 'URGENT', auto-upgrades as 'MEDIUM', and new version available as 'LOW/informational'"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response explicitly states EoS warnings require 'Plan upgrade immediately' and provides specific commands and timelines for addressing end-of-support scenarios"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response mentions 'Prepare pre/post-upgrade checklists' for medium priority items and references runbooks with 'Full pre/post checklists' for scheduled upgrades"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response states security patches should be applied 'within 7-14 days' and classifies them as URGENT, implying they may override normal scheduling"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response explicitly categorizes version availability notifications as 'LOW - Informational/Long-term Planning' with 'No immediate action needed' and 'Use For: Long-term planning'"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "Response includes a 'Cloud Monitoring Alerting Policy' section with specific gcloud commands for creating monitoring policies for GKE events"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": false,
+      "reason": "Response does not mention GKE release notes as a source for understanding version changes, though it provides comprehensive upgrade guidance otherwise"
+    }
+  ]
+}

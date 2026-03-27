@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Strongly advises AGAINST moving to 'No channel' \u2014 it provides LESS control, not more",
+      "passed": true,
+      "reason": "Response clearly states 'Moving all clusters to \"No channel\" for maximum control isn't generally recommended' and explains why it provides less control"
+    },
+    {
+      "expectation": "Explains that 'No channel' only supports the basic 30-day 'no upgrades' exclusion, while release channels support all three exclusion types including 'no minor or node upgrades' (up to EoS)",
+      "passed": false,
+      "reason": "Response does not mention the specific 30-day limitation or explain the different types of maintenance exclusions available on release channels"
+    },
+    {
+      "expectation": "Recommends staying on Regular channel (or moving to Stable/Extended) and using maintenance exclusions for control",
+      "passed": false,
+      "reason": "While it recommends keeping most clusters on Regular channel, it doesn't mention Stable/Extended channels as alternatives or explain maintenance exclusions as a control mechanism"
+    },
+    {
+      "expectation": "Specifically recommends the 'no minor or node upgrades' exclusion as the way to prevent disruptive changes while allowing security patches",
+      "passed": false,
+      "reason": "Response does not mention or explain the 'no minor or node upgrades' exclusion type at all"
+    },
+    {
+      "expectation": "Notes that Extended support (24 months) is only available on release channels, not 'No channel'",
+      "passed": false,
+      "reason": "Response does not mention Extended support or the 24-month availability difference between channels"
+    },
+    {
+      "expectation": "Explains that 'No channel' is a legacy configuration and the industry is moving away from it",
+      "passed": false,
+      "reason": "Response does not characterize 'No channel' as legacy or mention industry trends"
+    },
+    {
+      "expectation": "Mentions that maintenance windows control WHEN upgrades happen, while exclusions control WHAT upgrades happen \u2014 together they give fine-grained control",
+      "passed": false,
+      "reason": "While maintenance windows are mentioned, the response doesn't explain the distinction between WHEN vs WHAT controls or how they work together"
+    },
+    {
+      "expectation": "Warns about the risks of 'No channel': no granular exclusions, no Extended support, risk of snowflaking clusters",
+      "passed": false,
+      "reason": "Response mentions some general risks but doesn't specifically address the technical limitations like lack of granular exclusions, no Extended support, or cluster snowflaking"
+    }
+  ]
+}

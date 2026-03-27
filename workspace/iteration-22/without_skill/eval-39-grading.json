@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's native node pool upgrade strategies rather than the manual create/cordon/drain/delete workflow described",
+      "passed": true,
+      "reason": "Response clearly recommends in-place node pool upgrade as the primary approach and only suggests manual blue-green as a fallback option"
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends surge upgrade with maxSurge=0 and maxUnavailable set as the primary lever (since no surge capacity is available)",
+      "passed": false,
+      "reason": "Response recommends maxSurge=1-2 and maxUnavailable=0, which is incorrect for fixed reservations where surge capacity isn't available - should be maxSurge=0 and use maxUnavailable as the lever"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as a native alternative that handles cordon and migration automatically",
+      "passed": false,
+      "reason": "Response does not mention GKE's auto-scale blue-green upgrade strategy as a native alternative"
+    },
+    {
+      "expectation": "Explains that native strategies are the supported path and handle edge cases (PDB respect, drain timeouts, progress tracking) that manual workflows miss",
+      "passed": true,
+      "reason": "Response explains native approach has 'automated process with built-in safety checks' and positions it as better than manual workflow"
+    },
+    {
+      "expectation": "Only suggests manual blue-green as a last resort if native strategies don't meet a specific requirement",
+      "passed": true,
+      "reason": "Response clearly states 'Only fall back to the new pool approach if in-place upgrades fail' positioning manual approach as last resort"
+    },
+    {
+      "expectation": "Addresses GPU driver compatibility \u2014 need to verify target version's auto-installed driver is compatible",
+      "passed": false,
+      "reason": "Response does not mention GPU driver compatibility considerations when upgrading from 1.31 to 1.32"
+    },
+    {
+      "expectation": "Recommends scheduling the upgrade during a gap in GPU workloads to minimize impact",
+      "passed": true,
+      "reason": "Response mentions 'A100 workloads are typically long-running ML jobs - plan maintenance windows' which addresses scheduling considerations"
+    },
+    {
+      "expectation": "Provides gcloud commands for the recommended native approach",
+      "passed": true,
+      "reason": "Response provides specific gcloud container node-pools upgrade commands with appropriate parameters for the native approach"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": true,
+      "reason": "Explicitly states 'All 4 slices will restart simultaneously \u2014 TPU multislice maintenance is atomic, not rolling' and 'All pods across all slices terminate and recreate \u2014 there's no graceful migration for TPU multislice'"
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": true,
+      "reason": "Clearly states 'Cascading restart behavior: A maintenance event on ANY slice triggers restart of ALL slices in the multislice environment'"
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "Explicitly states 'All pods across all slices terminate and recreate' and 'Training job will be completely interrupted \u2014 expect full stop/restart cycle'"
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": true,
+      "reason": "States 'Capacity dependency risk: If insufficient TPU v5e capacity exists during recreation, slices will block until hardware becomes available \u2014 this could extend downtime significantly beyond 4 hours'"
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "Explicitly recommends 'Force a checkpoint save immediately before the maintenance window' in the checkpoint strategy section"
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "Provides specific YAML configuration with 'RESUME_FROM_CHECKPOINT: true' environment variable and emphasizes testing resume logic throughout the response"
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": true,
+      "reason": "Provides detailed gcloud commands for applying maintenance exclusions and explains the 30-day maximum deferral period with specific use cases"
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": true,
+      "reason": "References maintenance window coordination, checking scheduled maintenance times, and suggests scheduling during 'acceptable downtime' and 'natural pause points'"
+    }
+  ]
+}

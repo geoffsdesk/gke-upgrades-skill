@@ -1,0 +1,12 @@
+{
+  "eval_id": 6,
+  "mode": "without_skill",
+  "iteration": 22,
+  "prompt": "Our CTO wants us to move our production Standard cluster from the Rapid release channel to Stable. We're currently at 1.32 on Rapid. What are the implications and how do we do it?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-27T00:38:30.305902+00:00",
+  "input_tokens": 52,
+  "output_tokens": 612,
+  "time_seconds": 13.57
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": true,
+      "reason": "Response explicitly states 'Your entire multislice job will be terminated (all 4 slices simultaneously)' and 'TPU VMs will be drained and rescheduled to different physical hardware', indicating atomic recreation rather than rolling upgrade"
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": true,
+      "reason": "Response clearly states 'Your entire multislice job will be terminated (all 4 slices simultaneously)', indicating that maintenance affects all slices together"
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "Response states 'Your entire multislice job will be terminated (all 4 slices simultaneously)' and 'The job won't automatically resume', clearly indicating simultaneous restart and interruption"
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": false,
+      "reason": "Response does not mention resource availability issues or potential blocking/extended downtime scenarios during recreation"
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "Response recommends 'Implement Robust Checkpointing' and discusses checkpoint frequency, though it doesn't explicitly say 'immediately before maintenance window'"
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "Response includes recovery planning section with scripts to 'Load from latest checkpoint' and 'Ensure your training script detects and loads latest checkpoint'"
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": false,
+      "reason": "Response does not mention maintenance exclusions or the option to defer maintenance events"
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": true,
+      "reason": "Response mentions 'Maintenance windows are usually scheduled during low-usage periods' and includes a section on 'Consider Maintenance Windows' with configuration examples"
+    }
+  ]
+}

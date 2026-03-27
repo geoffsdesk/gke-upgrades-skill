@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Warns that GPU VMs do not support live migration \u2014 every upgrade forces pod restart, which kills training",
+      "passed": true,
+      "reason": "Response explicitly states that standard upgrade approaches won't work for GPU clusters and that nodes will need to be upgraded which would disrupt training"
+    },
+    {
+      "expectation": "Recommends waiting for the current training run to complete or reach a checkpoint before upgrading the GPU node pool",
+      "passed": true,
+      "reason": "Response recommends applying maintenance exclusion to protect active training run and scheduling upgrade 'during planned training gap (between campaigns)'"
+    },
+    {
+      "expectation": "Suggests the cordon-and-wait pattern: cordon GPU nodes, let training finish naturally, then upgrade the empty pool",
+      "passed": false,
+      "reason": "Response does not mention cordoning nodes or the cordon-and-wait pattern. It focuses on maintenance exclusions and parallel host maintenance instead"
+    },
+    {
+      "expectation": "Addresses GPU driver version coupling \u2014 GKE auto-installs drivers matching the target version, which may change CUDA versions and break framework compatibility",
+      "passed": true,
+      "reason": "Response includes 'GPU driver compatibility confirmed with target version' in the checklist and mentions checking driver compatibility"
+    },
+    {
+      "expectation": "Recommends testing the target GKE version in a staging cluster first to verify driver + CUDA + framework compatibility",
+      "passed": true,
+      "reason": "Response explicitly recommends 'Begin staging cluster testing with GKE 1.32' and includes testing in staging cluster as mandatory in risk mitigation"
+    },
+    {
+      "expectation": "Addresses GPUDirect-TCPXO version requirements \u2014 verify the target GKE version supports the networking stack",
+      "passed": true,
+      "reason": "Response has a dedicated section on GPUDirect-TCPXO requirements with commands to verify compatibility and emphasizes checking release notes for A3 Mega compatibility"
+    },
+    {
+      "expectation": "Notes that surge upgrades need extra H100 nodes which are scarce \u2014 recommends maxSurge=0/maxUnavailable=1 (maxUnavailable is the primary lever for GPU pools with fixed reservations), or GKE's auto-scale blue-green strategy if surge quota is unavailable",
+      "passed": false,
+      "reason": "Response mentions that surge upgrades won't work due to fixed reservations but doesn't specifically recommend maxSurge=0/maxUnavailable=1 or discuss maxUnavailable as the primary lever for GPU pools"
+    },
+    {
+      "expectation": "Recommends upgrading the control plane first (can be done independently without affecting running training)",
+      "passed": true,
+      "reason": "Response explicitly includes 'Phase 1: Control plane Upgrade (Low Risk)' and states it can be done during training gap with commands provided"
+    },
+    {
+      "expectation": "Mentions maintenance exclusions ('no minor or node upgrades') to protect against auto-upgrades during active training campaigns",
+      "passed": true,
+      "reason": "Response prominently features maintenance exclusions with specific commands for 'no minor or node upgrades' and 'no_upgrades' scopes to protect training runs"
+    },
+    {
+      "expectation": "Addresses compact placement \u2014 verify that replacement nodes land in the same placement group to preserve RDMA topology",
+      "passed": true,
+      "reason": "Response mentions 'Confirm placement policy keeps replacement nodes in the same compact placement group' and addresses RDMA topology preservation in risk mitigation"
+    }
+  ]
+}

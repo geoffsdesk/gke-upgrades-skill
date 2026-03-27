@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that clusters on Regular channel will be force-upgraded to the next minor version (1.31) when 1.30 hits EoS",
+      "passed": true,
+      "reason": "Response clearly states Regular channel clusters will have 'Automatic minor upgrade to GKE 1.31 (next supported minor version)' and 'No way to avoid this upgrade once 1.30 reaches EoS'"
+    },
+    {
+      "expectation": "Explains that clusters on Extended channel get up to 24 months of support, so 1.30 EoS is significantly later \u2014 they have more time",
+      "passed": true,
+      "reason": "Response explicitly states Extended channel 'provides up to 24 months of support' and gives specific timeline 'July 2026 (24-month extended support)' vs March 2025 for Regular channel"
+    },
+    {
+      "expectation": "Explains that legacy 'No channel' clusters: control plane EoS minor versions are auto-upgraded to next supported minor, AND EoS node pools are force-upgraded even when 'no auto-upgrade' is configured",
+      "passed": true,
+      "reason": "Response explains 'No channel' clusters undergo 'automatic upgrade to next supported minor version' with 'Control plane upgraded first, then node pools' and notes 'More aggressive than release channels'"
+    },
+    {
+      "expectation": "Mentions that a 'no upgrades' maintenance exclusion (30 days) can temporarily defer even EoS force-upgrades",
+      "passed": true,
+      "reason": "Response mentions 'Only 30-day \"no upgrades\" exclusions available' for No channel clusters and discusses maintenance exclusions that can control timing, though it emphasizes they expire at EoS"
+    },
+    {
+      "expectation": "Recommends proactive upgrade planning rather than waiting for EoS enforcement",
+      "passed": true,
+      "reason": "Response strongly recommends 'Option 1: Proactive Manual Upgrades (Recommended)' and states 'Upgrade before EoS enforcement to maintain control' with detailed action plans"
+    },
+    {
+      "expectation": "Mentions GKE EoS notifications via Cloud Logging as a planning tool",
+      "passed": false,
+      "reason": "Response does not mention Cloud Logging notifications or EoS notifications as a planning tool, though it provides other monitoring commands"
+    },
+    {
+      "expectation": "Mentions the deprecation insights dashboard for checking API compatibility before the forced upgrade",
+      "passed": true,
+      "reason": "Response includes command for checking deprecated API usage: 'gcloud recommender insights list --insight-type=google.container.DiagnosisInsight' with comment about it being a 'common upgrade blocker'"
+    },
+    {
+      "expectation": "Warns that 'snowflaking' (manually freezing versions) should be avoided \u2014 it creates security and reliability risks",
+      "passed": false,
+      "reason": "Response does not explicitly mention 'snowflaking' or warn about manually freezing versions creating security/reliability risks, though it does recommend proactive upgrades"
+    }
+  ]
+}

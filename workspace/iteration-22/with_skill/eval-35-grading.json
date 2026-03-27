@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends Stable or Extended release channel to minimize upgrade frequency",
+      "passed": true,
+      "reason": "Explicitly recommends Extended release channel with detailed justification about 24 months support and minimal auto-upgrades"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
+      "passed": true,
+      "reason": "Shows exact gcloud command with --add-maintenance-exclusion-scope no_minor_or_node_upgrades and explains control plane patches flow automatically"
+    },
+    {
+      "expectation": "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
+      "passed": true,
+      "reason": "Configures Sunday 6-12 AM maintenance window with specific gcloud command and FREQ=WEEKLY;BYDAY=SU"
+    },
+    {
+      "expectation": "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
+      "passed": true,
+      "reason": "Shows separate h100-training node pool for GPUs and cpu-support pool for other workloads with dedicated configurations"
+    },
+    {
+      "expectation": "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
+      "passed": true,
+      "reason": "Shows manual upgrade commands and strategy for quarterly upgrades during training gaps, with validation steps and rollback safety"
+    },
+    {
+      "expectation": "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
+      "passed": true,
+      "reason": "Provides detailed YAML example with CHECKPOINT_INTERVAL=1800 and terminationGracePeriodSeconds=3600 for checkpoint saving"
+    },
+    {
+      "expectation": "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
+      "passed": true,
+      "reason": "Includes multi-environment strategy with staging cluster and mentions creating staging jobs that run 24-48 hours to test upgrade impacts"
+    },
+    {
+      "expectation": "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading",
+      "passed": false,
+      "reason": "While it mentions RDMA topology with --placement-type COMPACT, it doesn't specifically note strict GKE version requirements or compatibility verification for GPUDirect/RDMA"
+    }
+  ]
+}

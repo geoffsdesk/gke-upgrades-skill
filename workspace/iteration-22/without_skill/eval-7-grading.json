@@ -1,0 +1,59 @@
+{
+  "assertions": [
+    {
+      "expectation": "Proposes a phased rollout: dev first, then staging, then prod",
+      "passed": true,
+      "reason": "Clear phased approach with Phase 1: Development (Days 1-3), Phase 2: Staging (Days 7-10), Phase 3: Production (Days 14-21)"
+    },
+    {
+      "expectation": "Includes soak time between environment phases (e.g., 24-48 hours for dev, 1 week for staging before prod)",
+      "passed": true,
+      "reason": "Includes 4-day gap between dev completion (Day 3) and staging start (Day 7), and 4-day gap between staging completion (Day 10) and prod start (Day 14)"
+    },
+    {
+      "expectation": "Defines go/no-go criteria between phases (error rates, latency, pod health)",
+      "passed": true,
+      "reason": "Provides comprehensive monitoring checklist including pod disruption, application availability, response times, resource utilization, and post-upgrade validation criteria"
+    },
+    {
+      "expectation": "Recommends sequential control plane upgrades (1.32\u21921.33) with skip-level node pool upgrades where possible",
+      "passed": true,
+      "reason": "Shows sequential approach upgrading control planes first, then node pools, with specific gcloud commands for 1.32 to 1.33 upgrade"
+    },
+    {
+      "expectation": "Suggests not upgrading all prod clusters simultaneously \u2014 do one or two first as canary",
+      "passed": true,
+      "reason": "Production phase explicitly starts with 1 cluster on Day 14, then second cluster on Day 16, with conservative monitoring between each"
+    },
+    {
+      "expectation": "Includes rollback triggers and criteria for halting the rollout",
+      "passed": true,
+      "reason": "Includes detailed Emergency Procedures section with rollback plan and criteria for stopping upgrades if critical issues arise"
+    },
+    {
+      "expectation": "Provides a timeline or schedule estimate for the full rollout",
+      "passed": true,
+      "reason": "Detailed timeline from Day 1 to Day 21 with specific phases and dates for each environment"
+    },
+    {
+      "expectation": "Mentions maintenance window coordination across clusters",
+      "passed": true,
+      "reason": "Risk Mitigation section includes 'Schedule upgrades during low-traffic periods' and 'Coordinate with application teams'"
+    },
+    {
+      "expectation": "If rollout sequencing is mentioned, notes that all clusters must be on the same channel for it to work",
+      "passed": false,
+      "reason": "Response mentions clusters are on Regular release channel but doesn't explicitly state the requirement that all clusters must be on same channel for rollout sequencing"
+    },
+    {
+      "expectation": "When presenting maintenance windows as an alternative, explicitly notes that windows do NOT guarantee ordering \u2014 upgrades fire based on version availability per region, not environment order. A prod window may fire before dev.",
+      "passed": false,
+      "reason": "Maintenance windows are mentioned but without the explicit warning about lack of ordering guarantees or that prod may fire before dev"
+    },
+    {
+      "expectation": "Mentions using two different channels with minor version controls (e.g., dev=Regular, prod=Stable with 'no minor' exclusion) as a simpler alternative to rollout sequencing",
+      "passed": false,
+      "reason": "Does not mention using different channels or minor version controls as an alternative approach"
+    }
+  ]
+}

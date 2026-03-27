@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends combining release channels with maintenance exclusions as the approach for maximum control",
+      "passed": true,
+      "reason": "Response explicitly recommends 'Extended Channel + Persistent Exclusions' configuration combining --release-channel extended with --add-maintenance-exclusion-scope"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' exclusion to prevent disruptive changes while allowing control plane security patches. May also mention persistent exclusions with --add-maintenance-exclusion-until-end-of-support (no longer a 6-month max, auto-tracks EoS)",
+      "passed": true,
+      "reason": "Response recommends --add-maintenance-exclusion-scope no_minor_or_node_upgrades and includes --add-maintenance-exclusion-until-end-of-support with detailed explanation of persistent tracking and EoS benefits"
+    },
+    {
+      "expectation": "Recommends maintenance windows to control WHEN patches are applied (e.g., weekend windows only)",
+      "passed": true,
+      "reason": "Response specifies maintenance window configuration with Saturday 2-6 AM timing: --maintenance-window-start, --maintenance-window-duration 4h, and --maintenance-window-recurrence 'FREQ=WEEKLY;BYDAY=SA'"
+    },
+    {
+      "expectation": "Mentions the cluster disruption budget (disruption interval) to control upgrade frequency \u2014 patch interval default 7d (max 90d), minor interval default 30d (max 90d)",
+      "passed": true,
+      "reason": "Response includes --maintenance-patch-version-disruption-interval=7776000s (90 days) and explains how this controls patch frequency with alternatives like 30d, 45d, 60d, and discusses the 90-day maximum"
+    },
+    {
+      "expectation": "Suggests Stable or Extended channel for production clusters in regulated environments. Extended channel provides maximum flexibility around EoS enforcement (additional cost only during extended period)",
+      "passed": true,
+      "reason": "Response recommends Extended channel for production and explains '24-month support instead of standard 14 months (extra cost only during extended period)' and 'Maximum flexibility around End of Support enforcement'"
+    },
+    {
+      "expectation": "Notes that disabling control plane patches entirely is not recommended due to security risks \u2014 monthly patches at minimum",
+      "passed": true,
+      "reason": "Response emphasizes allowing security patches automatically and states 'No risk of falling behind on CVEs' and 'Security patches automated' while showing monthly patches as a moderate control option"
+    },
+    {
+      "expectation": "May mention rollout sequencing as an advanced option for controlling upgrade order across multiple clusters, and/or the cluster disruption budget for controlling CP patch frequency",
+      "passed": true,
+      "reason": "Response mentions 'Rollout sequencing support' as an advantage and thoroughly covers cluster disruption budget via maintenance-patch-version-disruption-interval configuration"
+    },
+    {
+      "expectation": "Provides gcloud commands for configuring the recommended exclusion type and maintenance window",
+      "passed": true,
+      "reason": "Response provides comprehensive gcloud commands including cluster update with maintenance exclusions, maintenance windows, and separate commands for manual upgrades when needed"
+    }
+  ]
+}

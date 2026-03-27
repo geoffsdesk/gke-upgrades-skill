@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends increasing maxSurge for CPU pools (e.g., 10-20) to parallelize node replacements, with justification for the value",
+      "passed": true,
+      "reason": "Explicitly recommends maxSurge: 10 or 20-30% of pool size for CPU pools with clear justification for faster parallel upgrades"
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends increasing maxUnavailable (not maxSurge) as the primary lever since surge capacity is typically unavailable",
+      "passed": false,
+      "reason": "Response incorrectly recommends increasing maxSurge for GPU pools (2-3) as the primary strategy, when fixed reservations typically prevent surge capacity"
+    },
+    {
+      "expectation": "Advises checking and requesting increased compute quota before the upgrade for CPU pools",
+      "passed": false,
+      "reason": "No mention of checking or requesting increased compute quota before upgrades"
+    },
+    {
+      "expectation": "Suggests staggering node pool upgrades or running non-conflicting pools in parallel",
+      "passed": true,
+      "reason": "Provides detailed staggered upgrade strategy with specific kubectl commands for upgrading CPU pools in Week 1 and GPU pools in Week 2"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as an option for GPU pools",
+      "passed": false,
+      "reason": "Mentions blue-green strategy but does not specifically reference GKE's auto-scale blue-green upgrade feature or target it specifically for GPU pools"
+    },
+    {
+      "expectation": "Recommends expanding the maintenance window or splitting across multiple weekends",
+      "passed": true,
+      "reason": "Explicitly recommends splitting upgrades across multiple weekends (Week 1 for CPU pools, Week 2 for GPU pools)"
+    },
+    {
+      "expectation": "Provides the gcloud command for updating surge settings on each pool",
+      "passed": false,
+      "reason": "Only provides kubectl patch commands for version updates, but no gcloud commands for updating surge settings (maxSurge/maxUnavailable)"
+    },
+    {
+      "expectation": "Includes monitoring commands to track upgrade progress in real-time",
+      "passed": true,
+      "reason": "Provides a bash script with kubectl commands to monitor node status and track upgrade progress in real-time"
+    }
+  ]
+}

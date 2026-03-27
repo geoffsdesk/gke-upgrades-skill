@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Addresses Istio control plane version compatibility with the target Kubernetes version",
+      "passed": true,
+      "reason": "Response explicitly addresses compatibility requirements stating 'Istio must support BOTH GKE 1.31 AND 1.32 during the upgrade window' and dedicates Phase 1 to compatibility validation"
+    },
+    {
+      "expectation": "Recommends checking the Istio-Kubernetes version compatibility matrix before upgrading GKE",
+      "passed": true,
+      "reason": "Response includes specific commands to check compatibility matrix and provides the URL 'https://istio.io/latest/docs/releases/supported-releases/' in Phase 1"
+    },
+    {
+      "expectation": "Advises upgrading Istio first if the current Istio version doesn't support the target Kubernetes version",
+      "passed": true,
+      "reason": "Response clearly states 'If current Istio doesn't support 1.32, upgrade Istio FIRST before GKE' and includes Phase 2 dedicated to Istio control plane upgrade if needed"
+    },
+    {
+      "expectation": "Explains that sidecar injection happens via mutating webhook and may cause issues during node drain/recreation",
+      "passed": true,
+      "reason": "Response identifies admission webhook failures as the primary risk, explains the root cause as 'Istio sidecar injector webhook fails on new API server version' and provides specific commands to patch webhook configurations"
+    },
+    {
+      "expectation": "Mentions that new pods on upgraded nodes will get sidecar injected \u2014 verify the sidecar version matches",
+      "passed": true,
+      "reason": "Response addresses this in Phase 5 'Data Plane (Sidecar Upgrades)' explaining the need to restart deployments to get new sidecars and mentions Envoy proxy version skew issues"
+    },
+    {
+      "expectation": "Recommends monitoring Istio proxy version consistency across the mesh after upgrade",
+      "passed": true,
+      "reason": "Response includes specific monitoring sections with 'istioctl proxy-status' commands and warns about 'Envoy Proxy Version Skew' with symptoms and fixes"
+    },
+    {
+      "expectation": "Includes commands to check Istio version and proxy sync status (istioctl or kubectl)",
+      "passed": true,
+      "reason": "Response provides specific commands like 'kubectl get pods -n istio-system -l app=istiod -o jsonpath', 'istioctl proxy-status', and 'istioctl proxy-config' throughout the upgrade process"
+    },
+    {
+      "expectation": "Warns about potential traffic disruption if Istio control plane and sidecar versions are mismatched",
+      "passed": true,
+      "reason": "Response explicitly warns about 'Envoy Proxy Version Skew' with symptoms like 'HTTP 503s, connection resets, proxy configuration errors' and provides diagnosis and fix commands"
+    }
+  ]
+}
