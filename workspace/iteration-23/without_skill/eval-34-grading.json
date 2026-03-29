@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": false,
+      "reason": "The response mentions that multislice jobs cannot be live-migrated and will be terminated, but doesn't specifically explain the atomic recreation behavior or contrast it with rolling upgrades"
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": true,
+      "reason": "The response clearly states that the training job will be terminated and explains this is due to complex inter-slice communication requirements, implying all slices are affected together"
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "The response explicitly states 'Complete Training Interruption: Your training job will be terminated' and mentions all 4 slices (1024 TPU chips total) are affected"
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": true,
+      "reason": "The response mentions 'TPU v5e availability might be limited immediately after maintenance' and discusses 'TPU slice re-allocation time' as part of expected downtime"
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "The response explicitly recommends 'Save an extra checkpoint manually before the maintenance window' in the Best Practices section"
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "The response provides checkpoint configuration code and discusses graceful shutdown planning with automatic checkpoint saving"
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": false,
+      "reason": "The response does not mention maintenance exclusions or the ability to defer maintenance events"
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": true,
+      "reason": "The response mentions maintenance windows in the YAML configuration example with 'maintenance-window: sunday-03:00-07:00' and discusses timing control"
+    }
+  ]
+}

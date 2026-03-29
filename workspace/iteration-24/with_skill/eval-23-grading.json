@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies Service A (minAvailable=100%) as a guaranteed upgrade blocker \u2014 no disruptions allowed at all",
+      "passed": true,
+      "reason": "Response clearly identifies Service A as blocking with \u274c symbol and states 'Will block ALL node upgrades indefinitely' due to 100% availability requirement"
+    },
+    {
+      "expectation": "Identifies Service B (maxUnavailable=0) as also blocking upgrades \u2014 same effect as 100% minAvailable",
+      "passed": true,
+      "reason": "Response identifies Service B as blocking with \u274c and explicitly states 'maxUnavailable=0 \u2014 BLOCKING' and 'Identical to 100% availability \u2014 will block upgrades'"
+    },
+    {
+      "expectation": "States Service C (minAvailable=2 with 3 replicas) is safe \u2014 allows 1 pod disruption at a time",
+      "passed": true,
+      "reason": "Response marks Service C with \u2705 SAFE and states '3 replicas - 2 required = 1 pod can be unavailable during drain'"
+    },
+    {
+      "expectation": "States Service D (maxUnavailable=1 with 5 replicas) is safe \u2014 allows 1 pod down at a time",
+      "passed": true,
+      "reason": "Response marks Service D with \u2705 SAFE and states 'allows 1 pod eviction at a time' and 'Maintains 4/5 pods (80% capacity) during drain'"
+    },
+    {
+      "expectation": "Recommends fixing Service A: change to minAvailable=N-1 or maxUnavailable=1",
+      "passed": true,
+      "reason": "Response provides specific fix with kubectl patch commands changing to maxUnavailable=1 and alternative of minAvailable=90%"
+    },
+    {
+      "expectation": "Recommends fixing Service B: change to maxUnavailable=1",
+      "passed": true,
+      "reason": "Response provides specific fix with kubectl patch command: 'kubectl patch pdb service-b-pdb -p '{\"spec\":{\"maxUnavailable\":1}}'"
+    },
+    {
+      "expectation": "Explains that GKE respects PDBs for up to 1 hour during surge upgrades, then may force-drain",
+      "passed": true,
+      "reason": "Response states 'GKE respects PDBs for up to 1 hour during node upgrades, then force-evicts remaining pods' in the introduction"
+    },
+    {
+      "expectation": "Provides kubectl patch commands to fix the problematic PDBs",
+      "passed": true,
+      "reason": "Response provides specific kubectl patch commands for both Service A and Service B, along with additional examples in the immediate actions section"
+    },
+    {
+      "expectation": "Recommends testing PDB changes in a non-production environment first",
+      "passed": false,
+      "reason": "While the response provides testing commands to verify PDB configurations, it does not explicitly recommend testing changes in a non-production environment first"
+    }
+  ]
+}

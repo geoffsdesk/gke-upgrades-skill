@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all four notification types with dedicated sections for each: auto-upgrade scheduled (\ud83d\udfe1 Important), new version available (\ud83d\udfe2 Informational), end-of-life/deprecation (\ud83d\udd34 Critical), and security patch (\ud83d\udd34 Critical)"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response uses a clear urgency matrix with security patches in \ud83d\udd34 Critical (24-48 hours), auto-upgrades in \ud83d\udfe1 Important (1-2 weeks), and new version available in \ud83d\udfe2 Informational (monthly review), correctly ordering from highest to lowest urgency"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response explicitly categorizes EoS warnings as \ud83d\udd34 Critical requiring immediate action and provides specific guidance to plan upgrade timeline, with concrete commands and options for manual upgrades or Extended channel migration"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response provides a decision matrix and specific action items for auto-upgrade scheduled notifications, including evaluation of timing, testing considerations, and control options with specific gcloud commands for deferral or manual triggering"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response explicitly states security patches are \ud83d\udd34 Critical requiring action within 24-48 hours and provides emergency deferral commands for up to 30 days, acknowledging they may need to occur outside normal maintenance schedules"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response correctly categorizes new version available as \ud83d\udfe2 Informational with monthly review timeline and explicitly states to 'plan non-urgent upgrade' and 'review for new features' rather than immediate action"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "Response includes a dedicated section on structured notifications with specific gcloud commands to set up Pub/Sub topics and Cloud Logging sinks for programmatic GKE notification handling"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": true,
+      "reason": "Response includes a comment to 'Review release notes for new features between versions' when discussing new version available notifications, identifying release notes as the source for understanding version changes"
+    }
+  ]
+}

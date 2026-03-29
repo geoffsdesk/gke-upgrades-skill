@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "First step: check the operation status to understand why it failed (gcloud container operations list)",
+      "passed": true,
+      "reason": "Response includes 'gcloud container operations list --filter=\"targetLink:your-cluster-name\"' command to check the specific error"
+    },
+    {
+      "expectation": "Recommends checking events and logs for the specific failure reason",
+      "passed": false,
+      "reason": "While the response mentions checking the error via operations list, it doesn't specifically recommend checking events and logs for detailed failure analysis"
+    },
+    {
+      "expectation": "Explains that the cluster is in a mixed-version state (8 nodes at 1.32, 12 at 1.31) which is within skew policy",
+      "passed": true,
+      "reason": "Response clearly states the mixed state (8 upgraded, remaining on old version) and notes this is 'supported temporarily' with control plane at 1.32"
+    },
+    {
+      "expectation": "Notes that the mixed state is functional but not ideal \u2014 workloads can run on both versions",
+      "passed": true,
+      "reason": "Response explicitly states 'mixed node versions are supported temporarily' and mentions workloads can run, while noting it's not the final desired state"
+    },
+    {
+      "expectation": "Provides options: retry the upgrade after fixing the root cause, or rollback the 8 upgraded nodes",
+      "passed": false,
+      "reason": "Response provides retry option and manual node replacement, but does not mention rollback as an option for the 8 upgraded nodes"
+    },
+    {
+      "expectation": "Explains that retrying is usually better than rollback (rolling back means creating a new pool at old version)",
+      "passed": false,
+      "reason": "Response recommends resuming the upgrade but doesn't explain why this is better than rollback or mention that rollback requires creating a new pool"
+    },
+    {
+      "expectation": "Addresses the remaining 2 node pools: they can still be upgraded once the failed pool issue is resolved",
+      "passed": true,
+      "reason": "Response specifically mentions 'Upgrade the other two pools one at a time' in next steps and addresses them in the recovery plan"
+    },
+    {
+      "expectation": "Includes commands to diagnose the failure (operation details, node status, pod events)",
+      "passed": true,
+      "reason": "Response includes multiple diagnostic commands: gcloud operations list, kubectl get nodes, kubectl get pods, and mentions checking node status"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Checks for deprecated API usage that may have changed behavior in 1.30",
+      "passed": true,
+      "reason": "Response includes commands to check for deprecated API usage with 'kubectl get events --all-namespaces | grep -i deprecated' and mentions reviewing application manifests for outdated API versions"
+    },
+    {
+      "expectation": "Recommends checking admission webhooks \u2014 they may be rejecting or slowing down requests on the new version",
+      "passed": true,
+      "reason": "Response specifically mentions checking admission webhooks in the 'If Issues Persist' section, noting they might be causing latency"
+    },
+    {
+      "expectation": "Advises checking if resource requests/limits need adjusting for any system components that changed",
+      "passed": true,
+      "reason": "Response includes a dedicated section on 'Resource Limits & Requests' with commands to check allocated resources and mentions that Kubernetes 1.32 may have stricter resource enforcement"
+    },
+    {
+      "expectation": "Suggests examining kube-system pods for any that are crashlooping or restarting",
+      "passed": true,
+      "reason": "Response includes multiple commands to check kube-system pods: 'kubectl get pods -n kube-system', checking API server pods, etcd pods, and control plane components"
+    },
+    {
+      "expectation": "Includes commands to check API server metrics and latency (kubectl get --raw /metrics)",
+      "passed": false,
+      "reason": "While the response includes monitoring commands and mentions API server metrics with 'kubectl top pods', it does not include the specific 'kubectl get --raw /metrics' command"
+    },
+    {
+      "expectation": "Recommends checking if NetworkPolicy or service mesh components need updating for the new version",
+      "passed": false,
+      "reason": "Response checks CNI plugin pods but does not specifically mention NetworkPolicy or service mesh components needing updates for the new version"
+    },
+    {
+      "expectation": "Advises reviewing pod events for scheduling delays or readiness probe failures",
+      "passed": true,
+      "reason": "Response includes commands to check events with 'kubectl get events --all-namespaces --watch' and 'kubectl get events --all-namespaces | grep -i deprecated', which would capture scheduling and readiness issues"
+    },
+    {
+      "expectation": "Mentions checking if HPA or VPA are behaving differently on the new version",
+      "passed": false,
+      "reason": "Response does not mention HPA (Horizontal Pod Autoscaler) or VPA (Vertical Pod Autoscaler) and their potential behavior changes in the new version"
+    }
+  ]
+}

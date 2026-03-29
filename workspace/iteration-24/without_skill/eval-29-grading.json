@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Uses 'no upgrades' exclusion (30-day max) for the BFCM period \u2014 blocks everything including patches",
+      "passed": false,
+      "reason": "Uses 'MINOR_AND_PATCH_UPGRADES' scope instead of 'no upgrades' scope, and the BFCM period is 12 days, not mentioning the 30-day maximum limit for 'no upgrades' exclusions"
+    },
+    {
+      "expectation": "Uses 'no upgrades' exclusion for the June code freeze period",
+      "passed": false,
+      "reason": "Uses 'MINOR_UPGRADES' scope for June instead of 'no upgrades' scope that would block all upgrades including patches"
+    },
+    {
+      "expectation": "For permanent minor version control: uses 'no minor upgrades' (scope 'no_minor') if they only want to block minor versions, or 'no minor or node upgrades' (scope 'no_minor_or_node') if they also want to stop node upgrades. May recommend persistent exclusion with --add-maintenance-exclusion-until-end-of-support which auto-tracks EoS date",
+      "passed": false,
+      "reason": "Uses incorrect scope 'minor_upgrades' instead of 'no_minor', and doesn't mention --add-maintenance-exclusion-until-end-of-support option for persistent exclusions"
+    },
+    {
+      "expectation": "Notes the 30-day maximum for 'no upgrades' exclusions vs up-to-EoS for 'no minor or node upgrades'",
+      "passed": false,
+      "reason": "Does not mention the 30-day maximum limit for 'no upgrades' exclusions or the difference in duration limits between exclusion types"
+    },
+    {
+      "expectation": "Provides specific gcloud commands with --add-maintenance-exclusion-scope flags for each exclusion type",
+      "passed": true,
+      "reason": "Provides specific gcloud commands with --add-maintenance-exclusion-scope flags, though the scope values are incorrect"
+    },
+    {
+      "expectation": "Notes that you can have a maximum of three 'no upgrades' exclusions, and they must allow 48h of maintenance in any 32-day window",
+      "passed": false,
+      "reason": "Does not mention the maximum of three 'no upgrades' exclusions or the 48-hour maintenance window requirement in any 32-day period"
+    },
+    {
+      "expectation": "Mentions that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
+      "passed": true,
+      "reason": "Mentions that manual upgrades are possible at any time using gcloud commands, implying they bypass maintenance windows"
+    },
+    {
+      "expectation": "Warns about the risk of falling too far behind on versions during extended exclusion periods",
+      "passed": false,
+      "reason": "Does not warn about the risks of falling behind on versions during extended exclusion periods"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Response explicitly states 'Node versions can be at most 2 minor versions behind the control plane' which correctly explains the GKE version skew policy"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (nodes must be within 2 minor versions of control plane)",
+      "passed": false,
+      "reason": "Response incorrectly states the situation is 'at the maximum allowed skew' when 1.28 to 1.31 is actually 3 minor versions apart, which violates the 2 minor version policy"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Response mentions 'API compatibility issues', 'Workload scheduling problems', and 'potential cluster instability' which covers the expected warnings about kubelet incompatibility and workload disruption"
+    },
+    {
+      "expectation": "Recommends skip-level (N+2) node pool upgrades within supported version skew to reduce time and disruption. For the N+3 gap (1.28 with 1.31 CP), recommends multiple sequential skip-level upgrades within supported skew (e.g., 1.28\u21921.30 then 1.30\u21921.31) or creating a new node pool at the target version and migrating workloads. Never recommends an unsupported skip-level upgrade.",
+      "passed": true,
+      "reason": "Response recommends incremental upgrades '1.28 \u2192 1.29 \u2192 1.30 \u2192 1.31' and also suggests creating a new node pool option, avoiding unsupported skip-level upgrades"
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Response includes specific gcloud commands for both rolling upgrade approach and new node pool creation approach"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": false,
+      "reason": "Response does not mention surge settings or specify conservative upgrade parameters like maxSurge=1, maxUnavailable=0"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": true,
+      "reason": "Response includes monitoring commands and states 'The key is to upgrade incrementally and monitor closely' with specific monitoring steps provided"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": true,
+      "reason": "Response mentions 'Enable auto-upgrades where possible' and 'Set up maintenance windows' in the prevention section"
+    }
+  ]
+}

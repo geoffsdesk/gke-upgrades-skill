@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the difference between Rapid and Stable channels \u2014 including that Rapid has no SLA for upgrade stability while Stable carries a full SLA, and clearly distinguishes minor version vs patch version differences between the channels",
+      "passed": true,
+      "reason": "Response explicitly states 'Rapid channel carries NO SLA for upgrade stability' while 'Full SLA - versions are battle-tested' for Stable, and includes a detailed comparison table showing upgrade cadence, SLA differences, and version progression timing between channels"
+    },
+    {
+      "expectation": "Notes that channel changes don't trigger an immediate upgrade or downgrade",
+      "passed": true,
+      "reason": "Response indicates this by recommending maintenance exclusions to prevent immediate upgrades and by explaining the cluster will be 'ahead of channel' without auto-upgrades until Stable catches up, implying no immediate version change occurs"
+    },
+    {
+      "expectation": "Warns that if 1.30 isn't yet available on Stable, the cluster may not receive patches until Stable catches up",
+      "passed": false,
+      "reason": "The response warns about 1.32 (the user's current version) not being available on Stable and mentions no auto-upgrades until Stable catches up, but doesn't mention 1.30 specifically and doesn't clearly explain the patch delivery impact"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "Response provides the exact command: 'gcloud container clusters update CLUSTER_NAME --zone ZONE --release-channel stable'"
+    },
+    {
+      "expectation": "Recommends checking version availability on Stable before switching (gcloud container get-server-config)",
+      "passed": true,
+      "reason": "Response includes the specific command 'gcloud container get-server-config --zone YOUR_ZONE --format=\"yaml(channels)\" | grep -A 20 \"stable\"' and emphasizes checking version availability as the first critical step"
+    },
+    {
+      "expectation": "Discusses the impact on auto-upgrade timing going forward",
+      "passed": true,
+      "reason": "Response details that auto-upgrade timing will change from 'Immediate when versions promote' to 'Delayed until Stable validation complete' and mentions 2-4 week delays on new versions in the monitoring section"
+    },
+    {
+      "expectation": "Mentions that the Extended channel is an option if they need even slower cadence (with cost implications)",
+      "passed": false,
+      "reason": "Response mentions Extended channel as an alternative with 24-month support and manual control over upgrades, but does not mention any cost implications of using the Extended channel"
+    },
+    {
+      "expectation": "Advises coordinating the change during a maintenance window",
+      "passed": true,
+      "reason": "Response recommends applying maintenance exclusions before the migration and provides specific commands for maintenance exclusion management, effectively advising coordination during maintenance windows"
+    }
+  ]
+}

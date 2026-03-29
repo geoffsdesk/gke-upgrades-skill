@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's native node pool upgrade strategies rather than the manual create/cordon/drain/delete workflow described",
+      "passed": true,
+      "reason": "Explicitly states 'No, that's not the optimal approach!' and recommends native GKE upgrade strategy with detailed explanation of why it's better"
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends surge upgrade with maxSurge=0 and maxUnavailable set as the primary lever (since no surge capacity is available)",
+      "passed": true,
+      "reason": "Specifically configures maxSurge=0 and maxUnavailable=2 for fixed reservations, explaining 'No additional nodes created (fits your fixed reservation)'"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as a native alternative that handles cordon and migration automatically",
+      "passed": true,
+      "reason": "Describes 'Autoscaled Blue-Green (Preview)' strategy with specific gcloud commands and explains it 'creates replacement nodes gradually while scaling down the old pool'"
+    },
+    {
+      "expectation": "Explains that native strategies are the supported path and handle edge cases (PDB respect, drain timeouts, progress tracking) that manual workflows miss",
+      "passed": true,
+      "reason": "Details multiple advantages of native approach including 'Respects PodDisruptionBudgets for up to 1 hour', 'built-in retry logic', 'progress tracking', and lists manual approach downsides"
+    },
+    {
+      "expectation": "Only suggests manual blue-green as a last resort if native strategies don't meet a specific requirement",
+      "passed": false,
+      "reason": "The response suggests autoscaled blue-green as an alternative approach but doesn't position manual blue-green as a last resort - it actually recommends against the manual approach entirely"
+    },
+    {
+      "expectation": "Addresses GPU driver compatibility \u2014 need to verify target version's auto-installed driver is compatible",
+      "passed": true,
+      "reason": "Includes in pre-upgrade checklist: 'Verify GPU driver compatibility' and notes 'GKE 1.32 may change CUDA versions - test in staging first!'"
+    },
+    {
+      "expectation": "Recommends scheduling the upgrade during a gap in GPU workloads to minimize impact",
+      "passed": true,
+      "reason": "Provides maintenance window configuration commands and recommends 'off-peak hours', plus mentions 'Plan your maintenance window accordingly'"
+    },
+    {
+      "expectation": "Provides gcloud commands for the recommended native approach",
+      "passed": true,
+      "reason": "Includes specific gcloud commands for configuring and executing the native upgrade approach with proper parameters"
+    }
+  ]
+}

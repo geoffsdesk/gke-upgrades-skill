@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that clusters on Regular channel will be force-upgraded to the next minor version (1.31) when 1.30 hits EoS",
+      "passed": true,
+      "reason": "Response clearly states Regular channel clusters will automatically upgrade to the next available version in the channel within days of EoS"
+    },
+    {
+      "expectation": "Explains that clusters on Extended channel get up to 24 months of support, so 1.30 EoS is significantly later \u2014 they have more time",
+      "passed": false,
+      "reason": "Response mentions 12 months of extended support, not the correct 24 months, and doesn't emphasize that EoS is significantly delayed for Extended channel"
+    },
+    {
+      "expectation": "Explains that legacy 'No channel' clusters: control plane EoS minor versions are auto-upgraded to next supported minor, AND EoS node pools are force-upgraded even when 'no auto-upgrade' is configured",
+      "passed": false,
+      "reason": "Response states no-channel clusters remain on 1.30 indefinitely with no automatic upgrades, which is incorrect - they do get force-upgraded at EoS"
+    },
+    {
+      "expectation": "Mentions that a 'no upgrades' maintenance exclusion (30 days) can temporarily defer even EoS force-upgrades",
+      "passed": false,
+      "reason": "No mention of maintenance exclusions or the ability to temporarily defer EoS force-upgrades"
+    },
+    {
+      "expectation": "Recommends proactive upgrade planning rather than waiting for EoS enforcement",
+      "passed": true,
+      "reason": "Response includes proactive upgrade recommendations and staged rollout strategy, emphasizing planning ahead of auto-upgrades"
+    },
+    {
+      "expectation": "Mentions GKE EoS notifications via Cloud Logging as a planning tool",
+      "passed": false,
+      "reason": "No mention of GKE EoS notifications or Cloud Logging as planning tools"
+    },
+    {
+      "expectation": "Mentions the deprecation insights dashboard for checking API compatibility before the forced upgrade",
+      "passed": false,
+      "reason": "No mention of the deprecation insights dashboard or API compatibility checking"
+    },
+    {
+      "expectation": "Warns that 'snowflaking' (manually freezing versions) should be avoided \u2014 it creates security and reliability risks",
+      "passed": true,
+      "reason": "Response warns against the no-channel configuration, mentions security vulnerabilities, and recommends moving to release channels"
+    }
+  ]
+}

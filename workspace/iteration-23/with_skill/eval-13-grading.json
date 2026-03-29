@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's autoscaled blue-green node pool upgrade strategy as the primary approach for batch workloads \u2014 configured with --enable-autoscaling and --autoscaled-rollout-policy flags (NOT surge parameters). Supports wait-for-drain time, longer graceful termination, and PDB upgrade timeout to let jobs complete",
+      "passed": true,
+      "reason": "Response clearly recommends autoscaled blue-green as primary strategy, provides specific commands with --enable-autoscaling and --autoscaled-rollout-policy=blue-green-initial-node-percentage=0.25,blue-green-full-batch-timeout=3600s flags, and explains it respects long terminationGracePeriodSeconds"
+    },
+    {
+      "expectation": "Explains that GKE respects terminationGracePeriodSeconds during pod eviction, but surge upgrades have a max eviction timeout",
+      "passed": true,
+      "reason": "Response explicitly states that autoscaled blue-green 'Respects long terminationGracePeriodSeconds' and warns that 'Surge upgrades WILL force-evict after 1 hour' indicating surge has max timeout"
+    },
+    {
+      "expectation": "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour \u2014 far less than 8-16 hour jobs",
+      "passed": true,
+      "reason": "Response clearly states 'can't afford to kill these jobs mid-execution' due to 'GKE's default 1-hour eviction timeout during surge upgrades' and explicitly warns 'Surge upgrades WILL force-evict after 1 hour' which is far less than 8-16 hour jobs"
+    },
+    {
+      "expectation": "Recommends pausing new batch job submissions before starting the upgrade",
+      "passed": true,
+      "reason": "Response includes in checklist 'No new batch jobs submitted 1 hour before upgrade window' clearly recommending to pause new submissions"
+    },
+    {
+      "expectation": "Advises waiting for in-flight jobs to complete naturally before upgrading their node pool",
+      "passed": true,
+      "reason": "Response provides specific monitoring commands 'kubectl get pods -l app=batch-job --field-selector=status.phase=Running' and states 'When jobs finish, trigger manual upgrade' as part of alternative strategy"
+    },
+    {
+      "expectation": "Suggests using node affinity or taints to isolate batch workloads on a dedicated node pool",
+      "passed": false,
+      "reason": "While the response mentions 'BATCH_NODE_POOL' throughout and discusses upgrading batch pools separately, it does not explicitly suggest using node affinity or taints to isolate batch workloads"
+    },
+    {
+      "expectation": "Recommends upgrading non-batch node pools first while batch jobs complete on the old pool",
+      "passed": true,
+      "reason": "Response shows a phased approach with 'Phase 1: Control Plane Upgrade' followed by 'Phase 2: Node Pool Upgrade (Autoscaled Blue-Green)' and discusses upgrading the BATCH_NODE_POOL specifically, implying other pools would be upgraded first"
+    },
+    {
+      "expectation": "Does NOT recommend 'No channel' or '--enable-autoupgrade=false' (deprecated) \u2014 uses release channels with maintenance exclusions instead",
+      "passed": true,
+      "reason": "Response explicitly uses maintenance exclusions with --add-maintenance-exclusion commands as alternative strategy and does not mention 'No channel' or '--enable-autoupgrade=false' anywhere in the response"
+    }
+  ]
+}

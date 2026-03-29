@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the difference between Rapid and Stable channels \u2014 including that Rapid has no SLA for upgrade stability while Stable carries a full SLA, and clearly distinguishes minor version vs patch version differences between the channels",
+      "passed": false,
+      "reason": "Response mentions update cadence differences (2-3 weeks vs 2-3 months) and that Stable runs 2-4 minor versions behind, but does not explain the critical SLA differences between channels or distinguish minor vs patch version handling"
+    },
+    {
+      "expectation": "Notes that channel changes don't trigger an immediate upgrade or downgrade",
+      "passed": true,
+      "reason": "Explicitly states 'GKE never downgrades cluster versions automatically' and 'You'll stay on 1.32 until Stable channel catches up'"
+    },
+    {
+      "expectation": "Warns that if 1.30 isn't yet available on Stable, the cluster may not receive patches until Stable catches up",
+      "passed": false,
+      "reason": "Does not specifically warn about patch delivery issues when the cluster is ahead of the Stable channel - only mentions 'More time between security patches and bug fixes' as a general cadence change"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "Provides the exact gcloud command: 'gcloud container clusters update CLUSTER_NAME --zone=ZONE --release-channel=stable'"
+    },
+    {
+      "expectation": "Recommends checking version availability on Stable before switching (gcloud container get-server-config)",
+      "passed": false,
+      "reason": "Does not include the 'gcloud container get-server-config' command or recommend checking version availability on Stable before switching"
+    },
+    {
+      "expectation": "Discusses the impact on auto-upgrade timing going forward",
+      "passed": true,
+      "reason": "Addresses auto-upgrade timing changes, noting the shift from 2-3 weeks to 2-3 months update cadence and advising to 'Update your maintenance windows/schedules'"
+    },
+    {
+      "expectation": "Mentions that the Extended channel is an option if they need even slower cadence (with cost implications)",
+      "passed": false,
+      "reason": "Does not mention the Extended channel option at all"
+    },
+    {
+      "expectation": "Advises coordinating the change during a maintenance window",
+      "passed": true,
+      "reason": "Explicitly states 'Do this during a maintenance window (though it's low-risk)' in the best practices section"
+    }
+  ]
+}

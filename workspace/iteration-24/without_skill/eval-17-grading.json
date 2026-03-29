@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that surge upgrades require extra compute capacity (maxSurge creates NEW nodes before draining old ones)",
+      "passed": true,
+      "reason": "Response explains that surge nodes can't be created due to quota limits and provides solutions to work around this, demonstrating understanding that surge creates new nodes first"
+    },
+    {
+      "expectation": "Recommends setting maxUnavailable >0 instead of relying on maxSurge (drains first, then creates \u2014 uses less quota)",
+      "passed": true,
+      "reason": "Response specifically shows setting maxUnavailable=1 with maxSurge=0 in the GKE example and mentions this as an in-place upgrade approach"
+    },
+    {
+      "expectation": "Warns that maxUnavailable >0 means reduced capacity during upgrade \u2014 some pods won't have nodes",
+      "passed": true,
+      "reason": "Response mentions 'In-place upgrades increase risk of downtime' and advises to 'Monitor critical workloads closely during the process', indicating awareness of capacity reduction"
+    },
+    {
+      "expectation": "Suggests temporarily scaling down non-critical deployments to free up quota for surge nodes",
+      "passed": true,
+      "reason": "Response includes Option 3 'Temporary Workload Reduction' with specific kubectl scale command to reduce non-critical workloads"
+    },
+    {
+      "expectation": "Mentions that reducing maxSurge to 1 minimizes extra quota needed (slower but fits within constraints)",
+      "passed": false,
+      "reason": "Response shows setting maxSurge=0 but doesn't discuss the option of reducing maxSurge to 1 as a middle-ground approach"
+    },
+    {
+      "expectation": "Provides the gcloud command to update surge settings (maxSurge=0, maxUnavailable=1 for zero-extra-capacity mode)",
+      "passed": true,
+      "reason": "Response provides the exact gcloud command with maxSurge=0 and maxUnavailable=1 parameters"
+    },
+    {
+      "expectation": "Recommends doing the upgrade in off-peak hours when fewer pods are running",
+      "passed": false,
+      "reason": "Response does not mention timing the upgrade during off-peak hours"
+    },
+    {
+      "expectation": "Mentions requesting a temporary quota increase as a faster alternative to a permanent increase",
+      "passed": false,
+      "reason": "Response does not suggest requesting a temporary quota increase as an alternative approach"
+    }
+  ]
+}

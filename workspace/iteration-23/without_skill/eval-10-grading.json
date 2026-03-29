@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that spot VMs can be preempted at any time, which interacts with the upgrade drain process",
+      "passed": true,
+      "reason": "Response explicitly states 'Spot instances can be preempted at any time, including during the upgrade process' and mentions 'double disruption: upgrade evictions + spot preemptions'"
+    },
+    {
+      "expectation": "Notes that spot node pools may already have workloads designed for interruption (good for upgrades)",
+      "passed": true,
+      "reason": "Response includes application resilience checklist mentioning applications should handle graceful shutdowns and notes workloads should be preemption-tolerant"
+    },
+    {
+      "expectation": "Recommends higher maxSurge for spot pools since the workloads should already be fault-tolerant",
+      "passed": false,
+      "reason": "Response actually recommends conservative surge settings (max-surge=1) for spot pools, which contradicts the expectation for higher maxSurge"
+    },
+    {
+      "expectation": "Advises setting maxUnavailable >0 for spot pools since workloads are already preemption-tolerant",
+      "passed": true,
+      "reason": "Response shows examples with max-unavailable=1 for spot pools and mentions using max-unavailable=1 in the gradual upgrade example"
+    },
+    {
+      "expectation": "Mentions that spot VM availability may affect surge node creation (not guaranteed to get spot instances)",
+      "passed": true,
+      "reason": "Response mentions 'Monitor spot instance pricing and availability in your regions' and discusses preemption risk, implying availability concerns"
+    },
+    {
+      "expectation": "Recommends having PDBs even for spot workloads to ensure orderly drain during upgrade",
+      "passed": true,
+      "reason": "Response includes PodDisruptionBudget YAML example and mentions 'Have adequate PDBs in place for all applications' in best practices"
+    },
+    {
+      "expectation": "Provides the gcloud command for configuring surge settings on the spot pool",
+      "passed": true,
+      "reason": "Response provides multiple gcloud commands with surge settings including 'gcloud container node-pools update' with max-surge and max-unavailable parameters"
+    },
+    {
+      "expectation": "Suggests upgrading spot pools before on-demand pools since they're lower risk",
+      "passed": false,
+      "reason": "Response actually recommends the opposite strategy: 'Upgrade on-demand nodes first to maintain cluster stability' and shows upgrading on-demand pool before spot pool"
+    }
+  ]
+}

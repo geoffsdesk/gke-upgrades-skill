@@ -1,0 +1,59 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies this as an admission webhook compatibility issue \u2014 the webhook is rejecting pod creation requests",
+      "passed": true,
+      "reason": "Response clearly identifies this as 'a common issue during Kubernetes upgrades where admission webhooks become incompatible or unavailable' and explains webhooks are blocking pod creation"
+    },
+    {
+      "expectation": "Provides commands to identify the problematic webhook (kubectl get validatingwebhookconfigurations / mutatingwebhookconfigurations)",
+      "passed": true,
+      "reason": "Provides exact commands: 'kubectl get validatingadmissionwebhooks' and 'kubectl get mutatingadmissionwebhooks'"
+    },
+    {
+      "expectation": "Offers an immediate fix: temporarily disable or remove the problematic webhook",
+      "passed": true,
+      "reason": "Explicitly offers 'Delete the Problematic Webhook (Fastest)' as Option 1 for immediate fix"
+    },
+    {
+      "expectation": "Provides the kubectl delete command for the webhook configuration as emergency mitigation",
+      "passed": true,
+      "reason": "Provides specific delete commands: 'kubectl delete validatingadmissionwebhook cert-manager-webhook' and 'kubectl delete mutatingadmissionwebhook cert-manager-webhook'"
+    },
+    {
+      "expectation": "Warns that deleting the webhook removes validation \u2014 it's a temporary fix",
+      "passed": false,
+      "reason": "While it mentions this is for 'temporarily' removing webhooks, it doesn't explicitly warn that this removes validation capabilities or explain the security implications"
+    },
+    {
+      "expectation": "Recommends checking cert-manager version compatibility with Kubernetes 1.32",
+      "passed": true,
+      "reason": "Includes section 'Check cert-manager compatibility' with command to check cert-manager version and explicitly mentions upgrading 'to compatible version for k8s 1.32'"
+    },
+    {
+      "expectation": "Advises upgrading cert-manager to a version that supports 1.30 as the permanent fix",
+      "passed": true,
+      "reason": "Provides detailed upgrade instructions using helm and kubectl apply methods, recommending v1.16.0 as 'latest compatible version'"
+    },
+    {
+      "expectation": "Mentions setting failurePolicy to Ignore as a less drastic alternative to deletion",
+      "passed": true,
+      "reason": "Option 2 explicitly shows editing webhook to add 'failurePolicy: Ignore' as alternative approach"
+    },
+    {
+      "expectation": "Includes commands to verify pods can be created after the fix",
+      "passed": true,
+      "reason": "Verify Fix section includes 'kubectl run test-pod --image=nginx --rm -it --restart=Never' to test pod creation"
+    },
+    {
+      "expectation": "Notes that any webhook configuration changes (failurePolicy, cert-manager version) must be persisted in the source of truth (Helm chart, GitOps manifests, CI/CD pipeline) to survive redeployment",
+      "passed": false,
+      "reason": "Response doesn't mention the need to persist changes in source of truth like Helm charts, GitOps manifests, or CI/CD pipelines"
+    },
+    {
+      "expectation": "Qualifies failurePolicy: Ignore as a temporary debugging measure with explicit risks, recommending revert to Fail after the root cause is resolved",
+      "passed": false,
+      "reason": "While it mentions failurePolicy: Ignore option, it doesn't explicitly qualify it as temporary debugging measure with risks or recommend reverting to Fail after resolution"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's native node pool upgrade strategies rather than the manual create/cordon/drain/delete workflow described",
+      "passed": true,
+      "reason": "Explicitly states 'No, that's not the optimal approach' and recommends GKE's native upgrade strategies as simpler and fully supported"
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends surge upgrade with maxSurge=0 and maxUnavailable set as the primary lever (since no surge capacity is available)",
+      "passed": true,
+      "reason": "Specifically recommends surge upgrade with maxSurge=0 and maxUnavailable=4, explaining that maxSurge=0 means no extra GPUs required and uses existing reservation slots"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as a native alternative that handles cordon and migration automatically",
+      "passed": true,
+      "reason": "Describes autoscaled blue-green upgrade strategy as an alternative with specific gcloud command and explains it handles migration while keeping workloads serving"
+    },
+    {
+      "expectation": "Explains that native strategies are the supported path and handle edge cases (PDB respect, drain timeouts, progress tracking) that manual workflows miss",
+      "passed": true,
+      "reason": "States native upgrades 'respect PDBs, handle admission webhooks properly, and integrate with GKE's retry logic' and mentions 'proper PDB respect and eviction timeouts'"
+    },
+    {
+      "expectation": "Only suggests manual blue-green as a last resort if native strategies don't meet a specific requirement",
+      "passed": true,
+      "reason": "Opens with stating manual approach 'should be a last resort' and focuses entirely on native GKE strategies"
+    },
+    {
+      "expectation": "Addresses GPU driver compatibility \u2014 need to verify target version's auto-installed driver is compatible",
+      "passed": true,
+      "reason": "Explicitly mentions 'Test GPU driver compatibility: The 1.32 upgrade will change your CUDA driver version' and recommends creating staging pool to validate workloads"
+    },
+    {
+      "expectation": "Recommends scheduling the upgrade during a gap in GPU workloads to minimize impact",
+      "passed": false,
+      "reason": "While it discusses capacity impact and temporary capacity loss, it doesn't specifically recommend scheduling during workload gaps"
+    },
+    {
+      "expectation": "Provides gcloud commands for the recommended native approach",
+      "passed": true,
+      "reason": "Provides specific gcloud commands for both surge upgrade configuration and autoscaled blue-green upgrade approaches"
+    }
+  ]
+}

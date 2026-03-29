@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends combining release channels with maintenance exclusions as the approach for maximum control",
+      "passed": true,
+      "reason": "Response explicitly recommends Extended channel combined with 'no minor or node upgrades' maintenance exclusion as the primary approach"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' exclusion to prevent disruptive changes while allowing control plane security patches. May also mention persistent exclusions with --add-maintenance-exclusion-until-end-of-support (no longer a 6-month max, auto-tracks EoS)",
+      "passed": true,
+      "reason": "Response specifically recommends 'no minor or node upgrades' exclusion and includes --add-maintenance-exclusion-until-end-of-support flag with explanation of persistent exclusion that auto-tracks End of Support"
+    },
+    {
+      "expectation": "Recommends maintenance windows to control WHEN patches are applied (e.g., weekend windows only)",
+      "passed": true,
+      "reason": "Response includes maintenance window configuration with Saturday 2-6 AM window and provides gcloud commands with --maintenance-window-start, --maintenance-window-duration, and --maintenance-window-recurrence parameters"
+    },
+    {
+      "expectation": "Mentions the cluster disruption budget (disruption interval) to control upgrade frequency \u2014 patch interval default 7d (max 90d), minor interval default 30d (max 90d)",
+      "passed": true,
+      "reason": "Response includes --maintenance-patch-version-disruption-interval=7776000s (90 days) and explicitly mentions 'Patch disruption interval: 90 days prevents back-to-back patches' with enforcement of minimum gap"
+    },
+    {
+      "expectation": "Suggests Stable or Extended channel for production clusters in regulated environments. Extended channel provides maximum flexibility around EoS enforcement (additional cost only during extended period)",
+      "passed": true,
+      "reason": "Response recommends Extended channel specifically for financial services, mentions 24-month support vs 14-month standard, and explicitly notes additional cost only applies during extended period (months 15-24)"
+    },
+    {
+      "expectation": "Notes that disabling control plane patches entirely is not recommended due to security risks \u2014 monthly patches at minimum",
+      "passed": true,
+      "reason": "Response emphasizes allowing security patches while blocking disruptive changes, states 'Patches still auto-applied for security' and maintains that control plane patches should continue automatically"
+    },
+    {
+      "expectation": "May mention rollout sequencing as an advanced option for controlling upgrade order across multiple clusters, and/or the cluster disruption budget for controlling CP patch frequency",
+      "passed": true,
+      "reason": "Response mentions cluster disruption budget with 90-day patch disruption interval configuration, though rollout sequencing across multiple clusters is not explicitly covered"
+    },
+    {
+      "expectation": "Provides gcloud commands for configuring the recommended exclusion type and maintenance window",
+      "passed": true,
+      "reason": "Response provides comprehensive gcloud commands including cluster update with release channel, maintenance exclusion scope, maintenance window configuration, and disruption interval settings"
+    }
+  ]
+}

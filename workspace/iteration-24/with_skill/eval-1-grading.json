@@ -1,0 +1,59 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends sequential control plane upgrades (1.32\u21921.33) while using skip-level (N+2) for node pool upgrades where possible to reduce disruption",
+      "passed": false,
+      "reason": "The response recommends direct 1.32\u21921.33 upgrade for both control plane and node pools, but does not mention or recommend skip-level (N+2) upgrades for node pools to reduce disruption"
+    },
+    {
+      "expectation": "Specifies control plane upgrades before node pool upgrades",
+      "passed": true,
+      "reason": "Phase 2 clearly shows control plane upgrade first with the command 'gcloud container clusters upgrade CLUSTER_NAME --master' followed by node pool upgrades in Phase 3"
+    },
+    {
+      "expectation": "Provides different node pool upgrade ordering with rationale for the sequence",
+      "passed": true,
+      "reason": "Specifies upgrade order as: 1) General-purpose pool first (stateless workloads), 2) High-memory pool second (database workloads need careful handling), 3) GPU pool last (complex inference workloads), with clear rationale for each"
+    },
+    {
+      "expectation": "Includes specific surge upgrade settings (maxSurge/maxUnavailable) for each pool with justification for the chosen values (e.g., explaining why maxSurge is set higher for parallelism)",
+      "passed": true,
+      "reason": "Provides specific settings for each pool: General-purpose (maxSurge=5%, maxUnavailable=0 for stateless workloads), High-memory (maxSurge=1, maxUnavailable=0 for careful database handling), GPU pool (maxSurge=0, maxUnavailable=1 due to GPU reservation constraints)"
+    },
+    {
+      "expectation": "Addresses Postgres-specific concerns (PDB, backup, operator compatibility, PV reclaim)",
+      "passed": true,
+      "reason": "Addresses PDB configuration (minAvailable: 1), backup strategy (pg_dump), operator compatibility verification, and includes specific Postgres validation commands, though PV reclaim is not explicitly mentioned"
+    },
+    {
+      "expectation": "Addresses GPU-specific concerns (driver compatibility, maxUnavailable as primary lever since surge capacity is typically unavailable)",
+      "passed": true,
+      "reason": "Addresses driver compatibility testing, explains maxUnavailable=1 due to fixed GPU reservation constraints, mentions GPU nodes don't support live migration, and includes driver validation with nvidia-smi"
+    },
+    {
+      "expectation": "Includes actual gcloud commands for the upgrade steps",
+      "passed": true,
+      "reason": "Provides specific gcloud commands for control plane upgrade, node pool configuration, and node pool upgrades throughout the detailed upgrade sequence"
+    },
+    {
+      "expectation": "Provides a pre-upgrade checklist",
+      "passed": true,
+      "reason": "Phase 1 includes a comprehensive pre-upgrade checklist covering deprecated API checks, operator compatibility, PDB configuration, GPU driver compatibility, backups, and monitoring baseline"
+    },
+    {
+      "expectation": "Provides a post-upgrade checklist with validation commands",
+      "passed": true,
+      "reason": "Phase 4 includes detailed post-upgrade validation with specific commands for cluster health, workload health, Postgres cluster validation, and ML inference endpoint testing"
+    },
+    {
+      "expectation": "Includes rollback procedure or guidance (noting CP patch downgrades are customer-doable, minor downgrades require GKE support)",
+      "passed": true,
+      "reason": "Includes rollback plan section covering control plane rollback (contact GKE support), node pool rollback procedures, and emergency rollback with specific commands, though it doesn't specifically mention the distinction between patch and minor downgrades"
+    },
+    {
+      "expectation": "Mentions GKE's 2-step control plane minor upgrade where step 1 is rollbackable (step 2 commits and is not rollbackable), or mentions that node pools support downgrade",
+      "passed": false,
+      "reason": "The response does not mention GKE's 2-step control plane minor upgrade process or that node pools support downgrade - it only mentions general rollback procedures"
+    }
+  ]
+}

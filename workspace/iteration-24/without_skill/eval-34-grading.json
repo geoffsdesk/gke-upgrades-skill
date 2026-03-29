@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": false,
+      "reason": "The response mentions that slices become unavailable 'simultaneously or in sequence' but doesn't clearly explain that TPU slices are recreated atomically as a single unit, not through rolling upgrades"
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": true,
+      "reason": "The response clearly states 'even if only one slice needs maintenance, the whole distributed training will stop' and 'Your entire multislice job will be terminated'"
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "The response clearly states that the entire multislice job will be terminated and that the job won't automatically resume, indicating all pods restart and training is interrupted"
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": false,
+      "reason": "The response mentions 'Maintenance can last several hours' but doesn't specifically explain the resource availability blocking issue or potential for extended downtime due to insufficient TPU resources"
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "The response explicitly recommends 'Force immediate checkpoint' and provides a kubectl command example for triggering checkpointing before maintenance"
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "The response includes 'Automated Recovery Plan' section with automatic job resubmission and checkpoint restoration, addressing automatic resume functionality"
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": false,
+      "reason": "The response does not mention maintenance exclusions or the option to defer maintenance events for training runs close to completion"
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": false,
+      "reason": "The response does not discuss maintenance windows or scheduling options to control when maintenance occurs during planned training breaks"
+    }
+  ]
+}

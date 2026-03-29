@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Addresses Istio control plane version compatibility with the target Kubernetes version",
+      "passed": true,
+      "reason": "Response explicitly discusses Istio version compatibility with GKE 1.32, states Istio 1.19+ supports GKE 1.32, and warns about upgrading Istio first if on version <1.19"
+    },
+    {
+      "expectation": "Recommends checking the Istio-Kubernetes version compatibility matrix before upgrading GKE",
+      "passed": true,
+      "reason": "Response includes specific commands to check current Istio version and references the official Istio compatibility matrix URL for GKE platform setup"
+    },
+    {
+      "expectation": "Advises upgrading Istio first if the current Istio version doesn't support the target Kubernetes version",
+      "passed": true,
+      "reason": "Response clearly states 'If your Istio version doesn't support GKE 1.32' then provides specific Phase 1 instructions to upgrade Istio control plane first before GKE upgrade"
+    },
+    {
+      "expectation": "Explains that sidecar injection happens via mutating webhook and may cause issues during node drain/recreation",
+      "passed": true,
+      "reason": "Response addresses admission webhook failures as the most common issue, provides specific kubectl commands to check webhook status, and includes mitigation steps for webhook rejection problems"
+    },
+    {
+      "expectation": "Mentions that new pods on upgraded nodes will get sidecar injected \u2014 verify the sidecar version matches",
+      "passed": true,
+      "reason": "Response includes validation checklist item 'Sidecar injection working on new pods' and provides commands to check for pods without istio-proxy sidecars during monitoring"
+    },
+    {
+      "expectation": "Recommends monitoring Istio proxy version consistency across the mesh after upgrade",
+      "passed": true,
+      "reason": "Response includes specific commands to check Envoy versions across the fleet and addresses Envoy version compatibility as a specific gotcha with symptoms and fixes"
+    },
+    {
+      "expectation": "Includes commands to check Istio version and proxy sync status (istioctl or kubectl)",
+      "passed": true,
+      "reason": "Response provides multiple specific commands including 'kubectl get pods -n istio-system -l app=istiod', 'istioctl proxy-status', and watch commands for monitoring proxy sync status"
+    },
+    {
+      "expectation": "Warns about potential traffic disruption if Istio control plane and sidecar versions are mismatched",
+      "passed": true,
+      "reason": "Response explicitly warns 'Never upgrade GKE control plane and Istio simultaneously. This is the #1 cause of mesh breakage' and mentions traffic disruption risks throughout the upgrade process"
+    }
+  ]
+}

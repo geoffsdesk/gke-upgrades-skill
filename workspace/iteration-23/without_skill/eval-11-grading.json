@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends upgrading the control plane first before any node pools",
+      "passed": false,
+      "reason": "The response upgrades the control plane last (Phase 4) after upgrading all node pools, which is incorrect"
+    },
+    {
+      "expectation": "Provides a specific node pool upgrade order with rationale (coordinating\u2192data\u2192master, or similar logical sequence)",
+      "passed": true,
+      "reason": "Provides clear order: coordinating\u2192master\u2192data with rationale that coordinating nodes are stateless and safest first"
+    },
+    {
+      "expectation": "Addresses PV safety: regional pd-ssd volumes can reattach to nodes in other zones, which is good for upgrades",
+      "passed": true,
+      "reason": "Mentions that 'regional pd-ssd volumes will automatically reattach to new nodes' at the end"
+    },
+    {
+      "expectation": "Recommends setting PDB for Elasticsearch master nodes to ensure quorum (minAvailable=2 for 3-master setup)",
+      "passed": false,
+      "reason": "No mention of PodDisruptionBudgets (PDB) for master nodes to ensure quorum protection"
+    },
+    {
+      "expectation": "Recommends maxSurge=1, maxUnavailable=0 for all ES node pools (conservative, data-safe)",
+      "passed": false,
+      "reason": "Only specifies maxSurge=1, maxUnavailable=0 for master nodes, and maxSurge=0, maxUnavailable=1 for data nodes, not for all node pools"
+    },
+    {
+      "expectation": "Advises verifying Elasticsearch cluster health (green status) between each node pool upgrade",
+      "passed": true,
+      "reason": "Includes health checks and monitoring commands between upgrade phases, including checking for green status"
+    },
+    {
+      "expectation": "Mentions checking PV reclaim policy is set to Retain (not Delete) as a safety measure",
+      "passed": false,
+      "reason": "No mention of checking or setting PV reclaim policy to Retain"
+    },
+    {
+      "expectation": "Includes kubectl commands for checking StatefulSet rollout status",
+      "passed": false,
+      "reason": "No kubectl rollout status commands provided for StatefulSets"
+    },
+    {
+      "expectation": "Recommends taking an Elasticsearch snapshot backup before starting",
+      "passed": true,
+      "reason": "Includes specific curl commands to create Elasticsearch snapshots in the pre-upgrade preparation section"
+    }
+  ]
+}

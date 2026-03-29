@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Configures a recurring maintenance window for weekends only",
+      "passed": true,
+      "reason": "The response shows recurring weekend maintenance windows configured in multiple ways - Terraform with 'recurrence = \"FREQ=WEEKLY;BYDAY=SA\"' and gcloud with '--maintenance-window-recurrence=\"FREQ=WEEKLY;BYDAY=SA\"' for Saturday maintenance"
+    },
+    {
+      "expectation": "Provides the gcloud command with --maintenance-window-start/end and --maintenance-window-recurrence for weekly weekend schedule",
+      "passed": true,
+      "reason": "The maintenance-setup.sh script shows gcloud commands with '--maintenance-window-start=\"2024-01-06T02:00:00Z\"', '--maintenance-window-end=\"2024-01-06T06:00:00Z\"', and '--maintenance-window-recurrence=\"FREQ=WEEKLY;BYDAY=SA\"'"
+    },
+    {
+      "expectation": "Sets up maintenance exclusions for quarterly code freezes (up to 30 days each)",
+      "passed": true,
+      "reason": "The response includes quarterly exclusions (q1, q2, q3, q4) with approximately 2-week periods each (e.g., March 15 to April 1), which are well within the 30-day limit"
+    },
+    {
+      "expectation": "Sets up a maintenance exclusion for the November audit period",
+      "passed": true,
+      "reason": "The response includes a 'november-audit-2024' exclusion from '2024-11-01T00:00:00Z' to '2024-11-30T23:59:59Z' covering the entire November audit period"
+    },
+    {
+      "expectation": "Notes the 30-day maximum for maintenance exclusions and how to handle longer freezes",
+      "passed": false,
+      "reason": "The response does not mention the 30-day maximum limit for maintenance exclusions or provide guidance on handling longer freeze periods"
+    },
+    {
+      "expectation": "Explains that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
+      "passed": false,
+      "reason": "The response does not explain that maintenance windows only affect auto-upgrades and that manual upgrades can bypass these restrictions"
+    },
+    {
+      "expectation": "Recommends combining maintenance windows with Stable or Extended channel for maximum upgrade control",
+      "passed": false,
+      "reason": "The response does not mention GKE release channels (Stable or Extended) or recommend using them for better upgrade control"
+    },
+    {
+      "expectation": "Provides gcloud commands for each exclusion (--add-maintenance-exclusion-name/start-time/end-time)",
+      "passed": true,
+      "reason": "The maintenance-setup.sh script shows gcloud commands with '--add-maintenance-exclusion-name', '--add-maintenance-exclusion-start', '--add-maintenance-exclusion-end', and '--add-maintenance-exclusion-scope' for each exclusion"
+    },
+    {
+      "expectation": "Warns about the risk of falling too far behind on versions during long exclusion periods",
+      "passed": false,
+      "reason": "The response does not warn about the risks of falling behind on Kubernetes versions during extended exclusion periods or the potential security and support implications"
+    }
+  ]
+}

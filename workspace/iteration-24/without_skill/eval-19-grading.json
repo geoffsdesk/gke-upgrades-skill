@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "The response clearly categorizes notifications with specific mentions of auto-upgrade notifications, security patches, end-of-life warnings, and version updates in the triage matrix and automated script"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "The triage matrix assigns security patches to CRITICAL priority (highest) and patch version updates/new features to LOW priority (lowest), with clear urgency levels defined"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "End-of-life warnings are categorized as CRITICAL when <30 days remain, with specific actions including scheduling upgrades and notifying stakeholders before deprecation"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Auto-upgrade notifications are assigned HIGH priority with specific actions including testing in staging, reviewing breaking changes, and preparing rollback strategies"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Security patches with CVE 7.0+ are marked CRITICAL with 24-48 hour timeline and actions including scheduling emergency maintenance windows outside normal procedures"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Minor and patch version updates are categorized as MEDIUM/LOW priority with planning-focused actions like 'Add to upgrade roadmap' and 'No immediate action required'"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "The response includes a monitoring section with PrometheusRule configuration for GKE upgrade alerts and mentions Cloud Monitoring in the context of tracking upgrades"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": false,
+      "reason": "The response does not specifically mention GKE release notes as a source for understanding version changes, focusing instead on automated classification and action plans"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "First step: check the operation status to understand why it failed (gcloud container operations list)",
+      "passed": true,
+      "reason": "Response provides specific gcloud commands to check operation status: 'gcloud container operations list --cluster CLUSTER_NAME --zone ZONE --filter=\"operationType=UPGRADE_NODES\"' and describes it as the first diagnostic step"
+    },
+    {
+      "expectation": "Recommends checking events and logs for the specific failure reason",
+      "passed": true,
+      "reason": "Response includes commands to check events and logs: 'kubectl get events -A --field-selector type=Warning' and 'gcloud container operations describe OPERATION_ID' to get error details"
+    },
+    {
+      "expectation": "Explains that the cluster is in a mixed-version state (8 nodes at 1.32, 12 at 1.31) which is within skew policy",
+      "passed": true,
+      "reason": "Response explicitly states 'You're in a mixed-version state (8 nodes at 1.32, 12 nodes at the previous version)' and mentions it's 'within the 2-minor-version skew policy'"
+    },
+    {
+      "expectation": "Notes that the mixed state is functional but not ideal \u2014 workloads can run on both versions",
+      "passed": true,
+      "reason": "Response states the mixed-version state is 'completely valid and functional' and 'workloads can run on either version', though it doesn't explicitly call it 'not ideal'"
+    },
+    {
+      "expectation": "Provides options: retry the upgrade after fixing the root cause, or rollback the 8 upgraded nodes",
+      "passed": true,
+      "reason": "Response provides both 'Option A - Retry (Recommended)' with commands to resume upgrade, and 'Option B - Rollback (Only if needed)' with commands to create new pool at previous version"
+    },
+    {
+      "expectation": "Explains that retrying is usually better than rollback (rolling back means creating a new pool at old version)",
+      "passed": true,
+      "reason": "Response marks retry as 'Recommended' and states 'Fixing the root cause and retrying is usually faster than rollback'. Also shows rollback involves creating a new pool at previous version"
+    },
+    {
+      "expectation": "Addresses the remaining 2 node pools: they can still be upgraded once the failed pool issue is resolved",
+      "passed": true,
+      "reason": "Response includes 'Next Steps for Remaining Pools' section with commands to upgrade the other two pools after fixing the main pool issue"
+    },
+    {
+      "expectation": "Includes commands to diagnose the failure (operation details, node status, pod events)",
+      "passed": true,
+      "reason": "Response provides comprehensive diagnostic commands including operation details, pod events, node status monitoring, and specific troubleshooting commands for common issues"
+    }
+  ]
+}

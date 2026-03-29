@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Starts with pre-flight checks: current versions, cluster health, node status",
+      "passed": true,
+      "reason": "Section 1.1-1.4 includes commands to check current versions, cluster health, and node status with kubectl get nodes"
+    },
+    {
+      "expectation": "Includes the gcloud command to check available versions in the release channel",
+      "passed": true,
+      "reason": "Section 1.2 provides the exact gcloud container get-server-config command to check Regular channel versions"
+    },
+    {
+      "expectation": "Includes the API deprecation check command before upgrading",
+      "passed": true,
+      "reason": "Section 1.3 includes kubectl get --raw /metrics command to check for deprecated API usage"
+    },
+    {
+      "expectation": "Provides the exact gcloud command for control plane upgrade (--master flag or --cluster-version)",
+      "passed": true,
+      "reason": "Section 2.1 provides the exact gcloud container clusters upgrade command with --master and --cluster-version 1.33 flags"
+    },
+    {
+      "expectation": "Includes a verification step after control plane upgrade with expected output",
+      "passed": true,
+      "reason": "Section 2.3 includes commands to verify control plane health and shows expected 1.33.x version output"
+    },
+    {
+      "expectation": "Provides gcloud commands for node pool upgrades \u2014 may use skip-level (N+2) for node pools to reduce steps",
+      "passed": true,
+      "reason": "Sections 3.2 and 3.6 provide exact gcloud container node-pools upgrade commands, though using direct 1.32\u21921.33 upgrade rather than skip-level"
+    },
+    {
+      "expectation": "Includes monitoring commands to watch node pool upgrade progress",
+      "passed": true,
+      "reason": "Sections 3.3 and 3.7 include watch commands and gcloud operations list to monitor upgrade progress"
+    },
+    {
+      "expectation": "Provides sequential control plane upgrades (1.32\u21921.33) with option for skip-level node pool upgrades",
+      "passed": false,
+      "reason": "The runbook provides direct 1.32\u21921.33 upgrade for both control plane and node pools, but doesn't mention or provide option for skip-level node pool upgrades"
+    },
+    {
+      "expectation": "Includes post-upgrade validation: node versions, pod health, kube-system pods",
+      "passed": true,
+      "reason": "Phase 4 includes comprehensive validation with commands to check node versions, pod health, and kube-system pods status"
+    },
+    {
+      "expectation": "Provides a rollback section explaining what to do if something goes wrong",
+      "passed": true,
+      "reason": "Emergency Rollback section explains control plane rollback limitations and provides commands for node pool rollback scenarios"
+    }
+  ]
+}

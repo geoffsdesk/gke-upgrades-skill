@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes notifications into types including 'Security patch available', 'Auto-upgrade scheduled', 'Version available', 'End-of-life warning', and additional types like 'Deprecated API detected'"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response includes an Action Matrix table that assigns urgency levels: Security patches = HIGH, Auto-upgrade scheduled = MEDIUM, Version available = LOW, End-of-life = HIGH/CRITICAL"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response explicitly states end-of-life warnings require action with timeline-based responses: '90+ days: Add to quarterly planning', '30-60 days: HIGH priority - begin upgrade planning', etc., and emphasizes planning upgrades before support ends"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response provides decision criteria for auto-upgrade scheduled notifications including checking for deployment freezes, critical business events, and insufficient testing, plus commands for deferring if needed"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response states security patches require action within 7-14 days (sooner for critical CVEs) and includes them in escalation matrix with security team ownership, implying expedited timelines"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response explicitly categorizes 'Version available' as LOW urgency with 'Plan for next cycle' action and states 'PLAN FOR NEXT CYCLE \u2022 Add to upgrade backlog \u2022 No immediate action required'"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "Response includes specific commands for setting up Pub/Sub notifications and provides Cloud Logging queries for different notification types, plus mentions setting up alert routing by notification type"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": true,
+      "reason": "Response explicitly states 'Review CVE details in GKE release notes' for security patches and 'Review breaking changes in release notes' for version available notifications"
+    }
+  ]
+}

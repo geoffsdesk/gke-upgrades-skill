@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Checks for deprecated API usage that may have changed behavior in 1.30",
+      "passed": false,
+      "reason": "The response checks for deprecated APIs in general but specifically mentions 1.32, not 1.30 as required by the expectation"
+    },
+    {
+      "expectation": "Recommends checking admission webhooks \u2014 they may be rejecting or slowing down requests on the new version",
+      "passed": true,
+      "reason": "The response includes a dedicated section on admission webhook compatibility with specific commands to check validating and mutating webhook configurations"
+    },
+    {
+      "expectation": "Advises checking if resource requests/limits need adjusting for any system components that changed",
+      "passed": true,
+      "reason": "The response addresses system component resource pressure and includes commands to scale up system components if resource-constrained"
+    },
+    {
+      "expectation": "Suggests examining kube-system pods for any that are crashlooping or restarting",
+      "passed": true,
+      "reason": "The response includes specific commands to check for crashlooping components in kube-system namespace"
+    },
+    {
+      "expectation": "Includes commands to check API server metrics and latency (kubectl get --raw /metrics)",
+      "passed": true,
+      "reason": "The response includes the exact command 'kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated' to check API server metrics"
+    },
+    {
+      "expectation": "Recommends checking if NetworkPolicy or service mesh components need updating for the new version",
+      "passed": true,
+      "reason": "The response addresses service mesh compatibility, includes commands to check Istio/ASM configurations, and recommends updating service mesh control plane to version compatible with K8s 1.32"
+    },
+    {
+      "expectation": "Advises reviewing pod events for scheduling delays or readiness probe failures",
+      "passed": true,
+      "reason": "The response includes multiple commands to check events across different namespaces and specifically looks for system events and warning events"
+    },
+    {
+      "expectation": "Mentions checking if HPA or VPA are behaving differently on the new version",
+      "passed": true,
+      "reason": "The response has a dedicated section on HPA/VPA behavioral changes with specific commands to check HPA status and VPA recommendations"
+    }
+  ]
+}

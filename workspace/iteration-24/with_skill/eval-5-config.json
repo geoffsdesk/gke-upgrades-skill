@@ -1,0 +1,19 @@
+{
+  "eval_id": 5,
+  "mode": "with_skill",
+  "iteration": 24,
+  "prompt": "We somehow let our Standard cluster get into a bad state. The control plane is at 1.31 but one of our node pools is still at 1.28. We're getting warnings about version skew. What are we dealing with and how do we fix it?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-29T00:07:45.535633+00:00",
+  "input_tokens": 20981,
+  "output_tokens": 1193,
+  "time_seconds": 22.57,
+  "skill_files": [
+    "skill/SKILL.md",
+    "skill/evals/evals.json",
+    "skill/references/checklists.md",
+    "skill/references/runbook-template.md",
+    "skill/references/troubleshooting.md"
+  ]
+}
