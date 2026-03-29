@@ -3,52 +3,52 @@
     {
       "expectation": "Explains that regional clusters have multiple control plane replicas and the upgrade is rolling",
       "passed": true,
-      "reason": "Response clearly explains 'Regional clusters have multiple control plane replicas across zones' and 'GKE upgrades one replica at a time while others remain available'"
+      "reason": "Response clearly explains that regional clusters have multiple control plane replicas (typically 3) across zones and that GKE upgrades them one at a time"
     },
     {
       "expectation": "States that regional control plane upgrades have near-zero API server downtime",
       "passed": true,
-      "reason": "Response explicitly states 'Good news: You'll have zero API server downtime' and 'Your cluster API remains highly available throughout the upgrade'"
+      "reason": "Response explicitly states 'Regional clusters have no API server downtime during control plane upgrades' and emphasizes this point multiple times"
     },
     {
       "expectation": "Contrasts with zonal clusters where there IS a brief API server outage during upgrade",
-      "passed": true,
-      "reason": "Response mentions 'This is the key advantage of regional over zonal clusters - no API server downtime during upgrades'"
+      "passed": false,
+      "reason": "Response does not mention zonal clusters or contrast the behavior between regional and zonal cluster upgrades"
     },
     {
       "expectation": "Provides the gcloud command for control plane upgrade (--master flag)",
       "passed": true,
-      "reason": "Response provides the correct command: 'gcloud container clusters upgrade CLUSTER_NAME --region us-central1 --master --cluster-version 1.32'"
+      "reason": "Response provides the exact command: 'gcloud container clusters upgrade CLUSTER_NAME --region us-central1 --master --cluster-version 1.32'"
     },
     {
       "expectation": "Mentions expected duration for control plane upgrade (roughly 10-30 minutes)",
       "passed": true,
-      "reason": "Response states 'Total upgrade time: ~10-15 minutes for the full control plane' and 'upgrade typically takes 10-15 minutes'"
+      "reason": "Response states 'Upgrade typically completes in 10-15 minutes' which falls within the expected range"
     },
     {
       "expectation": "Includes a command to verify the control plane version after upgrade",
       "passed": true,
-      "reason": "Response includes verification command: 'gcloud container clusters describe CLUSTER_NAME --region us-central1 --format=\"table(name, currentMasterVersion, status)\"'"
+      "reason": "Response includes 'gcloud container clusters describe CLUSTER_NAME --region us-central1 --format=\"value(currentMasterVersion)\"' command for verification"
     },
     {
       "expectation": "Recommends checking kube-system pods health after upgrade",
       "passed": true,
-      "reason": "Response includes 'kubectl get pods -n kube-system' in both pre-flight checks and post-upgrade validation sections"
+      "reason": "Response includes 'kubectl get pods -n kube-system' in the post-upgrade validation section"
     },
     {
       "expectation": "Advises checking deprecated API usage before upgrading",
       "passed": true,
-      "reason": "Response includes specific commands to check deprecated APIs: 'kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated' and GKE insights command"
+      "reason": "Response includes a command to check deprecated API usage: 'kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated'"
     },
     {
       "expectation": "Mentions that GKE supports a 2-step control plane minor upgrade where the first step is rollbackable, or notes that CP patch downgrades can be done by the customer while minor downgrades require GKE support",
-      "passed": true,
-      "reason": "Response mentions 'Rollback: Control plane minor version rollback requires GKE support involvement' which addresses the constraint on minor version rollbacks"
+      "passed": false,
+      "reason": "Response does not mention the 2-step upgrade process or rollback capabilities for control plane upgrades"
     },
     {
       "expectation": "Mentions GKE's 2-step control plane minor upgrade: step 1 is rollbackable by the customer, step 2 commits the upgrade. This reduces risk for cautious teams.",
       "passed": false,
-      "reason": "Response does not explain the 2-step control plane minor upgrade process where step 1 is rollbackable and step 2 commits the upgrade"
+      "reason": "Response does not mention the 2-step control plane minor upgrade process or its risk reduction benefits"
     }
   ]
 }

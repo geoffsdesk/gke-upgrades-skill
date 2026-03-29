@@ -1,131 +1,141 @@
-I'll help you diagnose and fix this stuck node pool upgrade. Let's work through the most common causes systematically.
+I'll walk you through diagnosing and fixing this stuck node pool upgrade. Since pods aren't draining, let's check the most common causes systematically.
 
-## Immediate Diagnosis Steps
+## Immediate Diagnosis
 
 Run these commands to identify what's blocking the drain:
 
-### 1. Check for PDB violations (most likely cause)
+### 1. Check PDBs (most common cause)
 ```bash
-# Look for PDBs with 0 allowed disruptions
 kubectl get pdb -A -o wide
+# Look for ALLOWED DISRUPTIONS = 0
 
-# Check for specific PDB blocking events
-kubectl get events -A --field-selector reason=EvictionBlocked --sort-by='.lastTimestamp'
+# For any PDBs with 0 allowed disruptions:
+kubectl describe pdb PDB_NAME -n NAMESPACE
 ```
 
-### 2. Check for pending pods that can't reschedule
+### 2. Check for pods that can't be rescheduled
 ```bash
-# Find pending pods
+# Pending pods (resource constraints)
 kubectl get pods -A | grep Pending
+kubectl get events -A --field-selector reason=FailedScheduling | tail -10
 
-# Check scheduling failures
-kubectl get events -A --field-selector reason=FailedScheduling --sort-by='.lastTimestamp'
-```
-
-### 3. Check for bare pods (won't reschedule)
-```bash
-# Find pods without owner references
+# Bare pods (won't reschedule)
 kubectl get pods -A -o json | \
   jq -r '.items[] | select(.metadata.ownerReferences | length == 0) | "\(.metadata.namespace)/\(.metadata.name)"'
 ```
 
-### 4. Check current node status
+### 3. Check node and resource status
 ```bash
-# See which nodes are being drained
-kubectl get nodes -o wide -L cloud.google.com/gke-nodepool
+# Which nodes are being drained
+kubectl get nodes -o wide | grep SchedulingDisabled
 
-# Check for pods stuck in terminating
-kubectl get pods -A | grep Terminating
+# Resource availability
+kubectl top nodes
+kubectl describe nodes | grep -A 5 "Allocated resources"
 ```
 
-## Most Likely Fixes
-
-### Fix #1: PDB Too Restrictive
-If you find PDBs with 0 allowed disruptions:
-
+### 4. Check for admission webhook issues
 ```bash
-# Temporarily relax the problematic PDB
+kubectl get events -A --field-selector type=Warning | grep -i webhook
+kubectl get validatingwebhookconfigurations
+kubectl get mutatingwebhookconfigurations
+```
+
+## Quick Fixes by Root Cause
+
+### If PDBs are blocking (most likely):
+```bash
+# Temporarily relax the restrictive PDB
 kubectl patch pdb PDB_NAME -n NAMESPACE \
   -p '{"spec":{"maxUnavailable":"50%"}}'
 
-# Or if it's critical, allow at least 1 disruption
+# Or if it's completely blocking:
 kubectl patch pdb PDB_NAME -n NAMESPACE \
-  -p '{"spec":{"minAvailable":"2"}}'  # assuming 3+ replicas
+  -p '{"spec":{"minAvailable":null,"maxUnavailable":"100%"}}'
 ```
 
-### Fix #2: Resource Constraints
-If pods are pending due to insufficient resources:
-
+### If resource constraints (pods pending):
 ```bash
-# Reduce surge to 1 node at a time (slower but needs less quota)
-gcloud container node-pools update YOUR_NODE_POOL \
-  --cluster YOUR_CLUSTER \
-  --zone us-east1-b \
+# Reduce surge parallelism to fit available quota
+gcloud container node-pools update NODE_POOL_NAME \
+  --cluster CLUSTER_NAME \
+  --region us-east1 \
   --max-surge-upgrade 1 \
   --max-unavailable-upgrade 0
+
+# Or use drain-first mode if no surge quota available
+gcloud container node-pools update NODE_POOL_NAME \
+  --cluster CLUSTER_NAME \
+  --region us-east1 \
+  --max-surge-upgrade 0 \
+  --max-unavailable-upgrade 1
 ```
 
-Or temporarily scale down non-critical workloads:
+### If bare pods exist:
 ```bash
-kubectl scale deployment NON_CRITICAL_APP --replicas=0 -n NAMESPACE
+# Delete them (they won't reschedule anyway)
+kubectl delete pod POD_NAME -n NAMESPACE
 ```
 
-### Fix #3: Delete Bare Pods
-If you found bare pods (they won't reschedule anyway):
+### If webhooks are rejecting pod creation:
 ```bash
-kubectl delete pod POD_NAME -n NAMESPACE --grace-period=0 --force
+# Temporarily disable problematic webhook
+kubectl patch validatingwebhookconfigurations WEBHOOK_NAME \
+  -p '{"webhooks":[{"name":"WEBHOOK_NAME","failurePolicy":"Ignore"}]}'
 ```
 
-### Fix #4: Long Termination Grace Periods
-Check for pods with excessive termination periods:
-```bash
-kubectl get pods -A -o json | \
-  jq '.items[] | select(.spec.terminationGracePeriodSeconds > 300) | {ns:.metadata.namespace, name:.metadata.name, grace:.spec.terminationGracePeriodSeconds}'
-```
+## Resume the Upgrade
 
-If found, consider reducing the grace period in the workload spec.
-
-## Monitor Progress
-
-After applying fixes, monitor the upgrade:
+After fixing the blocking issue:
 
 ```bash
-# Watch node upgrade progress
+# The upgrade should resume automatically within 5-10 minutes
+# Monitor progress:
 watch 'kubectl get nodes -o wide'
 
-# Check for remaining stuck pods
-kubectl get pods -A | grep -E "Terminating|Pending"
-
-# Verify upgrade operation is progressing
-gcloud container operations list --cluster YOUR_CLUSTER --zone us-east1-b --limit=1
+# Check GKE operation status:
+gcloud container operations list \
+  --cluster CLUSTER_NAME \
+  --region us-east1 \
+  --filter="operationType=UPGRADE_NODES" \
+  --limit=1
 ```
 
 ## If Still Stuck After 30 Minutes
 
-1. **Check admission webhooks** that might be rejecting pod recreation:
+If the upgrade doesn't resume after fixing pod-level issues:
+
 ```bash
-kubectl get validatingwebhookconfigurations
-kubectl get events -A --field-selector reason=FailedCreate
+# Get the operation ID and contact GKE support
+gcloud container operations list \
+  --cluster CLUSTER_NAME \
+  --region us-east1 \
+  --filter="operationType=UPGRADE_NODES" \
+  --format="value(name)"
 ```
 
-2. **Force complete problematic pods**:
+## Post-Fix Cleanup
+
+Once the upgrade completes successfully:
+
+1. **Restore original PDBs** if you modified them:
 ```bash
-kubectl delete pod STUCK_POD -n NAMESPACE --grace-period=0 --force
+# Restore from backup or reset to original values
+kubectl patch pdb PDB_NAME -n NAMESPACE \
+  -p '{"spec":{"minAvailable":"ORIGINAL_VALUE","maxUnavailable":null}}'
 ```
 
-3. **Contact GKE Support** if the operation shows no progress after resolving pod-level issues. Provide:
-   - Cluster name and zone
-   - Operation ID from `gcloud container operations list`
-   - Timeline of when it got stuck
+2. **Re-enable webhooks** if disabled:
+```bash
+kubectl patch validatingwebhookconfigurations WEBHOOK_NAME \
+  -p '{"webhooks":[{"name":"WEBHOOK_NAME","failurePolicy":"Fail"}]}'
+```
 
-## Prevention for Next Time
+## Prevention for Future Upgrades
 
-After this upgrade completes:
+To avoid this in future upgrades:
+- Review PDB settings before upgrades - ensure they allow at least 1 disruption
+- Test upgrades in dev/staging first to catch webhook compatibility issues
+- Consider using maintenance windows during off-peak hours when resource pressure is lower
 
-1. **Review PDB settings** - ensure they allow at least 1 disruption
-2. **Set appropriate surge settings** based on your quota:
-   - Small pools (≤20 nodes): `maxSurge=1`
-   - Larger pools: `maxSurge=5%` of pool size
-3. **Schedule upgrades during off-peak hours** when resource usage is lower
-
-Let me know what you find with the diagnostic commands and I can provide more specific guidance!
+Start with checking the PDBs - that's the cause in ~80% of stuck drain scenarios. Let me know what you find and I can help with the specific fix!

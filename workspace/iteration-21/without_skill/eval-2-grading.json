@@ -3,57 +3,57 @@
     {
       "expectation": "Distinguishes between dev (Rapid) and prod (Stable) clusters in the checklists",
       "passed": true,
-      "reason": "Response clearly identifies dev clusters on Rapid channel and prod clusters on Stable channel, with specific recommendations to test on dev first"
+      "reason": "The response explicitly mentions testing on dev clusters first since they're on Rapid channel and would upgrade earlier, and recommends staggered production upgrades"
     },
     {
       "expectation": "Recognizes Autopilot limitations (no node management, no SSH, mandatory resource requests)",
       "passed": true,
-      "reason": "Mentions Autopilot restrictions, mandatory resource requests/limits, and notes that rollbacks aren't supported"
+      "reason": "The response mentions Autopilot handles node upgrades automatically, includes Autopilot-specific sections about resource constraints and requirements, and notes workloads may be rescheduled"
     },
     {
       "expectation": "Includes API deprecation checks with kubectl commands",
-      "passed": true,
-      "reason": "Provides specific kubectl commands for checking deprecated APIs and validating workloads"
+      "passed": false,
+      "reason": "While the response mentions checking deprecated APIs and breaking changes, it does not provide specific kubectl commands to perform these checks"
     },
     {
       "expectation": "Mentions mandatory resource requests as an Autopilot-specific concern",
       "passed": true,
-      "reason": "Explicitly mentions 'Verify resource requests/limits are properly set (Autopilot requirement)' in the checklist"
+      "reason": "The response specifically mentions monitoring for new Autopilot resource constraints and verifying resource requests/limits are appropriate in the Autopilot-specific sections"
     },
     {
       "expectation": "Pre-upgrade checklist includes workload readiness items (PDBs, bare pods, graceful shutdown)",
       "passed": false,
-      "reason": "Does not specifically mention Pod Disruption Budgets (PDBs), bare pods, or graceful shutdown configurations"
+      "reason": "The response does not specifically mention Pod Disruption Budgets (PDBs), bare pods, or graceful shutdown configurations in the pre-upgrade checklist"
     },
     {
       "expectation": "Post-upgrade checklist includes version verification commands",
-      "passed": true,
-      "reason": "Includes 'kubectl version' command for verifying cluster version after upgrade"
+      "passed": false,
+      "reason": "The response mentions verifying cluster health and updating documentation with new version, but does not provide specific kubectl commands to verify the cluster version"
     },
     {
       "expectation": "Post-upgrade checklist includes workload health validation",
       "passed": true,
-      "reason": "Contains comprehensive workload validation including deployments, pods, services, ingresses, and application health checks"
+      "reason": "The response includes comprehensive workload validation items like checking deployments, running smoke tests, verifying ingress traffic, and testing database connections"
     },
     {
       "expectation": "Recommends testing on dev clusters before prod auto-upgrade",
       "passed": true,
-      "reason": "First item in pre-upgrade checklist specifically recommends verifying dev clusters are running 1.32+ successfully before prod upgrade"
+      "reason": "The response explicitly recommends testing on dev clusters first since they're on Rapid channel and would upgrade earlier, and includes this as the first item in the pre-upgrade checklist"
     },
     {
       "expectation": "Mentions that checking the GKE release schedule gives ~1 month best-case advance notice for new minor upgrades, beyond the 72h notification",
       "passed": false,
-      "reason": "Does not mention GKE release schedule or the 1-month advance notice capability, only references the immediate upgrade notification"
+      "reason": "The response does not mention checking the GKE release schedule or the timing of advance notices beyond the immediate upgrade notification"
     },
     {
       "expectation": "Includes monitoring/observability validation items",
       "passed": true,
-      "reason": "Includes monitoring dashboard verification, performance metrics checking, and logging pipeline validation in both pre and post-upgrade checklists"
+      "reason": "The response includes extensive monitoring items like preparing enhanced monitoring, validating monitoring stack, checking dashboards, and comparing performance metrics"
     },
     {
       "expectation": "Does NOT proactively recommend node-level maintenance exclusions for Autopilot unless the customer explicitly asks for node upgrade control",
       "passed": true,
-      "reason": "Correctly does not mention node-level maintenance exclusions, focusing on Autopilot-appropriate recommendations instead"
+      "reason": "The response correctly does not mention node-level maintenance exclusions, focusing instead on Autopilot's automatic node management capabilities"
     }
   ]
 }

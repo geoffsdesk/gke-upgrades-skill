@@ -3,27 +3,27 @@
     {
       "expectation": "Identifies PDB as the most likely/common cause of stuck upgrades",
       "passed": true,
-      "reason": "Response clearly identifies PDB violations as the most likely cause in the diagnosis section and provides it as Fix #1"
+      "reason": "Response explicitly states PDBs are 'most common cause' and 'the cause in ~80% of stuck drain scenarios'"
     },
     {
       "expectation": "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
       "passed": true,
-      "reason": "Provides 'kubectl get pdb -A -o wide' command which is equivalent to --all-namespaces"
+      "reason": "Provides 'kubectl get pdb -A -o wide' command which is equivalent to checking all namespaces"
     },
     {
       "expectation": "Provides commands to identify which pods are blocking the drain",
       "passed": true,
-      "reason": "Includes multiple commands to identify blocking pods: checking pending pods, events for eviction blocks, bare pods, and terminating pods"
+      "reason": "Includes multiple commands: checking pending pods, bare pods, and events related to scheduling failures"
     },
     {
       "expectation": "Includes resource constraint diagnosis (capacity issues, pending pods)",
       "passed": true,
-      "reason": "Includes commands to check pending pods and scheduling failures, plus mentions resource constraints as Fix #2"
+      "reason": "Provides commands to check pending pods, resource availability with 'kubectl top nodes' and allocated resources"
     },
     {
       "expectation": "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
       "passed": true,
-      "reason": "Provides kubectl patch commands to modify PDBs with maxUnavailable and minAvailable adjustments"
+      "reason": "Shows kubectl patch commands to modify PDB maxUnavailable values temporarily"
     },
     {
       "expectation": "Mentions that GKE has a PDB timeout (up to 1 hour) after which it may force-drain, and that GKE sends notifications when eviction is blocked by PDB",
@@ -33,22 +33,22 @@
     {
       "expectation": "Includes guidance on surge upgrade settings as a potential fix",
       "passed": true,
-      "reason": "Provides gcloud command to adjust max-surge-upgrade settings and mentions surge settings in prevention section"
+      "reason": "Provides gcloud commands to adjust max-surge-upgrade and max-unavailable-upgrade settings"
     },
     {
       "expectation": "Mentions webhook issues as a possible cause",
       "passed": true,
-      "reason": "Mentions admission webhooks in the 'If Still Stuck' section with commands to check validating webhook configurations"
+      "reason": "Includes section on checking admission webhook issues and provides commands to diagnose and fix them"
     },
     {
       "expectation": "Includes validation steps to confirm the fix is working",
       "passed": true,
-      "reason": "Provides monitoring commands in 'Monitor Progress' section to watch nodes, check stuck pods, and verify operation progress"
+      "reason": "Provides monitoring commands using 'watch kubectl get nodes' and checking GKE operation status"
     },
     {
       "expectation": "Mentions GKE disruption-event notifications (POD_PDB_VIOLATION) that alert when eviction is blocked by PDB, available via Cloud Logging or Pub/Sub",
       "passed": false,
-      "reason": "Does not mention specific GKE disruption-event notifications, POD_PDB_VIOLATION events, or Cloud Logging/Pub/Sub integration"
+      "reason": "Does not mention POD_PDB_VIOLATION events, Cloud Logging, or Pub/Sub notifications for PDB violations"
     }
   ]
 }

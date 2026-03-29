@@ -1,55 +1,48 @@
 # GKE Autopilot Upgrade Checklists
-**Environment:** 2 dev clusters (Rapid channel) → 2 prod clusters (Stable channel)  
-**Upgrade:** 1.31 → 1.32 (minor version)  
-**Timeline:** Auto-upgrade scheduled next month
+
+**Cluster Setup:** 4 Autopilot clusters | Dev: 2 clusters on Rapid | Prod: 2 clusters on Stable  
+**Upgrade:** 1.31 → 1.32 (minor version) | Auto-upgrade timing: Next month
 
 ## Pre-Upgrade Checklist
 
 ```
 Pre-Upgrade Checklist - Autopilot Clusters
-- [ ] Dev clusters: ___ | Prod clusters: ___
-- [ ] Current version: 1.31 | Target version: 1.32
+- [ ] Clusters: 2 prod on Stable channel | Current: 1.31 | Target: 1.32
 
 Compatibility & API Changes
-- [ ] 1.32 release notes reviewed for breaking changes (https://cloud.google.com/kubernetes-engine/docs/release-notes)
-- [ ] No deprecated API usage in prod workloads:
-      - [ ] Check GKE deprecation insights in console (Insights tab)
-      - [ ] Run: kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated
-- [ ] Third-party operators (Istio, cert-manager, etc.) support K8s 1.32
-- [ ] CI/CD pipelines tested against 1.32 (use dev clusters for validation)
+- [ ] GKE 1.32 release notes reviewed for breaking changes
+- [ ] Deprecated API usage checked (GKE console → Insights tab → "Deprecations and Issues")
+- [ ] Alternative check: `kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated`
+- [ ] Third-party operators compatible with K8s 1.32 (cert-manager, ingress controllers, monitoring)
+- [ ] Admission webhooks tested against 1.32 (service mesh, policy engines)
 
 Workload Readiness (Autopilot Requirements)
-- [ ] All containers have resource requests defined (CPU & memory - mandatory for Autopilot)
-- [ ] PDBs configured for critical workloads (not overly restrictive - max 1hr respect during upgrade)
-- [ ] No bare pods — all managed by Deployments/StatefulSets
-- [ ] terminationGracePeriodSeconds ≤ 600s for regular pods (Autopilot limit)
-- [ ] terminationGracePeriodSeconds ≤ 25s for Spot pods (Autopilot limit)
-- [ ] StatefulSet data backed up if applicable
+- [ ] All containers have resource requests (CPU/memory) - MANDATORY for Autopilot
+- [ ] No bare pods — all workloads managed by Deployments/StatefulSets
+- [ ] PDBs configured for critical workloads (not overly restrictive — allow at least 1 disruption)
+- [ ] terminationGracePeriodSeconds ≤ 10 minutes (Autopilot limit, 25s for Spot)
+- [ ] StatefulSet data backups completed (application-level snapshots)
+- [ ] Database/stateful operator versions support K8s 1.32
 
-Dev Cluster Validation (Complete Before Prod)
-- [ ] Dev clusters already upgraded to 1.32 (Rapid channel gets it first)
-- [ ] Application smoke tests passing on dev 1.32 clusters
-- [ ] Performance baseline confirmed (latency, throughput within range)
-- [ ] No admission webhook failures or API compatibility issues
-- [ ] Service mesh (if used) functioning properly on 1.32
+Dev Environment Validation (Rapid Channel Head Start)
+- [ ] Dev clusters already on 1.32+ (Rapid gets versions ~2 weeks before Stable)
+- [ ] Application compatibility validated in dev
+- [ ] Performance regression testing completed
+- [ ] CI/CD pipeline tested against 1.32
 
-Production Timing Control
-- [ ] Maintenance window configured for prod clusters (off-peak hours):
-      gcloud container clusters update PROD_CLUSTER_NAME \
-        --region REGION \
-        --maintenance-window-start "2024-XX-XXTXX:XX:XXZ" \
-        --maintenance-window-duration 4h \
-        --maintenance-window-recurrence "FREQ=WEEKLY;BYDAY=SUN"
-- [ ] Consider maintenance exclusion if timing needs adjustment:
-      - "no upgrades" (30-day max) for temporary deferral
-      - "no minor upgrades" (up to EoS) for patch-only mode
-- [ ] Rollout sequence: ensure both prod clusters don't upgrade simultaneously
+Observability & Operations
+- [ ] Baseline metrics captured (error rates, latency, resource usage)
+- [ ] Monitoring/alerting active (Cloud Monitoring, Prometheus, APM)
+- [ ] Auto-upgrade timing reviewed (check maintenance windows if configured)
+- [ ] Stakeholders notified of upcoming auto-upgrade window
+- [ ] On-call schedule confirmed for upgrade period
 
-Ops Readiness
-- [ ] Monitoring dashboards active (error rates, latency baselines captured)
-- [ ] On-call team aware of scheduled upgrade window
-- [ ] Stakeholders notified of expected upgrade timing
-- [ ] Rollback plan documented (limited options for control plane downgrades)
+Control Plane Timing (Main Lever for Autopilot)
+- [ ] Maintenance windows configured for off-peak hours (if timing control needed)
+- [ ] Consider maintenance exclusion if deferral needed:
+      - "No upgrades" (30-day max, emergency deferrals only)
+      - "No minor upgrades" (up to EoS, allows patches but blocks 1.31→1.32)
+- [ ] Scheduled upgrade notifications enabled for 72h advance warning
 ```
 
 ## Post-Upgrade Checklist
@@ -57,59 +50,61 @@ Ops Readiness
 ```
 Post-Upgrade Checklist - Autopilot Clusters
 
-Control Plane Health
-- [ ] Prod cluster 1 at 1.32: gcloud container clusters describe CLUSTER_1 --region REGION --format="value(currentMasterVersion)"
-- [ ] Prod cluster 2 at 1.32: gcloud container clusters describe CLUSTER_2 --region REGION --format="value(currentMasterVersion)"
-- [ ] System pods healthy: kubectl get pods -n kube-system
-- [ ] No upgrade operations in progress: gcloud container operations list --region REGION
+Cluster Health
+- [ ] Control plane at 1.32: `gcloud container clusters describe CLUSTER_NAME --region REGION --format="value(currentMasterVersion)"`
+- [ ] All nodes at 1.32 (auto-managed by GKE in Autopilot)
+- [ ] All nodes Ready: `kubectl get nodes`
+- [ ] System pods healthy: `kubectl get pods -n kube-system`
+- [ ] No admission webhook failures: `kubectl get events -A --field-selector type=Warning | grep webhook`
 
-Node Health (Autopilot Managed)
-- [ ] All nodes Ready: kubectl get nodes
-- [ ] No nodes stuck in upgrade state
-- [ ] Node versions align with control plane (Autopilot handles this automatically)
+Workload Health
+- [ ] All deployments at desired replica count: `kubectl get deployments -A`
+- [ ] No failed pods: `kubectl get pods -A --field-selector=status.phase!=Running,status.phase!=Succeeded`
+- [ ] StatefulSets fully ready: `kubectl get statefulsets -A`
+- [ ] Ingress/load balancers responding (GKE manages these automatically)
+- [ ] Application smoke tests passing
 
-Workload Health - Cluster 1
-- [ ] All deployments at desired replica count: kubectl get deployments -A
-- [ ] No CrashLoopBackOff pods: kubectl get pods -A --field-selector=status.phase!=Running,status.phase!=Succeeded
-- [ ] StatefulSets fully ready: kubectl get statefulsets -A
-- [ ] Load balancers responding (ping external endpoints)
-- [ ] Application health checks passing
+API and Compatibility
+- [ ] No deprecated API warnings in cluster events: `kubectl get events -A --field-selector type=Warning`
+- [ ] HPA/VPA scaling behavior normal (1.32 may change autoscaling algorithms)
+- [ ] Custom operators still functional (restart if needed for API compatibility)
 
-Workload Health - Cluster 2
-- [ ] All deployments at desired replica count: kubectl get deployments -A
-- [ ] No CrashLoopBackOff pods: kubectl get pods -A --field-selector=status.phase!=Running,status.phase!=Succeeded
-- [ ] StatefulSets fully ready: kubectl get statefulsets -A
-- [ ] Load balancers responding (ping external endpoints)
-- [ ] Application health checks passing
+Observability Validation
+- [ ] Metrics pipeline uninterrupted (Cloud Monitoring integration intact)
+- [ ] Application logs flowing normally
+- [ ] Error rates within pre-upgrade baseline
+- [ ] Latency (p50/p95/p99) within acceptable range
+- [ ] Resource utilization patterns normal (Autopilot may adjust node provisioning)
 
-API & Compatibility Validation
-- [ ] No admission webhook errors in events: kubectl get events -A --field-selector type=Warning | grep webhook
-- [ ] HPA/VPA scaling behavior normal (check for algorithm changes in 1.32)
-- [ ] Service mesh control plane (if applicable) handling new API version
-- [ ] CI/CD deployments working against upgraded clusters
+Multi-Cluster Consistency
+- [ ] Both prod clusters upgraded successfully
+- [ ] Dev and prod environments version-aligned (dev may be ahead on newer patches)
+- [ ] Cross-cluster services (if any) functioning normally
 
-Observability & Performance
-- [ ] Metrics collection active, no gaps in dashboards
-- [ ] Logs flowing to aggregation systems
-- [ ] API latency within pre-upgrade baseline (p95, p99)
-- [ ] Application error rates ≤ pre-upgrade baseline
-- [ ] No unexpected 503s from API server
-
-Documentation & Cleanup
-- [ ] Upgrade completion logged in change management system
-- [ ] Any temporary maintenance exclusions removed (if applied)
-- [ ] Next upgrade timeline noted (1.32 → 1.33 when available in Stable)
-- [ ] Lessons learned documented for future upgrades
+Documentation
+- [ ] Upgrade completion documented
+- [ ] Any issues encountered logged for future upgrades
+- [ ] Lessons learned shared with team
 ```
 
-## Key Notes for Your Setup
+## Key Autopilot Differences
 
-**Progressive validation:** Since dev is on Rapid channel, you'll get 1.32 there first (~2-4 weeks before Stable). Use this natural progression to validate workload compatibility before prod auto-upgrades.
+Since you're on Autopilot, note these simplifications:
+- **No node pool management** — GKE handles all node upgrades automatically using surge strategy
+- **Regional control plane** — No downtime during control plane upgrade
+- **Auto-scaling** — Nodes provision/deprovision automatically during upgrade
+- **Resource requests mandatory** — Missing requests cause pod failures (most common Autopilot upgrade issue)
 
-**Autopilot simplifications:** No node pool management needed — GKE handles all node upgrades automatically with surge strategy. Focus on control plane timing and workload readiness.
+## Timing Considerations
 
-**Timing control:** The maintenance window is your primary lever for **when** the upgrade happens. Auto-upgrades respect maintenance windows, but manual upgrades bypass them entirely.
+With your current setup:
+- **Dev clusters (Rapid)** likely already upgraded to 1.32 — use them to validate compatibility
+- **Prod clusters (Stable)** will auto-upgrade next month — you have time to prepare
+- **Natural progression** — this setup gives you ~2-4 weeks of validation time between dev and prod
 
-**Resource requests reminder:** Double-check that all containers have CPU/memory requests — Autopilot will reject pods without them, and upgrades can expose previously hidden missing requests.
-
-**Limited rollback:** Control plane minor version downgrades require GKE support. Your best protection is thorough dev cluster validation before prod upgrades.
+Consider enabling **scheduled upgrade notifications** to get 72h advance warning:
+```bash
+gcloud container clusters update CLUSTER_NAME \
+  --region REGION \
+  --enable-scheduled-upgrades
+```

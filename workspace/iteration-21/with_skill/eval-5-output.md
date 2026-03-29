@@ -1,118 +1,182 @@
-You're dealing with **unsupported version skew** - your node pool is 3 minor versions behind the control plane (1.28 vs 1.31), which exceeds GKE's maximum supported skew of 2 minor versions.
+# GKE Version Skew Recovery Plan
 
-## What you're dealing with
+## What You're Dealing With
 
-**Current state:**
-- Control plane: 1.31.x
-- Node pool: 1.28.x  
-- Version skew: 3 minor versions (unsupported)
+You have a **critical version skew violation**. Your node pool at 1.28 is **3 minor versions** behind your 1.31 control plane, which exceeds GKE's maximum supported skew of 2 minor versions. This creates several risks:
 
-**Risks:**
-- **Kubernetes API compatibility issues** - 1.28 kubelet may not properly communicate with 1.31 API server
-- **Workload scheduling problems** - pods may fail to schedule or behave unexpectedly
-- **Security vulnerabilities** - 1.28 is missing 3 versions worth of security patches
-- **Forced upgrade risk** - if 1.28 reaches End of Support, GKE will force-upgrade the node pool
+- **EoS enforcement imminent**: 1.28 reached End of Support and will be force-upgraded by GKE
+- **API compatibility issues**: Some 1.31 control plane APIs may not work with 1.28 nodes
+- **Security vulnerabilities**: 1.28 nodes are missing ~3 years of security patches
+- **Support limitations**: This configuration is outside GKE's support matrix
 
-## Recovery plan
+## Immediate Assessment
 
-You cannot skip directly from 1.28 to 1.31 in a single upgrade - you must do sequential upgrades within the 2-version skew limit.
-
-### Option 1: Sequential skip-level upgrades (recommended)
-
-Upgrade the node pool in two jumps, staying within supported skew:
+First, let's understand your current state:
 
 ```bash
-# Step 1: 1.28 → 1.30 (2-version skip, within skew limit)
-gcloud container node-pools upgrade NODE_POOL_NAME \
-  --cluster CLUSTER_NAME \
+# Check all versions
+gcloud container clusters describe CLUSTER_NAME \
   --zone ZONE \
-  --node-version 1.30.8-gke.1568000
+  --format="table(name, currentMasterVersion, nodePools[].name, nodePools[].version)"
 
-# Wait for completion, then Step 2: 1.30 → 1.31
-gcloud container node-pools upgrade NODE_POOL_NAME \
-  --cluster CLUSTER_NAME \
+# Check release channel and auto-upgrade status
+gcloud container clusters describe CLUSTER_NAME \
   --zone ZONE \
-  --node-version 1.31.4-gke.1575000
+  --format="value(releaseChannel.channel)"
+
+# Check for any maintenance exclusions blocking upgrades
+gcloud container clusters describe CLUSTER_NAME \
+  --zone ZONE \
+  --format="yaml(maintenancePolicy)"
+
+# Verify node pool is healthy (before we touch it)
+kubectl get nodes -l cloud.google.com/gke-nodepool=NODE_POOL_NAME
 ```
 
-### Option 2: Create new node pool (faster recovery)
+## Recovery Options
 
-If you need to minimize risk or the old pool has other issues:
+### Option A: Skip-Level Upgrade (Recommended)
+
+Since you're within the 3-version limit, you can use GKE's skip-level upgrade to jump directly from 1.28 → 1.30 or 1.28 → 1.31:
 
 ```bash
-# Create new node pool at 1.31
-gcloud container node-pools create POOL_NAME-v131 \
+# Upgrade node pool directly to 1.31 (2-version skip)
+gcloud container node-pools upgrade NODE_POOL_NAME \
   --cluster CLUSTER_NAME \
   --zone ZONE \
-  --node-version 1.31.4-gke.1575000 \
+  --cluster-version 1.31.PATCH_VERSION
+
+# Or safer: upgrade to 1.30 first, then 1.31
+gcloud container node-pools upgrade NODE_POOL_NAME \
+  --cluster CLUSTER_NAME \
+  --zone ZONE \
+  --cluster-version 1.30.PATCH_VERSION
+```
+
+**Skip-level constraints:**
+- Must stay within 2 minor versions of control plane (1.28→1.30 ✓, 1.28→1.31 ✓)
+- Cannot skip to unsupported versions
+- Some workloads may need compatibility validation across the gap
+
+### Option B: Create New Node Pool + Migration
+
+If the skip-level upgrade seems too risky or you have workloads sensitive to the version jump:
+
+```bash
+# Create new node pool at current control plane version
+gcloud container node-pools create NODE_POOL_NAME-new \
+  --cluster CLUSTER_NAME \
+  --zone ZONE \
+  --cluster-version 1.31.PATCH_VERSION \
+  --num-nodes NUM_NODES \
   --machine-type MACHINE_TYPE \
-  --num-nodes NUM_NODES
+  --disk-size DISK_SIZE
 
-# Cordon old pool
-kubectl cordon -l cloud.google.com/gke-nodepool=OLD_POOL_NAME
+# Cordon old node pool
+kubectl cordon -l cloud.google.com/gke-nodepool=NODE_POOL_NAME
 
-# Drain workloads (may take time depending on PDBs)
-kubectl drain NODE_NAME --ignore-daemonsets --delete-emptydir-data
+# Drain workloads (this will reschedule to new pool)
+kubectl drain NODE_NAME --ignore-daemonsets --delete-emptydir-data --grace-period=300
 
-# Delete old pool once workloads migrated
-gcloud container node-pools delete OLD_POOL_NAME \
+# After all workloads migrate, delete old pool
+gcloud container node-pools delete NODE_POOL_NAME \
   --cluster CLUSTER_NAME \
   --zone ZONE
 ```
 
-## Pre-flight checks
+## Pre-Upgrade Checklist
 
-Before starting either approach:
+Before proceeding with either option:
+
+- [ ] **Remove any maintenance exclusions** that might be blocking auto-upgrades
+- [ ] **Check for deprecated API usage**: `kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated`
+- [ ] **Verify PDBs won't block drain**: `kubectl get pdb -A -o wide` (look for ALLOWED DISRUPTIONS = 0)
+- [ ] **No bare pods**: `kubectl get pods -A -o json | jq -r '.items[] | select(.metadata.ownerReferences | length == 0)'`
+- [ ] **Backup stateful workloads** if any exist on the 1.28 node pool
+- [ ] **Configure appropriate surge settings** for the upgrade:
+  ```bash
+  # Conservative settings for version-skewed pools
+  gcloud container node-pools update NODE_POOL_NAME \
+    --cluster CLUSTER_NAME \
+    --zone ZONE \
+    --max-surge-upgrade 1 \
+    --max-unavailable-upgrade 0
+  ```
+
+## Recovery Runbook
+
+### Step 1: Enable auto-upgrades and remove blocks
 
 ```bash
-# Check available versions
-gcloud container get-server-config --zone ZONE \
-  --format="yaml(channels)"
-
-# Check for deprecated API usage (major upgrade blocker)
-kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated
-
-# Verify workload readiness
-kubectl get pdb -A
-kubectl get pods -A | grep -v Running
-```
-
-## Recommended settings for the upgrade
-
-Since you're catching up from a severely skewed state:
-
-```bash
-# Conservative surge settings to minimize disruption
-gcloud container node-pools update NODE_POOL_NAME \
-  --cluster CLUSTER_NAME \
+# Check if you're on "No channel" (common cause of this situation)
+gcloud container clusters describe CLUSTER_NAME \
   --zone ZONE \
-  --max-surge-upgrade 1 \
-  --max-unavailable-upgrade 0
-```
+  --format="value(releaseChannel.channel)"
 
-## Prevention for the future
-
-To avoid this situation recurring:
-
-1. **Enable auto-upgrades** or use maintenance exclusions to control timing, not freeze indefinitely
-2. **Set up monitoring** for version skew warnings
-3. **Use release channels** (Regular or Stable) instead of pinning to specific versions
-4. **Configure maintenance windows** for predictable upgrade timing
-
-```bash
-# Example: Move to Regular channel with maintenance window
+# If "No channel", migrate to Regular channel first
 gcloud container clusters update CLUSTER_NAME \
   --zone ZONE \
-  --release-channel regular \
-  --maintenance-window-start "2024-01-06T02:00:00Z" \
-  --maintenance-window-end "2024-01-06T06:00:00Z" \
-  --maintenance-window-recurrence "FREQ=WEEKLY;BYDAY=SA"
+  --release-channel regular
+
+# Remove any maintenance exclusions blocking upgrades
+gcloud container clusters update CLUSTER_NAME \
+  --zone ZONE \
+  --clear-maintenance-exclusions
 ```
 
-## Next steps
+### Step 2: Execute the upgrade
 
-1. **Immediate**: Execute the sequential upgrade plan above
-2. **Short-term**: Configure proper maintenance controls to prevent future skew  
-3. **Long-term**: Consider why this node pool got stuck - was auto-upgrade disabled? PDB blocking drain? Resource constraints?
+**If using skip-level (Option A):**
+```bash
+# Skip-level upgrade 1.28 → 1.30
+gcloud container node-pools upgrade NODE_POOL_NAME \
+  --cluster CLUSTER_NAME \
+  --zone ZONE \
+  --cluster-version 1.30.LATEST_PATCH
 
-The sequential skip-level approach (Option 1) is usually faster than creating a new pool, but either works. The key is staying within the 2-version skew constraint during the recovery process.
+# Monitor progress
+watch 'kubectl get nodes -o wide -l cloud.google.com/gke-nodepool=NODE_POOL_NAME'
+```
+
+**If creating new pool (Option B):**
+Follow the commands in Option B above.
+
+### Step 3: Validate
+
+```bash
+# Confirm all nodes at supported versions
+gcloud container node-pools list --cluster CLUSTER_NAME --zone ZONE
+
+# Check workload health
+kubectl get pods -A | grep -v Running | grep -v Completed
+
+# Verify no version skew warnings
+kubectl get events -A --field-selector reason=NodeSkew
+```
+
+## Prevention
+
+To avoid this situation in the future:
+
+1. **Stay on release channels** (not "No channel") with auto-upgrades enabled
+2. **Use maintenance windows** to control timing, not maintenance exclusions to freeze versions
+3. **Set up monitoring** for version skew:
+   ```bash
+   # Enable cluster notifications for EoS warnings
+   gcloud container clusters update CLUSTER_NAME \
+     --zone ZONE \
+     --enable-network-policy \
+     --notification-config=topic=projects/PROJECT_ID/topics/gke-cluster-upgrades
+   ```
+4. **Regular upgrade cadence**: Don't let node pools fall more than 1 minor version behind
+
+## Troubleshooting
+
+If the skip-level upgrade fails:
+- **Check resource constraints**: `kubectl top nodes`
+- **Look for stuck PDBs**: `kubectl get pdb -A -o wide`
+- **Monitor upgrade progress**: `gcloud container operations list --cluster CLUSTER_NAME --zone ZONE`
+
+The 1.28 → 1.30/1.31 jump crosses significant Kubernetes changes, so test critical workloads carefully after the upgrade completes.
+
+**Critical warning**: Don't delay this fix. GKE will force-upgrade 1.28 nodes to the next supported version automatically once EoS enforcement kicks in, and that forced upgrade may be more disruptive than a planned one.

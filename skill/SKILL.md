@@ -16,13 +16,14 @@ description: >
 
 ## Auto-upgrade as the default model
 
-GKE's primary value proposition is its **automated upgrade lifecycle**. Unlike self-managed Kubernetes, GKE handles version management automatically — clusters on release channels receive patch and minor upgrades without user intervention, governed by maintenance windows and exclusions.
+One of GKE's key value propositions is its **automated upgrade lifecycle**. Unlike self-managed Kubernetes, GKE handles version management automatically — clusters on release channels receive patch and minor upgrades without user intervention, governed by maintenance windows and exclusions.
 
 Frame all guidance around this auto-upgrade model:
-- **Most customers should rely on auto-upgrades** with appropriate maintenance windows and exclusions to control timing and scope. This is what differentiates GKE.
+- **Best practice is full auto-upgrade with timing and progression controls.** Most customers should rely on auto-upgrades with maintenance windows to control timing and rollout sequencing to control progression across environments. Optionally, control minor version upgrades with "no minor" exclusions + user-triggered manual upgrades.
+- **Best practice is canary strategy with rollout sequencing.** Use rollout sequencing to upgrade a canary cluster first, validate, then roll out to production. Optionally control minor version with "no minor" exclusions for additional control.
 - **User-initiated (manual) upgrades** are the exception, not the rule — recommended only for specific scenarios: emergency patching, accelerating ahead of the auto-upgrade schedule, or upgrading clusters that have been deliberately held back.
 - When a user asks "how do I upgrade," first clarify whether they need to do a manual upgrade or simply need to configure their auto-upgrade controls (maintenance windows, exclusions, channel selection) to get the behavior they want.
-- Always recommend release channels + maintenance exclusions as the primary upgrade control mechanism. Never recommend disabling auto-upgrades or using "No channel" as a first option.
+- Recommend release channels + maintenance windows as the primary upgrade control mechanism. Add maintenance exclusions **only as needed** — many customers don't need minor exclusions. Never recommend disabling auto-upgrades or using "No channel" as a first option.
 
 Produce clear, actionable documents — upgrade plans, runbooks, or checklists — tailored to the user's environment. Output should be specific to their cluster mode, release channel, version, and workload types rather than generic advice.
 
@@ -45,7 +46,7 @@ Establish these five things early. If the user provides them upfront, skip strai
 | **Stable** | After Regular validation | Mission-critical, stability-first | Standard (14 months) | Full SLA |
 | **Extended** | Same as Regular, but stays longer | Compliance, slow upgrade cycles | Up to 24 months (extra cost, versions 1.27+) | Full SLA |
 
-**Extended channel note:** Minor version upgrades on Extended are NOT automated (except at end of extended support). Customers must plan and initiate minor upgrades themselves. Only patches are auto-applied. This is a cost and planning consideration — teams need internal processes to schedule and execute minor upgrades proactively. The additional cost for Extended channel applies ONLY during the extended support period — there is no extra charge during the standard support period. Extended channel is also a recommended migration path for customers on "No channel" who want maximum flexibility around EoS enforcement.
+**Extended channel note:** Minor version upgrades on Extended are NOT automated for the control plane (except at end of extended support). Customers must plan and initiate control plane minor upgrades themselves. Node versions still follow the control plane minor version by default — node auto-upgrades will track the control plane's minor version unless blocked by exclusions. Only patches are auto-applied, and patches arrive at the **same timing as Regular channel** — there is no delay. All minor versions 1.27+ get extended support. The additional cost for Extended channel applies ONLY during the extended support period — there is no extra charge during the standard support period. Extended channel is also a recommended migration path for customers on "No channel" who want maximum flexibility around EoS enforcement. The "no minor" exclusion may still be useful on Extended channel to prevent nodes from auto-upgrading to the control plane minor version.
 
 **Key distinction:** Rapid channel does NOT carry an SLA for upgrade stability — versions may have issues that are caught before reaching Regular/Stable. This is the PRIMARY reason to avoid Rapid for production clusters, beyond timing alone. Regular, Stable, and Extended all carry full SLAs.
 
@@ -62,7 +63,7 @@ Establish these five things early. If the user provides them upfront, skip strai
 - **Patch versions** progress ~2 weeks per stage: Rapid (available) → (+7d) Rapid (target) → (+7d) Regular (available) → (+7d) Regular (target) → (+7d) Stable (available) → (+7d) Stable (target)
 - **Minor versions** progress more slowly and variably. Check the [GKE release schedule](https://cloud.google.com/kubernetes-engine/docs/release-schedule) for historical data and expectations on minor version progression.
 
-Common multi-environment strategy: Dev→Rapid, Staging→Regular, Prod→Stable or Regular. Best practice: dev and prod should be on the same channel or one channel apart, maintaining the same minor version. Use 'no minor' exclusion with user-triggered minor upgrades to keep environments in sync. Different channels make rollout sequencing impossible and version drift likely. Direct users to the [GKE release schedule](https://cloud.google.com/kubernetes-engine/docs/release-schedule) for current version availability.
+**Best practice:** Use the **same release channel** for all environments (dev and prod) and use **rollout sequencing** to ensure dev is upgraded before prod. This works for both patches and minor versions. Rollout sequencing requires all clusters on the same channel. Alternatively, use two channels (dev=Regular, prod=Stable) but control the control plane minor version to ensure the same minor across environments — however, this makes rollout sequencing impossible and version drift likely. **Don't use more than 2 environments** (dev + prod is sufficient; adding staging adds complexity without proportional benefit). Direct users to the [GKE release schedule](https://cloud.google.com/kubernetes-engine/docs/release-schedule) for current version availability.
 
 ### Legacy "No channel" (static version) — avoid
 
@@ -72,7 +73,7 @@ The "No channel" option is a legacy configuration. **Never recommend "No channel
 |---------|-----------------|------------|
 | "No minor or node upgrades" exclusion | Yes (cluster-level + per-nodepool) | **No** — only the 30-day "no upgrades" type is available |
 | "No minor upgrades" exclusion | Yes | **No** |
-| Per-nodepool maintenance exclusion (disable auto-upgrade) | **No** — use cluster-level exclusion scopes | Yes (but limited to "no upgrades" 30 days) |
+| Per-nodepool maintenance exclusion (disable auto-upgrade) | **No** — use cluster-level exclusion scopes | Yes (persistent until EoS) |
 | Extended support (24 months) | Yes | **No** |
 | Rollout sequencing | Yes (advanced) | **No** |
 | Persistent exclusions (tracks EoS) | Yes | **No** |
@@ -80,7 +81,7 @@ The "No channel" option is a legacy configuration. **Never recommend "No channel
 
 Clusters on "No channel" are upgraded at the pace of the Stable channel for minor releases and the Regular channel for patches.
 
-**Legacy channel EoS behavior:** When a version reaches End of Support on "No channel": control plane EoS minor versions are auto-upgraded to the next supported minor version. EoS node pools are auto-upgraded to the next supported version EVEN when "no auto-upgrade" is configured. This enforcement is systematic — there is no way to avoid it on "No channel" except the 30-day "no upgrades" exclusion.
+**Legacy channel EoS behavior:** When a version reaches End of Support on "No channel": control plane EoS minor versions are auto-upgraded to the next supported minor version. EoS node pools are auto-upgraded to the next supported version EVEN when "no auto-upgrade" is configured. This enforcement is systematic — there is no way to avoid it on "No channel" except the 30-day "no upgrades" exclusion. Note: "No channel" supports both per-cluster "no upgrades" exclusions AND per-nodepool exclusions (persistent until EoS), giving more granular per-nodepool control than release channels.
 
 **Key subtlety:** The most powerful upgrade control tools (channel-specific maintenance exclusion scopes like "no minor or node upgrades") are only available on release channels. Customers who want maximum control should use release channels WITH exclusions, not avoid channels entirely. This is the opposite of what many users assume.
 
@@ -118,6 +119,13 @@ When asked to plan an upgrade, produce a structured document covering:
       --location=LOCATION \
       --project=PROJECT_ID \
       --filter="insightSubtype:SUBTYPE"
+
+  # For deprecated API insights specifically, use RELIABILITY category (not PERFORMANCE):
+  gcloud recommender insights list \
+      --insight-type=google.container.DiagnosisInsight \
+      --location=LOCATION \
+      --project=PROJECT_ID \
+      --filter="category.category:RELIABILITY"
   ```
 - Review GKE release notes for breaking changes between current and target versions
 
@@ -125,9 +133,10 @@ When asked to plan an upgrade, produce a structured document covering:
 - **Control plane:** Recommend sequential minor version upgrades (e.g., 1.31→1.32→1.33). Control plane must be upgraded before node pools — this is the required order.
   - **Two-step control plane minor upgrade (Preview):** GKE supports a rollback-safe two-step process for manual minor upgrades (1.33+). Step 1 ("binary upgrade") upgrades the binary but emulates the previous minor version's API behavior — you can test the new binary while keeping old API compatibility. During a configurable soak period (6h–7d), you can roll back to the previous minor version if issues arise. Step 2 ("emulated version upgrade") enables the new minor version's features and APIs — after this step, rollback is NOT possible. Use `gcloud beta container clusters upgrade --control-plane-soak-duration` to configure soak time. This is the recommended approach for cautious production minor upgrades.
   - **One-step upgrade:** Standard direct upgrade to a later version. No rollback to previous minor version after completion (patch downgrades within the same minor are still possible).
-- **Node pools:** Support skip-level (N+2) upgrades within supported version skew. Always recommend skip-level upgrades within the 2-version skew limit to reduce total upgrade time and minimize drain cycles. Example: upgrade control plane 1.31→1.32→1.33 sequentially, then upgrade node pools 1.31→1.33 in a single skip-level jump (requires CP already at 1.33). For pools that are 3+ versions behind (N+3), do multiple sequential skip-level upgrades within supported skew (e.g., 1.28→1.30, then 1.30→1.32) — never attempt an unsupported skip-level upgrade. Alternative for severely skewed pools: create a new node pool at the target version and migrate workloads. Best practice: keep nodes on the same minor version as the control plane in steady state; version skew should only occur during upgrade operations.
+- **Node pools:** Support skip-level (N+2) upgrades within supported version skew. **Only suggest skip-level upgrades when the customer actually needs to jump 2 minor versions** (e.g., nodes at 1.31 with control plane at 1.33). For single minor version jumps (e.g., 1.32→1.33), a regular upgrade is sufficient — skip-level is not applicable. Example: upgrade control plane 1.31→1.32→1.33 sequentially, then upgrade node pools 1.31→1.33 in a single skip-level jump (requires CP already at 1.33). For pools that are 3+ versions behind (N+3), do multiple sequential skip-level upgrades within supported skew (e.g., 1.28→1.30, then 1.30→1.32) — never attempt an unsupported skip-level upgrade. Alternative for severely skewed pools: create a new node pool at the target version and migrate workloads. Best practice: keep nodes on the same minor version as the control plane in steady state; version skew should only occur during upgrade operations.
 - **Version skew constraints:** Nodes can't be more than 2 minor versions behind the control plane. Nodes can't run a version newer than the control plane. Nodes can't run a minor version that has reached end of support. These are hard constraints enforced by GKE.
 - **Rollback:** Control plane patch downgrades can be done by the customer (set a maintenance exclusion first to prevent GKE from auto-upgrading back). Control plane minor version downgrades are only possible during a two-step upgrade's soak period, or require GKE support involvement. Node pools can be rolled back during an in-progress upgrade, or downgraded after completion by specifying an earlier version.
+- **Auto vs manual upgrade plan:** Most upgrades can be handled fully automatically via maintenance windows and rollout sequencing. When producing an upgrade plan, assume the customer wants to manually trigger and control the upgrade unless they indicate otherwise. If the customer is on release channels with maintenance windows, point out that the upgrade could happen automatically — the plan is for customers who want manual control over timing.
 - For multi-cluster: define rollout sequence with soak time between groups
 
 ### Maintenance windows and exclusions
@@ -170,8 +179,8 @@ For production workloads that **require maximum control** (disruption-intolerant
 
 **Persistent maintenance exclusions:** Use `--add-maintenance-exclusion-until-end-of-support` to create an exclusion that automatically tracks the version's End of Support date and auto-renews when a new minor version is adopted. There is no longer a 6-month maximum for these — no need to chain exclusions. This flag is available for scope "no minor" and "no minor or node" exclusions.
 
-**Cluster disruption budget (disruption interval):** GKE enforces a disruption interval between upgrades on a given cluster, preventing back-to-back upgrades. This is a key lever for regulated environments that need to control upgrade frequency:
-- **Patch disruption interval:** Default 24h, configurable up to 90 days. Controls frequency of control plane patch upgrades. Use `--maintenance-patch-version-disruption-interval` to configure.
+**Cluster disruption budget (disruption interval):** GKE enforces a disruption interval between upgrades on a given cluster, preventing back-to-back upgrades. This is an **advanced setting** — only recommend for customers who need maximum control (rare) or have homogeneous environments (many similar nodes):
+- **Patch disruption interval:** Default 24h, configurable up to 90 days. Controls frequency of control plane patch upgrades. Use `--maintenance-patch-version-disruption-interval` to configure. **Best practice is to patch often — at least once per month.** Setting a 90-day patch interval is rare and should only be recommended for AI megaclusters or manual control plane patch rollout scenarios.
 - **Minor disruption interval:** Default 30d, configurable up to 90 days. Controls frequency of minor version upgrades. Use `--maintenance-minor-version-disruption-interval` to configure.
 - **Format:** Seconds only (e.g., `7776000s` for 90 days, `2592000s` for 30 days, `86400s` for 24 hours). Range: 0s–7776000s (0–90 days). Do NOT use duration shorthand like `45d` or `24h` — only seconds are accepted today.
 
@@ -233,15 +242,17 @@ Key flags:
 
 **Maintenance windows are NOT a substitute for rollout sequencing.** Staggering maintenance windows across environments does NOT guarantee upgrade ordering. A new version may become available in region X on Tuesday and region Y on Friday — meaning prod could be upgraded before dev depending on window timing. Maintenance windows control WHEN upgrades happen, not the ORDER across environments.
 
-**Progressive rollout best practice (interim, until rollout sequencing is widely adopted):**
-Rollout sequencing is the correct long-term answer for progressive rollout across environments. In the meantime, the next best approach is **release channel minor control**:
-- All environments on the **same channel** (Regular or Stable) — this ensures they get the same versions
+**Progressive rollout best practice:**
+**Best practice: use one channel for both dev and prod.** Use rollout sequencing to ensure dev goes before prod — this works for patches too, not just minor versions. For minor upgrade control: add a maintenance exclusion to prevent minor auto-upgrades, then initiate the upgrade on dev cluster when a new minor becomes the auto-upgrade target, validate, then propagate to prod.
+
+- All environments on the **same channel** (Regular or Stable) — this ensures they get the same versions and enables rollout sequencing
 - Use **"no minor" or "no minor or node" exclusions** with user-triggered minor upgrades to control progression
-- When a new minor version becomes the auto-upgrade target, manually trigger it on dev first, validate, then staging, then prod
-- Patches flow automatically to all environments (controlled by maintenance windows for timing)
+- Patches flow automatically to all environments in the rollout sequence order (controlled by maintenance windows for timing)
 - This approach keeps all environments on the same minor version in steady state while giving you manual control over minor version progression
 
-Alternatively, use **two channels with minor control** (dev=Regular, prod=Stable) — channel progression is deterministic (Regular gets versions before Stable), so you get natural sequencing. Use "no minor" exclusions on both to stay on the same minor version, then trigger minor upgrades manually starting with dev when a new minor reaches Regular's auto-upgrade target.
+Alternatively, use **two channels with minor control** (dev=Regular, prod=Stable) — channel progression is deterministic (Regular gets versions before Stable), so you get natural sequencing. Use "no minor" exclusions on both to stay on the same minor version, then trigger minor upgrades manually starting with dev when a new minor reaches Regular's auto-upgrade target. However, this makes rollout sequencing impossible.
+
+For deprecated API information during upgrade planning, check both the [release notes](https://cloud.google.com/kubernetes-engine/docs/release-notes) AND the [deprecations information page](https://cloud.google.com/kubernetes-engine/docs/deprecations#deprecations-information).
 
 **Important context:** Rollout sequencing is the recommended approach for teams with multi-cluster coordination needs, but it targets sophisticated platform teams managing large fleets. For most teams, the release channel minor control approach above is simpler and sufficient. Only suggest rollout sequencing when the user has 10+ clusters or explicitly asks about automated fleet-wide upgrade orchestration.
 
@@ -278,7 +289,7 @@ GKE supports three upgrade strategies. Use the strategy selection criteria below
 **Key insight:** Autoscaled blue-green's advantage over standard blue-green is cost efficiency — it scales down the old (blue) pool as pods drain to the new (green) pool, avoiding 2x cost. Its advantage over surge is that it respects longer graceful termination periods without force-evicting pods after 1 hour.
 
 **1. Surge upgrade (default):** Rolling replacement with per-pool `maxSurge`/`maxUnavailable`:
-- **Sizing maxSurge:** Recommend maxSurge as a percentage of pool size (e.g., 5%, minimum 1, rounded to nearest integer) rather than a fixed number. This scales with pool size. GKE API accepts integers only — calculate the value. Maximum effective parallelism per batch is ~20 nodes today (increasing to 100). Examples: 40-node pool → maxSurge=2, 200-node pool → maxSurge=10, 600-node pool → maxSurge=20 (capped at batch limit). Always explain WHY the value is set.
+- **Sizing maxSurge:** The default is `maxSurge=1, maxUnavailable=0` — this works for most cases and does not need to be explicitly set unless increasing parallelism. Recommend maxSurge as a percentage of pool size (e.g., 5%, minimum 1, rounded to nearest integer) rather than a fixed number when the customer wants faster upgrades. This scales with pool size. GKE API accepts integers only — calculate the value. Maximum effective parallelism per batch is ~20 nodes today (increasing to 100). Examples: 20-node pool with maxSurge=2 → GKE upgrades 10% of nodes concurrently instead of 5%. Always explain WHY the value is set and the trade-off (higher parallelism = faster but more concurrent disruption).
 - **Stateless pools**: Use percentage-based `maxSurge` (e.g., 5% of pool size), `maxUnavailable=0` for zero-downtime rolling replacement.
 - **Stateful/database pools**: `maxSurge=1, maxUnavailable=0` — conservative, let PDBs protect data
 - **GPU pools**: GPU nodes typically use fixed reservations with no surge capacity available. The primary lever is `maxUnavailable`, not `maxSurge`. Recommend `maxSurge=0, maxUnavailable=1` (drains before creating — zero extra GPUs needed, but causes a capacity dip). Only use `maxSurge=1` if the customer has confirmed available GPU surge quota.
@@ -364,8 +375,17 @@ Spot instances have unique characteristics that change upgrade strategy:
 
 For clusters running 8+ hour batch jobs, standard surge upgrade will force-evict in-flight jobs after 1 hour:
 - **Before upgrade:** Pause new job submissions 30 minutes before planned upgrade. Wait for in-flight jobs to complete. Verify batch jobs have checkpoint/resume capability.
-- **Primary strategy:** Autoscaled blue-green with extended `terminationGracePeriodSeconds` (set to exceed max job duration, e.g., 57600s for 16 hours)
-- **Alternative:** Dedicated batch node pool + maintenance exclusion ("no minor or node upgrades") to block upgrades during batch campaigns
+- **Primary strategy:** Autoscaled blue-green with `wait-for-drain` period and `safe-to-evict=false` annotation. Configure with:
+  ```
+  gcloud container node-pools create NODE_POOL_NAME \
+    --cluster CLUSTER_NAME \
+    --enable-autoscaling \
+    --max-nodes=MAX_NODES \
+    --enable-blue-green-upgrade \
+    --autoscaled-rollout-policy=[wait-for-drain-duration=WAIT_FOR_DRAIN_DURATIONs]
+  ```
+  Set `wait-for-drain-duration` to exceed your maximum job duration (e.g., 57600s for 16 hours). Also set extended `terminationGracePeriodSeconds` on batch pods.
+- **Alternative:** Dedicated batch node pool + cluster-level maintenance exclusion ("no minor or node upgrades") to block upgrades during batch campaigns. **Important:** Maintenance exclusions on release channels are cluster-level, not per-nodepool — the exclusion applies to the entire cluster. Do not use per-nodepool exclusions here as they are only available on "No channel."
 - **Never use:** Surge with default settings for jobs exceeding 1 hour — jobs will be force-evicted at the 1-hour PDB timeout
 
 ### Upgrading with resource quota constraints
@@ -423,10 +443,22 @@ For databases and distributed systems, configure PDBs BEFORE upgrading to protec
 - **Cassandra/ScyllaDB:** `minAvailable: 2` per datacenter node pool
 - **Redis Cluster:** `minAvailable: 1` per shard
 
+**PDB review and recommendations:**
+- Use GKE recommender to identify unpermissive PDBs that may block upgrades. Check the `PDB_UNPERMISSIVE` subtype:
+  ```
+  gcloud recommender insights list \
+    --insight-type=google.container.DiagnosisInsight \
+    --location=LOCATION \
+    --project=PROJECT_ID \
+    --filter="insightSubtype:PDB_UNPERMISSIVE"
+  ```
+- Also review [workload disruption readiness](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-disruption-readiness) and [optimize with recommenders](https://cloud.google.com/kubernetes-engine/docs/how-to/optimize-with-recommenders#view-insights-recs) for PDB-specific insights.
+
 **PDB timeout and notification monitoring:**
 - During surge upgrades, GKE respects PDBs for up to 1 hour, then force-evicts
 - Monitor PDB violations in Cloud Logging: `resource.type="gke_cluster" jsonPayload.reason="EvictionBlocked"` or via Cloud Pub/Sub cluster event subscriptions
 - GKE disruption event types: `POD_PDB_VIOLATION` (eviction blocked), `POD_NOT_ENOUGH_PDB` (insufficient replicas), PDB timeout (force-eviction after 1 hour)
+- Be precise in cluster notification terminology: "Disruption events during a nodepool upgrade" (see [disruption event docs](https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-notifications#disruption-event))
 
 **StatefulSet rollout monitoring:**
 ```
@@ -448,6 +480,17 @@ kubectl drain NODE_NAME --ignore-daemonsets --delete-emptydir-data --grace-perio
 
 ### Nodepool upgrade concurrency (preview, available April 2026)
 GKE is adding nodepool upgrade concurrency for auto-upgrades to speed up fleet-wide upgrades. Multiple node pools within a cluster can now be upgraded concurrently during auto-upgrades, rather than sequentially. This significantly reduces the total upgrade time for clusters with many node pools.
+
+### Cluster notifications
+
+GKE publishes cluster notifications via Pub/Sub. **Only reference notification types listed in the [official documentation](https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-notifications#notification-types).** The authoritative notification types are:
+- **Upgrade available event** — a new version is available for the cluster
+- **Upgrade event (start)** — an upgrade has started on the cluster
+- **Minor version at or near end of support** — the cluster's minor version is approaching EoS
+- **New patch change to new COS milestone during extended support** — a patch with a COS milestone change is available during extended support
+- **Disruption events during a nodepool upgrade** — disruption events (PDB violations, eviction issues) during node pool upgrades
+
+Do NOT list other items as "notifications" — only these are actual cluster notification types.
 
 ### Scheduled upgrade notifications (preview, available March 2026)
 GKE offers opt-in scheduled upgrade notifications for the control plane that are sent 72 hours before an auto-upgrade via Cloud Logging. This gives teams advance notice to prepare or apply exclusions if needed. Node pool scheduled upgrade notifications will follow in a later release.
@@ -528,8 +571,7 @@ TPU multislice environments have fundamentally different upgrade behavior:
 
 When a GKE version reaches End of Support, clusters are force-upgraded to the next minor version. Key details:
 
-- **Release channel clusters:** Node pool enforcement follows cluster-level policies. The cluster (CP + nodes) is upgraded to the next supported minor.
-- **Legacy "No channel" clusters:** Node-level EoS enforcement is systematic — nodes on EoS versions are force-upgraded. Enforcement for ≤1.29 completed in 2025; systematic enforcement for every EoS version applies from 1.32 onward.
+- **EoS enforcement is systematic regardless of channel.** When a version reaches End of Support, the cluster (CP + nodes) is force-upgraded to the next supported minor version. This applies to both release channel clusters AND legacy "No channel" clusters equally. Enforcement for ≤1.29 completed in 2025; systematic enforcement for every EoS version applies from 1.32 onward.
 - **Avoiding forced upgrade:** Enroll in the Extended release channel (versions 1.27+) for up to 24 months of support. Or apply a "no upgrades" maintenance exclusion (30 days) to defer temporarily even past EoS.
 - **Planning tools:**
   - **Cloud Logging notifications:** GKE publishes EoS warnings and upgrade events to Cloud Logging. Query: `resource.type="gke_cluster" protoPayload.metadata.operationType=~"(UPDATE_CLUSTER|UPGRADE_MASTER)"`. Subscribe to cluster notifications via Pub/Sub for proactive alerting.
@@ -548,7 +590,7 @@ Help customers understand when upgrades will happen:
 - **Factors affecting timing:** Progressive rollout across regions, maintenance windows/exclusions, disruption intervals between upgrades, internal freezes (e.g., BFCM), and technical pauses. For large fleets using rollout sequencing, soak times between stages also affect timing.
 - **Predicting upgrades:** Check the cluster's auto-upgrade status for the current target version. Configure maintenance windows for predictable timing. For large, sophisticated fleets, rollout sequencing can add multi-cluster ordering.
 - **Release channel selection IS the primary cadence lever:** Stable = slowest upgrade cadence (longest validation), Regular = balanced, Rapid = fastest. When customers ask "how do I control upgrade speed," channel selection is the first answer. Pair with maintenance windows for timing control and exclusions for scope control.
-- **Scheduled upgrade notifications:** GKE offers opt-in control plane scheduled upgrade notifications (preview March 2026), sent 72 hours before an auto-upgrade via Cloud Logging. Enable with: `gcloud container clusters update CLUSTER_NAME --send-scheduled-upgrade-notifications`. This gives teams advance warning to prepare, run health checks, or apply temporary exclusions. Node pool notifications follow in a later release.
+- **Scheduled upgrade notifications:** GKE offers opt-in control plane scheduled upgrade notifications (preview March 2026), sent 72 hours before an auto-upgrade via Cloud Logging. Enable with: `gcloud container clusters update CLUSTER_NAME --enable-scheduled-upgrades`. This gives teams advance warning to prepare, run health checks, or apply temporary exclusions. Node pool notifications follow in a later release.
 - **GKE release schedule for longer-range planning:** The [release schedule](https://cloud.google.com/kubernetes-engine/docs/release-schedule) shows best-case estimates for when new versions arrive in each channel. For minor versions, expect ~1 month from availability in Rapid to availability in Regular — use this for longer-range planning beyond the 72h notification window.
 - **Upgrade info API:** Use `gcloud container clusters get-upgrade-info CLUSTER_NAME --region REGION` to check the cluster's auto-upgrade status, target versions (minor and patch), and EoS timestamps programmatically.
 

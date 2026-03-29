@@ -3,42 +3,42 @@
     {
       "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
       "passed": true,
-      "reason": "Response clearly states 'GKE's maximum supported skew of 2 minor versions' and explains the current skew of 3 minor versions is unsupported"
+      "reason": "Response clearly states 'GKE's maximum supported skew of 2 minor versions' and explains that 1.28 nodes are '3 minor versions behind your 1.31 control plane, which exceeds GKE's maximum supported skew'"
     },
     {
       "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (nodes must be within 2 minor versions of control plane)",
       "passed": true,
-      "reason": "Response explicitly states 'Version skew: 3 minor versions (unsupported)' and identifies this as exceeding the 2-version limit"
+      "reason": "Response explicitly identifies this as a 'critical version skew violation' and states that 1.28 nodes are '3 minor versions behind your 1.31 control plane, which exceeds GKE's maximum supported skew of 2 minor versions'"
     },
     {
       "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
       "passed": true,
-      "reason": "Response lists specific risks including 'Kubernetes API compatibility issues - 1.28 kubelet may not properly communicate with 1.31 API server' and 'workload scheduling problems'"
+      "reason": "Response warns about 'API compatibility issues: Some 1.31 control plane APIs may not work with 1.28 nodes', security vulnerabilities, and support limitations. Also mentions workload compatibility concerns throughout"
     },
     {
       "expectation": "Recommends skip-level (N+2) node pool upgrades within supported version skew to reduce time and disruption. For the N+3 gap (1.28 with 1.31 CP), recommends multiple sequential skip-level upgrades within supported skew (e.g., 1.28\u21921.30 then 1.30\u21921.31) or creating a new node pool at the target version and migrating workloads. Never recommends an unsupported skip-level upgrade.",
-      "passed": true,
-      "reason": "Response provides exactly this approach: 'Sequential skip-level upgrades' doing 1.28\u21921.30 then 1.30\u21921.31, staying within 2-version skew, and also offers the new node pool option. Explicitly states 'You cannot skip directly from 1.28 to 1.31'"
+      "passed": false,
+      "reason": "Response recommends 1.28\u21921.31 as a valid 2-version skip, but this is actually a 3-version gap (1.28\u21921.29\u21921.30\u21921.31). The response incorrectly treats this as within supported skew limits when it should recommend either 1.28\u21921.30 then 1.30\u21921.31, or the new node pool approach"
     },
     {
       "expectation": "Provides gcloud commands for the node pool upgrade steps",
       "passed": true,
-      "reason": "Response includes complete gcloud commands for both sequential upgrades and new node pool creation with specific command syntax and parameters"
+      "reason": "Response provides detailed gcloud commands for both skip-level upgrades and new node pool creation/migration, including specific command syntax and parameters"
     },
     {
       "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
       "passed": true,
-      "reason": "Response explicitly includes a section with gcloud command setting '--max-surge-upgrade 1 --max-unavailable-upgrade 0' with explanation 'Conservative surge settings to minimize disruption'"
+      "reason": "Response explicitly includes surge settings configuration: 'gcloud container node-pools update ... --max-surge-upgrade 1 --max-unavailable-upgrade 0' with the comment 'Conservative settings for version-skewed pools'"
     },
     {
       "expectation": "Advises monitoring closely between each version bump for issues",
-      "passed": false,
-      "reason": "While the response mentions 'Wait for completion' between upgrades and provides pre-flight checks, it doesn't explicitly advise monitoring closely between each version bump for issues"
+      "passed": true,
+      "reason": "Response includes monitoring commands like 'watch kubectl get nodes' and validation steps, plus troubleshooting section for monitoring upgrade progress and checking for issues"
     },
     {
       "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
       "passed": true,
-      "reason": "Response includes a 'Prevention for the future' section that specifically mentions 'Use release channels (Regular or Stable)' and 'Configure maintenance windows' with example gcloud commands"
+      "reason": "Prevention section explicitly mentions 'Stay on release channels (not \"No channel\") with auto-upgrades enabled' and 'Use maintenance windows to control timing, not maintenance exclusions to freeze versions'"
     }
   ]
 }
