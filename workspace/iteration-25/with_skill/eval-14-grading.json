@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Checks for deprecated API usage that may have changed behavior in 1.30",
+      "passed": false,
+      "reason": "The response checks for deprecated API usage but focuses on 1.31\u21921.32 upgrade, not 1.30 behavior changes"
+    },
+    {
+      "expectation": "Recommends checking admission webhooks \u2014 they may be rejecting or slowing down requests on the new version",
+      "passed": true,
+      "reason": "Response includes detailed admission webhook checks with specific commands and identifies webhooks as potential cause of 503 errors and latency"
+    },
+    {
+      "expectation": "Advises checking if resource requests/limits need adjusting for any system components that changed",
+      "passed": true,
+      "reason": "Response includes checking system component resource usage with 'kubectl top pods -n kube-system' and mentions system components may need more resources"
+    },
+    {
+      "expectation": "Suggests examining kube-system pods for any that are crashlooping or restarting",
+      "passed": true,
+      "reason": "Response includes 'kubectl get pods -n kube-system' and specifically mentions looking for 'crashlooping or frequent restarts'"
+    },
+    {
+      "expectation": "Includes commands to check API server metrics and latency (kubectl get --raw /metrics)",
+      "passed": true,
+      "reason": "Response includes multiple 'kubectl get --raw /metrics' commands to check deprecated API usage and webhook response times"
+    },
+    {
+      "expectation": "Recommends checking if NetworkPolicy or service mesh components need updating for the new version",
+      "passed": true,
+      "reason": "Response includes specific sections on NetworkPolicy changes and Service Mesh Compatibility with commands to check Istio/ASM"
+    },
+    {
+      "expectation": "Advises reviewing pod events for scheduling delays or readiness probe failures",
+      "passed": false,
+      "reason": "While the response includes checking various events, it doesn't specifically mention scheduling delays or readiness probe failures"
+    },
+    {
+      "expectation": "Mentions checking if HPA or VPA are behaving differently on the new version",
+      "passed": true,
+      "reason": "Response includes dedicated HPA/VPA section with commands to check HPA status and VPA recommendations, explicitly mentioning K8s 1.32 may have changed HPA algorithm defaults"
+    }
+  ]
+}

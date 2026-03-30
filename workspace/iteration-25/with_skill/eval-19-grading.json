@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all notification types including 'Scheduled Upgrade Notifications', 'Upgrade Available Event', 'Minor Version at or Near End of Support', and 'Security Patch Notifications'"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response provides clear urgency levels with security patches marked as 'ACCELERATE' for Critical/High CVEs, and 'Upgrade Available Event' marked as 'NONE - Informational only'. Also includes a detailed triage workflow with CRITICAL, HIGH, MEDIUM, LOW classifications"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response explicitly states end-of-life notifications require 'PLAN UPGRADE - Critical' action and provides detailed timeline: '90+ days before EoS: plan upgrade', '30 days: Begin upgrade planning', '7 days: Must upgrade', 'At EoS: Forced upgrade occurs'"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response includes specific checklist for scheduled upgrade notifications: 'Verify timing aligns with maintenance windows', 'Check for conflicting deployments or critical business events', 'Apply no upgrades exclusion if needed', 'Notify stakeholders'"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response specifically addresses this: 'For Critical: Consider manual upgrade ahead of auto-schedule' and categorizes security patches as requiring 'ACCELERATE' action if severity is Critical/High"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response clearly states for 'Upgrade Available Event': 'Action Required: NONE - Informational only' and explains 'Auto-upgrades will handle this automatically' and categorizes as 'LOW (Informational)'"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "Response provides detailed configuration examples including 'gcloud pubsub topics create gke-cluster-notifications', cluster notification configuration, and Cloud Monitoring alert policy examples with specific filters and notification channels"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": true,
+      "reason": "Response mentions 'GKE Security Bulletins, Release Notes' as the source for security patch notifications, indicating release notes as a reference for version changes"
+    }
+  ]
+}

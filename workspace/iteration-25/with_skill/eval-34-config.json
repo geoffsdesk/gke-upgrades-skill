@@ -1,0 +1,19 @@
+{
+  "eval_id": 34,
+  "mode": "with_skill",
+  "iteration": 25,
+  "prompt": "We run a TPU multislice training environment on GKE with 4 TPU v5e slices (each 256 chips) for a large language model. GKE is telling us a maintenance event is coming. What will actually happen to our training job, and how should we prepare?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-03-30T00:28:29.882065+00:00",
+  "input_tokens": 22296,
+  "output_tokens": 1192,
+  "time_seconds": 27.89,
+  "skill_files": [
+    "skill/SKILL.md",
+    "skill/evals/evals.json",
+    "skill/references/checklists.md",
+    "skill/references/runbook-template.md",
+    "skill/references/troubleshooting.md"
+  ]
+}

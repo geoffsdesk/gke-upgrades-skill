@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the difference between Rapid and Stable channels \u2014 including that Rapid has no SLA for upgrade stability while Stable carries a full SLA, and clearly distinguishes minor version vs patch version differences between the channels",
+      "passed": false,
+      "reason": "The response mentions release cadence differences but fails to explain SLA differences between channels or distinguish between minor version vs patch version differences"
+    },
+    {
+      "expectation": "Notes that channel changes don't trigger an immediate upgrade or downgrade",
+      "passed": false,
+      "reason": "The response doesn't explicitly state that channel changes don't trigger immediate upgrades or downgrades"
+    },
+    {
+      "expectation": "Warns that if 1.30 isn't yet available on Stable, the cluster may not receive patches until Stable catches up",
+      "passed": false,
+      "reason": "The response doesn't warn about potential gap in patch availability if the current version isn't available on Stable channel"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "Provides the correct gcloud container clusters update command with --release-channel stable flag"
+    },
+    {
+      "expectation": "Recommends checking version availability on Stable before switching (gcloud container get-server-config)",
+      "passed": true,
+      "reason": "Explicitly recommends checking current Stable version and provides the gcloud container get-server-config command"
+    },
+    {
+      "expectation": "Discusses the impact on auto-upgrade timing going forward",
+      "passed": true,
+      "reason": "Mentions the change in release cadence from every 2-4 weeks to every 2-3 months and describes it as more predictable"
+    },
+    {
+      "expectation": "Mentions that the Extended channel is an option if they need even slower cadence (with cost implications)",
+      "passed": false,
+      "reason": "The response mentions Regular channel as a middle ground but doesn't mention the Extended channel option or its cost implications"
+    },
+    {
+      "expectation": "Advises coordinating the change during a maintenance window",
+      "passed": true,
+      "reason": "Recommends planning maintenance window if cluster recreation is needed and suggests testing in staging first"
+    }
+  ]
+}

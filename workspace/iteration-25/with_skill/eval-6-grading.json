@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the difference between Rapid and Stable channels \u2014 including that Rapid has no SLA for upgrade stability while Stable carries a full SLA, and clearly distinguishes minor version vs patch version differences between the channels",
+      "passed": true,
+      "reason": "Response clearly explains that Rapid has NO SLA for upgrade stability while Stable has full SLA coverage, and distinguishes that security patches arrive at same speed while only minor versions are delayed 4-6 weeks in Stable"
+    },
+    {
+      "expectation": "Notes that channel changes don't trigger an immediate upgrade or downgrade",
+      "passed": true,
+      "reason": "Response explicitly states that the cluster will be 'frozen at 1.32' after migration and won't get minor version auto-upgrades until Stable catches up, indicating no immediate upgrade/downgrade"
+    },
+    {
+      "expectation": "Warns that if 1.30 isn't yet available on Stable, the cluster may not receive patches until Stable catches up",
+      "passed": false,
+      "reason": "The response warns about 1.32 not being available on Stable, but incorrectly states they'll still receive patches. The expectation is about 1.30 and warns patches may not be available, which is contradicted by the response"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "Response provides the exact command: 'gcloud container clusters update CLUSTER_NAME --zone YOUR_ZONE --release-channel stable'"
+    },
+    {
+      "expectation": "Recommends checking version availability on Stable before switching (gcloud container get-server-config)",
+      "passed": true,
+      "reason": "Response provides the exact command 'gcloud container get-server-config --zone YOUR_ZONE --format=\"yaml(channels.STABLE.validVersions)\"' and emphasizes checking version availability multiple times"
+    },
+    {
+      "expectation": "Discusses the impact on auto-upgrade timing going forward",
+      "passed": true,
+      "reason": "Response clearly explains the change from ~2 weeks in Rapid to 4-6 weeks in Stable for new versions, and discusses the overall upgrade cadence changes"
+    },
+    {
+      "expectation": "Mentions that the Extended channel is an option if they need even slower cadence (with cost implications)",
+      "passed": false,
+      "reason": "Response does not mention the Extended channel at all as an alternative option for even slower cadence"
+    },
+    {
+      "expectation": "Advises coordinating the change during a maintenance window",
+      "passed": true,
+      "reason": "Response includes maintenance exclusions and maintenance windows in the migration process, and shows setting up proper maintenance windows post-migration"
+    }
+  ]
+}

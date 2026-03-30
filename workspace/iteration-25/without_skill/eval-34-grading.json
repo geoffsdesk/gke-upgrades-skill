@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": true,
+      "reason": "Response explains that TPU slices will be drained and recreated on new physical hardware, and notes that all 4 slices may not be maintained simultaneously but losing even one slice stops training, implying atomic recreation"
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": true,
+      "reason": "Response explicitly states 'All 4 slices may not be maintained simultaneously, but losing even one slice stops training' and 'multislice training requires all slices to be healthy'"
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "Response clearly states 'Training will halt completely' and 'All in-memory state will be lost', indicating simultaneous interruption"
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": true,
+      "reason": "Response mentions 'TPU v5e-256 availability can be limited' and 'Your slices might not come back immediately' in the post-maintenance section"
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "Response includes 'Force a checkpoint save before the maintenance window' in the pre-maintenance checklist"
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "Response shows checkpoint configuration code and includes restart policies in YAML, plus mentions 'Load from latest checkpoint' in recovery steps"
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": true,
+      "reason": "Response mentions 'Contact Google Cloud Support to reschedule if critical' under Option B: Reschedule Maintenance"
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": true,
+      "reason": "Response mentions 'Maintenance usually happens during your region's maintenance window' and suggests Option A: Controlled Restart to 'Stop training gracefully before maintenance'"
+    }
+  ]
+}

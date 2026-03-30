@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's autoscaled blue-green node pool upgrade strategy as the primary approach for batch workloads \u2014 configured with --enable-autoscaling and --autoscaled-rollout-policy flags (NOT surge parameters). Supports wait-for-drain time, longer graceful termination, and PDB upgrade timeout to let jobs complete",
+      "passed": false,
+      "reason": "The response mentions creating new node pools and migration but does not specifically recommend autoscaled blue-green strategy with --autoscaled-rollout-policy flags or mention wait-for-drain, graceful termination periods, or PDB upgrade timeouts"
+    },
+    {
+      "expectation": "Explains that GKE respects terminationGracePeriodSeconds during pod eviction, but surge upgrades have a max eviction timeout",
+      "passed": false,
+      "reason": "The response does not mention terminationGracePeriodSeconds or explain how GKE handles pod eviction timeouts during surge upgrades"
+    },
+    {
+      "expectation": "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour \u2014 far less than 8-16 hour jobs",
+      "passed": false,
+      "reason": "The response does not mention GKE's default 1-hour pod eviction timeout or explain why this is problematic for 8-16 hour jobs"
+    },
+    {
+      "expectation": "Recommends pausing new batch job submissions before starting the upgrade",
+      "passed": true,
+      "reason": "The response shows using node taints to prevent new job scheduling with 'kubectl taint nodes batch-node-pool upgrade=in-progress:NoSchedule'"
+    },
+    {
+      "expectation": "Advises waiting for in-flight jobs to complete naturally before upgrading their node pool",
+      "passed": true,
+      "reason": "The response includes scripts that check for running jobs and wait for completion before proceeding with upgrades, including 'while [[ $(kubectl get jobs --field-selector status.active=1 --no-headers | wc -l) -gt 0 ]]'"
+    },
+    {
+      "expectation": "Suggests using node affinity or taints to isolate batch workloads on a dedicated node pool",
+      "passed": true,
+      "reason": "The response shows creating dedicated node pools and using nodeSelector with 'cloud.google.com/gke-nodepool: batch-pool-v131' and demonstrates taint usage"
+    },
+    {
+      "expectation": "Recommends upgrading non-batch node pools first while batch jobs complete on the old pool",
+      "passed": true,
+      "reason": "The recommended node pool strategy implies creating new pools with newer versions while keeping batch jobs on existing pools, effectively upgrading non-batch workloads first"
+    },
+    {
+      "expectation": "Does NOT recommend 'No channel' or '--enable-autoupgrade=false' (deprecated) \u2014 uses release channels with maintenance exclusions instead",
+      "passed": false,
+      "reason": "The response does not discuss release channels, maintenance exclusions, or address the deprecated --enable-autoupgrade flag options"
+    }
+  ]
+}

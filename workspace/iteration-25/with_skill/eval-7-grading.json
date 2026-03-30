@@ -1,0 +1,59 @@
+{
+  "assertions": [
+    {
+      "expectation": "Proposes a phased rollout: dev first, then staging, then prod",
+      "passed": true,
+      "reason": "Response clearly outlines Phase 1 (Dev), Phase 2 (Staging), Phase 3 (Production Canary), and Phase 4 (Production Completion) with dev \u2192 staging \u2192 prod progression"
+    },
+    {
+      "expectation": "Includes soak time between environment phases (e.g., 24-48 hours for dev, 1 week for staging before prod)",
+      "passed": true,
+      "reason": "Response includes specific soak times: 2-3 days for dev validation, 3-5 days for staging validation, and 72 hours for production canary monitoring"
+    },
+    {
+      "expectation": "Defines go/no-go criteria between phases (error rates, latency, pod health)",
+      "passed": true,
+      "reason": "Response provides detailed validation checklists including application health, performance metrics, error rates, latency (p95/p99), and customer-facing service stability"
+    },
+    {
+      "expectation": "Recommends sequential control plane upgrades (1.32\u21921.33) with skip-level node pool upgrades where possible",
+      "passed": true,
+      "reason": "Response shows sequential upgrade process: first control plane upgrade, then node pool upgrade after CP completes, with specific gcloud commands"
+    },
+    {
+      "expectation": "Suggests not upgrading all prod clusters simultaneously \u2014 do one or two first as canary",
+      "passed": true,
+      "reason": "Response explicitly recommends upgrading 2 production clusters first as canary, waiting 2-3 days, then upgrading remaining 2 clusters"
+    },
+    {
+      "expectation": "Includes rollback triggers and criteria for halting the rollout",
+      "passed": true,
+      "reason": "Response includes a dedicated rollback plan section with specific triggers and actions, plus mentions blocking progression with exclusions if issues are found"
+    },
+    {
+      "expectation": "Provides a timeline or schedule estimate for the full rollout",
+      "passed": true,
+      "reason": "Response provides detailed timeline with specific dates (January 7-28) and a summary table showing 4-week total duration with weekly phases"
+    },
+    {
+      "expectation": "Mentions maintenance window coordination across clusters",
+      "passed": true,
+      "reason": "Response includes specific maintenance window configurations with different schedules per environment (Tuesday for dev, Wednesday for staging, Saturday for prod)"
+    },
+    {
+      "expectation": "If rollout sequencing is mentioned, notes that all clusters must be on the same channel for it to work",
+      "passed": true,
+      "reason": "Response mentions rollout sequencing and explicitly states 'Since all clusters are on the same Regular channel, you can use GKE's native rollout sequencing'"
+    },
+    {
+      "expectation": "When presenting maintenance windows as an alternative, explicitly notes that windows do NOT guarantee ordering \u2014 upgrades fire based on version availability per region, not environment order. A prod window may fire before dev.",
+      "passed": false,
+      "reason": "While maintenance windows are mentioned for configuration, the response does not explicitly warn that maintenance windows do not guarantee environment ordering or that prod might upgrade before dev"
+    },
+    {
+      "expectation": "Mentions using two different channels with minor version controls (e.g., dev=Regular, prod=Stable with 'no minor' exclusion) as a simpler alternative to rollout sequencing",
+      "passed": false,
+      "reason": "Response does not mention using different channels as an alternative approach - it only covers the scenario where all environments are on Regular channel"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "First step: check the operation status to understand why it failed (gcloud container operations list)",
+      "passed": true,
+      "reason": "Response includes 'gcloud container operations list --cluster CLUSTER_NAME --zone ZONE --filter=\"operationType=UPGRADE_NODES\" --limit=1' to check the actual error from GKE operations"
+    },
+    {
+      "expectation": "Recommends checking events and logs for the specific failure reason",
+      "passed": true,
+      "reason": "Response includes multiple diagnostic commands: checking events with 'kubectl get events -A --field-selector reason=FailedScheduling', checking pods status, and checking PDBs for common failure reasons"
+    },
+    {
+      "expectation": "Explains that the cluster is in a mixed-version state (8 nodes at 1.32, 12 at 1.31) which is within skew policy",
+      "passed": true,
+      "reason": "Response explicitly states 'Your cluster is in a mixed-version state (8 nodes at 1.32, 12 nodes at the old version)' and mentions 'GKE allows nodes within 2 minor versions of the control plane'"
+    },
+    {
+      "expectation": "Notes that the mixed state is functional but not ideal \u2014 workloads can run on both versions",
+      "passed": true,
+      "reason": "Response states 'this is completely valid and functional' and 'your workloads will continue running normally on whichever nodes they're scheduled to'"
+    },
+    {
+      "expectation": "Provides options: retry the upgrade after fixing the root cause, or rollback the 8 upgraded nodes",
+      "passed": true,
+      "reason": "Response provides both options with detailed steps: 'Recommended approach: Retry the upgrade' section and 'Alternative: Rollback (only if retry isn't viable)' section"
+    },
+    {
+      "expectation": "Explains that retrying is usually better than rollback (rolling back means creating a new pool at old version)",
+      "passed": true,
+      "reason": "Response explicitly states 'Retry is simpler than rollback in most cases' and explains rollback involves creating a new pool at old version with detailed commands"
+    },
+    {
+      "expectation": "Addresses the remaining 2 node pools: they can still be upgraded once the failed pool issue is resolved",
+      "passed": true,
+      "reason": "Response includes section 'Your other node pools' stating 'Don't touch them yet. Complete the main workload pool first, then upgrade the others sequentially'"
+    },
+    {
+      "expectation": "Includes commands to diagnose the failure (operation details, node status, pod events)",
+      "passed": true,
+      "reason": "Response includes comprehensive diagnostic commands: gcloud operations list, kubectl get pods, kubectl get events, kubectl get pdb, kubectl get nodes, and commands to check bare pods"
+    }
+  ]
+}
