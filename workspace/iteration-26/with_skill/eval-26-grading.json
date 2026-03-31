@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that clusters on Regular channel will be force-upgraded to the next minor version (1.31) when 1.30 hits EoS",
+      "passed": true,
+      "reason": "Response clearly states that Regular channel clusters will be 'force-upgraded to 1.31' automatically when 1.30 reaches EoS"
+    },
+    {
+      "expectation": "Explains that clusters on Extended channel get up to 24 months of support, so 1.30 EoS is significantly later \u2014 they have more time",
+      "passed": true,
+      "reason": "Response explicitly states Extended channel clusters have 'up to 24 months of support' and won't be force-upgraded when standard support ends"
+    },
+    {
+      "expectation": "Explains that legacy 'No channel' clusters: control plane EoS minor versions are auto-upgraded to next supported minor, AND EoS node pools are force-upgraded even when 'no auto-upgrade' is configured",
+      "passed": true,
+      "reason": "Response states that 'No channel' clusters will be 'force-upgraded to 1.31' just like Regular channel clusters, affecting both control plane and node pools"
+    },
+    {
+      "expectation": "Mentions that a 'no upgrades' maintenance exclusion (30 days) can temporarily defer even EoS force-upgrades",
+      "passed": true,
+      "reason": "Response provides specific command example for 30-day 'no upgrades' exclusion and states it 'works even past EoS'"
+    },
+    {
+      "expectation": "Recommends proactive upgrade planning rather than waiting for EoS enforcement",
+      "passed": true,
+      "reason": "Response includes Option 2 for manual upgrade control and recommends upgrading proactively before EoS enforcement, plus provides action plan with pre-EoS preparation"
+    },
+    {
+      "expectation": "Mentions GKE EoS notifications via Cloud Logging as a planning tool",
+      "passed": false,
+      "reason": "Response does not mention Cloud Logging or EoS notifications as planning tools"
+    },
+    {
+      "expectation": "Mentions the deprecation insights dashboard for checking API compatibility before the forced upgrade",
+      "passed": false,
+      "reason": "Response mentions deprecation checks via kubectl command but does not specifically mention the deprecation insights dashboard"
+    },
+    {
+      "expectation": "Warns that 'snowflaking' (manually freezing versions) should be avoided \u2014 it creates security and reliability risks",
+      "passed": true,
+      "reason": "Response warns against permanent freezing, stating 'No permanent freezing' and explains that version drift accumulation makes upgrades harder and increases blast radius"
+    }
+  ]
+}

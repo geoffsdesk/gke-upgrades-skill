@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": false,
+      "reason": "The response mentions that slices will be shut down and doesn't support live migration, but doesn't explicitly explain the atomic recreation process or clarify that it's not a rolling upgrade"
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": false,
+      "reason": "The response mentions that the multislice training job will fail when slices are shut down, but doesn't specifically warn that maintenance on any single slice triggers restart of all slices"
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "The response clearly states that pods will be evicted, training processes will be terminated, and the multislice training job will fail"
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": false,
+      "reason": "The response mentions 15-60 minute downtime expectations but doesn't explain the potential for extended blocking when insufficient TPU resources are available"
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "The response recommends proactive shutdown with checkpoint saving before maintenance and emphasizes implementing robust checkpointing"
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "The response includes code examples for checkpoint detection on startup and automatic recovery setup"
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": false,
+      "reason": "The response does not mention maintenance exclusions or the ability to defer maintenance events"
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": true,
+      "reason": "The response mentions 'Schedule training jobs considering typical GCP maintenance windows' in the best practices section"
+    }
+  ]
+}

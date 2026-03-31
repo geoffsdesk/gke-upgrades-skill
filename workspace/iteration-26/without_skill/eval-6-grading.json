@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the difference between Rapid and Stable channels \u2014 including that Rapid has no SLA for upgrade stability while Stable carries a full SLA, and clearly distinguishes minor version vs patch version differences between the channels",
+      "passed": false,
+      "reason": "Response mentions update frequency differences but doesn't explain SLA differences or minor vs patch version distinctions between channels"
+    },
+    {
+      "expectation": "Notes that channel changes don't trigger an immediate upgrade or downgrade",
+      "passed": false,
+      "reason": "Response incorrectly states that 'The channel switch triggers a master upgrade' and mentions API server unavailability, contradicting this expectation"
+    },
+    {
+      "expectation": "Warns that if 1.30 isn't yet available on Stable, the cluster may not receive patches until Stable catches up",
+      "passed": false,
+      "reason": "While response mentions checking if 1.32 is available in Stable, it doesn't warn about missing patches if the version isn't available yet"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "Provides the correct gcloud container clusters update command with --release-channel=stable parameter"
+    },
+    {
+      "expectation": "Recommends checking version availability on Stable before switching (gcloud container get-server-config)",
+      "passed": true,
+      "reason": "Explicitly recommends using gcloud container get-server-config to check available Stable versions before switching"
+    },
+    {
+      "expectation": "Discusses the impact on auto-upgrade timing going forward",
+      "passed": true,
+      "reason": "Explains that update frequency will change from every 2-4 weeks to every 2-3 months and mentions node pool upgrade timing"
+    },
+    {
+      "expectation": "Mentions that the Extended channel is an option if they need even slower cadence (with cost implications)",
+      "passed": false,
+      "reason": "Extended channel is not mentioned as an option for even slower update cadence"
+    },
+    {
+      "expectation": "Advises coordinating the change during a maintenance window",
+      "passed": true,
+      "reason": "Explicitly recommends planning for a maintenance window and scheduling during low-traffic periods"
+    }
+  ]
+}

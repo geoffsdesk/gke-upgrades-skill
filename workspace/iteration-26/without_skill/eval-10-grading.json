@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that spot VMs can be preempted at any time, which interacts with the upgrade drain process",
+      "passed": true,
+      "reason": "Response explains increased preemption risk during upgrades and mentions spot instance volatility during disruption"
+    },
+    {
+      "expectation": "Notes that spot node pools may already have workloads designed for interruption (good for upgrades)",
+      "passed": true,
+      "reason": "Response mentions that spot workloads should be designed with appropriate tolerations and fault-tolerance considerations"
+    },
+    {
+      "expectation": "Recommends higher maxSurge for spot pools since the workloads should already be fault-tolerant",
+      "passed": false,
+      "reason": "Response actually recommends conservative/lower maxSurge settings (--max-surge 1) for spot instances, opposite of the expectation"
+    },
+    {
+      "expectation": "Advises setting maxUnavailable >0 for spot pools since workloads are already preemption-tolerant",
+      "passed": false,
+      "reason": "Response does not mention or configure maxUnavailable settings at all"
+    },
+    {
+      "expectation": "Mentions that spot VM availability may affect surge node creation (not guaranteed to get spot instances)",
+      "passed": true,
+      "reason": "Response mentions planning for longer upgrade windows and considering low-demand periods when spot availability is higher"
+    },
+    {
+      "expectation": "Recommends having PDBs even for spot workloads to ensure orderly drain during upgrade",
+      "passed": true,
+      "reason": "Response includes a specific PodDisruptionBudget YAML example and emphasizes ensuring proper PDBs"
+    },
+    {
+      "expectation": "Provides the gcloud command for configuring surge settings on the spot pool",
+      "passed": false,
+      "reason": "Response provides Azure CLI (az) commands, not gcloud commands which are for Google Cloud Platform"
+    },
+    {
+      "expectation": "Suggests upgrading spot pools before on-demand pools since they're lower risk",
+      "passed": false,
+      "reason": "Response suggests the opposite - temporarily increasing on-demand capacity first, then upgrading spot pools, and describes gradual migration as the safest approach"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Checks for deprecated API usage that may have changed behavior in 1.30",
+      "passed": true,
+      "reason": "Response includes specific commands to check for deprecated API calls: 'kubectl logs -n kube-system -l component=kube-apiserver | grep -i \"deprecated\"' and mentions auditing workloads for deprecated APIs"
+    },
+    {
+      "expectation": "Recommends checking admission webhooks \u2014 they may be rejecting or slowing down requests on the new version",
+      "passed": false,
+      "reason": "The response does not mention admission webhooks or provide commands to check their status or behavior"
+    },
+    {
+      "expectation": "Advises checking if resource requests/limits need adjusting for any system components that changed",
+      "passed": true,
+      "reason": "Response includes commands to check API server resources: 'kubectl get pods -n kube-system -l component=kube-apiserver -o yaml | grep -A 5 resources:' and checks node resource utilization"
+    },
+    {
+      "expectation": "Suggests examining kube-system pods for any that are crashlooping or restarting",
+      "passed": true,
+      "reason": "Response includes commands to check kube-system pods: 'kubectl get pods -n kube-system -l component=kube-apiserver' and 'kubectl get pods -n kube-system -l component=etcd'"
+    },
+    {
+      "expectation": "Includes commands to check API server metrics and latency (kubectl get --raw /metrics)",
+      "passed": false,
+      "reason": "While the response includes some latency monitoring with 'time kubectl get nodes', it does not include the specific 'kubectl get --raw /metrics' command to check API server metrics"
+    },
+    {
+      "expectation": "Recommends checking if NetworkPolicy or service mesh components need updating for the new version",
+      "passed": true,
+      "reason": "Response includes checking service mesh components with commands like 'kubectl rollout restart daemonset/istio-proxy -n istio-system' and mentions checking ingress/service mesh issues"
+    },
+    {
+      "expectation": "Advises reviewing pod events for scheduling delays or readiness probe failures",
+      "passed": false,
+      "reason": "The response does not include commands to check pod events using 'kubectl get events' or 'kubectl describe pods' to look for scheduling or readiness probe issues"
+    },
+    {
+      "expectation": "Mentions checking if HPA or VPA are behaving differently on the new version",
+      "passed": false,
+      "reason": "The response does not mention Horizontal Pod Autoscaler (HPA) or Vertical Pod Autoscaler (VPA) or provide commands to check their behavior"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's native node pool upgrade strategies rather than the manual create/cordon/drain/delete workflow described",
+      "passed": true,
+      "reason": "Response clearly states 'manual blue-green is not the right approach' and recommends 'GKE's native surge upgrade' as the primary solution"
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends surge upgrade with maxSurge=0 and maxUnavailable set as the primary lever (since no surge capacity is available)",
+      "passed": true,
+      "reason": "Explicitly recommends surge upgrade with maxSurge=0 and maxUnavailable=4, explaining this works with fixed reservations since no extra GPU nodes are needed"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as a native alternative that handles cordon and migration automatically",
+      "passed": true,
+      "reason": "Provides 'Autoscaled Blue-Green' as an alternative with gcloud commands and explains it handles cordon/migration automatically"
+    },
+    {
+      "expectation": "Explains that native strategies are the supported path and handle edge cases (PDB respect, drain timeouts, progress tracking) that manual workflows miss",
+      "passed": true,
+      "reason": "Lists advantages of native approach including 'Respects PDBs and graceful termination automatically', 'built-in retry logic', and explains manual approach lacks 'built-in safety' and 'doesn't respect maintenance windows or PDB timeouts'"
+    },
+    {
+      "expectation": "Only suggests manual blue-green as a last resort if native strategies don't meet a specific requirement",
+      "passed": true,
+      "reason": "Manual blue-green is not recommended as the primary approach; autoscaled blue-green is only suggested 'if you're running long jobs (8+ hours) that can't tolerate GKE's 1-hour eviction timeout'"
+    },
+    {
+      "expectation": "Addresses GPU driver compatibility \u2014 need to verify target version's auto-installed driver is compatible",
+      "passed": true,
+      "reason": "Includes a dedicated 'GPU driver compatibility check' section with staging pool creation and explains 'GKE auto-installs drivers matching the target version, which may change CUDA versions'"
+    },
+    {
+      "expectation": "Recommends scheduling the upgrade during a gap in GPU workloads to minimize impact",
+      "passed": false,
+      "reason": "While the response mentions PDB configuration and staging validation, it does not explicitly recommend scheduling the upgrade during a gap in GPU workloads"
+    },
+    {
+      "expectation": "Provides gcloud commands for the recommended native approach",
+      "passed": true,
+      "reason": "Multiple gcloud command examples are provided including node pool update commands with specific parameters and the upgrade command with proper syntax"
+    }
+  ]
+}

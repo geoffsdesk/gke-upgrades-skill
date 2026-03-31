@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Configures a recurring maintenance window for weekends only",
+      "passed": true,
+      "reason": "Response includes both Terraform configuration with recurring_window using FREQ=WEEKLY;BYDAY=SA and gcloud commands with maintenance-window-recurrence for Saturday maintenance windows"
+    },
+    {
+      "expectation": "Provides the gcloud command with --maintenance-window-start/end and --maintenance-window-recurrence for weekly weekend schedule",
+      "passed": true,
+      "reason": "Response includes gcloud commands with --maintenance-window-start, --maintenance-window-end, and --maintenance-window-recurrence='FREQ=WEEKLY;BYDAY=SA'"
+    },
+    {
+      "expectation": "Sets up maintenance exclusions for quarterly code freezes (up to 30 days each)",
+      "passed": true,
+      "reason": "Response configures quarterly exclusions for Q1 (March 15-31), Q2 (June 15-30), Q3 (September 15-30), and Q4 (December 15-31), each within the 30-day limit"
+    },
+    {
+      "expectation": "Sets up a maintenance exclusion for the November audit period",
+      "passed": true,
+      "reason": "Response includes annual audit exclusion for November 1-30 with NO_UPGRADES scope in both Terraform and gcloud configurations"
+    },
+    {
+      "expectation": "Notes the 30-day maximum for maintenance exclusions and how to handle longer freezes",
+      "passed": false,
+      "reason": "Response does not mention the 30-day maximum limitation for maintenance exclusions or provide guidance on handling longer freeze periods"
+    },
+    {
+      "expectation": "Explains that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
+      "passed": false,
+      "reason": "Response does not explain the distinction between manual and automatic upgrades regarding maintenance window enforcement"
+    },
+    {
+      "expectation": "Recommends combining maintenance windows with Stable or Extended channel for maximum upgrade control",
+      "passed": false,
+      "reason": "Response does not mention release channels (Stable/Extended) or recommend their use for better upgrade control"
+    },
+    {
+      "expectation": "Provides gcloud commands for each exclusion (--add-maintenance-exclusion-name/start-time/end-time)",
+      "passed": true,
+      "reason": "Response includes complete gcloud commands with --add-maintenance-exclusion-name, --add-maintenance-exclusion-start, --add-maintenance-exclusion-end, and --add-maintenance-exclusion-scope for all quarterly freezes and annual audit"
+    },
+    {
+      "expectation": "Warns about the risk of falling too far behind on versions during long exclusion periods",
+      "passed": false,
+      "reason": "Response does not warn about version lag risks or the potential issues of falling behind on security updates during extended exclusion periods"
+    }
+  ]
+}

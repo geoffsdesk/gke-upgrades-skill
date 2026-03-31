@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's autoscaled blue-green node pool upgrade strategy as the primary approach for batch workloads \u2014 configured with --enable-autoscaling and --autoscaled-rollout-policy flags (NOT surge parameters). Supports wait-for-drain time, longer graceful termination, and PDB upgrade timeout to let jobs complete",
+      "passed": false,
+      "reason": "Response recommends blue-green node pools but doesn't mention --enable-autoscaling or --autoscaled-rollout-policy flags. Uses basic node pool creation without autoscaling configuration or PDB upgrade timeout parameters."
+    },
+    {
+      "expectation": "Explains that GKE respects terminationGracePeriodSeconds during pod eviction, but surge upgrades have a max eviction timeout",
+      "passed": false,
+      "reason": "Response doesn't explain terminationGracePeriodSeconds or mention surge upgrade eviction timeout limitations."
+    },
+    {
+      "expectation": "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour \u2014 far less than 8-16 hour jobs",
+      "passed": false,
+      "reason": "Response doesn't mention the 1-hour default eviction timeout or compare it to the 8-16 hour job duration."
+    },
+    {
+      "expectation": "Recommends pausing new batch job submissions before starting the upgrade",
+      "passed": true,
+      "reason": "Response recommends cordoning old nodes to prevent new job scheduling, which effectively pauses new submissions to those nodes."
+    },
+    {
+      "expectation": "Advises waiting for in-flight jobs to complete naturally before upgrading their node pool",
+      "passed": true,
+      "reason": "Response clearly states to 'Let existing jobs complete naturally' and shows monitoring commands to track job completion before deleting the old pool."
+    },
+    {
+      "expectation": "Suggests using node affinity or taints to isolate batch workloads on a dedicated node pool",
+      "passed": true,
+      "reason": "Response includes a job template with nodeAffinity configuration to target specific node pools for batch workloads."
+    },
+    {
+      "expectation": "Recommends upgrading non-batch node pools first while batch jobs complete on the old pool",
+      "passed": false,
+      "reason": "Response doesn't explicitly recommend upgrading non-batch node pools first. The blue-green strategy creates new pools but doesn't address mixed workload scenarios."
+    },
+    {
+      "expectation": "Does NOT recommend 'No channel' or '--enable-autoupgrade=false' (deprecated) \u2014 uses release channels with maintenance exclusions instead",
+      "passed": false,
+      "reason": "Response doesn't mention maintenance exclusions for release channels. It suggests switching to Rapid channel but doesn't address maintenance exclusions as an alternative to disabling autoupgrade."
+    }
+  ]
+}

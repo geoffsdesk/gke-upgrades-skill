@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all notification types: end-of-life warnings, upgrade available events, upgrade started (auto-upgrade), and security patches (COS milestone patches)"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": false,
+      "reason": "The urgency hierarchy is incorrect - response assigns CRITICAL to end-of-life warnings and LOW to patches, but security patches should be highest priority, not lowest"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response clearly states EoS notifications require immediate action within 1-2 weeks and explains GKE will force-upgrade at end of support"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response provides detailed action checklists for auto-upgrade events including monitoring progress and running post-upgrade validation"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": false,
+      "reason": "Response treats patches as LOW priority for 'next maintenance window' but doesn't address that security patches may require expedited action outside normal windows"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response categorizes 'upgrade available' as HIGH priority for planning (1-4 weeks timeline) but emphasizes planning and testing rather than immediate action"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "Response provides specific gcloud commands for configuring Pub/Sub notifications and Cloud Monitoring alerts for GKE cluster events"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": true,
+      "reason": "Response explicitly mentions reviewing 'GKE release notes for breaking changes' as part of the upgrade planning process"
+    }
+  ]
+}

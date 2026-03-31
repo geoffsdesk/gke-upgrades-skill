@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": true,
+      "reason": "The response clearly states 'This is not rolling\u2014it's atomic recreation of the entire multislice environment' and explains that all 4 slices are recreated simultaneously"
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": true,
+      "reason": "The response explicitly states 'A maintenance event on ANY single slice in your multislice environment triggers restart of ALL 4 slices simultaneously'"
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "The response clearly explains 'Your LLM training job will be forcibly terminated across all 1,024 TPU chips' and 'the entire training run stops'"
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": true,
+      "reason": "The response warns 'If insufficient TPU v5e resources exist in your zone during recreation, slices will block until hardware becomes available. This can cause extended downtime (potentially hours)'"
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "The response provides specific commands for saving checkpoints and explicitly recommends 'force a checkpoint save before maintenance'"
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "The response includes post-maintenance recovery steps with specific command 'Resume from your pre-maintenance checkpoint' and discusses ensuring the training script handles TPU mesh recreation gracefully"
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": true,
+      "reason": "The response provides specific gcloud commands for applying maintenance exclusions and explains how to use them to delay the maintenance event"
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": false,
+      "reason": "While the response mentions maintenance exclusions and monitoring release schedules, it does not specifically discuss configuring maintenance windows to schedule the event during planned training breaks"
+    }
+  ]
+}

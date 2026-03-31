@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all four notification types with specific sections for security patches, end-of-life warnings, auto-upgrade notifications, and available version updates"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response uses color-coded priority system with security patches marked as 'CRITICAL' (red), auto-upgrades as 'HIGH' (yellow), new version available as 'MEDIUM' (green), and general announcements as 'LOW' (blue)"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response specifically addresses end-of-life warnings with different urgency levels based on timeline (<30 days = critical immediate upgrade, 30-90 days = plan upgrade timeline) and emphasizes loss of support"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response provides a detailed 'Response Playbook' section with specific commands for assessing impact, checking current version, and planning upgrades for auto-upgrade notifications"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response marks security patches as 'CRITICAL - Immediate Action Required (0-7 days)' and explicitly states they can be exploited, implying urgency beyond normal maintenance schedules"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response categorizes 'Available Version Updates' as 'MEDIUM - Plan Ahead (1-3 months)' with action to 'Evaluate for next maintenance window' and states 'Stay current but not urgent'"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": false,
+      "reason": "Response does not mention Pub/Sub or Cloud Monitoring alerts specifically. It covers email filtering, Slack integration, and basic monitoring but lacks the specific GCP services mentioned in the expectation"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": false,
+      "reason": "Response does not mention GKE release notes as a source for understanding version changes. It focuses on notification triage and response procedures but doesn't reference release notes for change details"
+    }
+  ]
+}

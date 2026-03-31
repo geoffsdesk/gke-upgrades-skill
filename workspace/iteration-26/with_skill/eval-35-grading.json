@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends Stable or Extended release channel to minimize upgrade frequency",
+      "passed": true,
+      "reason": "Response explicitly recommends Extended channel with detailed explanation of 24-month support and no automatic minor version upgrades"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
+      "passed": true,
+      "reason": "Response provides specific gcloud command for 'no_minor_or_node_upgrades' exclusion and explicitly states it allows control plane security patches while blocking disruptive upgrades"
+    },
+    {
+      "expectation": "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
+      "passed": true,
+      "reason": "Response configures maintenance window for Sundays 3-9 AM with specific command flags --maintenance-window-start and --maintenance-window-recurrence"
+    },
+    {
+      "expectation": "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
+      "passed": true,
+      "reason": "Response creates separate h100-training pool with taints and system-pool for non-training workloads, with clear separation of concerns"
+    },
+    {
+      "expectation": "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
+      "passed": true,
+      "reason": "Response shows manual upgrade workflow during training campaign gaps, with commands to temporarily remove exclusions and manually trigger upgrades"
+    },
+    {
+      "expectation": "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
+      "passed": true,
+      "reason": "Response includes checkpoint configuration with terminationGracePeriodSeconds and Python code example for checkpoint frequency every 6-12 hours"
+    },
+    {
+      "expectation": "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
+      "passed": false,
+      "reason": "Response does not mention GPU driver version testing or staging validation before production upgrades"
+    },
+    {
+      "expectation": "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading",
+      "passed": false,
+      "reason": "Response mentions compact placement for RDMA topology but does not discuss GKE version compatibility requirements for GPUDirect/RDMA"
+    }
+  ]
+}

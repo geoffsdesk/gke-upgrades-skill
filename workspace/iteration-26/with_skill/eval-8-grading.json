@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the key difference: surge upgrades nodes in-place with rolling replacement, blue-green creates an entirely new pool",
+      "passed": true,
+      "reason": "Response clearly explains that surge upgrades drain nodes (in-place replacement) while blue-green creates new nodes (green pool) alongside old nodes (blue pool)"
+    },
+    {
+      "expectation": "Recommends blue-green for this scenario due to local SSDs (data can't migrate between nodes)",
+      "passed": true,
+      "reason": "Response strongly recommends blue-green and explicitly states that local SSD data cannot migrate between nodes"
+    },
+    {
+      "expectation": "Explains that local SSD data is lost when a node is drained during surge upgrade",
+      "passed": true,
+      "reason": "Response clearly states 'Surge upgrades drain nodes, which destroys all local SSD data' and explains data loss implications"
+    },
+    {
+      "expectation": "Recommends GKE's autoscaled blue-green upgrade strategy configured with --enable-autoscaling and --autoscaled-rollout-policy (NOT surge parameters like maxSurge/maxUnavailable which don't apply to blue-green), or describes the blue-green process if manual workflow is needed",
+      "passed": false,
+      "reason": "Response uses --standard-rollout-policy with batch parameters instead of --enable-autoscaling and --autoscaled-rollout-policy for autoscaled blue-green. The provided configuration appears to be for standard rollout, not autoscaled blue-green"
+    },
+    {
+      "expectation": "Addresses Cassandra-specific concerns: need to decommission from the ring before draining, rebuild on new nodes",
+      "passed": true,
+      "reason": "Response extensively covers Cassandra-specific concerns including proper decommissioning process, rebuild storms, and data redistribution"
+    },
+    {
+      "expectation": "Provides gcloud commands for creating the new node pool with matching configuration",
+      "passed": true,
+      "reason": "Response provides gcloud container node-pools update command with blue-green configuration parameters"
+    },
+    {
+      "expectation": "Includes kubectl commands for cordoning and draining",
+      "passed": false,
+      "reason": "Response mentions cordoning and draining conceptually but does not provide specific kubectl cordon or kubectl drain commands"
+    },
+    {
+      "expectation": "Mentions PDB configuration to protect the Cassandra quorum during migration",
+      "passed": true,
+      "reason": "Response includes a complete PodDisruptionBudget YAML configuration and explains how it protects Cassandra quorum (6 of 9 nodes available)"
+    }
+  ]
+}

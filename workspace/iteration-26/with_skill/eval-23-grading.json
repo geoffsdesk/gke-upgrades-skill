@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies Service A (minAvailable=100%) as a guaranteed upgrade blocker \u2014 no disruptions allowed at all",
+      "passed": true,
+      "reason": "Response clearly identifies Service A as CRITICAL risk, stating it 'Will definitely block upgrades' and explains that it 'Requires ALL pods to remain available at all times' preventing node drain"
+    },
+    {
+      "expectation": "Identifies Service B (maxUnavailable=0) as also blocking upgrades \u2014 same effect as 100% minAvailable",
+      "passed": true,
+      "reason": "Response identifies Service B as CRITICAL risk, explicitly stating it's 'Identical to 100% availability requirement - no pods can be disrupted' and will cause 'complete upgrade blockage'"
+    },
+    {
+      "expectation": "States Service C (minAvailable=2 with 3 replicas) is safe \u2014 allows 1 pod disruption at a time",
+      "passed": true,
+      "reason": "Response categorizes Service C as LOW risk and 'Upgrade-safe', explicitly stating it 'Allows 1 pod (33%) to be unavailable during drain' and 'Node drain can evict 1 pod while 2 remain serving'"
+    },
+    {
+      "expectation": "States Service D (maxUnavailable=1 with 5 replicas) is safe \u2014 allows 1 pod down at a time",
+      "passed": true,
+      "reason": "Response categorizes Service D as LOW risk and 'Upgrade-safe', stating it 'Allows 1 pod (20%) disruption' and 'Node drain can evict 1 pod at a time'"
+    },
+    {
+      "expectation": "Recommends fixing Service A: change to minAvailable=N-1 or maxUnavailable=1",
+      "passed": true,
+      "reason": "Response provides specific fix for Service A: 'Change to minAvailable=50% or maxUnavailable=1 to allow at least one pod to be evicted' and includes YAML example with minAvailable=50%"
+    },
+    {
+      "expectation": "Recommends fixing Service B: change to maxUnavailable=1",
+      "passed": true,
+      "reason": "Response provides specific fix for Service B: 'Change to maxUnavailable=1 to allow single pod eviction during drain' and includes YAML example with maxUnavailable=1"
+    },
+    {
+      "expectation": "Explains that GKE respects PDBs for up to 1 hour during surge upgrades, then may force-drain",
+      "passed": true,
+      "reason": "Response includes dedicated section 'GKE PDB Timeout Behavior' explaining 'GKE respects PDBs for up to 1 hour during surge upgrades' and 'After 1 hour, pods are force-evicted regardless of PDB'"
+    },
+    {
+      "expectation": "Provides kubectl patch commands to fix the problematic PDBs",
+      "passed": false,
+      "reason": "Response provides YAML configuration examples but does not include actual kubectl patch commands - it only shows complete YAML manifests for applying new PDB configurations"
+    },
+    {
+      "expectation": "Recommends testing PDB changes in a non-production environment first",
+      "passed": false,
+      "reason": "Response does not explicitly recommend testing in non-production environments, though it does mention testing PDBs with 'kubectl drain --dry-run' on a test node, which is not the same as testing in a non-production environment"
+    }
+  ]
+}
