@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": false,
+      "reason": "Response mentions job termination and slice restarts but doesn't specifically explain that TPU slices are recreated atomically rather than through rolling upgrades"
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": true,
+      "reason": "Response states 'Even if maintenance targets specific slices, the entire multislice job typically fails since it requires all slices to be healthy'"
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "Response clearly states 'Complete job termination: Your training job will be killed, not gracefully paused' and mentions simultaneous restart in recovery section"
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": false,
+      "reason": "Response mentions 'Variable downtime: Maintenance windows can last 30 minutes to several hours' but doesn't specifically explain the blocking behavior when insufficient resources are available"
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "Response recommends 'Force a checkpoint ~30 minutes before the window' in the best practices section"
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "Response provides detailed implementation for automatic resume including 'resume_training()' function and 'ENABLE_AUTO_RESUME' environment variable"
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": false,
+      "reason": "Response does not mention maintenance exclusions or the option to defer maintenance events"
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": false,
+      "reason": "Response mentions monitoring maintenance windows but doesn't suggest using them to schedule events during planned breaks in training"
+    }
+  ]
+}

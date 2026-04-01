@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": true,
+      "reason": "Response explicitly states 'Each slice undergoes atomic recreation - not rolling updates like regular pods' and 'All pods on each slice terminate and recreate in a single step'"
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": true,
+      "reason": "Response clearly states 'Any maintenance on ANY slice triggers restart of ALL slices' and 'All 4 slices (1,024 TPU v5e chips total) will restart simultaneously'"
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "Response explicitly states 'Your entire training job will be interrupted' and 'All pods on each slice terminate and recreate in a single step'"
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": true,
+      "reason": "Response states 'If insufficient TPU v5e resources exist during recreation, slices will block until hardware becomes available' and mentions 'extended downtime beyond the normal maintenance window'"
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "Response includes 'Force a checkpoint save before the maintenance window' with specific kubectl commands and verification steps"
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "Response recommends 'Test checkpoint resume in a dev environment' and includes 'Resume from latest checkpoint' command with specific kubectl example"
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": false,
+      "reason": "Response explicitly states 'Don't assume maintenance exclusions help - GKE host maintenance bypasses cluster-level controls' which contradicts the expectation to suggest using maintenance exclusions"
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": true,
+      "reason": "Response includes 'Maintenance Window Planning' section that advises planning for downtime and coordinating with research team, though it doesn't explicitly mention controlling when the event occurs"
+    }
+  ]
+}

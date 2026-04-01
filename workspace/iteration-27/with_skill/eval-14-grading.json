@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Checks for deprecated API usage that may have changed behavior in 1.30",
+      "passed": true,
+      "reason": "Response specifically mentions K8s 1.32 removed deprecated v1beta1 APIs and provides commands to check deprecated API usage including 'kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated'"
+    },
+    {
+      "expectation": "Recommends checking admission webhooks \u2014 they may be rejecting or slowing down requests on the new version",
+      "passed": true,
+      "reason": "Response dedicates a full section to admission webhook compatibility with specific commands to list and check webhooks, test pod creation against webhooks, and provides mitigation strategies"
+    },
+    {
+      "expectation": "Advises checking if resource requests/limits need adjusting for any system components that changed",
+      "passed": true,
+      "reason": "Response mentions that K8s 1.32 system components may have higher resource requirements and provides commands to check system pod resource usage and identifies resource pressure scenarios"
+    },
+    {
+      "expectation": "Suggests examining kube-system pods for any that are crashlooping or restarting",
+      "passed": true,
+      "reason": "Response includes specific commands to check kube-system pod status and mentions looking for 'Crashlooping coredns, metrics-server, or konnectivity-agent pods' as potential causes"
+    },
+    {
+      "expectation": "Includes commands to check API server metrics and latency (kubectl get --raw /metrics)",
+      "passed": true,
+      "reason": "Response includes 'kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated' command to check API server metrics"
+    },
+    {
+      "expectation": "Recommends checking if NetworkPolicy or service mesh components need updating for the new version",
+      "passed": true,
+      "reason": "Response specifically mentions service mesh (Istio/ASM) compatibility issues and recommends upgrading 'cert-manager/service mesh to versions supporting K8s 1.32'"
+    },
+    {
+      "expectation": "Advises reviewing pod events for scheduling delays or readiness probe failures",
+      "passed": true,
+      "reason": "Response includes commands to check events with 'kubectl get events' and specifically looks for 'FailedScheduling' and 'Evicted' events which cover scheduling delays"
+    },
+    {
+      "expectation": "Mentions checking if HPA or VPA are behaving differently on the new version",
+      "passed": true,
+      "reason": "Response includes a dedicated section on HPA/VPA behavior changes with commands to check HPA status and mentions that 'K8s 1.32 may have changed HPA scaling algorithms or stabilization windows'"
+    }
+  ]
+}

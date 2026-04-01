@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's native node pool upgrade strategies rather than the manual create/cordon/drain/delete workflow described",
+      "passed": true,
+      "reason": "Response clearly recommends GKE's in-place node pool upgrade feature over the manual workflow and calls the manual approach 'not optimal'"
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends surge upgrade with maxSurge=0 and maxUnavailable set as the primary lever (since no surge capacity is available)",
+      "passed": false,
+      "reason": "Response mentions max-surge=1 and max-unavailable=0 in the example, but doesn't specifically address fixed reservations requiring maxSurge=0 as the primary constraint"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as a native alternative that handles cordon and migration automatically",
+      "passed": false,
+      "reason": "Response does not mention auto-scale blue-green upgrade strategy as an alternative native option"
+    },
+    {
+      "expectation": "Explains that native strategies are the supported path and handle edge cases (PDB respect, drain timeouts, progress tracking) that manual workflows miss",
+      "passed": true,
+      "reason": "Response mentions that GKE handles orchestration automatically and respects PodDisruptionBudgets, indicating native strategies handle edge cases better"
+    },
+    {
+      "expectation": "Only suggests manual blue-green as a last resort if native strategies don't meet a specific requirement",
+      "passed": false,
+      "reason": "Response mentions when to use new node pool approach but doesn't frame it as a last resort or specifically mention manual blue-green"
+    },
+    {
+      "expectation": "Addresses GPU driver compatibility \u2014 need to verify target version's auto-installed driver is compatible",
+      "passed": false,
+      "reason": "Response does not address GPU driver compatibility concerns or the need to verify driver compatibility with the target Kubernetes version"
+    },
+    {
+      "expectation": "Recommends scheduling the upgrade during a gap in GPU workloads to minimize impact",
+      "passed": false,
+      "reason": "Response mentions planning maintenance window but doesn't specifically recommend scheduling during gaps in GPU workloads"
+    },
+    {
+      "expectation": "Provides gcloud commands for the recommended native approach",
+      "passed": true,
+      "reason": "Response provides specific gcloud container node-pools upgrade commands with various configuration options"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all notification types in the action matrix table and throughout the guide"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": false,
+      "reason": "Security patches are assigned medium priority, not highest. End-of-life warnings and deprecated APIs are highest priority, new version available is correctly lowest"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "EoS warnings are marked as high priority with detailed action checklist including checking EoS dates and planning immediate upgrades"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Action checklist for auto-upgrade scheduled includes 'Review pre-upgrade checklist (workload readiness, PDBs, etc.)'"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Security patches section states 'For critical CVEs: expedite to within days' indicating expedited handling outside normal cycles"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "New version available is marked as low priority with 'No immediate action needed' and described as planning for next maintenance cycle"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "Includes detailed Pub/Sub setup commands and Cloud Logging queries for automated notification filtering and alerting"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": true,
+      "reason": "References GKE release notes multiple times, including 'Review CVE details in GKE release notes' and 'Review release notes for new features/changes'"
+    }
+  ]
+}

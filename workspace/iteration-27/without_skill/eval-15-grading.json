@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "First step: check the operation status to understand why it failed (gcloud container operations list)",
+      "passed": true,
+      "reason": "Response includes 'gcloud container operations list --filter=\"name:upgrade\"' command to check upgrade status"
+    },
+    {
+      "expectation": "Recommends checking events and logs for the specific failure reason",
+      "passed": false,
+      "reason": "Response asks for the error message at the end but doesn't provide specific commands to check events or logs for diagnosing the failure"
+    },
+    {
+      "expectation": "Explains that the cluster is in a mixed-version state (8 nodes at 1.32, 12 at 1.31) which is within skew policy",
+      "passed": true,
+      "reason": "Response explains mixed-version state and notes 'GKE supports nodes up to 2 minor versions behind' the control plane"
+    },
+    {
+      "expectation": "Notes that the mixed state is functional but not ideal \u2014 workloads can run on both versions",
+      "passed": true,
+      "reason": "Response states 'Your pods should be running fine on the mixed-version nodes' and notes the state is manageable"
+    },
+    {
+      "expectation": "Provides options: retry the upgrade after fixing the root cause, or rollback the 8 upgraded nodes",
+      "passed": false,
+      "reason": "Response provides retry options but doesn't mention rollback as an option - only shows different approaches to complete the upgrade"
+    },
+    {
+      "expectation": "Explains that retrying is usually better than rollback (rolling back means creating a new pool at old version)",
+      "passed": false,
+      "reason": "Response doesn't discuss rollback or explain why retrying is preferable to rollback"
+    },
+    {
+      "expectation": "Addresses the remaining 2 node pools: they can still be upgraded once the failed pool issue is resolved",
+      "passed": true,
+      "reason": "Response states 'Keep them on the old version until the main pool is fully upgraded' and addresses the other node pools"
+    },
+    {
+      "expectation": "Includes commands to diagnose the failure (operation details, node status, pod events)",
+      "passed": true,
+      "reason": "Response includes 'kubectl get nodes -o wide', 'kubectl get pods --all-namespaces -o wide', and 'gcloud container operations list' for diagnosis"
+    }
+  ]
+}

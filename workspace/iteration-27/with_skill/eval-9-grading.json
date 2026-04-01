@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends increasing maxSurge for CPU pools (e.g., 10-20) to parallelize node replacements, with justification for the value",
+      "passed": true,
+      "reason": "Response recommends maxSurge=8 for CPU pools with 150 nodes (calculated as 5% which equals 7-8 nodes), providing clear justification that CPU pools have available quota for surge capacity"
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends increasing maxUnavailable (not maxSurge) as the primary lever since surge capacity is typically unavailable",
+      "passed": true,
+      "reason": "Response explicitly states 'maxUnavailable is your primary lever' for GPU pools and recommends maxUnavailable=4 with maxSurge=0, correctly identifying that fixed reservations limit surge capacity"
+    },
+    {
+      "expectation": "Advises checking and requesting increased compute quota before the upgrade for CPU pools",
+      "passed": true,
+      "reason": "Response mentions 'Scale down non-critical dev/test workloads to free CPU quota for surge' in the pre-upgrade preparation section"
+    },
+    {
+      "expectation": "Suggests staggering node pool upgrades or running non-conflicting pools in parallel",
+      "passed": true,
+      "reason": "Response provides detailed parallel upgrade strategy with specific commands and suggests staggering GPU pools 30 minutes after CPU pools to avoid resource conflicts"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as an option for GPU pools",
+      "passed": true,
+      "reason": "Response includes a dedicated 'Blue-Green for GPU Pools' section with specific gcloud command for enabling blue-green upgrades"
+    },
+    {
+      "expectation": "Recommends expanding the maintenance window or splitting across multiple weekends",
+      "passed": true,
+      "reason": "Response includes 'Extended Maintenance Window Strategy' section with maintenance exclusion commands and discusses fitting upgrades into weekend windows"
+    },
+    {
+      "expectation": "Provides the gcloud command for updating surge settings on each pool",
+      "passed": true,
+      "reason": "Response provides specific gcloud container node-pools update commands for both GPU pools (maxUnavailable) and CPU pools (maxSurge) with all required parameters"
+    },
+    {
+      "expectation": "Includes monitoring commands to track upgrade progress in real-time",
+      "passed": true,
+      "reason": "Response includes a 'Monitoring Command' section with a specific watch command using gcloud and kubectl to track node pool status and node readiness in real-time"
+    }
+  ]
+}

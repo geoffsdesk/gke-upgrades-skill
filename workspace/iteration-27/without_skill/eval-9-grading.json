@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends increasing maxSurge for CPU pools (e.g., 10-20) to parallelize node replacements, with justification for the value",
+      "passed": false,
+      "reason": "While the response recommends increasing maxSurge for CPU pools, it suggests 50% rather than specific values like 10-20, and lacks detailed justification for why this specific value is appropriate for parallelization"
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends increasing maxUnavailable (not maxSurge) as the primary lever since surge capacity is typically unavailable",
+      "passed": true,
+      "reason": "The response correctly identifies that GPU pools should use maxUnavailable as the primary lever and sets it more conservatively (10%) due to cost/availability constraints, while also reducing maxSurge to 30%"
+    },
+    {
+      "expectation": "Advises checking and requesting increased compute quota before the upgrade for CPU pools",
+      "passed": false,
+      "reason": "The response does not mention checking or requesting increased compute quota before upgrades"
+    },
+    {
+      "expectation": "Suggests staggering node pool upgrades or running non-conflicting pools in parallel",
+      "passed": true,
+      "reason": "The response includes a 'Staggered Node Pool Upgrades' section with a bash script showing how to run CPU pools in parallel first, then GPU pools after"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as an option for GPU pools",
+      "passed": false,
+      "reason": "The response does not mention GKE's auto-scale blue-green upgrade strategy specifically for GPU pools"
+    },
+    {
+      "expectation": "Recommends expanding the maintenance window or splitting across multiple weekends",
+      "passed": false,
+      "reason": "The response does not suggest expanding the maintenance window or splitting upgrades across multiple weekends as alternative solutions"
+    },
+    {
+      "expectation": "Provides the gcloud command for updating surge settings on each pool",
+      "passed": true,
+      "reason": "The response provides specific gcloud commands for updating surge settings for both CPU and GPU pools with the appropriate parameters"
+    },
+    {
+      "expectation": "Includes monitoring commands to track upgrade progress in real-time",
+      "passed": true,
+      "reason": "The response includes an 'Upgrade Monitoring Script' section with a bash script using gcloud container operations list to track upgrade progress in real-time"
+    }
+  ]
+}

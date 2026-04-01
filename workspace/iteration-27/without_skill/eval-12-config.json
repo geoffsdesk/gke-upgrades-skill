@@ -1,0 +1,12 @@
+{
+  "eval_id": 12,
+  "mode": "without_skill",
+  "iteration": 27,
+  "prompt": "We run an Istio service mesh on our Standard GKE cluster at 1.31 and need to upgrade to 1.32. We've heard horror stories about mesh upgrades breaking things. What's the right order of operations and what should we watch out for?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-04-01T00:40:06.930214+00:00",
+  "input_tokens": 65,
+  "output_tokens": 1504,
+  "time_seconds": 26.88
+}

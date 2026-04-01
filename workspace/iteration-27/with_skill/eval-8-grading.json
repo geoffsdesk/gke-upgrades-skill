@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the key difference: surge upgrades nodes in-place with rolling replacement, blue-green creates an entirely new pool",
+      "passed": true,
+      "reason": "Response clearly explains that blue-green creates a new pool ('GKE provisions 9 new nodes (green pool)') and contrasts this with surge approach that drains nodes immediately"
+    },
+    {
+      "expectation": "Recommends blue-green for this scenario due to local SSDs (data can't migrate between nodes)",
+      "passed": true,
+      "reason": "Response explicitly recommends blue-green upgrade and clearly states the reason: 'Surge drains nodes immediately, destroying local SSD data' and 'Local SSD data preserved until you explicitly confirm the new ring is healthy'"
+    },
+    {
+      "expectation": "Explains that local SSD data is lost when a node is drained during surge upgrade",
+      "passed": true,
+      "reason": "Response explicitly states 'Surge drains nodes immediately, destroying local SSD data' and identifies this as a key problem with surge upgrades for this use case"
+    },
+    {
+      "expectation": "Recommends GKE's autoscaled blue-green upgrade strategy configured with --enable-autoscaling and --autoscaled-rollout-policy (NOT surge parameters like maxSurge/maxUnavailable which don't apply to blue-green), or describes the blue-green process if manual workflow is needed",
+      "passed": false,
+      "reason": "Response uses incorrect parameters - it shows --standard-rollout-policy instead of --autoscaled-rollout-policy and doesn't include --enable-autoscaling. The parameters shown (batch-node-count, batch-soak-duration) are not the correct blue-green autoscaling configuration"
+    },
+    {
+      "expectation": "Addresses Cassandra-specific concerns: need to decommission from the ring before draining, rebuild on new nodes",
+      "passed": true,
+      "reason": "Response thoroughly addresses Cassandra concerns including 'Cassandra nodes need proper decommissioning (nodetool decommission)' and provides detailed steps for decommissioning during the soak period"
+    },
+    {
+      "expectation": "Provides gcloud commands for creating the new node pool with matching configuration",
+      "passed": false,
+      "reason": "Response provides gcloud commands for configuring the upgrade strategy but doesn't show commands for creating a new node pool with matching configuration (node type, local SSDs, etc.)"
+    },
+    {
+      "expectation": "Includes kubectl commands for cordoning and draining",
+      "passed": false,
+      "reason": "Response mentions that nodes are cordoned and drained as part of the blue-green process but doesn't provide the actual kubectl commands for cordoning and draining"
+    },
+    {
+      "expectation": "Mentions PDB configuration to protect the Cassandra quorum during migration",
+      "passed": true,
+      "reason": "Response includes a complete PodDisruptionBudget configuration with 'minAvailable: 7 # Maintain majority quorum (7 out of 9)' to protect Cassandra quorum"
+    }
+  ]
+}

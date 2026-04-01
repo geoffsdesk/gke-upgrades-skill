@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that surge upgrades require extra compute capacity (maxSurge creates NEW nodes before draining old ones)",
+      "passed": true,
+      "reason": "Clearly explains that surge strategy creates new nodes before draining old ones, requiring +1 node quota"
+    },
+    {
+      "expectation": "Recommends setting maxUnavailable >0 instead of relying on maxSurge (drains first, then creates \u2014 uses less quota)",
+      "passed": true,
+      "reason": "Explicitly recommends maxUnavailable=1 with maxSurge=0 and explains this drains first, then creates, using zero extra quota"
+    },
+    {
+      "expectation": "Warns that maxUnavailable >0 means reduced capacity during upgrade \u2014 some pods won't have nodes",
+      "passed": true,
+      "reason": "Mentions 'temporary capacity loss during each node replacement' and 'capacity dips' as trade-offs"
+    },
+    {
+      "expectation": "Suggests temporarily scaling down non-critical deployments to free up quota for surge nodes",
+      "passed": true,
+      "reason": "Provides detailed section on scaling down non-critical workloads with specific kubectl commands to free up quota"
+    },
+    {
+      "expectation": "Mentions that reducing maxSurge to 1 minimizes extra quota needed (slower but fits within constraints)",
+      "passed": true,
+      "reason": "Shows maxSurge=1 with maxUnavailable=0 as an alternative approach that needs minimal surge capacity"
+    },
+    {
+      "expectation": "Provides the gcloud command to update surge settings (maxSurge=0, maxUnavailable=1 for zero-extra-capacity mode)",
+      "passed": true,
+      "reason": "Provides exact gcloud container node-pools update command with maxSurge=0 and maxUnavailable=1"
+    },
+    {
+      "expectation": "Recommends doing the upgrade in off-peak hours when fewer pods are running",
+      "passed": true,
+      "reason": "Includes dedicated section on off-peak timing with specific recommendations about weekends, nights, and lower pod density"
+    },
+    {
+      "expectation": "Mentions requesting a temporary quota increase as a faster alternative to a permanent increase",
+      "passed": false,
+      "reason": "Does not mention requesting a temporary quota increase as an alternative - only addresses working within existing quota constraints"
+    }
+  ]
+}

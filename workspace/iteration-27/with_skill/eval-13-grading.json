@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's autoscaled blue-green node pool upgrade strategy as the primary approach for batch workloads \u2014 configured with --enable-autoscaling and --autoscaled-rollout-policy flags (NOT surge parameters). Supports wait-for-drain time, longer graceful termination, and PDB upgrade timeout to let jobs complete",
+      "passed": true,
+      "reason": "Response explicitly recommends autoscaled blue-green as primary strategy and provides specific commands using --enable-autoscaling and --autoscaled-rollout-policy flags with blue-green-initial-node-percentage and blue-green-full-batch-timeout parameters"
+    },
+    {
+      "expectation": "Explains that GKE respects terminationGracePeriodSeconds during pod eviction, but surge upgrades have a max eviction timeout",
+      "passed": true,
+      "reason": "Response explains that autoscaled blue-green 'Respects extended terminationGracePeriodSeconds (no 1-hour force eviction)' and shows configuration with terminationGracePeriodSeconds: 3600"
+    },
+    {
+      "expectation": "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour \u2014 far less than 8-16 hour jobs",
+      "passed": true,
+      "reason": "Response explicitly states 'GKE's default 1-hour PDB timeout during surge upgrades will force-evict your jobs mid-execution' and warns 'GKE force-evicts after 1 hour regardless of PDB or grace period'"
+    },
+    {
+      "expectation": "Recommends pausing new batch job submissions before starting the upgrade",
+      "passed": true,
+      "reason": "Response includes specific command 'kubectl scale deployment batch-job-controller --replicas=0' in Phase 2: Batch Job Preparation and mentions 'Pause new job submissions'"
+    },
+    {
+      "expectation": "Advises waiting for in-flight jobs to complete naturally before upgrading their node pool",
+      "passed": true,
+      "reason": "Response includes checking running jobs with kubectl commands and estimating completion time before node pool upgrade, and mentions executing 'during your natural job gap window'"
+    },
+    {
+      "expectation": "Suggests using node affinity or taints to isolate batch workloads on a dedicated node pool",
+      "passed": false,
+      "reason": "Response assumes a dedicated batch node pool ('BATCH_NODE_POOL_NAME') but does not explain how to set up node affinity or taints to isolate batch workloads on this pool"
+    },
+    {
+      "expectation": "Recommends upgrading non-batch node pools first while batch jobs complete on the old pool",
+      "passed": false,
+      "reason": "Response does not mention upgrading non-batch node pools first - it focuses on the batch node pool upgrade strategy and control plane upgrade, but doesn't address handling multiple node pools"
+    },
+    {
+      "expectation": "Does NOT recommend 'No channel' or '--enable-autoupgrade=false' (deprecated) \u2014 uses release channels with maintenance exclusions instead",
+      "passed": true,
+      "reason": "Response uses maintenance exclusions with --add-maintenance-exclusion commands and does not recommend disabling auto-upgrade or switching to no channel"
+    }
+  ]
+}

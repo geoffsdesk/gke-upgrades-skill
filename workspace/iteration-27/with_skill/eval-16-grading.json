@@ -1,0 +1,59 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies this as an admission webhook compatibility issue \u2014 the webhook is rejecting pod creation requests",
+      "passed": true,
+      "reason": "Response correctly identifies this as an admission webhook failure after Kubernetes upgrade, specifically stating that cert-manager's webhook certificates likely weren't updated for new API server"
+    },
+    {
+      "expectation": "Provides commands to identify the problematic webhook (kubectl get validatingwebhookconfigurations / mutatingwebhookconfigurations)",
+      "passed": true,
+      "reason": "Provides specific command: 'kubectl get validatingwebhookconfigurations | grep cert-manager' to identify the failing webhook"
+    },
+    {
+      "expectation": "Offers an immediate fix: temporarily disable or remove the problematic webhook",
+      "passed": true,
+      "reason": "Provides immediate mitigation by patching the webhook to set failurePolicy to 'Ignore' which temporarily disables validation failures"
+    },
+    {
+      "expectation": "Provides the kubectl delete command for the webhook configuration as emergency mitigation",
+      "passed": false,
+      "reason": "Does not provide a kubectl delete command for the webhook configuration; instead uses kubectl patch to modify failurePolicy"
+    },
+    {
+      "expectation": "Warns that deleting the webhook removes validation \u2014 it's a temporary fix",
+      "passed": true,
+      "reason": "Clearly labels the patch as 'temporary' and 'Emergency Fix', and later shows how to re-enable proper validation with failurePolicy: Fail"
+    },
+    {
+      "expectation": "Recommends checking cert-manager version compatibility with Kubernetes 1.32",
+      "passed": true,
+      "reason": "Explicitly includes step to check cert-manager version compatibility and provides command to check current version"
+    },
+    {
+      "expectation": "Advises upgrading cert-manager to a version that supports 1.30 as the permanent fix",
+      "passed": true,
+      "reason": "Provides specific helm upgrade command to upgrade cert-manager to v1.13.3 with note to check compatibility for Kubernetes 1.32 (though expectation mentions 1.30, the context is 1.32 upgrade)"
+    },
+    {
+      "expectation": "Mentions setting failurePolicy to Ignore as a less drastic alternative to deletion",
+      "passed": true,
+      "reason": "Uses failurePolicy: Ignore as the primary emergency mitigation strategy, presenting it as the immediate fix rather than deletion"
+    },
+    {
+      "expectation": "Includes commands to verify pods can be created after the fix",
+      "passed": true,
+      "reason": "Provides specific test commands: 'kubectl run test-pod --image=nginx --rm -it --restart=Never -- echo \"Webhook bypass working\"' and similar verification steps"
+    },
+    {
+      "expectation": "Notes that any webhook configuration changes (failurePolicy, cert-manager version) must be persisted in the source of truth (Helm chart, GitOps manifests, CI/CD pipeline) to survive redeployment",
+      "passed": false,
+      "reason": "Does not mention the need to persist changes in source of truth systems like Helm charts, GitOps manifests, or CI/CD pipelines"
+    },
+    {
+      "expectation": "Qualifies failurePolicy: Ignore as a temporary debugging measure with explicit risks, recommending revert to Fail after the root cause is resolved",
+      "passed": true,
+      "reason": "Clearly labels failurePolicy: Ignore as temporary, provides step to re-enable it with failurePolicy: Fail, and emphasizes this is emergency mitigation while permanent fix is implemented"
+    }
+  ]
+}
