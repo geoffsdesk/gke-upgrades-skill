@@ -179,9 +179,14 @@ def call_gemini(api_key: str, model: str, system: str, prompt: str) -> dict:
 
 
 def call_ollama(base_url: str, model: str, system: str, prompt: str,
-                max_tokens: int = 4096, num_ctx: int = 32768) -> dict:
-    """Call Ollama's OpenAI-compatible chat API (local or remote)."""
-    url = f"{base_url}/v1/chat/completions"
+                max_tokens: int = 8192, num_ctx: int = 131072) -> dict:
+    """Call Ollama's NATIVE /api/chat endpoint (not OpenAI-compatible).
+
+    The native API properly supports the 'options' field for num_ctx and
+    num_predict, which the /v1/chat/completions endpoint silently ignores.
+    Default num_ctx=131072 to fit the full ~90K char skill context.
+    """
+    url = f"{base_url}/api/chat"
     messages = []
     if system:
         messages.append({"role": "system", "content": system})
@@ -192,7 +197,7 @@ def call_ollama(base_url: str, model: str, system: str, prompt: str,
         "messages": messages,
         "stream": False,
         "options": {
-            "num_ctx": num_ctx,
+            "num_ctx": num_ctx,       # Gemma 4 supports up to 128K tokens
             "num_predict": max_tokens,
         },
     }
@@ -204,15 +209,18 @@ def call_ollama(base_url: str, model: str, system: str, prompt: str,
         with urllib.request.urlopen(req, timeout=600) as resp:  # 10min timeout for local models
             result = json.loads(resp.read())
         elapsed = time.time() - t0
-        content = ""
-        for choice in result.get("choices", []):
-            msg = choice.get("message", {})
-            content += msg.get("content", "")
-        usage = result.get("usage", {})
+
+        # Native API returns message directly (not in choices array)
+        content = result.get("message", {}).get("content", "")
+
+        # Token counts from native API
+        input_tokens = result.get("prompt_eval_count", 0)
+        output_tokens = result.get("eval_count", 0)
+
         return {
             "content": content,
-            "input_tokens": usage.get("prompt_tokens", 0),
-            "output_tokens": usage.get("completion_tokens", 0),
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
             "time_seconds": round(elapsed, 2),
             "error": None,
         }
@@ -231,8 +239,9 @@ def call_ollama(base_url: str, model: str, system: str, prompt: str,
         return {"content": "", "tokens": 0, "time_seconds": 0, "error": str(e)}
 
 
-# Global Ollama URL — set from args
+# Global Ollama settings — set from args
 _ollama_url = DEFAULT_OLLAMA_URL
+_ollama_num_ctx = 131072
 
 
 def call_model(provider: str, api_key: str, model: str, system: str, prompt: str) -> dict:
@@ -241,7 +250,7 @@ def call_model(provider: str, api_key: str, model: str, system: str, prompt: str
     elif provider == "gemini":
         return call_gemini(api_key, model, system, prompt)
     elif provider == "ollama":
-        return call_ollama(_ollama_url, model, system, prompt)
+        return call_ollama(_ollama_url, model, system, prompt, num_ctx=_ollama_num_ctx)
     else:
         return {"content": "", "tokens": 0, "time_seconds": 0, "error": f"Unknown provider: {provider}"}
 
@@ -371,7 +380,7 @@ def grade_output(provider: str, api_key: str, model: str,
     # For Ollama grading, use higher token limit to avoid truncation
     if provider == "ollama":
         result = call_ollama(_ollama_url, model, GRADING_SYSTEM, grading_prompt,
-                             max_tokens=8192, num_ctx=32768)
+                             max_tokens=8192, num_ctx=_ollama_num_ctx)
     else:
         result = call_model(provider, api_key, model, GRADING_SYSTEM, grading_prompt)
     if result["error"]:
@@ -811,6 +820,8 @@ def main():
                         help="Ollama model for --provider claude+ollama (default: gemma4)")
     parser.add_argument("--ollama-url", default=DEFAULT_OLLAMA_URL,
                         help=f"Ollama server URL (default: {DEFAULT_OLLAMA_URL})")
+    parser.add_argument("--num-ctx", type=int, default=131072,
+                        help="Ollama context window size in tokens (default: 131072). Reduce if OOM. Gemma 4 supports up to 128K.")
     parser.add_argument("--grade-with", choices=["self", "claude"], default="self",
                         help="Which model grades responses. 'self' = same model grades its own output. 'claude' = Claude grades all outputs (more accurate for local models).")
     parser.add_argument("--iteration", type=int, required=True,
@@ -827,9 +838,10 @@ def main():
 
     args = parser.parse_args()
 
-    # Set global Ollama URL
-    global _ollama_url
+    # Set global Ollama settings
+    global _ollama_url, _ollama_num_ctx
     _ollama_url = args.ollama_url
+    _ollama_num_ctx = args.num_ctx
 
     # Resolve API keys from env if not provided
     if not args.dry_run:
@@ -884,6 +896,15 @@ def main():
                     available = [m["name"] for m in tags_data.get("models", [])]
                     print(f"Ollama connected at {_ollama_url}")
                     print(f"Available models: {', '.join(available) if available else '(none)'}")
+                    print(f"Context window: {_ollama_num_ctx:,} tokens (--num-ctx to change)")
+                    # Estimate skill context token count (~4 chars per token)
+                    skill_context = build_skill_context()
+                    est_tokens = len(skill_context) // 4
+                    if est_tokens > _ollama_num_ctx * 0.8:
+                        print(f"WARNING: Skill context is ~{est_tokens:,} tokens, close to {_ollama_num_ctx:,} limit!")
+                        print(f"         Increase with --num-ctx {est_tokens * 2} or reduce skill size.")
+                    else:
+                        print(f"Skill context: ~{est_tokens:,} estimated tokens ({est_tokens*100//_ollama_num_ctx}% of context window)")
             except Exception as e:
                 print(f"Warning: Cannot reach Ollama at {_ollama_url}: {e}")
                 print(f"Make sure Ollama is running: ollama serve")
