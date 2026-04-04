@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Response clearly states 'GKE's maximum supported skew of 2 minor versions' and identifies the violation"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (nodes must be within 2 minor versions of control plane)",
+      "passed": true,
+      "reason": "Explicitly states 'N+3 skew - **unsupported**' and identifies this as a 'version skew violation' that 'exceeds GKE's maximum supported skew'"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Mentions 'cluster instability, unsupported configuration, security vulnerabilities' and references workload migration impacts"
+    },
+    {
+      "expectation": "Recommends skip-level (N+2) node pool upgrades within supported version skew to reduce time and disruption. For the N+3 gap (1.28 with 1.31 CP), recommends multiple sequential skip-level upgrades within supported skew (e.g., 1.28\u21921.30 then 1.30\u21921.31) or creating a new node pool at the target version and migrating workloads. Never recommends an unsupported skip-level upgrade.",
+      "passed": true,
+      "reason": "Correctly recommends '1.28 \u2192 1.30 (N+2 skip-level)' then '1.30 \u2192 1.31' and offers new node pool migration as alternative, staying within supported skew limits"
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Provides specific gcloud container node-pools upgrade commands for both upgrade approaches with proper syntax"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": false,
+      "reason": "Does not mention surge settings at all - the gcloud commands provided use default surge settings without specifying conservative parameters"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": false,
+      "reason": "While it mentions 'Wait for completion' between steps, it doesn't specifically advise close monitoring for issues between version bumps"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": true,
+      "reason": "Provides detailed prevention section with maintenance window configuration commands, though doesn't specifically mention release channel enrollment"
+    }
+  ]
+}

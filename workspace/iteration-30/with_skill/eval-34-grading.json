@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": true,
+      "reason": "Response explicitly states 'All 4 slices will be recreated entirely in a single step' and 'this is not a rolling upgrade', and contrasts this with standard node upgrades in the comparison table"
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": true,
+      "reason": "Response clearly states 'The maintenance event on ANY slice triggers restart of ALL slices simultaneously' under the Cascading restart section"
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "Response explicitly mentions 'Complete job termination: Your LLM training run will be terminated' and 'Pod eviction from all TPU slices simultaneously' with 'All training pods terminated' in the comparison table"
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": true,
+      "reason": "Response addresses this with 'If insufficient TPU v5e resources exist during recreation, slices block until hardware is available \u2014 this can extend downtime significantly' and mentions 'Slice recreation may be delayed hours/days until v5e hardware is available'"
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "Response provides specific command 'kubectl exec -it TRAINING_POD -- python save_checkpoint.py --force-save' and recommends 'Force frequent checkpoints before maintenance' with code examples"
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "Response includes code examples for checkpoint configuration with 'checkpoint_manager.force_save_on_preemption = True' and provides restart validation procedures with checkpoint restore verification"
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": false,
+      "reason": "The response does not mention maintenance exclusions or the ability to defer maintenance events. It focuses on preparation and recovery but not on postponement options"
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": true,
+      "reason": "Response includes a 'Maintenance Window Planning' section that recommends scheduling 'during training gaps' and 'Natural checkpoint boundaries (end of epoch)' and 'Weekend/off-peak hours'"
+    }
+  ]
+}

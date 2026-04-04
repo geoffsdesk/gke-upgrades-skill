@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all four types: 'Scheduled Upgrade Notifications', 'Upgrade Available Event' (new version), 'Minor Version End of Support' (end-of-life), and 'Security Patch Notifications'"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": false,
+      "reason": "Response assigns 'HIGH PRIORITY' to end-of-life warnings, not security patches. Security patches are marked as 'REVIEW - Usually Auto' and new version available is 'INFORMATIONAL - No Action Required', which doesn't match the expected priority ordering"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response clearly states for EoS warnings: 'Immediate: Plan upgrade within 30 days' and provides detailed action steps including checking EoS timeline and scheduling maintenance"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response includes specific pre-upgrade actions for scheduled upgrades: 'Run pre-upgrade health checks' and mentions 'Run pre-upgrade checklist' in the team playbook"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": false,
+      "reason": "Response states security patches 'auto-apply' and require 'No blocking action needed', which contradicts the expectation that they may require expedited manual upgrades"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response categorizes 'Upgrade Available Event' as 'Informational - No Action Required' and states 'Monitor only. Review release notes if interested in new features'"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "Response includes specific section 'Configure Pub/Sub for Programmatic Processing' with commands to create topics and configure notifications, plus Cloud Logging queries"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": true,
+      "reason": "Response mentions 'Review release notes if interested in new features', 'Review breaking changes in release notes between current \u2192 next minor', and 'Review release notes for interesting features'"
+    }
+  ]
+}

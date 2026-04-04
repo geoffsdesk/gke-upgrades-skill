@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all four notification types with specific sections for 'Auto-upgrade Scheduled', 'Available Version Updates', 'End-of-Life (EOL) Warnings', and 'Security Patches & CVE Fixes'"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response assigns security patches to CRITICAL priority (highest), and new version available to MEDIUM priority with informational updates being lowest"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response explicitly states EOL warnings require 'Upgrade immediately to supported version' for final notices and 'Plan upgrade path and timeline' for early warnings"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response includes a detailed 'Planned Upgrade Checklist' in YAML format with pre_upgrade, upgrade, and post_upgrade steps, and mentions 'prepare rollback plan' for auto-upgrade scenarios"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response specifically mentions security patches require action 'within 24-72 hours' and includes a 'Security patch emergency response' script for handling urgent security updates"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response categorizes 'Available Version Updates' as MEDIUM PRIORITY with 2-4 week timeline for planning, and some version announcements as INFORMATIONAL with 'Monthly review' timeline"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": false,
+      "reason": "Response does not mention Pub/Sub or Cloud Monitoring alerts. It only covers email filters, Gmail rules, and a Python script for processing notifications"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": true,
+      "reason": "Response includes 'Review release notes' as a required action in the planned upgrade checklist for medium priority notifications"
+    }
+  ]
+}

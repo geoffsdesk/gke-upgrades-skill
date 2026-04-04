@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that Extended channel provides up to 24 months of support vs 14 months for standard channels",
+      "passed": true,
+      "reason": "The response clearly states '24-month support for versions 1.27+ (vs 14 months on Regular)' in the benefits section"
+    },
+    {
+      "expectation": "Mentions that Extended channel has additional cost (it's not free)",
+      "passed": true,
+      "reason": "The response explicitly mentions 'Additional cost during extended support period (months 15-24 of version lifecycle)' and has a dedicated cost impact section"
+    },
+    {
+      "expectation": "Notes that Extended channel gets the same versions as Regular but keeps them available longer",
+      "passed": true,
+      "reason": "The response states 'Same patch timing as Regular \u2014 patches arrive at Regular channel speed, no delay' and explains the extended availability during months 15-24"
+    },
+    {
+      "expectation": "Warns that staying on older versions longer means missing new features and accumulating technical debt",
+      "passed": true,
+      "reason": "The response mentions 'Less frequent feature access \u2014 you'll be on older minor versions longer than Regular channel users' as a key tradeoff"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel to Extended",
+      "passed": true,
+      "reason": "The response provides the exact command: 'gcloud container clusters update CLUSTER_NAME --zone ZONE --release-channel extended'"
+    },
+    {
+      "expectation": "Advises checking that the current version (1.31) is available on Extended before switching",
+      "passed": true,
+      "reason": "The response includes a specific warning about checking if 1.31 is available in Extended channel and provides the command to check: 'gcloud container get-server-config --zone ZONE --format=\"yaml(channels.EXTENDED.validVersions)\"'"
+    },
+    {
+      "expectation": "Recommends Extended for environments with compliance requirements or slow internal change processes",
+      "passed": true,
+      "reason": "The response mentions 'regulated environments' and recommends Extended for maximum stability and predictability, which addresses compliance and slow change process needs"
+    },
+    {
+      "expectation": "Mentions that Extended doesn't mean you can skip upgrades forever \u2014 you still must upgrade within 24 months",
+      "passed": true,
+      "reason": "The response states that automatic upgrades still trigger 'at end of extended support' and discusses the 24-month lifecycle limit"
+    },
+    {
+      "expectation": "Notes that minor version upgrades on Extended are NOT automated (except at EoS) \u2014 customers must plan and initiate them manually",
+      "passed": true,
+      "reason": "The response explicitly states 'Manual control over minor version upgrades \u2014 control plane minor versions are NOT auto-upgraded (except at end of extended support)' and emphasizes manual upgrade responsibility throughout"
+    }
+  ]
+}

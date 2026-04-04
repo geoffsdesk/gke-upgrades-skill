@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends upgrading the L4 inference pool and A100 pool separately with different strategies",
+      "passed": true,
+      "reason": "Response clearly separates L4 and A100 pools with distinct strategies: autoscaled blue-green for L4 pool and job-aware timing/autoscaled blue-green for A100 pool"
+    },
+    {
+      "expectation": "For L4 inference pool: recommends surge upgrade with maxSurge=1 or 2 to maintain capacity during rolling replacement",
+      "passed": false,
+      "reason": "Response recommends autoscaled blue-green strategy instead of surge upgrade with maxSurge parameters. No mention of maxSurge=1 or 2 configuration"
+    },
+    {
+      "expectation": "Addresses GPU driver version compatibility \u2014 auto-installed drivers must be compatible with inference framework (TensorRT, vLLM, etc.)",
+      "passed": true,
+      "reason": "Response explicitly addresses GPU driver compatibility, mentions CUDA version changes in GKE 1.32, and recommends testing compatibility with inference models in staging"
+    },
+    {
+      "expectation": "For A100 fine-tuning pool: recommends scheduling the upgrade during a gap between fine-tuning jobs",
+      "passed": true,
+      "reason": "Response provides detailed job-aware timing strategy with maintenance exclusions to wait for fine-tuning job completion before upgrading"
+    },
+    {
+      "expectation": "Notes that GPU VMs do not support live migration \u2014 inference pods will restart during node upgrade, causing brief latency spikes",
+      "passed": true,
+      "reason": "Response explicitly states 'GPU VMs don't support live migration - every upgrade causes pod restarts' and mentions 'Inference latency spikes are inevitable with surge upgrades'"
+    },
+    {
+      "expectation": "Recommends PDBs on inference deployments to ensure enough replicas stay available during the rolling upgrade",
+      "passed": true,
+      "reason": "Response includes specific PDB configuration with minAvailable: 80% for inference services to protect during blue-green transition"
+    },
+    {
+      "expectation": "Addresses auto-scaler interaction \u2014 new nodes created by auto-scaler during upgrade will be at the old version until their pool upgrade completes",
+      "passed": true,
+      "reason": "Response addresses autoscaler interaction by recommending temporarily constraining autoscaling during upgrade window to prevent new nodes at old version"
+    },
+    {
+      "expectation": "Recommends testing driver + CUDA compatibility in staging before production upgrade",
+      "passed": true,
+      "reason": "Response includes specific staging validation steps with commands to create staging node pool and verify inference model loading and throughput before production upgrade"
+    }
+  ]
+}

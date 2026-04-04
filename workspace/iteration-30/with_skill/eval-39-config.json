@@ -1,0 +1,19 @@
+{
+  "eval_id": 39,
+  "mode": "with_skill",
+  "iteration": 30,
+  "prompt": "We want to upgrade our GPU node pool (128 A100 nodes with fixed reservations) on our Standard GKE cluster from 1.31 to 1.32. We've been told we should create a new node pool at 1.32, cordon the old pool, drain it manually, and delete it. Is that the right approach? Is there a better way?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-04-04T00:32:39.480590+00:00",
+  "input_tokens": 22313,
+  "output_tokens": 1054,
+  "time_seconds": 23.4,
+  "skill_files": [
+    "skill/SKILL.md",
+    "skill/evals/evals.json",
+    "skill/references/checklists.md",
+    "skill/references/runbook-template.md",
+    "skill/references/troubleshooting.md"
+  ]
+}
