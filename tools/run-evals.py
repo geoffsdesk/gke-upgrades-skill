@@ -178,7 +178,8 @@ def call_gemini(api_key: str, model: str, system: str, prompt: str) -> dict:
         return {"content": "", "tokens": 0, "time_seconds": 0, "error": str(e)}
 
 
-def call_ollama(base_url: str, model: str, system: str, prompt: str) -> dict:
+def call_ollama(base_url: str, model: str, system: str, prompt: str,
+                max_tokens: int = 4096, num_ctx: int = 32768) -> dict:
     """Call Ollama's OpenAI-compatible chat API (local or remote)."""
     url = f"{base_url}/v1/chat/completions"
     messages = []
@@ -191,8 +192,8 @@ def call_ollama(base_url: str, model: str, system: str, prompt: str) -> dict:
         "messages": messages,
         "stream": False,
         "options": {
-            "num_ctx": 32768,       # Context window — Gemma 4 supports up to 128K
-            "num_predict": 4096,    # Max output tokens
+            "num_ctx": num_ctx,
+            "num_predict": max_tokens,
         },
     }
 
@@ -272,9 +273,93 @@ GRADING_SYSTEM = dedent("""\
 """)
 
 
+import re as _re
+
+
+def _repair_json(raw: str) -> str:
+    """Attempt to repair common JSON issues from local models.
+
+    Handles:
+    - Trailing commas before } or ]
+    - Truncated JSON (missing closing brackets)
+    - Unescaped newlines/quotes inside strings
+    - Markdown code fences wrapping JSON
+    """
+    text = raw.strip()
+
+    # Strip markdown code fences
+    if text.startswith("```"):
+        text = "\n".join(text.split("\n")[1:])
+        if text.endswith("```"):
+            text = text[:-3].strip()
+        elif "```" in text:
+            text = text[:text.rfind("```")].strip()
+
+    # Remove trailing commas before } or ]
+    text = _re.sub(r',\s*([}\]])', r'\1', text)
+
+    # Try parsing as-is first
+    try:
+        return json.dumps(json.loads(text))
+    except json.JSONDecodeError:
+        pass
+
+    # Truncated JSON — find the last COMPLETE assertion object and discard the rest
+    # Strategy: find all complete {...} blocks within the assertions array
+    # by looking for assertion objects that end with }
+    last_good_brace = -1
+    depth = 0
+    in_string = False
+    escape_next = False
+    for i, ch in enumerate(text):
+        if escape_next:
+            escape_next = False
+            continue
+        if ch == '\\' and in_string:
+            escape_next = True
+            continue
+        if ch == '"' and not escape_next:
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+        if ch == '{':
+            depth += 1
+        elif ch == '}':
+            depth -= 1
+            if depth == 1:  # Just closed an assertion object (depth 1 = inside top-level object)
+                last_good_brace = i
+
+    if last_good_brace > 0:
+        truncated = text[:last_good_brace + 1]
+        # Close remaining brackets
+        open_braces = truncated.count('{') - truncated.count('}')
+        open_brackets = truncated.count('[') - truncated.count(']')
+        truncated += ']' * open_brackets + '}' * open_braces
+        truncated = _re.sub(r',\s*([}\]])', r'\1', truncated)
+        try:
+            return json.dumps(json.loads(truncated))
+        except json.JSONDecodeError:
+            pass
+
+    # Last resort: try closing all open brackets (for minor truncation)
+    open_braces = text.count('{') - text.count('}')
+    open_brackets = text.count('[') - text.count(']')
+    if open_braces > 0 or open_brackets > 0:
+        patched = text + '"}' * 0  # Don't add random string closers
+        patched = text + ']' * open_brackets + '}' * open_braces
+        patched = _re.sub(r',\s*([}\]])', r'\1', patched)
+        try:
+            return json.dumps(json.loads(patched))
+        except json.JSONDecodeError:
+            pass
+
+    return text  # Return as-is, caller will handle the error
+
+
 def grade_output(provider: str, api_key: str, model: str,
                  prompt: str, response: str, expectations: list[str]) -> dict:
-    """Grade a response against expectations using the same model."""
+    """Grade a response against expectations using the specified model."""
     grading_prompt = (
         f"## User Prompt\n{prompt}\n\n"
         f"## Model Response\n{response}\n\n"
@@ -283,22 +368,23 @@ def grade_output(provider: str, api_key: str, model: str,
     for i, exp in enumerate(expectations, 1):
         grading_prompt += f"{i}. {exp}\n"
 
-    result = call_model(provider, api_key, model, GRADING_SYSTEM, grading_prompt)
+    # For Ollama grading, use higher token limit to avoid truncation
+    if provider == "ollama":
+        result = call_ollama(_ollama_url, model, GRADING_SYSTEM, grading_prompt,
+                             max_tokens=8192, num_ctx=32768)
+    else:
+        result = call_model(provider, api_key, model, GRADING_SYSTEM, grading_prompt)
     if result["error"]:
         return {"error": result["error"]}
 
-    # Parse JSON from response (handle markdown code blocks)
-    content = result["content"].strip()
-    if content.startswith("```"):
-        content = "\n".join(content.split("\n")[1:])
-        if content.endswith("```"):
-            content = content[:-3].strip()
+    # Parse JSON from response with repair
+    content = _repair_json(result["content"])
 
     try:
         grading = json.loads(content)
         return grading
     except json.JSONDecodeError as e:
-        return {"error": f"Failed to parse grading JSON: {e}\nRaw: {content[:500]}"}
+        return {"error": f"Failed to parse grading JSON: {e}\nRaw: {result['content'][:500]}"}
 
 
 # ---------------------------------------------------------------------------
@@ -502,15 +588,27 @@ def _run_provider(provider: str, api_key: str, model: str, all_evals: list,
                     grade_provider = provider
                     grade_key = api_key
                     grade_model = model
-                grading = grade_output(grade_provider, grade_key, grade_model,
-                                       prompt, result["content"], expectations)
+
+                # Grade with retry on parse failures (local models sometimes need a second attempt)
+                max_grade_attempts = 3 if grade_provider == "ollama" else 1
+                grading = None
+                for attempt in range(max_grade_attempts):
+                    grading = grade_output(grade_provider, grade_key, grade_model,
+                                           prompt, result["content"], expectations)
+                    if "error" not in grading:
+                        break
+                    if attempt < max_grade_attempts - 1:
+                        print(f" retry {attempt+2}...", end="", flush=True)
+                        time.sleep(1)
+
                 if "error" in grading:
                     print(f" GRADE ERROR: {grading['error'][:100]}")
                 else:
                     assertions = grading.get("assertions", [])
                     passed = sum(1 for a in assertions if a.get("passed"))
                     grader_tag = f" (graded by {grade_provider})" if grade_provider != provider else ""
-                    print(f" {passed}/{len(assertions)} passed{grader_tag}")
+                    retry_tag = f" (attempt {attempt+1})" if attempt > 0 else ""
+                    print(f" {passed}/{len(assertions)} passed{grader_tag}{retry_tag}")
                     save_grading(iteration_dir, eval_id, mode, grading)
 
             time.sleep(1)
@@ -755,6 +853,19 @@ def main():
         # For single-provider gemini, map api_key to gemini_key
         if args.provider == "gemini" and not args.gemini_key:
             args.gemini_key = args.api_key
+
+        # For Ollama, recommend --grade-with claude for accurate grading
+        if args.provider in ("ollama",) and args.grade_with == "self":
+            # Check if Claude API key is available — if so, auto-use it for grading
+            if not args.api_key:
+                args.api_key = os.environ.get("ANTHROPIC_API_KEY")
+            if args.api_key:
+                print("Note: Using Claude as grader for Ollama outputs (more accurate).")
+                print("      To self-grade with the local model, use: --grade-with self --api-key none")
+                args.grade_with = "claude"
+            else:
+                print("Warning: Self-grading with local models produces unreliable results.")
+                print("         For accurate grading, add: --grade-with claude --api-key sk-ant-...")
 
         # Grade-with claude requires an API key even for ollama-only runs
         if args.grade_with == "claude" and args.provider == "ollama":
