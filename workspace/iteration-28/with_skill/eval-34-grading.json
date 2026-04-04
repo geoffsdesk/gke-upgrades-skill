@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": true,
+      "reason": "Response clearly states 'TPU multislice maintenance is atomic' and 'All 4 slices will restart simultaneously \u2014 TPU multislice environments don't support rolling updates'"
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": true,
+      "reason": "Response explicitly states 'Even if maintenance technically only affects 1 slice, GKE will restart ALL slices in the multislice environment to maintain the required interconnect topology'"
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "Response clearly states 'Your training job will terminate immediately' and 'immediate stop of all running workloads'"
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": true,
+      "reason": "Response states 'The slices will only come back online if sufficient TPU v5e capacity is available in your zone. If hardware is constrained, you could face extended downtime waiting for TPU resources to become available'"
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "Response includes 'Checkpoint immediately \u2014 Save your model state, optimizer state, and training metadata to persistent storage (Cloud Storage/GCS) right now' in the preparation checklist"
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "Response includes detailed checkpoint restoration steps and testing procedures, including 'Test restore procedure' and recovery procedures for resuming from checkpoint"
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": false,
+      "reason": "The response does not mention maintenance exclusions or the option to defer the maintenance event"
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": true,
+      "reason": "Response mentions 'Schedule during training breaks \u2014 If you have natural checkpointing intervals, try to align the maintenance window with one of those'"
+    }
+  ]
+}

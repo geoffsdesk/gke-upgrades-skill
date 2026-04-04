@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's native node pool upgrade strategies rather than the manual create/cordon/drain/delete workflow described",
+      "passed": true,
+      "reason": "Explicitly states 'No, that's not the right approach' and recommends GKE's native upgrade strategies as the supported path"
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends surge upgrade with maxSurge=0 and maxUnavailable set as the primary lever (since no surge capacity is available)",
+      "passed": true,
+      "reason": "Specifically recommends 'maxSurge=0 because your fixed reservation has no surge capacity' and 'maxUnavailable=4' as the configuration"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as a native alternative that handles cordon and migration automatically",
+      "passed": true,
+      "reason": "Provides a 'Native Blue-Green' section with gcloud commands using BLUE_GREEN strategy and explains it handles cordon/migration automatically"
+    },
+    {
+      "expectation": "Explains that native strategies are the supported path and handle edge cases (PDB respect, drain timeouts, progress tracking) that manual workflows miss",
+      "passed": true,
+      "reason": "States 'Much safer than manual cordon/drain \u2014 GKE handles the orchestration' and 'Manual workflows aren't supported by GKE SRE', mentions PDB configuration"
+    },
+    {
+      "expectation": "Only suggests manual blue-green as a last resort if native strategies don't meet a specific requirement",
+      "passed": false,
+      "reason": "Does not suggest manual blue-green as a last resort - instead presents native blue-green as an alternative if capacity allows"
+    },
+    {
+      "expectation": "Addresses GPU driver compatibility \u2014 need to verify target version's auto-installed driver is compatible",
+      "passed": true,
+      "reason": "Includes a 'Pre-Upgrade Requirements' section specifically about testing GPU driver compatibility and mentions 'GKE auto-installs GPU drivers matching the target version \u2014 this can change CUDA versions silently'"
+    },
+    {
+      "expectation": "Recommends scheduling the upgrade during a gap in GPU workloads to minimize impact",
+      "passed": false,
+      "reason": "Does not mention scheduling during gaps in GPU workloads - focuses on technical configuration but not timing recommendations"
+    },
+    {
+      "expectation": "Provides gcloud commands for the recommended native approach",
+      "passed": true,
+      "reason": "Provides specific gcloud commands for both the surge upgrade strategy and blue-green strategy configurations"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "eval_id": 31,
+  "mode": "with_skill",
+  "iteration": 29,
+  "prompt": "We run a large-scale LLM training cluster on GKE Standard with 512 H100 GPU nodes (A3 Mega, 8 GPUs each) using GPUDirect-TCPXO for inter-node communication. Our training runs last 2-3 weeks. We're on GKE 1.31 and need to upgrade to 1.32. How do we do this without destroying an active training run or breaking our GPU interconnect?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-04-03T03:12:01.398838+00:00",
+  "input_tokens": 22337,
+  "output_tokens": 2037,
+  "time_seconds": 43.83,
+  "skill_files": [
+    "skill/SKILL.md",
+    "skill/evals/evals.json",
+    "skill/references/checklists.md",
+    "skill/references/runbook-template.md",
+    "skill/references/troubleshooting.md"
+  ]
+}

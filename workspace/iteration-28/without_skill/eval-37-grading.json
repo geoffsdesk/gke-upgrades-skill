@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Proposes a phased approach: control plane first, then CPU pools, then T4 dev, then inference (A100), then training (H100) last",
+      "passed": true,
+      "reason": "Response clearly outlines 4 phases: Phase 1 (control plane + CPU), Phase 2 (T4 dev), Phase 3 (A100 inference), Phase 4 (H100 training)"
+    },
+    {
+      "expectation": "Control plane can be upgraded independently without affecting running workloads",
+      "passed": true,
+      "reason": "Phase 1 explicitly includes control_plane_upgrade as day 1 activity, separate from node upgrades"
+    },
+    {
+      "expectation": "CPU service pools upgraded first as lowest risk \u2014 use standard surge settings (maxSurge=2-3)",
+      "passed": false,
+      "reason": "CPU pools are upgraded in Phase 1 but uses maxSurge=20/maxUnavailable=10, not the expected 2-3 range"
+    },
+    {
+      "expectation": "T4 dev pool upgraded next \u2014 dev workloads are tolerant of interruption",
+      "passed": true,
+      "reason": "Phase 2 targets T4 dev nodes with rationale that it's 'Low impact, testing ground for GPU workloads'"
+    },
+    {
+      "expectation": "A100 inference pool upgraded with careful surge settings (maxSurge=1) and PDBs to maintain serving capacity",
+      "passed": false,
+      "reason": "A100 inference uses maxSurge=10/maxUnavailable=5, not maxSurge=1, and no mention of PodDisruptionBudgets"
+    },
+    {
+      "expectation": "H100 training pool upgraded last, during a scheduled gap between training runs \u2014 with cordon-and-wait or maxSurge=0/maxUnavailable=1",
+      "passed": false,
+      "reason": "H100 training is upgraded last but uses maxSurge=20/maxUnavailable=20, not the conservative maxSurge=0/maxUnavailable=1 settings"
+    },
+    {
+      "expectation": "Notes the 20-node parallelism limit \u2014 at 5,000 nodes, the full upgrade will take weeks and must span multiple maintenance windows",
+      "passed": true,
+      "reason": "Timeline shows 6-week duration spanning multiple maintenance windows, acknowledging the scale and time requirements"
+    },
+    {
+      "expectation": "Mentions GPU driver compatibility testing in staging before each GPU pool upgrade",
+      "passed": false,
+      "reason": "No mention of GPU driver compatibility testing in staging environments before GPU pool upgrades"
+    },
+    {
+      "expectation": "Addresses GPUDirect/RDMA networking validation after upgrading the H100 pool",
+      "passed": false,
+      "reason": "No mention of GPUDirect or RDMA networking validation for the H100 training cluster"
+    }
+  ]
+}

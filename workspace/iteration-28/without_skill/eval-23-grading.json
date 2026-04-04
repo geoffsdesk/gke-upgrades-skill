@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies Service A (minAvailable=100%) as a guaranteed upgrade blocker \u2014 no disruptions allowed at all",
+      "passed": true,
+      "reason": "Response clearly identifies Service A as 'BLOCKS ALL UPGRADES' and explains that 100% minAvailable requires ALL pods to be available with no disruptions allowed"
+    },
+    {
+      "expectation": "Identifies Service B (maxUnavailable=0) as also blocking upgrades \u2014 same effect as 100% minAvailable",
+      "passed": true,
+      "reason": "Response identifies Service B as 'BLOCKS ALL UPGRADES' and explicitly states it's 'Identical to Service A - no pods can be disrupted'"
+    },
+    {
+      "expectation": "States Service C (minAvailable=2 with 3 replicas) is safe \u2014 allows 1 pod disruption at a time",
+      "passed": false,
+      "reason": "Response incorrectly categorizes Service C as 'RISKY' and states it 'BLOCKS UPGRADES', not safe as expected"
+    },
+    {
+      "expectation": "States Service D (maxUnavailable=1 with 5 replicas) is safe \u2014 allows 1 pod down at a time",
+      "passed": true,
+      "reason": "Response correctly identifies Service D as 'SAFE CONFIGURATION' with 'LOW' risk and good upgrade compatibility"
+    },
+    {
+      "expectation": "Recommends fixing Service A: change to minAvailable=N-1 or maxUnavailable=1",
+      "passed": true,
+      "reason": "Response provides YAML fix for Service A changing to 'maxUnavailable: 1'"
+    },
+    {
+      "expectation": "Recommends fixing Service B: change to maxUnavailable=1",
+      "passed": true,
+      "reason": "Response provides YAML fix for Service B changing to 'maxUnavailable: 1'"
+    },
+    {
+      "expectation": "Explains that GKE respects PDBs for up to 1 hour during surge upgrades, then may force-drain",
+      "passed": false,
+      "reason": "Response does not mention GKE-specific behavior, 1-hour timeout, or force-drain mechanisms"
+    },
+    {
+      "expectation": "Provides kubectl patch commands to fix the problematic PDBs",
+      "passed": false,
+      "reason": "Response provides YAML manifests but does not include kubectl patch commands"
+    },
+    {
+      "expectation": "Recommends testing PDB changes in a non-production environment first",
+      "passed": false,
+      "reason": "Response mentions 'Test PDBs with dry-run upgrades' but does not specifically recommend testing in non-production environments first"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "eval_id": 15,
+  "mode": "with_skill",
+  "iteration": 29,
+  "prompt": "We upgraded our Standard cluster's control plane to 1.32 successfully, but the node pool upgrade for our main workload pool failed partway through. 8 out of 20 nodes upgraded, then it stopped with an error. The other two node pools haven't been touched yet. What do we do?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-04-03T02:59:48.077312+00:00",
+  "input_tokens": 22297,
+  "output_tokens": 822,
+  "time_seconds": 14.97,
+  "skill_files": [
+    "skill/SKILL.md",
+    "skill/evals/evals.json",
+    "skill/references/checklists.md",
+    "skill/references/runbook-template.md",
+    "skill/references/troubleshooting.md"
+  ]
+}

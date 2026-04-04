@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the difference between Rapid and Stable channels \u2014 including that Rapid has no SLA for upgrade stability while Stable carries a full SLA, and clearly distinguishes minor version vs patch version differences between the channels",
+      "passed": true,
+      "reason": "Response clearly explains Rapid has no SLA while Stable has full SLA, and details timing differences for both patches (4-6 weeks later) and minor versions (2-4 months later) between channels"
+    },
+    {
+      "expectation": "Notes that channel changes don't trigger an immediate upgrade or downgrade",
+      "passed": true,
+      "reason": "Response explicitly states 'Channel migration: Immediate (API call)' but explains that upgrades only happen after versions become available in the target channel, indicating no immediate version change"
+    },
+    {
+      "expectation": "Warns that if 1.30 isn't yet available on Stable, the cluster may not receive patches until Stable catches up",
+      "passed": true,
+      "reason": "Response provides critical warning about being 'ahead of channel' and freezing auto-upgrades, though it references 1.32 instead of 1.30 (which is appropriate given the user's context of being at 1.32)"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "Response provides the exact gcloud command: 'gcloud container clusters update CLUSTER_NAME --zone YOUR_ZONE --release-channel stable'"
+    },
+    {
+      "expectation": "Recommends checking version availability on Stable before switching (gcloud container get-server-config)",
+      "passed": true,
+      "reason": "Response includes pre-migration checklist with specific gcloud container get-server-config command to check if 1.32 is available in Stable channel"
+    },
+    {
+      "expectation": "Discusses the impact on auto-upgrade timing going forward",
+      "passed": true,
+      "reason": "Response thoroughly discusses auto-upgrade behavior changes, including patch timing (4-6 weeks later), minor versions (2-4 months later), and predictability improvements"
+    },
+    {
+      "expectation": "Mentions that the Extended channel is an option if they need even slower cadence (with cost implications)",
+      "passed": false,
+      "reason": "Response does not mention the Extended channel as an alternative option or discuss its cost implications"
+    },
+    {
+      "expectation": "Advises coordinating the change during a maintenance window",
+      "passed": true,
+      "reason": "Response includes maintenance window configuration commands and discusses using maintenance exclusions to control timing of the migration"
+    }
+  ]
+}

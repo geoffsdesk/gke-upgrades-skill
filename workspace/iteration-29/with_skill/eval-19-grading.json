@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all four notification types in the action matrix table and provides detailed sections for each: scheduled upgrades (72h advance), version available, end-of-life warnings, and security patches"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": false,
+      "reason": "Response assigns end-of-life warnings as highest priority (HIGH), security patches as medium priority (MEDIUM), and version available as lowest (LOW). This contradicts the expectation that security patches should be highest priority"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response explicitly states end-of-life warnings require 'Plan upgrade ASAP' with checklist items including planning upgrade path and scheduling before EoS date to avoid forced upgrade"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response provides a decision tree for scheduled upgrades including validation steps and mentions 'Need validation first? \u2192 Defer and trigger manually after testing'"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response specifically mentions 'For critical security fixes: consider manual upgrade to accelerate' and provides command examples for accelerated patch upgrades"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response explicitly states for version available notifications: 'Informational only. This just means a new version is available... No immediate action needed unless you want to manually upgrade ahead of schedule'"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": false,
+      "reason": "Response provides Cloud Logging filters for notifications but does not mention setting up Pub/Sub or Cloud Monitoring alerts specifically for GKE upgrade events"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": false,
+      "reason": "Response does not mention GKE release notes or reference them as a source for understanding version changes"
+    }
+  ]
+}

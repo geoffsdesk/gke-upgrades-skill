@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes notifications into specific types including 'Scheduled upgrade notifications', 'Upgrade available event', 'Minor version at or near end of support', and mentions 'New patch change to new COS milestone' which covers security patches"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response assigns clear urgency levels using emoji indicators: URGENT (\ud83d\udea8) for end-of-life, HIGH PRIORITY (\u26a0\ufe0f) for scheduled upgrades, MEDIUM PRIORITY (\ud83d\udcca) for available versions, and INFORMATIONAL (\u2705) for monitoring-only events"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response explicitly states for end-of-life warnings: 'Act within days to weeks before EoS date' and 'Action required: Plan and execute upgrade to supported version' with specific commands and upgrade planning guidance"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response provides specific actions for scheduled upgrades including 72-hour decision timeline and concrete options (accept, defer, or reschedule) with commands, though it doesn't explicitly mention a 'checklist' - it provides actionable steps"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": false,
+      "reason": "While the response mentions 'New patch change to new COS milestone' as medium priority, it does not specifically address security patches requiring expedited upgrades outside normal maintenance windows"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response correctly categorizes 'Upgrade available event' as MEDIUM PRIORITY with 'No urgency - version becomes auto-upgrade target in 1-4 weeks' and states 'Action required: Review release notes, plan testing in dev/staging'"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "Response includes a specific section on 'Pub/Sub Integration for Automated Responses' with concrete commands and also provides Cloud Logging queries for monitoring GKE notifications"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": true,
+      "reason": "Response explicitly mentions checking GKE release notes with the specific URL: 'Check GKE release notes: https://cloud.google.com/kubernetes-engine/docs/release-notes'"
+    }
+  ]
+}

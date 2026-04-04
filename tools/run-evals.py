@@ -2,7 +2,7 @@
 """
 GKE Upgrade Skill — Automated Eval Runner
 
-Runs all eval prompts from skill/evals/evals.json against a model (Claude or Gemini),
+Runs all eval prompts from skill/evals/evals.json against a model (Claude, Gemini, or Ollama),
 grades outputs against expectations, and produces benchmark.json.
 
 Usage:
@@ -12,8 +12,17 @@ Usage:
     # Run with Gemini
     python3 tools/run-evals.py --provider gemini --api-key AIza... --iteration 4 --model gemini-2.0-flash
 
+    # Run with Ollama (local model, no API key needed)
+    python3 tools/run-evals.py --provider ollama --iteration 4 --model gemma4:27b
+
+    # Run with custom Ollama endpoint
+    python3 tools/run-evals.py --provider ollama --iteration 4 --model gemma4:27b --ollama-url http://192.168.1.100:11434
+
     # Run BOTH providers in same iteration (head-to-head comparison)
     python3 tools/run-evals.py --provider both --api-key sk-ant-... --gemini-key AIza... --iteration 4
+
+    # Run Claude + Ollama head-to-head
+    python3 tools/run-evals.py --provider claude+ollama --api-key sk-ant-... --iteration 4 --ollama-model gemma4:27b
 
     # Run only specific evals
     python3 tools/run-evals.py --provider claude --api-key sk-ant-... --iteration 4 --evals 4,5,6
@@ -23,6 +32,9 @@ Usage:
 
     # Dry run — show what would be done
     python3 tools/run-evals.py --dry-run --iteration 4
+
+    # Grade Ollama outputs using Claude as grader (recommended for accuracy)
+    python3 tools/run-evals.py --provider ollama --iteration 4 --model gemma4:27b --grade-with claude --api-key sk-ant-...
 
 Zero dependencies beyond Python 3.10+ stdlib.
 """
@@ -58,6 +70,19 @@ GEMINI_MODELS = {
     "pro": "gemini-3.1-pro-preview",
     "flash-lite": "gemini-2.5-flash-lite",
 }
+OLLAMA_MODELS = {
+    "gemma4": "gemma4:latest",
+    "gemma4:12b": "gemma4:12b",
+    "gemma4:27b": "gemma4:27b",
+    "gemma3": "gemma3:latest",
+    "gemma3:27b": "gemma3:27b",
+    "gemma2": "gemma2:latest",
+    "gemma2:9b": "gemma2:9b",
+    "gemma2:27b": "gemma2:27b",
+    "llama3.3": "llama3.3:latest",
+    "qwen3": "qwen3:latest",
+}
+DEFAULT_OLLAMA_URL = "http://localhost:11434"
 
 # ---------------------------------------------------------------------------
 # Skill context builder
@@ -153,11 +178,69 @@ def call_gemini(api_key: str, model: str, system: str, prompt: str) -> dict:
         return {"content": "", "tokens": 0, "time_seconds": 0, "error": str(e)}
 
 
+def call_ollama(base_url: str, model: str, system: str, prompt: str) -> dict:
+    """Call Ollama's OpenAI-compatible chat API (local or remote)."""
+    url = f"{base_url}/v1/chat/completions"
+    messages = []
+    if system:
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": prompt})
+
+    body = {
+        "model": model,
+        "messages": messages,
+        "stream": False,
+        "options": {
+            "num_ctx": 32768,       # Context window — Gemma 4 supports up to 128K
+            "num_predict": 4096,    # Max output tokens
+        },
+    }
+
+    data = json.dumps(body).encode()
+    req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"}, method="POST")
+    t0 = time.time()
+    try:
+        with urllib.request.urlopen(req, timeout=600) as resp:  # 10min timeout for local models
+            result = json.loads(resp.read())
+        elapsed = time.time() - t0
+        content = ""
+        for choice in result.get("choices", []):
+            msg = choice.get("message", {})
+            content += msg.get("content", "")
+        usage = result.get("usage", {})
+        return {
+            "content": content,
+            "input_tokens": usage.get("prompt_tokens", 0),
+            "output_tokens": usage.get("completion_tokens", 0),
+            "time_seconds": round(elapsed, 2),
+            "error": None,
+        }
+    except urllib.error.URLError as e:
+        if "Connection refused" in str(e):
+            return {"content": "", "tokens": 0, "time_seconds": 0,
+                    "error": f"Ollama not running at {base_url}. Start with: ollama serve"}
+        return {"content": "", "tokens": 0, "time_seconds": 0, "error": str(e)}
+    except urllib.error.HTTPError as e:
+        body_text = e.read().decode()[:500]
+        if e.code == 404 and "model" in body_text.lower():
+            return {"content": "", "tokens": 0, "time_seconds": 0,
+                    "error": f"Model '{model}' not found. Pull it first: ollama pull {model}"}
+        return {"content": "", "tokens": 0, "time_seconds": 0, "error": f"HTTP {e.code}: {body_text}"}
+    except Exception as e:
+        return {"content": "", "tokens": 0, "time_seconds": 0, "error": str(e)}
+
+
+# Global Ollama URL — set from args
+_ollama_url = DEFAULT_OLLAMA_URL
+
+
 def call_model(provider: str, api_key: str, model: str, system: str, prompt: str) -> dict:
     if provider == "claude":
         return call_claude(api_key, model, system, prompt)
     elif provider == "gemini":
         return call_gemini(api_key, model, system, prompt)
+    elif provider == "ollama":
+        return call_ollama(_ollama_url, model, system, prompt)
     else:
         return {"content": "", "tokens": 0, "time_seconds": 0, "error": f"Unknown provider: {provider}"}
 
@@ -410,14 +493,24 @@ def _run_provider(provider: str, api_key: str, model: str, all_evals: list,
 
             if not args.skip_grading:
                 print(f"         grading...", end="", flush=True)
-                grading = grade_output(provider, api_key, model,
+                # Determine grading provider/model/key
+                if args.grade_with == "claude" and provider != "claude":
+                    grade_provider = "claude"
+                    grade_key = args.api_key
+                    grade_model = CLAUDE_MODELS.get(args.claude_model, args.claude_model)
+                else:
+                    grade_provider = provider
+                    grade_key = api_key
+                    grade_model = model
+                grading = grade_output(grade_provider, grade_key, grade_model,
                                        prompt, result["content"], expectations)
                 if "error" in grading:
                     print(f" GRADE ERROR: {grading['error'][:100]}")
                 else:
                     assertions = grading.get("assertions", [])
                     passed = sum(1 for a in assertions if a.get("passed"))
-                    print(f" {passed}/{len(assertions)} passed")
+                    grader_tag = f" (graded by {grade_provider})" if grade_provider != provider else ""
+                    print(f" {passed}/{len(assertions)} passed{grader_tag}")
                     save_grading(iteration_dir, eval_id, mode, grading)
 
             time.sleep(1)
@@ -448,13 +541,26 @@ def run_evals(args):
         iteration_dir = ensure_iteration_dir(args.iteration, "claude")
         ensure_iteration_dir(args.iteration, "gemini")
         n_providers = 2
+    elif args.provider == "claude+ollama":
+        ollama_model = args.ollama_model
+        if ollama_model in OLLAMA_MODELS:
+            ollama_model = OLLAMA_MODELS[ollama_model]
+        providers = [
+            ("claude", args.api_key, args.claude_model),
+            ("ollama", None, ollama_model),
+        ]
+        iteration_dir = ensure_iteration_dir(args.iteration, "claude")
+        ensure_iteration_dir(args.iteration, "ollama")
+        n_providers = 2
     else:
         model = args.model
         if args.provider == "claude" and model in CLAUDE_MODELS:
             model = CLAUDE_MODELS[model]
         elif args.provider == "gemini" and model in GEMINI_MODELS:
             model = GEMINI_MODELS[model]
-        providers = [(args.provider, args.api_key, model)]
+        elif args.provider == "ollama" and model in OLLAMA_MODELS:
+            model = OLLAMA_MODELS[model]
+        providers = [(args.provider, args.api_key if args.provider != "ollama" else None, model)]
         iteration_dir = ensure_iteration_dir(args.iteration)
         n_providers = 1
 
@@ -478,8 +584,10 @@ def run_evals(args):
             model = CLAUDE_MODELS[model]
         elif provider == "gemini" and model in GEMINI_MODELS:
             model = GEMINI_MODELS[model]
+        elif provider == "ollama" and model in OLLAMA_MODELS:
+            model = OLLAMA_MODELS[model]
 
-        mode_prefix = f"{provider}_" if args.provider == "both" else ""
+        mode_prefix = f"{provider}_" if args.provider in ("both", "claude+ollama") else ""
         print(f"\n{'#'*60}")
         print(f"  PROVIDER: {provider.upper()} | MODEL: {model}")
         print(f"{'#'*60}")
@@ -496,8 +604,9 @@ def run_evals(args):
 
     # Print summary
     delta = benchmark.get("delta", {})
-    if args.provider == "both":
-        for prov in ["claude", "gemini"]:
+    if args.provider in ("both", "claude+ollama"):
+        prov_list = ["claude", "gemini"] if args.provider == "both" else ["claude", "ollama"]
+        for prov in prov_list:
             ws = benchmark.get(f"{prov}_with_skill", {})
             wos = benchmark.get(f"{prov}_without_skill", {})
             prov_delta = delta.get(prov, {})
@@ -590,16 +699,22 @@ def main():
               python3 tools/run-evals.py --dry-run --iteration 4
         """)
     )
-    parser.add_argument("--provider", choices=["claude", "gemini", "both"], default="claude",
-                        help="API provider: claude, gemini, or both (default: claude)")
+    parser.add_argument("--provider", choices=["claude", "gemini", "ollama", "both", "claude+ollama"], default="claude",
+                        help="API provider: claude, gemini, ollama, both (claude+gemini), or claude+ollama (default: claude)")
     parser.add_argument("--api-key", help="Claude API key (or set ANTHROPIC_API_KEY env var). Used for both --provider claude and --provider both.")
     parser.add_argument("--gemini-key", help="Gemini API key (or set GEMINI_API_KEY env var). Required for --provider gemini or --provider both.")
     parser.add_argument("--model", default="sonnet",
-                        help="Model name or alias (single provider). Claude: sonnet/opus/haiku. Gemini: flash/pro/flash-lite.")
+                        help="Model name or alias (single provider). Claude: sonnet/opus/haiku. Gemini: flash/pro/flash-lite. Ollama: gemma4/gemma3/llama3.3/etc.")
     parser.add_argument("--claude-model", default="sonnet",
                         help="Claude model for --provider both (default: sonnet)")
     parser.add_argument("--gemini-model", default="pro",
-                        help="Gemini model for --provider both (default: flash)")
+                        help="Gemini model for --provider both (default: pro)")
+    parser.add_argument("--ollama-model", default="gemma4",
+                        help="Ollama model for --provider claude+ollama (default: gemma4)")
+    parser.add_argument("--ollama-url", default=DEFAULT_OLLAMA_URL,
+                        help=f"Ollama server URL (default: {DEFAULT_OLLAMA_URL})")
+    parser.add_argument("--grade-with", choices=["self", "claude"], default="self",
+                        help="Which model grades responses. 'self' = same model grades its own output. 'claude' = Claude grades all outputs (more accurate for local models).")
     parser.add_argument("--iteration", type=int, required=True,
                         help="Iteration number (creates workspace/iteration-N/)")
     parser.add_argument("--evals", help="Comma-separated eval IDs to run (default: all)")
@@ -614,9 +729,13 @@ def main():
 
     args = parser.parse_args()
 
+    # Set global Ollama URL
+    global _ollama_url
+    _ollama_url = args.ollama_url
+
     # Resolve API keys from env if not provided
     if not args.dry_run:
-        if args.provider in ("claude", "both"):
+        if args.provider in ("claude", "both", "claude+ollama"):
             if not args.api_key:
                 args.api_key = os.environ.get("ANTHROPIC_API_KEY")
             if not args.api_key:
@@ -636,6 +755,28 @@ def main():
         # For single-provider gemini, map api_key to gemini_key
         if args.provider == "gemini" and not args.gemini_key:
             args.gemini_key = args.api_key
+
+        # Grade-with claude requires an API key even for ollama-only runs
+        if args.grade_with == "claude" and args.provider == "ollama":
+            if not args.api_key:
+                args.api_key = os.environ.get("ANTHROPIC_API_KEY")
+            if not args.api_key:
+                print("Error: --api-key required when using --grade-with claude (or set ANTHROPIC_API_KEY env var)")
+                sys.exit(1)
+
+        # Verify Ollama connectivity
+        if args.provider in ("ollama", "claude+ollama"):
+            try:
+                req = urllib.request.Request(f"{_ollama_url}/api/tags", method="GET")
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    tags_data = json.loads(resp.read())
+                    available = [m["name"] for m in tags_data.get("models", [])]
+                    print(f"Ollama connected at {_ollama_url}")
+                    print(f"Available models: {', '.join(available) if available else '(none)'}")
+            except Exception as e:
+                print(f"Warning: Cannot reach Ollama at {_ollama_url}: {e}")
+                print(f"Make sure Ollama is running: ollama serve")
+                sys.exit(1)
 
     if args.grade_only:
         grade_only(args)

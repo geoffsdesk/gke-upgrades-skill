@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies Service A (minAvailable=100%) as a guaranteed upgrade blocker \u2014 no disruptions allowed at all",
+      "passed": true,
+      "reason": "Response clearly identifies Service A as risky, stating it 'prevents ANY pod disruption' and 'completely blocks node drain'"
+    },
+    {
+      "expectation": "Identifies Service B (maxUnavailable=0) as also blocking upgrades \u2014 same effect as 100% minAvailable",
+      "passed": true,
+      "reason": "Response identifies Service B as risky, stating 'Same as Service A - zero disruption allowed' and 'will block drain'"
+    },
+    {
+      "expectation": "States Service C (minAvailable=2 with 3 replicas) is safe \u2014 allows 1 pod disruption at a time",
+      "passed": false,
+      "reason": "Response actually categorizes Service C as 'RISKY - May Block Upgrades', not safe, noting it could block if pods are unevenly distributed"
+    },
+    {
+      "expectation": "States Service D (maxUnavailable=1 with 5 replicas) is safe \u2014 allows 1 pod down at a time",
+      "passed": true,
+      "reason": "Response correctly identifies Service D as 'SAFE - Upgrade Friendly' and recommends keeping it as-is"
+    },
+    {
+      "expectation": "Recommends fixing Service A: change to minAvailable=N-1 or maxUnavailable=1",
+      "passed": true,
+      "reason": "Response recommends changing Service A to 'minAvailable=80%' or 'maxUnavailable=1'"
+    },
+    {
+      "expectation": "Recommends fixing Service B: change to maxUnavailable=1",
+      "passed": true,
+      "reason": "Response explicitly recommends 'Change to maxUnavailable=1' for Service B"
+    },
+    {
+      "expectation": "Explains that GKE respects PDBs for up to 1 hour during surge upgrades, then may force-drain",
+      "passed": false,
+      "reason": "Response does not mention GKE-specific behavior, 1-hour timeout, or force-drain mechanisms"
+    },
+    {
+      "expectation": "Provides kubectl patch commands to fix the problematic PDBs",
+      "passed": true,
+      "reason": "Response provides specific kubectl patch commands for Services A, B, and C with exact syntax"
+    },
+    {
+      "expectation": "Recommends testing PDB changes in a non-production environment first",
+      "passed": false,
+      "reason": "Response mentions testing Service C 'in a staging environment' but does not provide a general recommendation to test PDB changes in non-production first"
+    }
+  ]
+}

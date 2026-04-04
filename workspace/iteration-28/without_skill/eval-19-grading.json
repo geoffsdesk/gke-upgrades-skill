@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all four types: security patches/CVEs, auto-upgrade scheduled, end-of-life/deprecation warnings, and new version available notifications with specific examples and keywords for each"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response establishes clear urgency hierarchy: CRITICAL (security patches, 0-7 days), HIGH (auto-upgrades, 1-4 weeks), MEDIUM (new versions available, 1-3 months), LOW (informational)"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response explicitly addresses EOL warnings with specific timelines (final notice <30 days = CRITICAL, early notice 30-90 days = HIGH) and states 'plan and schedule upgrade within the window' and 'risk cluster outage'"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response includes detailed action plans for auto-upgrades including 'Check application compatibility', 'Test in staging environment', 'Prepare monitoring and rollback procedures', and provides response templates with specific checklist items"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response explicitly states security patches require 'Schedule maintenance window within 24-48 hours' and 'Schedule emergency maintenance window within 24-48 hours', indicating expedited timelines outside normal windows"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response categorizes new version available as MEDIUM priority 'Plan Ahead (1-3 months)' with action 'Review release notes, plan testing and gradual rollout' and LOW priority announcements as 'no immediate action needed'"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": false,
+      "reason": "Response does not mention Pub/Sub or Cloud Monitoring alerts. It provides Gmail filters and a Python script for email processing, but does not recommend GCP-native alerting mechanisms"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": true,
+      "reason": "Response explicitly mentions 'Review release notes' in multiple places including action plans for available version updates and response templates, identifying it as the source for understanding changes"
+    }
+  ]
+}

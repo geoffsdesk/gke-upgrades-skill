@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends Stable or Extended release channel to minimize upgrade frequency",
+      "passed": true,
+      "reason": "Response explicitly recommends STABLE release channel with comment 'More predictable than RAPID, more secure than REGULAR'"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
+      "passed": true,
+      "reason": "Response shows maintenance exclusions with scope: NO_UPGRADES and provides bash script examples for adding maintenance exclusions during training periods"
+    },
+    {
+      "expectation": "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
+      "passed": true,
+      "reason": "Response sets maintenance window to 02:00 daily and includes bash script showing weekly Sunday maintenance window configuration"
+    },
+    {
+      "expectation": "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
+      "passed": true,
+      "reason": "Response clearly separates systemNodePool for infrastructure and h100NodePools for training, with different taints and labels to ensure isolation"
+    },
+    {
+      "expectation": "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
+      "passed": true,
+      "reason": "Response explicitly sets autoUpgrade: false for H100 training node pools and includes planned node pool rotation strategy for manual upgrades"
+    },
+    {
+      "expectation": "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
+      "passed": true,
+      "reason": "Response includes detailed checkpointing configuration with CHECKPOINT_INTERVAL environment variable, persistent volume claims for checkpoints, and automated backup CronJob"
+    },
+    {
+      "expectation": "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
+      "passed": false,
+      "reason": "Response does not mention GPU driver version testing or staging validation requirements"
+    },
+    {
+      "expectation": "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading",
+      "passed": false,
+      "reason": "Response mentions ADVANCED_DATAPATH for better GPU networking but does not specifically address GPUDirect/RDMA networking version compatibility requirements"
+    }
+  ]
+}

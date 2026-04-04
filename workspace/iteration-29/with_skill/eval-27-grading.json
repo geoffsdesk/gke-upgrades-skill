@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends combining release channels with maintenance exclusions as the approach for maximum control",
+      "passed": true,
+      "reason": "The response explicitly recommends combining Extended channel with 'no minor or node upgrades' exclusion as the primary approach"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' exclusion to prevent disruptive changes while allowing control plane security patches. May also mention persistent exclusions with --add-maintenance-exclusion-until-end-of-support (no longer a 6-month max, auto-tracks EoS)",
+      "passed": true,
+      "reason": "The response recommends 'no_minor_or_node_upgrades' exclusion and includes the --add-maintenance-exclusion-until-end-of-support flag in the configuration"
+    },
+    {
+      "expectation": "Recommends maintenance windows to control WHEN patches are applied (e.g., weekend windows only)",
+      "passed": true,
+      "reason": "The response includes maintenance window configuration with Saturday 2-6 AM window using --maintenance-window-start and --maintenance-window-recurrence flags"
+    },
+    {
+      "expectation": "Mentions the cluster disruption budget (disruption interval) to control upgrade frequency \u2014 patch interval default 7d (max 90d), minor interval default 30d (max 90d)",
+      "passed": true,
+      "reason": "The response includes --maintenance-patch-version-disruption-interval=7776000s (90 days) in the configuration and mentions it provides control over patch frequency"
+    },
+    {
+      "expectation": "Suggests Stable or Extended channel for production clusters in regulated environments. Extended channel provides maximum flexibility around EoS enforcement (additional cost only during extended period)",
+      "passed": true,
+      "reason": "The response recommends Extended channel as the primary option for maximum control and mentions the cost is only during extended period, with 24 months support vs 14 months for Regular"
+    },
+    {
+      "expectation": "Notes that disabling control plane patches entirely is not recommended due to security risks \u2014 monthly patches at minimum",
+      "passed": true,
+      "reason": "The response explicitly states not to use 'no upgrades' for long periods as it blocks security patches and accumulates security debt"
+    },
+    {
+      "expectation": "May mention rollout sequencing as an advanced option for controlling upgrade order across multiple clusters, and/or the cluster disruption budget for controlling CP patch frequency",
+      "passed": true,
+      "reason": "The response provides fleet configuration examples showing dev vs production cluster sequencing and includes cluster disruption budget (disruption interval) configuration"
+    },
+    {
+      "expectation": "Provides gcloud commands for configuring the recommended exclusion type and maintenance window",
+      "passed": true,
+      "reason": "The response provides complete gcloud commands with all necessary flags including exclusion types, maintenance windows, and disruption intervals"
+    }
+  ]
+}

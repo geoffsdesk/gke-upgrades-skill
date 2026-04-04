@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Strongly advises AGAINST moving to 'No channel' \u2014 it provides LESS control, not more",
+      "passed": true,
+      "reason": "Opens with strong statement 'No, moving to \"No channel\" would actually give you LESS control, not more' and calls it a common misconception"
+    },
+    {
+      "expectation": "Explains that 'No channel' only supports the basic 30-day 'no upgrades' exclusion, while release channels support all three exclusion types including 'no minor or node upgrades' (up to EoS)",
+      "passed": true,
+      "reason": "Table clearly shows Regular channel supports 'no minor upgrades' and 'no minor or node upgrades' exclusions while No channel only has 'Only 30-day \"no upgrades\" exclusions'"
+    },
+    {
+      "expectation": "Recommends staying on Regular channel (or moving to Stable/Extended) and using maintenance exclusions for control",
+      "passed": true,
+      "reason": "Explicitly states 'Stay on Regular channel' and provides gcloud commands for maintenance exclusions, also discusses Extended channel as an alternative"
+    },
+    {
+      "expectation": "Specifically recommends the 'no minor or node upgrades' exclusion as the way to prevent disruptive changes while allowing security patches",
+      "passed": true,
+      "reason": "Shows gcloud command for 'no_minor_or_node_upgrades' exclusion and explains it blocks minor/node upgrades while allowing control plane security patches"
+    },
+    {
+      "expectation": "Notes that Extended support (24 months) is only available on release channels, not 'No channel'",
+      "passed": true,
+      "reason": "Table shows Extended support available on Regular channel but not No channel, and Extended channel section mentions 'Up to 24 months of support per version'"
+    },
+    {
+      "expectation": "Explains that 'No channel' is a legacy configuration and the industry is moving away from it",
+      "passed": true,
+      "reason": "Explicitly calls No channel 'a legacy configuration' in the explanation section"
+    },
+    {
+      "expectation": "Mentions that maintenance windows control WHEN upgrades happen, while exclusions control WHAT upgrades happen \u2014 together they give fine-grained control",
+      "passed": false,
+      "reason": "While both maintenance windows and exclusions are discussed, the response doesn't explicitly articulate this distinction between WHEN vs WHAT controls"
+    },
+    {
+      "expectation": "Warns about the risks of 'No channel': no granular exclusions, no Extended support, risk of snowflaking clusters",
+      "passed": false,
+      "reason": "Covers lack of granular exclusions and no Extended support, but doesn't mention the risk of snowflaking clusters or other operational risks of No channel"
+    }
+  ]
+}

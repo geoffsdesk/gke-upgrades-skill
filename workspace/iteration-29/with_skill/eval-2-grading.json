@@ -1,0 +1,59 @@
+{
+  "assertions": [
+    {
+      "expectation": "Distinguishes between dev (Rapid) and prod (Stable) clusters in the checklists",
+      "passed": true,
+      "reason": "Both checklists clearly differentiate between dev and prod clusters, mentioning testing on dev clusters first and validating prod clusters separately"
+    },
+    {
+      "expectation": "Recognizes Autopilot limitations (no node management, no SSH, mandatory resource requests)",
+      "passed": true,
+      "reason": "Response explicitly mentions no node pool management, automatic node upgrades by Autopilot, and mandatory resource requests as critical requirements"
+    },
+    {
+      "expectation": "Includes API deprecation checks with kubectl commands",
+      "passed": true,
+      "reason": "Pre-upgrade checklist includes specific kubectl command for checking deprecated API usage: `kubectl get --raw /metrics | grep apiserver_request_total | grep deprecated`"
+    },
+    {
+      "expectation": "Mentions mandatory resource requests as an Autopilot-specific concern",
+      "passed": true,
+      "reason": "Multiple mentions of mandatory resource requests, specifically noting 'Autopilot will reject pods without them' and calling it the '#1 Autopilot upgrade failure'"
+    },
+    {
+      "expectation": "Pre-upgrade checklist includes workload readiness items (PDBs, bare pods, graceful shutdown)",
+      "passed": true,
+      "reason": "Pre-upgrade checklist includes PDBs configuration, no bare pods requirement, and termination grace period settings for both regular and Spot pods"
+    },
+    {
+      "expectation": "Post-upgrade checklist includes version verification commands",
+      "passed": true,
+      "reason": "Post-upgrade checklist includes specific gcloud commands to verify cluster versions: `gcloud container clusters describe CLUSTER_NAME --region REGION --format=\"value(currentMasterVersion)\"`"
+    },
+    {
+      "expectation": "Post-upgrade checklist includes workload health validation",
+      "passed": true,
+      "reason": "Post-upgrade checklist has comprehensive workload health checks including deployments, pods status, StatefulSets, PVCs, and application smoke tests"
+    },
+    {
+      "expectation": "Recommends testing on dev clusters before prod auto-upgrade",
+      "passed": true,
+      "reason": "Response explicitly mentions using dev clusters for validation, documenting lessons learned, and leveraging the Rapid\u2192Stable channel progression for natural validation"
+    },
+    {
+      "expectation": "Mentions that checking the GKE release schedule gives ~1 month best-case advance notice for new minor upgrades, beyond the 72h notification",
+      "passed": false,
+      "reason": "Response mentions 30-day advance notice but doesn't specifically reference checking the GKE release schedule or distinguish this from the 72h notification window"
+    },
+    {
+      "expectation": "Includes monitoring/observability validation items",
+      "passed": true,
+      "reason": "Both checklists include comprehensive observability sections with monitoring baselines, metrics collection, log aggregation, and performance validation"
+    },
+    {
+      "expectation": "Does NOT proactively recommend node-level maintenance exclusions for Autopilot unless the customer explicitly asks for node upgrade control",
+      "passed": true,
+      "reason": "Response mentions maintenance exclusions only for control plane timing and specifically notes that Autopilot handles node upgrades automatically without customer control"
+    }
+  ]
+}
