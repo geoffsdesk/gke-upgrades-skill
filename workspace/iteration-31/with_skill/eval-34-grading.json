@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": true,
+      "reason": "The response explicitly states 'Atomic recreation: All 4 TPU v5e slices (1,024 chips total) will be recreated entirely in a single step \u2014 not rolling' and emphasizes this is a complete environment recreation, not a rolling update."
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": true,
+      "reason": "The response clearly states 'Cascading restart: The maintenance event on ANY slice triggers restart of ALL slices in your multislice environment' in the maintenance behavior section."
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "The response explicitly states 'Complete job termination: Your LLM training job cannot survive this \u2014 all model state in TPU memory is lost' and emphasizes that the training job will be completely terminated across all slices simultaneously."
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": true,
+      "reason": "The response specifically mentions 'Capacity dependency: If insufficient TPU v5e resources exist during recreation, slices will block until hardware becomes available (potentially hours of additional downtime)' and discusses potential extended outage scenarios."
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "The response includes 'Force Immediate Checkpoint' as a specific action item and states 'Save checkpoint at current iteration (don't wait for next scheduled checkpoint)' with code examples."
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "The response provides a 'Prepare Auto-Resume Script' section with a complete bash script example for automated restart and discusses implementing robust checkpointing and automated resume pipeline."
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": false,
+      "reason": "The response does not mention maintenance exclusions or the ability to defer the maintenance event. It only discusses preparation and scheduling during natural training pauses."
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": true,
+      "reason": "The response mentions 'Schedule during natural training pause: If you have planned evaluation or hyperparameter adjustment phases, align maintenance with those' as a risk mitigation strategy."
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes notification types including 'Upgrade available event', 'Scheduled upgrade notifications', 'Minor version at/near EoS', and 'New patch with COS milestone' covering all required categories"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response assigns urgency levels using color coding and symbols: security patches get \ud83d\udfe1 Evaluate (higher urgency), scheduled upgrades get \ud83d\udfe0 Prepare, while upgrade available gets \ud83d\udcd8 Info (lowest urgency)"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response explicitly states EoS warnings require planning upgrades with specific timelines: 30+ days = plan upgrade, <30 days = urgent schedule upgrade, and provides commands for handling EoS situations"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response provides specific pre-flight checklist commands for scheduled upgrades including checking pod status, PDBs, deprecated APIs, and maintenance exclusions"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response mentions security patches marked 'critical' or 'high' require immediate action and includes them in the urgent response category requiring <2 hour response time"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response clearly states 'Upgrade Available' notifications require 'None (unless manual upgrade desired)' action and are marked as \ud83d\udcd8 Info with 'No deadline'"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "Response provides Cloud Monitoring alert policy examples and mentions setting up Pub/Sub subscription for programmatic handling of cluster events"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": false,
+      "reason": "Response does not mention GKE release notes as a source for understanding version changes, focusing instead on notification handling and triage processes"
+    }
+  ]
+}

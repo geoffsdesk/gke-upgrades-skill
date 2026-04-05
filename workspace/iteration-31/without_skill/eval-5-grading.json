@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the GKE version skew policy: nodes must be within 2 minor versions of the control plane",
+      "passed": true,
+      "reason": "Response explicitly states 'Kubernetes only supports a maximum of 2 minor version differences between control plane and nodes'"
+    },
+    {
+      "expectation": "Identifies that 1.28 nodes with a 1.31 control plane violates the skew policy (nodes must be within 2 minor versions of control plane)",
+      "passed": true,
+      "reason": "Response clearly identifies this as a version skew issue and states 'you're at the 3-version limit (1.31 vs 1.28)' which violates the 2-version policy"
+    },
+    {
+      "expectation": "Warns about potential issues: kubelet incompatibility, API features not working, possible workload disruption",
+      "passed": true,
+      "reason": "Response lists risks including 'API compatibility issues', 'Workload scheduling problems', 'Potential cluster instability', and mentions service disruptions during upgrades"
+    },
+    {
+      "expectation": "Recommends skip-level (N+2) node pool upgrades within supported version skew to reduce time and disruption. For the N+3 gap (1.28 with 1.31 CP), recommends multiple sequential skip-level upgrades within supported skew (e.g., 1.28\u21921.30 then 1.30\u21921.31) or creating a new node pool at the target version and migrating workloads. Never recommends an unsupported skip-level upgrade.",
+      "passed": false,
+      "reason": "Response recommends incremental upgrades (1.28\u21921.29\u21921.30\u21921.31) instead of skip-level upgrades within supported skew. Does not mention creating new node pools and migrating workloads as an alternative approach"
+    },
+    {
+      "expectation": "Provides gcloud commands for the node pool upgrade steps",
+      "passed": true,
+      "reason": "Response provides multiple gcloud commands including 'gcloud container clusters upgrade' commands for upgrading node pools through the staged approach"
+    },
+    {
+      "expectation": "Recommends using conservative surge settings (maxSurge=1, maxUnavailable=0) given the risky state",
+      "passed": false,
+      "reason": "Response does not mention or recommend any specific surge settings for the upgrade process"
+    },
+    {
+      "expectation": "Advises monitoring closely between each version bump for issues",
+      "passed": true,
+      "reason": "Response includes monitoring commands and advises to 'Monitor cluster health closely' with specific watch commands for operations and pods"
+    },
+    {
+      "expectation": "Mentions that future prevention includes setting up release channel enrollment and maintenance windows",
+      "passed": true,
+      "reason": "Response includes prevention measures with maintenance windows setup using gcloud commands, though it mentions auto-upgrade rather than release channel enrollment specifically"
+    }
+  ]
+}

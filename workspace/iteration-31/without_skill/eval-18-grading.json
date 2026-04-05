@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Configures a recurring maintenance window for weekends only",
+      "passed": false,
+      "reason": "The response sets a daily maintenance window at 07:00 UTC (Saturday 2-6 AM EST) but doesn't configure true weekend-only recurring windows - it's actually daily"
+    },
+    {
+      "expectation": "Provides the gcloud command with --maintenance-window-start/end and --maintenance-window-recurrence for weekly weekend schedule",
+      "passed": false,
+      "reason": "No gcloud commands are provided for setting maintenance windows - only Terraform configuration is shown"
+    },
+    {
+      "expectation": "Sets up maintenance exclusions for quarterly code freezes (up to 30 days each)",
+      "passed": true,
+      "reason": "The response includes quarterly exclusions (Q1: March 15-31, Q2: June 15-30, Q3: September 15-30, Q4: December 15-31) within the timeframes"
+    },
+    {
+      "expectation": "Sets up a maintenance exclusion for the November audit period",
+      "passed": true,
+      "reason": "The response includes an annual audit exclusion for November 1-30, 2024"
+    },
+    {
+      "expectation": "Notes the 30-day maximum for maintenance exclusions and how to handle longer freezes",
+      "passed": false,
+      "reason": "The response does not mention the 30-day maximum limitation for maintenance exclusions or provide guidance on handling longer freezes"
+    },
+    {
+      "expectation": "Explains that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
+      "passed": false,
+      "reason": "The response does not explain the difference between manual and automatic upgrades regarding maintenance windows"
+    },
+    {
+      "expectation": "Recommends combining maintenance windows with Stable or Extended channel for maximum upgrade control",
+      "passed": false,
+      "reason": "The response does not mention GKE release channels or recommend using Stable or Extended channels"
+    },
+    {
+      "expectation": "Provides gcloud commands for each exclusion (--add-maintenance-exclusion-name/start-time/end-time)",
+      "passed": false,
+      "reason": "No gcloud commands are provided for adding maintenance exclusions - only Terraform and Python code is shown"
+    },
+    {
+      "expectation": "Warns about the risk of falling too far behind on versions during long exclusion periods",
+      "passed": false,
+      "reason": "The response does not warn about risks of falling behind on versions during exclusion periods"
+    }
+  ]
+}

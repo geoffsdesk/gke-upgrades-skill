@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": true,
+      "reason": "Response explicitly states 'All 4 slices (1024 chips total) will likely go down simultaneously' and 'Your TPU nodes will be drained and recreated', indicating atomic recreation rather than rolling upgrade"
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": false,
+      "reason": "Response mentions all slices going down simultaneously but doesn't specifically explain that maintenance on any single slice triggers restart of all slices in the multislice environment"
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "Response clearly states 'Your training job will be terminated/interrupted' and indicates simultaneous impact across all slices"
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": true,
+      "reason": "Response mentions 'TPU v5e slices may not be immediately available post-maintenance' and 'The downtime will likely be 30 minutes to several hours depending on maintenance scope and resource availability'"
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "Response includes 'Force an immediate checkpoint' section with specific command example and emphasizes immediate checkpointing as first preparation step"
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "Response provides specific YAML configuration for restart handling and includes environment variable for resuming from checkpoint, plus mentions configuring job for checkpoint restoration"
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": false,
+      "reason": "Response does not mention maintenance exclusions or the ability to defer maintenance events"
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": false,
+      "reason": "Response mentions 'Coordinate timing' and scheduling around checkpoint intervals but does not specifically discuss maintenance windows as a GKE feature to control when events occur"
+    }
+  ]
+}

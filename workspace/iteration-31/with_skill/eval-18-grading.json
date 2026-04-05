@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Configures a recurring maintenance window for weekends only",
+      "passed": true,
+      "reason": "Response configures Saturday maintenance windows with specific recurrence pattern 'FREQ=WEEKLY;BYDAY=SA' for weekend-only scheduling"
+    },
+    {
+      "expectation": "Provides the gcloud command with --maintenance-window-start/end and --maintenance-window-recurrence for weekly weekend schedule",
+      "passed": true,
+      "reason": "Command includes --maintenance-window-start '2024-01-06T07:00:00Z', --maintenance-window-duration 4h, and --maintenance-window-recurrence 'FREQ=WEEKLY;BYDAY=SA'"
+    },
+    {
+      "expectation": "Sets up maintenance exclusions for quarterly code freezes (up to 30 days each)",
+      "passed": true,
+      "reason": "Provides specific command for Q4 code freeze exclusion with proper start/end dates and mentions 30-day maximum limit"
+    },
+    {
+      "expectation": "Sets up a maintenance exclusion for the November audit period",
+      "passed": true,
+      "reason": "Includes separate command for November audit exclusion with specific dates (2024-11-01 to 2024-11-30)"
+    },
+    {
+      "expectation": "Notes the 30-day maximum for maintenance exclusions and how to handle longer freezes",
+      "passed": true,
+      "reason": "Explicitly states 'Each no upgrades exclusion: 30 days maximum' and explains how to 'chain multiple exclusions' for longer freezes"
+    },
+    {
+      "expectation": "Explains that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
+      "passed": false,
+      "reason": "Response does not explicitly explain that manual upgrades bypass maintenance windows or clarify this distinction between manual and automatic upgrades"
+    },
+    {
+      "expectation": "Recommends combining maintenance windows with Stable or Extended channel for maximum upgrade control",
+      "passed": true,
+      "reason": "Recommends Extended release channel specifically for 'maximum upgrade control' and explains the benefits in regulated environments"
+    },
+    {
+      "expectation": "Provides gcloud commands for each exclusion (--add-maintenance-exclusion-name/start-time/end-time)",
+      "passed": true,
+      "reason": "Provides complete gcloud commands with --add-maintenance-exclusion-name, --add-maintenance-exclusion-start, and --add-maintenance-exclusion-end parameters for both quarterly and audit exclusions"
+    },
+    {
+      "expectation": "Warns about the risk of falling too far behind on versions during long exclusion periods",
+      "passed": true,
+      "reason": "Includes warning about 'Extended exclusion periods can cause clusters to fall behind on patches' and advises planning 'catch-up windows between quarterly freezes'"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Proposes a phased approach: control plane first, then CPU pools, then T4 dev, then inference (A100), then training (H100) last",
+      "passed": true,
+      "reason": "Response clearly outlines phased approach in correct order: Phase 1 (control plane, CPU services, T4 dev), Phase 2 (A100 inference), Phase 3 (H100 training)"
+    },
+    {
+      "expectation": "Control plane can be upgraded independently without affecting running workloads",
+      "passed": true,
+      "reason": "Response explicitly states 'Brief API unavailability (~5 minutes), no workload disruption' and shows control plane upgrade command in Phase 1.1"
+    },
+    {
+      "expectation": "CPU service pools upgraded first as lowest risk \u2014 use standard surge settings (maxSurge=2-3)",
+      "passed": true,
+      "reason": "CPU services pool is upgraded first in Phase 1.2 with maxSurge=50 (5% surge mentioned), though the specific value is higher than 2-3"
+    },
+    {
+      "expectation": "T4 dev pool upgraded next \u2014 dev workloads are tolerant of interruption",
+      "passed": true,
+      "reason": "T4 dev pool upgraded in Phase 1.3 with explicit mention 'Low - development workloads, interruptible' and uses maxUnavailable strategy"
+    },
+    {
+      "expectation": "A100 inference pool upgraded with careful surge settings (maxSurge=1) and PDBs to maintain serving capacity",
+      "passed": true,
+      "reason": "A100 inference pool uses blue-green or drain-first surge with careful settings (maxSurge=0, maxUnavailable=3) and mentions autoscaling to maintain capacity"
+    },
+    {
+      "expectation": "H100 training pool upgraded last, during a scheduled gap between training runs \u2014 with cordon-and-wait or maxSurge=0/maxUnavailable=1",
+      "passed": true,
+      "reason": "H100 training pool is Phase 3 (last), uses maxSurge=0/maxUnavailable=1 settings, and includes coordination with ML teams for training gaps and maintenance exclusions"
+    },
+    {
+      "expectation": "Notes the 20-node parallelism limit \u2014 at 5,000 nodes, the full upgrade will take weeks and must span multiple maintenance windows",
+      "passed": true,
+      "reason": "Response mentions 20-node parallelism limit in A100 section and states 'Total estimated duration: 3-4 weeks' with timeline spanning multiple weeks"
+    },
+    {
+      "expectation": "Mentions GPU driver compatibility testing in staging before each GPU pool upgrade",
+      "passed": true,
+      "reason": "Response includes staging validation with GPU driver compatibility testing, specifically mentioning 'GPU driver compatibility confirmed for T4s' and staging A100 pool creation for testing"
+    },
+    {
+      "expectation": "Addresses GPUDirect/RDMA networking validation after upgrading the H100 pool",
+      "passed": true,
+      "reason": "Response includes 'GPUDirect/RDMA topology intact (if applicable)' in the H100 post-upgrade validation checklist"
+    }
+  ]
+}

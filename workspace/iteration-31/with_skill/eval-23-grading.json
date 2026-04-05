@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies Service A (minAvailable=100%) as a guaranteed upgrade blocker \u2014 no disruptions allowed at all",
+      "passed": true,
+      "reason": "Response correctly identifies Service A as HIGH RISK and states 'Will block upgrades - No pods can be evicted' due to minAvailable: 100%"
+    },
+    {
+      "expectation": "Identifies Service B (maxUnavailable=0) as also blocking upgrades \u2014 same effect as 100% minAvailable",
+      "passed": true,
+      "reason": "Response identifies Service B as HIGH RISK and explicitly states 'maxUnavailable: 0 and minAvailable: 100% are equivalent \u2014 both prevent ANY pod eviction'"
+    },
+    {
+      "expectation": "States Service C (minAvailable=2 with 3 replicas) is safe \u2014 allows 1 pod disruption at a time",
+      "passed": false,
+      "reason": "Response rates Service C as MEDIUM RISK and states it 'May block if multi-zone', not as safe. It correctly identifies that only 1 pod can be evicted but presents this as risky rather than safe"
+    },
+    {
+      "expectation": "States Service D (maxUnavailable=1 with 5 replicas) is safe \u2014 allows 1 pod down at a time",
+      "passed": true,
+      "reason": "Response clearly identifies Service D as LOW RISK/Upgrade-safe and explains it 'Allows 1 pod eviction per drain cycle' with 4 healthy replicas remaining"
+    },
+    {
+      "expectation": "Recommends fixing Service A: change to minAvailable=N-1 or maxUnavailable=1",
+      "passed": true,
+      "reason": "Response provides specific YAML configuration showing 'minAvailable: 2' and notes 'or use maxUnavailable: 1' for Service A"
+    },
+    {
+      "expectation": "Recommends fixing Service B: change to maxUnavailable=1",
+      "passed": true,
+      "reason": "Response provides specific YAML configuration with 'maxUnavailable: 1' for Service B"
+    },
+    {
+      "expectation": "Explains that GKE respects PDBs for up to 1 hour during surge upgrades, then may force-drain",
+      "passed": true,
+      "reason": "Response explicitly states 'GKE respects PDB constraints for up to 1 hour' and 'After 1 hour: GKE force-evicts remaining pods, bypassing PDB protection'"
+    },
+    {
+      "expectation": "Provides kubectl patch commands to fix the problematic PDBs",
+      "passed": true,
+      "reason": "Response includes kubectl patch command: 'kubectl patch pdb SERVICE_PDB_NAME -n NAMESPACE -p '{\"spec\":{\"maxUnavailable\":\"50%\"}}'"
+    },
+    {
+      "expectation": "Recommends testing PDB changes in a non-production environment first",
+      "passed": true,
+      "reason": "Response includes multiple references to testing: 'Test all PDB changes in a dev cluster upgrade first' and 'Test PDB settings in dev/staging environments during upgrade rehearsals'"
+    }
+  ]
+}

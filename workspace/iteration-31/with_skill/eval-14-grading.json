@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Checks for deprecated API usage that may have changed behavior in 1.30",
+      "passed": true,
+      "reason": "Response includes specific commands to check deprecated API usage (kubectl get --raw /metrics | grep deprecated) and identifies this as the most likely cause"
+    },
+    {
+      "expectation": "Recommends checking admission webhooks \u2014 they may be rejecting or slowing down requests on the new version",
+      "passed": true,
+      "reason": "Response dedicates a section to checking admission webhooks with specific commands and identifies webhook latency as a likely root cause"
+    },
+    {
+      "expectation": "Advises checking if resource requests/limits need adjusting for any system components that changed",
+      "passed": true,
+      "reason": "Response includes kubectl top pods -n kube-system to check system component resource usage"
+    },
+    {
+      "expectation": "Suggests examining kube-system pods for any that are crashlooping or restarting",
+      "passed": true,
+      "reason": "Response specifically mentions checking for crashlooping/restarting kube-system pods with kubectl get pods -n kube-system command"
+    },
+    {
+      "expectation": "Includes commands to check API server metrics and latency (kubectl get --raw /metrics)",
+      "passed": true,
+      "reason": "Response includes kubectl get --raw /metrics command to check API server metrics, specifically for deprecated API usage"
+    },
+    {
+      "expectation": "Recommends checking if NetworkPolicy or service mesh components need updating for the new version",
+      "passed": true,
+      "reason": "Response mentions service mesh in the context of admission webhooks and includes it in the resolution steps for updating components"
+    },
+    {
+      "expectation": "Advises reviewing pod events for scheduling delays or readiness probe failures",
+      "passed": true,
+      "reason": "Response includes kubectl get events commands for both kube-system namespace and cluster-wide events to check for issues"
+    },
+    {
+      "expectation": "Mentions checking if HPA or VPA are behaving differently on the new version",
+      "passed": true,
+      "reason": "Response has a dedicated section for checking HPA/VPA behavioral changes with specific commands and identifies HPA algorithm changes as a potential issue"
+    }
+  ]
+}

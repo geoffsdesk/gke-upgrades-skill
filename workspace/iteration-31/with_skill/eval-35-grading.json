@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends Stable or Extended release channel to minimize upgrade frequency",
+      "passed": true,
+      "reason": "Response specifically recommends Extended channel with detailed justification including 24-month support period and manual control plane minor upgrades"
+    },
+    {
+      "expectation": "Recommends 'no minor or node upgrades' maintenance exclusion to block disruptive upgrades while allowing security patches on the control plane",
+      "passed": true,
+      "reason": "Response includes specific command '--add-maintenance-exclusion-scope no_minor_or_node_upgrades' and explains that control plane security patches continue automatically"
+    },
+    {
+      "expectation": "Recommends a narrow maintenance window (e.g., weekends only) so CP patches happen at predictable times",
+      "passed": true,
+      "reason": "Response configures maintenance window for 'Sunday 4-10 AM' using '--maintenance-window-start' and '--maintenance-window-recurrence \"FREQ=WEEKLY;BYDAY=SU\"'"
+    },
+    {
+      "expectation": "Suggests isolating training workloads on dedicated GPU node pools separate from serving/infrastructure pools",
+      "passed": true,
+      "reason": "Response creates a dedicated 'h100-training' node pool with specific taints and labels, separate from the base cluster infrastructure"
+    },
+    {
+      "expectation": "Recommends disabling auto-upgrade on GPU training node pools and upgrading manually during scheduled gaps between training runs",
+      "passed": true,
+      "reason": "Response explicitly sets '--enable-autoupgrade=false' for the H100 training pool and discusses quarterly minor upgrades during scheduled training gaps"
+    },
+    {
+      "expectation": "Advises configuring training frameworks with checkpointing so jobs can resume after any disruption",
+      "passed": true,
+      "reason": "Response includes 'terminationGracePeriodSeconds: 3600' for checkpointing and mentions training job protection with graceful eviction before checkpointing"
+    },
+    {
+      "expectation": "Mentions GPU driver version testing \u2014 always validate in staging before applying to production GPU pools",
+      "passed": true,
+      "reason": "Response includes a detailed pre-upgrade testing protocol section with commands to create staging pools and test CUDA compatibility and driver versions"
+    },
+    {
+      "expectation": "Notes that GPUDirect/RDMA networking has strict GKE version requirements \u2014 verify compatibility before upgrading",
+      "passed": false,
+      "reason": "Response does not mention GPUDirect/RDMA networking compatibility requirements or version constraints for these networking features"
+    }
+  ]
+}

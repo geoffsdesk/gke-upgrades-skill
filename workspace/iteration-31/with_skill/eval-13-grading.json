@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's autoscaled blue-green node pool upgrade strategy as the primary approach for batch workloads \u2014 configured with --enable-autoscaling and --autoscaled-rollout-policy flags (NOT surge parameters). Supports wait-for-drain time, longer graceful termination, and PDB upgrade timeout to let jobs complete",
+      "passed": true,
+      "reason": "Response explicitly recommends autoscaled blue-green as the ONLY native GKE strategy, provides specific gcloud commands with --enable-autoscaling and --autoscaled-rollout-policy flags, and explains it respects extended graceful termination periods"
+    },
+    {
+      "expectation": "Explains that GKE respects terminationGracePeriodSeconds during pod eviction, but surge upgrades have a max eviction timeout",
+      "passed": true,
+      "reason": "Response clearly states that surge upgrades force-evict pods after 1 hour regardless of terminationGracePeriodSeconds, and contrasts this with autoscaled blue-green which respects the 16-hour termination grace period"
+    },
+    {
+      "expectation": "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour \u2014 far less than 8-16 hour jobs",
+      "passed": true,
+      "reason": "Response explicitly states 'Standard surge upgrades force-evict pods after 1 hour' and 'Force-evicts after 1 hour regardless of terminationGracePeriodSeconds \u2014 will kill your 8-16 hour jobs'"
+    },
+    {
+      "expectation": "Recommends pausing new batch job submissions before starting the upgrade",
+      "passed": true,
+      "reason": "Response includes 'Pause new job submissions' as step 1 in Option A timing strategy and mentions 'Job scheduler can pause new submissions if needed' in the checklist"
+    },
+    {
+      "expectation": "Advises waiting for in-flight jobs to complete naturally before upgrading their node pool",
+      "passed": true,
+      "reason": "Option A explicitly states 'Wait for current jobs to complete (up to 16 hours)' and 'Upgrade empty pool', showing the wait-for-completion approach"
+    },
+    {
+      "expectation": "Suggests using node affinity or taints to isolate batch workloads on a dedicated node pool",
+      "passed": false,
+      "reason": "Response assumes a dedicated batch node pool exists (references 'BATCH_NODE_POOL') but does not explicitly recommend using node affinity or taints to create this isolation"
+    },
+    {
+      "expectation": "Recommends upgrading non-batch node pools first while batch jobs complete on the old pool",
+      "passed": false,
+      "reason": "Response mentions upgrading the control plane first and focuses on the batch node pool upgrade, but does not specifically recommend upgrading other non-batch node pools first"
+    },
+    {
+      "expectation": "Does NOT recommend 'No channel' or '--enable-autoupgrade=false' (deprecated) \u2014 uses release channels with maintenance exclusions instead",
+      "passed": true,
+      "reason": "Response mentions the cluster is on Regular release channel and provides maintenance exclusion commands as an alternative strategy, without suggesting disabling auto-upgrades or switching to no channel"
+    }
+  ]
+}

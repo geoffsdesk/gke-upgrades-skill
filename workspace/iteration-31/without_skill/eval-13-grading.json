@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends GKE's autoscaled blue-green node pool upgrade strategy as the primary approach for batch workloads \u2014 configured with --enable-autoscaling and --autoscaled-rollout-policy flags (NOT surge parameters). Supports wait-for-drain time, longer graceful termination, and PDB upgrade timeout to let jobs complete",
+      "passed": false,
+      "reason": "The response mentions node pool replacement but does not specifically recommend autoscaled blue-green node pool upgrade strategy with --enable-autoscaling and --autoscaled-rollout-policy flags. It suggests manual node pool creation without these specific GKE autoscaling configurations."
+    },
+    {
+      "expectation": "Explains that GKE respects terminationGracePeriodSeconds during pod eviction, but surge upgrades have a max eviction timeout",
+      "passed": false,
+      "reason": "The response mentions terminationGracePeriodSeconds but does not explain the relationship between GKE's respect for this setting during pod eviction or mention surge upgrade eviction timeout limitations."
+    },
+    {
+      "expectation": "Notes that GKE's default pod eviction timeout during surge upgrade is 1 hour \u2014 far less than 8-16 hour jobs",
+      "passed": false,
+      "reason": "The response does not mention GKE's default 1-hour pod eviction timeout during surge upgrades or contrast this with the 8-16 hour job duration."
+    },
+    {
+      "expectation": "Recommends pausing new batch job submissions before starting the upgrade",
+      "passed": true,
+      "reason": "The response explicitly shows cordoning nodes to prevent new scheduling and mentions stopping new job scheduling on the old cluster in multiple strategies."
+    },
+    {
+      "expectation": "Advises waiting for in-flight jobs to complete naturally before upgrading their node pool",
+      "passed": true,
+      "reason": "The response clearly advises waiting for existing jobs to complete before proceeding with upgrades, showing monitoring commands and emphasizing letting jobs finish naturally."
+    },
+    {
+      "expectation": "Suggests using node affinity or taints to isolate batch workloads on a dedicated node pool",
+      "passed": true,
+      "reason": "The response shows using nodeSelector with 'workload-type: batch' and 'cloud.google.com/gke-nodepool' labels to isolate batch workloads on specific node pools."
+    },
+    {
+      "expectation": "Recommends upgrading non-batch node pools first while batch jobs complete on the old pool",
+      "passed": true,
+      "reason": "The node pool replacement strategy demonstrates creating new pools first and using node selectors to direct new jobs to upgraded pools while existing jobs complete on old pools."
+    },
+    {
+      "expectation": "Does NOT recommend 'No channel' or '--enable-autoupgrade=false' (deprecated) \u2014 uses release channels with maintenance exclusions instead",
+      "passed": false,
+      "reason": "The response actually recommends switching to 'None' release channel for manual control in Strategy 4, which goes against the expectation to avoid this approach and use maintenance exclusions instead."
+    }
+  ]
+}
