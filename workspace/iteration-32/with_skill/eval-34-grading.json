@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains that multi-host TPU slices are recreated atomically in a single step \u2014 not a rolling upgrade",
+      "passed": true,
+      "reason": "Response explicitly states 'All 4 slices will be recreated simultaneously \u2014 not rolling upgrades' and 'Each 256-chip slice is treated as a single atomic unit that gets recreated entirely'"
+    },
+    {
+      "expectation": "Warns that a maintenance event on ANY single slice triggers restart of ALL slices in the multislice environment",
+      "passed": true,
+      "reason": "Response clearly states 'Cascading restart: A maintenance event on ANY slice triggers restart of ALL slices in your multislice environment'"
+    },
+    {
+      "expectation": "Notes that all pods on all affected slices will restart simultaneously \u2014 the training job will be interrupted",
+      "passed": true,
+      "reason": "Response explicitly mentions 'All pods on all slices restart simultaneously when maintenance begins' and 'Your training job will be completely terminated across all 1,024 chips at once'"
+    },
+    {
+      "expectation": "Explains that if insufficient TPU resources are available during recreation, the slice blocks until hardware is freed \u2014 potentially causing extended downtime",
+      "passed": true,
+      "reason": "Response addresses this with 'Capacity dependency: If insufficient TPU v5e resources exist during recreation, slices will block until hardware becomes available' and mentions 1-3 hours downtime in worst case"
+    },
+    {
+      "expectation": "Recommends saving a training checkpoint immediately before the maintenance window",
+      "passed": true,
+      "reason": "Response has a dedicated section 'Save training checkpoint immediately' with specific kubectl commands to trigger manual checkpoints"
+    },
+    {
+      "expectation": "Recommends configuring the training framework for automatic checkpoint resume so it can restart after the maintenance event",
+      "passed": true,
+      "reason": "Response includes checkpoint resume guidance with 'Restart training from latest checkpoint' section and 'Verify training resumed from checkpoint (not epoch 0)' commands"
+    },
+    {
+      "expectation": "Suggests using maintenance exclusions to defer the event if the training run is close to completion",
+      "passed": false,
+      "reason": "Response does not mention maintenance exclusions or how to defer maintenance events - it only discusses preparing for and handling the maintenance"
+    },
+    {
+      "expectation": "Mentions maintenance windows to control when the event occurs \u2014 schedule it during a planned break in training",
+      "passed": true,
+      "reason": "Response mentions 'Don't schedule maintenance during critical training phases' and 'TPU multislice maintenance should happen during planned training gaps' and 'Consider pausing training campaigns entirely during maintenance periods'"
+    }
+  ]
+}

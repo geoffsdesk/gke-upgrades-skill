@@ -1,0 +1,59 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends sequential control plane upgrades (1.32\u21921.33) while using skip-level (N+2) for node pool upgrades where possible to reduce disruption",
+      "passed": false,
+      "reason": "The response shows 1.32\u21921.33 which is only N+1, not N+2 skip-level upgrades. The response does not demonstrate or recommend skip-level node pool upgrades to reduce disruption."
+    },
+    {
+      "expectation": "Specifies control plane upgrades before node pool upgrades",
+      "passed": true,
+      "reason": "The response clearly states 'Control plane first: 1.32 \u2192 1.33 (required order)' and structures the upgrade plan with Phase 1 being control plane upgrade before node pool upgrades."
+    },
+    {
+      "expectation": "Provides different node pool upgrade ordering with rationale for the sequence",
+      "passed": true,
+      "reason": "The response provides a clear sequence: General \u2192 High-memory (Postgres) \u2192 GPU, with rationale that orders by risk level and explains why stateless workloads go first, then stateful database, then highest-risk GPU pool."
+    },
+    {
+      "expectation": "Includes specific surge upgrade settings (maxSurge/maxUnavailable) for each pool with justification for the chosen values (e.g., explaining why maxSurge is set higher for parallelism)",
+      "passed": true,
+      "reason": "The response provides specific settings for each pool: General-purpose (maxSurge=5%, maxUnavailable=0), High-memory (maxSurge=1, maxUnavailable=0), GPU (various options), with clear justifications like 'fast parallel upgrade' and 'conservative one-at-a-time'."
+    },
+    {
+      "expectation": "Addresses Postgres-specific concerns (PDB, backup, operator compatibility, PV reclaim)",
+      "passed": true,
+      "reason": "The response addresses PDB configuration ('recommend minAvailable: 1 or 50%'), operator compatibility checks, mentions PVs will reattach automatically, and includes Postgres monitoring during upgrades."
+    },
+    {
+      "expectation": "Addresses GPU-specific concerns (driver compatibility, maxUnavailable as primary lever since surge capacity is typically unavailable)",
+      "passed": true,
+      "reason": "The response addresses GPU driver compatibility, mentions that surge capacity might not be available for GPUs, and provides alternative strategies including maxUnavailable settings for fixed GPU reservations."
+    },
+    {
+      "expectation": "Includes actual gcloud commands for the upgrade steps",
+      "passed": true,
+      "reason": "The response includes specific gcloud commands for pre-flight checks, control plane upgrade, node pool configuration updates, and upgrade commands for each phase."
+    },
+    {
+      "expectation": "Provides a pre-upgrade checklist",
+      "passed": true,
+      "reason": "The response includes comprehensive pre-upgrade requirements with critical checks (deprecated APIs, operator compatibility, GPU drivers, PDB configuration) and infrastructure readiness items."
+    },
+    {
+      "expectation": "Provides a post-upgrade checklist with validation commands",
+      "passed": true,
+      "reason": "The response includes a detailed post-upgrade validation section with specific kubectl commands for checking cluster health, workload status, and success criteria."
+    },
+    {
+      "expectation": "Includes rollback procedure or guidance (noting CP patch downgrades are customer-doable, minor downgrades require GKE support)",
+      "passed": true,
+      "reason": "The response includes a rollback strategy section that specifically mentions 'Control plane: Contact GKE support (minor version rollback requires assistance)' and provides node pool rollback guidance."
+    },
+    {
+      "expectation": "Mentions GKE's 2-step control plane minor upgrade where step 1 is rollbackable (step 2 commits and is not rollbackable), or mentions that node pools support downgrade",
+      "passed": false,
+      "reason": "The response does not mention GKE's 2-step control plane upgrade process or that step 1 is rollbackable while step 2 commits. It only mentions that minor version rollback requires GKE support assistance."
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends increasing maxSurge for CPU pools (e.g., 10-20) to parallelize node replacements, with justification for the value",
+      "passed": false,
+      "reason": "Recommends maxSurge=8 for CPU pools, not 10-20 as specified in expectation"
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends increasing maxUnavailable (not maxSurge) as the primary lever since surge capacity is typically unavailable",
+      "passed": true,
+      "reason": "Correctly recommends maxSurge=0 and maxUnavailable=2 for GPU pools, explaining that surge capacity isn't available with fixed reservations"
+    },
+    {
+      "expectation": "Advises checking and requesting increased compute quota before the upgrade for CPU pools",
+      "passed": false,
+      "reason": "Does not mention checking or requesting increased compute quota - only mentions scaling down workloads to free quota"
+    },
+    {
+      "expectation": "Suggests staggering node pool upgrades or running non-conflicting pools in parallel",
+      "passed": true,
+      "reason": "Provides detailed commands for running all node pools in parallel using background processes"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as an option for GPU pools",
+      "passed": true,
+      "reason": "Specifically mentions and provides gcloud command for autoscaled blue-green strategy for GPU pools"
+    },
+    {
+      "expectation": "Recommends expanding the maintenance window or splitting across multiple weekends",
+      "passed": false,
+      "reason": "Does not recommend expanding the window or splitting - instead focuses on making upgrades fit within the existing 8-hour window"
+    },
+    {
+      "expectation": "Provides the gcloud command for updating surge settings on each pool",
+      "passed": true,
+      "reason": "Provides specific gcloud container node-pools update commands for all pool types with surge/unavailable settings"
+    },
+    {
+      "expectation": "Includes monitoring commands to track upgrade progress in real-time",
+      "passed": true,
+      "reason": "Provides kubectl and gcloud commands for monitoring node status and operations during upgrades"
+    }
+  ]
+}

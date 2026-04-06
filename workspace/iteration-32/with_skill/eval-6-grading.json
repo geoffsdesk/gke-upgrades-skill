@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains the difference between Rapid and Stable channels \u2014 including that Rapid has no SLA for upgrade stability while Stable carries a full SLA, and clearly distinguishes minor version vs patch version differences between the channels",
+      "passed": true,
+      "reason": "Response clearly explains Rapid has no SLA for upgrade stability while Stable has full SLA coverage, and distinguishes timing differences including that Stable is 4-6 weeks slower for security patches"
+    },
+    {
+      "expectation": "Notes that channel changes don't trigger an immediate upgrade or downgrade",
+      "passed": false,
+      "reason": "While the response discusses auto-upgrade behavior after channel change, it doesn't explicitly state that the channel change itself doesn't trigger an immediate upgrade or downgrade"
+    },
+    {
+      "expectation": "Warns that if 1.30 isn't yet available on Stable, the cluster may not receive patches until Stable catches up",
+      "passed": true,
+      "reason": "Response clearly warns about version availability and states cluster will be 'ahead of channel' and won't receive auto-upgrades until Stable catches up to 1.32 (though expectation mentions 1.30, the concept is correctly addressed for 1.32)"
+    },
+    {
+      "expectation": "Provides the gcloud command to change the release channel",
+      "passed": true,
+      "reason": "Provides the specific command: gcloud container clusters update CLUSTER_NAME --zone ZONE --release-channel stable"
+    },
+    {
+      "expectation": "Recommends checking version availability on Stable before switching (gcloud container get-server-config)",
+      "passed": true,
+      "reason": "Explicitly recommends checking version availability and provides the gcloud container get-server-config command with proper formatting"
+    },
+    {
+      "expectation": "Discusses the impact on auto-upgrade timing going forward",
+      "passed": true,
+      "reason": "Thoroughly discusses auto-upgrade behavior changes, including the 4-6 week slower cadence and different scenarios based on version availability"
+    },
+    {
+      "expectation": "Mentions that the Extended channel is an option if they need even slower cadence (with cost implications)",
+      "passed": true,
+      "reason": "Discusses Extended channel as an alternative with manual control over upgrades and mentions additional cost implications during extended support period"
+    },
+    {
+      "expectation": "Advises coordinating the change during a maintenance window",
+      "passed": true,
+      "reason": "Recommends adding maintenance exclusions and controlling migration timing, effectively advising coordination during appropriate maintenance periods"
+    }
+  ]
+}

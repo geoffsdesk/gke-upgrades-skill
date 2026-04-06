@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response explicitly categorizes all four types: auto-upgrade scheduled (in HIGH priority), new version available (in MEDIUM priority), end-of-life/deprecation warnings (in CRITICAL/HIGH/MEDIUM based on timeline), and security patches (in CRITICAL/HIGH based on CVE score)"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response assigns security patches to CRITICAL/HIGH priority (highest urgency) and new version available to MEDIUM priority (lower urgency), with a clear 4-tier priority system"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response explicitly states end-of-life warnings with <30 days are CRITICAL requiring immediate action, 30-90 days are HIGH requiring action within 1-2 weeks, and >90 days are MEDIUM requiring planning within 1 month"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": false,
+      "reason": "While auto-upgrade scheduled notifications are classified as HIGH priority, the response does not mention executing a pre-upgrade checklist - it only mentions planning upgrades, reviewing breaking changes, and preparing rollback plans"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response explicitly states security patches with CVE \u22657.0 require 'Emergency change management process' and 'Schedule maintenance window ASAP' within 24-48 hours, clearly indicating expedited upgrades outside normal windows"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response categorizes 'New version availability notifications' as MEDIUM priority with 1-month timeline and actions like 'Add to backlog' and 'Consider for future planning', clearly positioning them as planning-focused rather than immediate action"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": false,
+      "reason": "Response provides email filtering rules and a Python triage script but does not mention setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": false,
+      "reason": "Response does not mention GKE release notes as a source for understanding version changes, though it does mention reviewing breaking changes documentation"
+    }
+  ]
+}

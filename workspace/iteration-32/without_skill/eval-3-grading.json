@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Identifies PDB as the most likely/common cause of stuck upgrades",
+      "passed": true,
+      "reason": "Response explicitly states 'PodDisruptionBudgets (Most Common)' and mentions PDBs as 'the most likely culprit' in the conclusion"
+    },
+    {
+      "expectation": "Provides kubectl command to check PDBs (kubectl get pdb --all-namespaces or similar)",
+      "passed": true,
+      "reason": "Multiple commands provided: 'kubectl get pdb --all-namespaces' appears several times throughout the response"
+    },
+    {
+      "expectation": "Provides commands to identify which pods are blocking the drain",
+      "passed": true,
+      "reason": "Provides multiple commands including 'kubectl get pods --all-namespaces | grep Terminating' and commands to check pods without controllers"
+    },
+    {
+      "expectation": "Includes resource constraint diagnosis (capacity issues, pending pods)",
+      "passed": false,
+      "reason": "Does not mention resource constraints, capacity issues, or pending pods as potential causes of stuck upgrades"
+    },
+    {
+      "expectation": "Provides a fix for restrictive PDBs (patch or temporary adjustment)",
+      "passed": true,
+      "reason": "Provides kubectl patch command to relax PDBs: 'kubectl patch pdb PDB_NAME -n NAMESPACE -p '{\"spec\":{\"minAvailable\":0}}'' and kubectl delete pdb command"
+    },
+    {
+      "expectation": "Mentions that GKE has a PDB timeout (up to 1 hour) after which it may force-drain, and that GKE sends notifications when eviction is blocked by PDB",
+      "passed": false,
+      "reason": "Does not mention GKE's PDB timeout mechanism or automatic force-drain after 1 hour, nor GKE notifications for PDB-blocked evictions"
+    },
+    {
+      "expectation": "Includes guidance on surge upgrade settings as a potential fix",
+      "passed": true,
+      "reason": "Section 6 provides surge upgrade configuration with specific command: 'gcloud container node-pools update ... --max-surge-upgrade 3 --max-unavailable-upgrade 1'"
+    },
+    {
+      "expectation": "Mentions webhook issues as a possible cause",
+      "passed": false,
+      "reason": "Does not mention webhooks or admission controllers as potential causes of stuck pod drainage"
+    },
+    {
+      "expectation": "Includes validation steps to confirm the fix is working",
+      "passed": false,
+      "reason": "Does not provide specific steps to validate that fixes are working or that the upgrade is proceeding after applying solutions"
+    },
+    {
+      "expectation": "Mentions GKE disruption-event notifications (POD_PDB_VIOLATION) that alert when eviction is blocked by PDB, available via Cloud Logging or Pub/Sub",
+      "passed": false,
+      "reason": "Does not mention POD_PDB_VIOLATION events, Cloud Logging, or Pub/Sub notifications for PDB-blocked evictions"
+    }
+  ]
+}

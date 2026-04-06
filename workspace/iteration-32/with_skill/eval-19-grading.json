@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Categorizes notifications by type: auto-upgrade scheduled, new version available, end-of-life/deprecation, security patch",
+      "passed": true,
+      "reason": "Response clearly categorizes all four notification types: end-of-support warnings, security patches, scheduled auto-upgrades, and available version updates"
+    },
+    {
+      "expectation": "Assigns urgency levels to each category (security patches = highest, new version available = lowest)",
+      "passed": true,
+      "reason": "Response assigns urgency levels with URGENT for security patches and EoS, MEDIUM for scheduled upgrades and minor versions, INFORMATIONAL for patch versions and general announcements"
+    },
+    {
+      "expectation": "End-of-life warnings require action: plan upgrade before the support window closes",
+      "passed": true,
+      "reason": "Response explicitly states EoS warnings require action within 30-60 days and provides specific commands for upgrading or migrating to Extended channel"
+    },
+    {
+      "expectation": "Auto-upgrade scheduled notifications should trigger pre-upgrade checklist execution",
+      "passed": true,
+      "reason": "Response specifies actions for scheduled upgrades including 'Verify maintenance window timing', 'Ensure team is prepared', and provides team responsibilities with pre-upgrade testing requirements"
+    },
+    {
+      "expectation": "Security patch notifications may require expedited upgrades outside normal maintenance windows",
+      "passed": true,
+      "reason": "Response categorizes critical security patches as URGENT requiring action within 7-14 days, which implies expedited handling outside normal maintenance"
+    },
+    {
+      "expectation": "New version available notifications are informational \u2014 use for planning, not immediate action",
+      "passed": true,
+      "reason": "Response categorizes available version updates as either MEDIUM (minor versions for planning) or INFORMATIONAL (patch versions), explicitly stating 'No immediate action needed' for informational items"
+    },
+    {
+      "expectation": "Recommends setting up Pub/Sub or Cloud Monitoring alerts for GKE upgrade events",
+      "passed": true,
+      "reason": "Response provides specific Pub/Sub configuration commands and Cloud Logging queries for monitoring GKE upgrade events"
+    },
+    {
+      "expectation": "Mentions GKE release notes as the source for understanding what changed in each version",
+      "passed": false,
+      "reason": "Response does not mention GKE release notes as a source for understanding version changes - it focuses on notification handling but lacks this reference"
+    }
+  ]
+}

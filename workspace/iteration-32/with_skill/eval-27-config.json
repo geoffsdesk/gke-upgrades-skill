@@ -1,0 +1,19 @@
+{
+  "eval_id": 27,
+  "mode": "with_skill",
+  "iteration": 32,
+  "prompt": "We want maximum control over our GKE upgrade timing without falling behind on security. We're a financial services company with strict change windows. What's the recommended configuration to control when upgrades happen while keeping our clusters secure?",
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "start_time": "2026-04-06T00:22:07.071800+00:00",
+  "input_tokens": 22276,
+  "output_tokens": 1176,
+  "time_seconds": 27.82,
+  "skill_files": [
+    "skill/SKILL.md",
+    "skill/evals/evals.json",
+    "skill/references/checklists.md",
+    "skill/references/runbook-template.md",
+    "skill/references/troubleshooting.md"
+  ]
+}

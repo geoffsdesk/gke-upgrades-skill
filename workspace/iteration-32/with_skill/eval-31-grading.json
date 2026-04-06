@@ -1,0 +1,54 @@
+{
+  "assertions": [
+    {
+      "expectation": "Warns that GPU VMs do not support live migration \u2014 every upgrade forces pod restart, which kills training",
+      "passed": false,
+      "reason": "While the response acknowledges that training runs would be disrupted and needs to be stopped before node upgrades, it doesn't explicitly mention that GPU VMs don't support live migration as the underlying reason for the forced pod restarts"
+    },
+    {
+      "expectation": "Recommends waiting for the current training run to complete or reach a checkpoint before upgrading the GPU node pool",
+      "passed": true,
+      "reason": "The response explicitly states 'Wait for your next planned training restart (checkpoint save), then upgrade nodes' and includes steps to checkpoint and stop training workloads before upgrading"
+    },
+    {
+      "expectation": "Suggests the cordon-and-wait pattern: cordon GPU nodes, let training finish naturally, then upgrade the empty pool",
+      "passed": false,
+      "reason": "The response doesn't mention cordoning nodes. Instead, it suggests using maintenance exclusions and scaling down the training workload to 0 replicas, which is a different approach"
+    },
+    {
+      "expectation": "Addresses GPU driver version coupling \u2014 GKE auto-installs drivers matching the target version, which may change CUDA versions and break framework compatibility",
+      "passed": true,
+      "reason": "The response specifically mentions 'GPU driver version changes with GKE upgrades can affect CUDA compatibility' and includes driver version validation steps with CUDA compatibility testing"
+    },
+    {
+      "expectation": "Recommends testing the target GKE version in a staging cluster first to verify driver + CUDA + framework compatibility",
+      "passed": true,
+      "reason": "The response includes detailed steps to create a staging validation pool and test compatibility, including CUDA version compatibility testing with the training framework"
+    },
+    {
+      "expectation": "Addresses GPUDirect-TCPXO version requirements \u2014 verify the target GKE version supports the networking stack",
+      "passed": true,
+      "reason": "The response confirms GPUDirect-TCPXO is supported in GKE 1.32 and includes specific testing steps for TCPXO connectivity validation in the staging environment"
+    },
+    {
+      "expectation": "Notes that surge upgrades need extra H100 nodes which are scarce \u2014 recommends maxSurge=0/maxUnavailable=1 (maxUnavailable is the primary lever for GPU pools with fixed reservations), or GKE's auto-scale blue-green strategy if surge quota is unavailable",
+      "passed": true,
+      "reason": "The response explicitly mentions 'A3 Mega reservations typically have no surge capacity for H100s' and recommends 'maxSurge=0, maxUnavailable=4' configuration, addressing the scarcity issue and using maxUnavailable as the primary lever"
+    },
+    {
+      "expectation": "Recommends upgrading the control plane first (can be done independently without affecting running training)",
+      "passed": true,
+      "reason": "The response includes a dedicated 'Phase 1: Control Plane Upgrade' section that explicitly states 'Control plane upgrades don't restart nodes or pods - safe to do during active training' and provides specific commands"
+    },
+    {
+      "expectation": "Mentions maintenance exclusions ('no minor or node upgrades') to protect against auto-upgrades during active training campaigns",
+      "passed": true,
+      "reason": "The response extensively covers maintenance exclusions, including specific commands to add exclusions with 'no_minor_or_node_upgrades' scope to protect training nodes from automatic upgrades"
+    },
+    {
+      "expectation": "Addresses compact placement \u2014 verify that replacement nodes land in the same placement group to preserve RDMA topology",
+      "passed": true,
+      "reason": "The response includes a 'Compact Placement Preservation' section with specific commands to verify placement policy after node replacement and mentions preserving RDMA topology"
+    }
+  ]
+}

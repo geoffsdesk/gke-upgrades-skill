@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Recommends increasing maxSurge for CPU pools (e.g., 10-20) to parallelize node replacements, with justification for the value",
+      "passed": true,
+      "reason": "Response recommends maxSurge: 50% for CPU pools with justification about being 'more aggressive' for CPU pools to speed up upgrades"
+    },
+    {
+      "expectation": "For GPU pools with fixed reservations: recommends increasing maxUnavailable (not maxSurge) as the primary lever since surge capacity is typically unavailable",
+      "passed": true,
+      "reason": "Response specifically mentions 'maxUnavailable: 0' for A100 pools and suggests 'maxSurge=1 --max-unavailable=0' approach, recognizing the constraint of fixed reservations"
+    },
+    {
+      "expectation": "Advises checking and requesting increased compute quota before the upgrade for CPU pools",
+      "passed": false,
+      "reason": "The response does not mention checking or requesting increased compute quota before upgrades"
+    },
+    {
+      "expectation": "Suggests staggering node pool upgrades or running non-conflicting pools in parallel",
+      "passed": true,
+      "reason": "Response includes parallel upgrades section with commands to upgrade multiple pools simultaneously using --async flag"
+    },
+    {
+      "expectation": "Mentions GKE's auto-scale blue-green upgrade strategy as an option for GPU pools",
+      "passed": false,
+      "reason": "While the response mentions blue-green strategy, it doesn't specifically reference GKE's auto-scale blue-green upgrade strategy for GPU pools"
+    },
+    {
+      "expectation": "Recommends expanding the maintenance window or splitting across multiple weekends",
+      "passed": false,
+      "reason": "The response focuses on speeding up upgrades to fit the 8-hour window but doesn't suggest expanding the maintenance window or splitting across multiple weekends"
+    },
+    {
+      "expectation": "Provides the gcloud command for updating surge settings on each pool",
+      "passed": true,
+      "reason": "Response includes gcloud commands like 'gcloud container node-pools update gpu-pool-a100 --max-surge=1 --max-unavailable=0' for updating surge settings"
+    },
+    {
+      "expectation": "Includes monitoring commands to track upgrade progress in real-time",
+      "passed": true,
+      "reason": "Response includes monitoring script with 'gcloud container operations list', 'gcloud container node-pools list', and 'kubectl get nodes' commands for tracking progress"
+    }
+  ]
+}

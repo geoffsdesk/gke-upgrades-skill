@@ -1,0 +1,44 @@
+{
+  "assertions": [
+    {
+      "expectation": "Uses 'no upgrades' exclusion (30-day max) for the BFCM period \u2014 blocks everything including patches",
+      "passed": false,
+      "reason": "Uses ALL_UPGRADES scope for BFCM period but doesn't mention the 30-day maximum limit or explain that this blocks patches too. The BFCM exclusion spans Nov 20 - Dec 3 which is only ~13 days, within the limit, but the constraint isn't mentioned."
+    },
+    {
+      "expectation": "Uses 'no upgrades' exclusion for the June code freeze period",
+      "passed": false,
+      "reason": "Uses ALL_UPGRADES scope for June but doesn't mention this violates the 30-day maximum since June exclusion is the entire month (30 days). Also doesn't explain what 'no upgrades' exclusions block."
+    },
+    {
+      "expectation": "For permanent minor version control: uses 'no minor upgrades' (scope 'no_minor') if they only want to block minor versions, or 'no minor or node upgrades' (scope 'no_minor_or_node') if they also want to stop node upgrades. May recommend persistent exclusion with --add-maintenance-exclusion-until-end-of-support which auto-tracks EoS date",
+      "passed": false,
+      "reason": "Disables auto-upgrade via auto_upgrade = false in node pool but doesn't use maintenance exclusion scopes like 'no_minor' or 'no_minor_or_node' for permanent minor version control. Doesn't mention --add-maintenance-exclusion-until-end-of-support option."
+    },
+    {
+      "expectation": "Notes the 30-day maximum for 'no upgrades' exclusions vs up-to-EoS for 'no minor or node upgrades'",
+      "passed": false,
+      "reason": "Doesn't mention the 30-day maximum limit for 'no upgrades' exclusions or contrast this with the up-to-EoS duration allowed for 'no minor or node upgrades' exclusions."
+    },
+    {
+      "expectation": "Provides specific gcloud commands with --add-maintenance-exclusion-scope flags for each exclusion type",
+      "passed": true,
+      "reason": "Provides gcloud commands with --add-maintenance-exclusion-scope=ALL_UPGRADES flags for the exclusions, though doesn't show different scope types for different use cases."
+    },
+    {
+      "expectation": "Notes that you can have a maximum of three 'no upgrades' exclusions, and they must allow 48h of maintenance in any 32-day window",
+      "passed": false,
+      "reason": "Doesn't mention the maximum of three 'no upgrades' exclusions limit or the requirement to allow 48h of maintenance in any 32-day window."
+    },
+    {
+      "expectation": "Mentions that manual upgrades bypass maintenance windows \u2014 only auto-upgrades respect them",
+      "passed": false,
+      "reason": "Provides manual upgrade functionality in the script but doesn't explicitly mention that manual upgrades bypass maintenance windows and exclusions - only auto-upgrades respect them."
+    },
+    {
+      "expectation": "Warns about the risk of falling too far behind on versions during extended exclusion periods",
+      "passed": false,
+      "reason": "Mentions monitoring security patches and applying critical updates in approved windows, but doesn't specifically warn about the risk of falling too far behind on versions during extended exclusion periods."
+    }
+  ]
+}

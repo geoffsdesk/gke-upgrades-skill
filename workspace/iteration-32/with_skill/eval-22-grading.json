@@ -1,0 +1,49 @@
+{
+  "assertions": [
+    {
+      "expectation": "Explains this is related to the interaction between maxSurge, drain order, and pod scheduling",
+      "passed": true,
+      "reason": "Response clearly explains the root cause involves maxSurge being too high relative to cluster size, causing multiple nodes to be cordoned/drained simultaneously and creating the musical chairs effect with pod scheduling"
+    },
+    {
+      "expectation": "Notes that GKE cordons nodes before draining them \u2014 pods should prefer scheduling onto uncordoned (upgraded) nodes",
+      "passed": true,
+      "reason": "Response explicitly mentions that 'GKE cordons multiple nodes simultaneously' and explains that evicted pods look for available nodes but many are cordoned and about to drain"
+    },
+    {
+      "expectation": "Identifies possible cause: too many nodes being drained simultaneously (high maxSurge) before enough upgraded nodes exist",
+      "passed": true,
+      "reason": "Response directly identifies 'maxSurge is set too high relative to your cluster size' as the root cause and explains the timing issue where not enough upgraded nodes exist"
+    },
+    {
+      "expectation": "Recommends reducing maxSurge to 1 to ensure upgraded nodes are available before draining the next batch",
+      "passed": true,
+      "reason": "Response provides specific gcloud command to set maxSurge to 1 and explains why this works: 'Creates 1 new node with the target version, cordons and drains exactly 1 old node, evicted pods land on the newly upgraded node'"
+    },
+    {
+      "expectation": "Suggests using pod anti-affinity or node affinity to prefer already-upgraded nodes",
+      "passed": true,
+      "reason": "Response includes 'Option 2: Pod Anti-Affinity Rules' with a complete YAML example showing nodeAffinity configuration to prefer specific node pools"
+    },
+    {
+      "expectation": "Mentions checking if any taints or tolerations are causing pods to land on the wrong nodes",
+      "passed": true,
+      "reason": "Response includes 'Option 3: Temporary Node Taints' with kubectl commands to manually taint nodes to prevent scheduling and explains how to remove taints after upgrade"
+    },
+    {
+      "expectation": "Provides kubectl commands to check node cordoned status and pod scheduling events",
+      "passed": true,
+      "reason": "Response provides multiple monitoring commands including checking node status, monitoring pod movements, and checking for pending pods with specific kubectl commands"
+    },
+    {
+      "expectation": "Recommends setting maxUnavailable=0 to ensure old nodes aren't removed until pods are safely rescheduled",
+      "passed": true,
+      "reason": "Response includes '--max-unavailable-upgrade 0' in the gcloud command example for the immediate fix"
+    },
+    {
+      "expectation": "May mention GKE's autoscaled blue-green upgrade strategy as an alternative that avoids this issue by cordoning the entire old pool before migrating workloads to new nodes",
+      "passed": true,
+      "reason": "Response includes 'Option 1: Use Autoscaled Blue-Green (Preview)' with gcloud command and explains how it creates a new green pool that scales up as the old blue pool scales down"
+    }
+  ]
+}
